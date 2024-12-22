@@ -1,14 +1,18 @@
 spring:
   application:
-    name : dding
+    name: dding
+# DB 생기면 아래 3줄 지우기
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 
 #  datasource:
 #      url: jdbc:mysql://localhost:3306/your_database_name
 #      username: your_username
 #      password: your_password
-#      driver-class-name: com.mysql.cj.jdbc.Driver
+#      driver-class-name: com1.mysql.cj.jdbc.Driver
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
