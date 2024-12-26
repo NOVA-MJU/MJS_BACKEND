@@ -1,0 +1,192 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MJS API",
+    "description": "API 명세서 - 스프린트 1",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://MJS.com/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "notice",
+      "description": "명지대학교 공지사항 제공 API 입니다"
+    }
+  ],
+  "paths": {
+    "/notice": {
+      "post": {
+        "tags": [
+          "notice"
+        ],
+        "summary": "공지사항 목록 조회",
+        "operationId": "getNotices",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "description": "공지사항 카테고리(일반, 학사, 장학/학자금, 진로/취업/창업, 학생활동, 학칙개정)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "description": "조회할 연도 (기본값: 현재 연도)",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "공지사항 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "example": 1
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "[명지통합치료연구센터] 2025-1학기 돌봄 근로장학생 모집 안내"
+                          },
+                          "url": {
+                            "type": "string",
+                            "example": "https://www.mju.ac.kr/mjukr/255/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGbWp1a3IlMkYxNDElMkYyMTc0ODMlMkZhcnRjbFZpZXcuZG8lM0ZwYWdlJTNEMSUyNnNyY2hDb2x1bW4lM0QlMjZzcmNoV3JkJTNEJTI2YmJzQ2xTZXElM0QlMjZiYnNPcGVuV3JkU2VxJTNEJTI2cmdzQmduZGVTdHIlM0QlMjZyZ3NFbmRkZVN0ciUzRCUyNmlzVmlld01pbmUlM0RmYWxzZSUyNmlzVmlldyUzRHRydWUlMjZwYXNzd29yZCUzRCUyNg%3D%3D"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024.12.20"
+                          },
+                          "category": {
+                            "type": "string",
+                            "example": "일반"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청 데이터",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "fail"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "유효하지 않은 요청입니다."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notices/{id}": {
+      "get": {
+        "tags": [
+          "notice"
+        ],
+        "summary": "공지사항 상세 조회",
+        "operationId": "getNoticeById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "조회할 공지사항 ID",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "공지사항 상세 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "[명지통합치료연구센터] 2025-1학기 돌봄 근로장학생 모집 안내"
+                    },
+                    "url": {
+                      "type": "string",
+                      "example": "https://www.mju.ac.kr/mjukr/255/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGbWp1a3IlMkYxNDElMkYyMTc0ODMlMkZhcnRjbFZpZXcuZG8lM0ZwYWdlJTNEMSUyNnNyY2hDb2x1bW4lM0QlMjZzcmNoV3JkJTNEJTI2YmJzQ2xTZXElM0QlMjZiYnNPcGVuV3JkU2VxJTNEJTI2cmdzQmduZGVTdHIlM0QlMjZyZ3NFbmRkZVN0ciUzRCUyNmlzVmlld01pbmUlM0RmYWxzZSUyNmlzVmlldyUzRHRydWUlMjZwYXNzd29yZCUzRCUyNg%3D%3D"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024.12.20"
+                    },
+                    "category": {
+                      "type": "string",
+                      "example": "일반"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "공지사항을 찾을 수 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "fail"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "해당 공지사항을 찾을 수 없습니다"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
