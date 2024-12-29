@@ -2,9 +2,10 @@ HELP.md
 caches/
 /out
 /build
+
 daemon/
 .idea/
-ide/
+idea/
 jdks/
 native/
 src/main/generated/
