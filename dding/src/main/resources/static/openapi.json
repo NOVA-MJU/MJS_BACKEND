@@ -447,6 +447,26 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "페이지 번호 (기본값: 0)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "한 페이지당 표시할 항목 수 (기본값: 10)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
           }
         ],
         "responses": {
@@ -489,6 +509,23 @@
                           }
                         }
                       }
+                    },
+                    "pageInfo": {
+                      "type": "object",
+                      "properties": {
+                        "currentPage" : {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "totalPages": {
+                          "type": "integer",
+                          "example": 5
+                        },
+                        "totalItems": {
+                          "type": "integer",
+                          "example": 50
+                        }
+                      }
                     }
                   }
                 }
@@ -509,6 +546,26 @@
                     "message": {
                       "type": "string",
                       "example": "유효하지 않은 요청입니다."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "공지사항을 찾을 수 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status" : {
+                      "type": "string",
+                      "example": "fail"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "해당 공지사항을 찾을 수 없습니다."
                     }
                   }
                 }
@@ -564,6 +621,26 @@
                     "category": {
                       "type": "string",
                       "example": "일반"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청 데이터",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "fail"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "유효하지 않은 요청입니다."
                     }
                   }
                 }
