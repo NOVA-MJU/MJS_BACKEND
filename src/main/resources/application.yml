@@ -1,21 +1,35 @@
 spring:
   application:
     name: mjs
-# DB 생기면 아래 3줄 지우기
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 
-#  datasource:
-#      url: jdbc:mysql://localhost:3306/your_database_name
-#      username: your_username
-#      password: your_password
-#      driver-class-name: com1.mysql.cj.jdbc.Driver
+  # 임시 H2 데이터베이스 설정
+  # http://localhost:8080/h2-console 로 접속해서 확인
+  # JDBC URL 필드에 다음을 입력 jdbc:h2:mem:testdb
+  # Username: sa, Password: 빈 칸.
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true # 쿼리 로깅 활성화
+  h2:
+    console:
+      enabled: true
+      path: /h2-console # H2 콘솔 URL 설정 (기본값: /h2-console)
 
-#  jpa:
-#    hibernate:
-#      ddl-auto: update
-#    show-sql: true
+  # DB 연결 설정 (DB 생기면 활성화)
+  # datasource:
+  #   url: jdbc:mysql://localhost:3306/your_database_name
+  #   username: your_username
+  #   password: your_password
+  #   driver-class-name: com.mysql.cj.jdbc.Driver
+  # jpa:
+  #   hibernate:
+  #     ddl-auto: update
+  #   show-sql: true
 
 springdoc:
   api-docs:
