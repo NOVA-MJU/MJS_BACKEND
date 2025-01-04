@@ -6,6 +6,7 @@ import nova.mjs.community.DTO.CommunityBoardRequest;
 import nova.mjs.community.DTO.CommunityBoardResponse;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.entity.enumList.CommunityCategory;
+import nova.mjs.community.exception.CommunityNotFoundException;
 import nova.mjs.community.repository.CommunityBoardRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,7 +53,6 @@ public class CommunityBoardService {
 
     @Transactional
     public CommunityBoardResponse updateBoard(UUID uuid, CommunityBoardRequest request) {
-        // 기존 게시글 가져오기 (존재하지 않으면 예외 발생)
         CommunityBoard board = getExistingBoard(uuid);
 
         // 게시글 업데이트
@@ -70,6 +70,7 @@ public class CommunityBoardService {
 
 
     // 5. DELETE 게시글 삭제
+    @Transactional
     public void deleteBoard(UUID uuid) {
         CommunityBoard board = getExistingBoard(uuid);
         communityBoardRepository.delete(board);
@@ -78,6 +79,6 @@ public class CommunityBoardService {
 
     private CommunityBoard getExistingBoard(UUID uuid) {
         return communityBoardRepository.findByUuid(uuid)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+                .orElseThrow(CommunityNotFoundException::new);
     }
 }
