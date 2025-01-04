@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
         log.error("Access denied: {}", ex.getMessage());
-        return createErrorResponseEntity(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "[WEABLE] 토큰이 유효하지 않거나 사용자에게 해당 접근 권한이 없습니다.");
+        return createErrorResponseEntity(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "[MJS] 토큰이 유효하지 않거나 사용자에게 해당 접근 권한이 없습니다.");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MalformedJwtException.class)
     public ResponseEntity<ErrorResponse> handleMalformedJwtException(MalformedJwtException ex) {
         log.error("MalformedJwtException error: {}", ex.getMessage());
-        return createErrorResponseEntity(HttpStatus.UNAUTHORIZED, "WRONG_SIGNATURE_TOKEN", "[WEABLE] JWT 토큰이 변조되었거나 잘못된 형식입니다");
+        return createErrorResponseEntity(HttpStatus.UNAUTHORIZED, "WRONG_SIGNATURE_TOKEN", "[MJS] JWT 토큰이 변조되었거나 잘못된 형식입니다");
     }
 
     // 요청 HTTP 메서드 잘못됨
