@@ -1,6 +1,6 @@
 spring:
   application:
-    name: dding
+    name: mjs
 # DB 생기면 아래 3줄 지우기
   autoconfigure:
     exclude:
@@ -16,3 +16,9 @@ spring:
 #    hibernate:
 #      ddl-auto: update
 #    show-sql: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    url: /static/openapi/main.json

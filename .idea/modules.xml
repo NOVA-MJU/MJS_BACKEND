@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/MJS_backend.iml" filepath="$PROJECT_DIR$/.idea/MJS_backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ddingworld_backend.iml" filepath="$PROJECT_DIR$/.idea/modules/ddingworld_backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ddingworld_backend.main.iml" filepath="$PROJECT_DIR$/.idea/modules/ddingworld_backend.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ddingworld_backend.test.iml" filepath="$PROJECT_DIR$/.idea/modules/ddingworld_backend.test.iml" />
     </modules>
   </component>
 </project>
