@@ -22,97 +22,6 @@
   ],
   "paths": {
     "/communityBoard": {
-      "post": {
-        "tags": [
-          "communityBoard"
-        ],
-        "summary": "게시판 글 작성",
-        "security": [
-          {
-            "Authorization": []
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string",
-                    "example": "자유게시판 제목"
-                  },
-                  "content": {
-                    "type": "string",
-                    "example": "자유게시판 내용이 들어갈 것입니다."
-                  }
-                },
-                "required": ["title", "content", "author"]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "게시글 작성 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "example": 1
-                    },
-                    "title": {
-                      "type": "string",
-                      "example": "자유게시판 제목"
-                    },
-                    "content": {
-                      "type": "string",
-                      "example": "자유 게시판 내용 이시다!!!"
-                    },
-                    "author": {
-                      "type": "string",
-                      "example": "user 닉네임"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time",
-                      "example": "2024-12-22T12:00:00Z"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청 데이터",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 400
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Bad Request"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "필수 필드가 누락되었습니다."
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
       "get": {
         "tags": [
           "communityBoard"
@@ -127,6 +36,7 @@
         "parameters": [
           {
             "name": "page",
+            "description": "page는 0부터 시작합니다.",
             "in": "query",
             "required": false,
             "schema": {
@@ -136,6 +46,7 @@
           },
           {
             "name": "size",
+            "description": "size는 10이 디폴트 값입니다.",
             "in": "query",
             "required": false,
             "schema": {
@@ -175,12 +86,167 @@
                   }
                 },
                 "example": {
-                  "id" :  "61edd056-7b24-4c89-9744-cdbd45254205",
-                  "title" : "자전거 타고 괌 가는 방법",
-                  "preview" : "한 줄 미리보기가 들어갑니다",
-                  "likes" : "4",
-                  "commentCount" : "15",
-                  "views" : "124"
+                  "status": "API 요청 성공",
+                  "data": {
+                    "content": [
+                      {
+                        "uuid": "9b7e0506-1205-4cbe-83e9-b0dde53df7a8",
+                        "title": "자전거 타고 괌 가는 방법",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:22:34.545354"
+                      },
+                      {
+                        "uuid": "c48b7c17-5eb7-4dca-bbef-1309ed903964",
+                        "title": "자전거 타고 괌 가는 방법0",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:22:36.722039"
+                      },
+                      {
+                        "uuid": "4ecdbba2-18f5-44b8-b512-0a20b9d417d3",
+                        "title": "자전거 타고 괌 가는 방법1",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:22:37.639607"
+                      },
+                      {
+                        "uuid": "214b3939-5792-4b09-b642-b266d77eeae4",
+                        "title": "자전거 타고 괌 가는 방법2",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:22:40.521407"
+                      },
+                      {
+                        "uuid": "ce0a3cad-88a4-4f4a-b775-ed45fdbd7503",
+                        "title": "자전거 타고 괌 가는 방법3",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:22:41.613037"
+                      },
+                      {
+                        "uuid": "8903108f-e212-4f33-a159-5f96445507ef",
+                        "title": "자전거 타고 괌 가는 방법3",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:22:43.683996"
+                      },
+                      {
+                        "uuid": "2d6fb709-009f-42bd-a932-e46baae89313",
+                        "title": "자전거 타고 괌 가는 방법4",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:22:45.133903"
+                      },
+                      {
+                        "uuid": "64cbf6aa-252f-41db-8cb2-f662c7785375",
+                        "title": "자전거 타고 괌 가는 방법5",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:22:46.861359"
+                      },
+                      {
+                        "uuid": "aebd76e0-2c53-4df7-8330-4ae6774e2b34",
+                        "title": "자전거 타고 괌 가는 방법6",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:22:49.294387"
+                      },
+                      {
+                        "uuid": "86632ac0-af03-4a92-81d7-b12030647b96",
+                        "title": "자전거 타고 괌 가는 방법6",
+                        "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                        "contentImages": [
+                          "https://example.com/image1.jpg",
+                          "https://example.com/image2.jpg",
+                          "https://example.com/image3.jpg"
+                        ],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-01-04T22:39:10.309642"
+                      }
+                    ],
+                    "pageable": {
+                      "pageNumber": 0,
+                      "pageSize": 10,
+                      "sort": {
+                        "empty": true,
+                        "sorted": false,
+                        "unsorted": true
+                      },
+                      "offset": 0,
+                      "unpaged": false,
+                      "paged": true
+                    },
+                    "last": true,
+                    "totalPages": 1,
+                    "totalElements": 10,
+                    "size": 10,
+                    "number": 0,
+                    "sort": {
+                      "empty": true,
+                      "sorted": false,
+                      "unsorted": true
+                    },
+                    "first": true,
+                    "numberOfElements": 10,
+                    "empty": false
+                  },
+                  "timestamp": "2025-01-04T22:39:18.6926803"
                 }
               }
             }
@@ -201,41 +267,32 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer"
+              "type": "string"
             },
-            "description": "조회할 게시글의 ID"
+            "description": "조회할 게시글의 UUID"
           }
         ],
         "responses": {
-          "200": {
+          "201": {
             "description": "게시글 상세 조회 성공",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "example": 1
-                    },
-                    "title": {
-                      "type": "string",
-                      "example": "자유게시판 제목"
-                    },
-                    "content": {
-                      "type": "string",
-                      "example": "이곳은 자유게시판입니다."
-                    },
-                    "author": {
-                      "type": "string",
-                      "example": "user123"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time",
-                      "example": "2024-12-22T12:00:00Z"
-                    }
-                  }
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "uuid": "aebd76e0-2c53-4df7-8330-4ae6774e2b34",
+                    "title": "자전거 타고 괌 가는 방법6",
+                    "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                    "contentImages": [
+                      "https://example.com/image1.jpg",
+                      "https://example.com/image2.jpg",
+                      "https://example.com/image3.jpg"
+                    ],
+                    "viewCount": 0,
+                    "published": true,
+                    "publishedAt": "2025-01-04T22:22:49.2943874"
+                  },
+                  "timestamp": "2025-01-04T22:22:49.2994026"
                 }
               }
             }
@@ -255,14 +312,92 @@
               "application/json": {
                 "example": {
                   "status": 404,
-                  "error": "MEMBER_NOT_FOUND",
-                  "message": "[WEABLE] 존재하지 않는 사용자입니다."
+                  "error": "COMMUNITY_NOT_FOUND",
+                  "message": "[MJS] 요청한 게시판을 찾을 수 없습니다."
                 }
               }
             }
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "communityBoard"
+        ],
+        "summary": "게시판 글 작성",
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "published": {
+                    "type": "boolean"
+                  },
+                  "contentImages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["title", "content", "published"]
+              },
+              "example": {
+                "title": "자전거 타고 괌 가는 방법6",
+                "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼...",
+                "published": true,
+                "contentImages": [
+                  "https://example.com/image1.jpg",
+                  "https://example.com/image2.jpg",
+                  "https://example.com/image3.jpg"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "게시글 작성 성공",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "uuid": "aebd76e0-2c53-4df7-8330-4ae6774e2b34",
+                    "title": "자전거 타고 괌 가는 방법6",
+                    "content": "우선 비행기 타고 가야하는데, 아 근데 문제는 자전거가 너무 큼. 우선 이거 톱으로 짤라서 가져가야됨. 근데 또 비싸잖슴? 그니까 본드로 도착해서 붙이는거 잊지 말라고",
+                    "contentImages": [
+                      "https://example.com/image1.jpg",
+                      "https://example.com/image2.jpg",
+                      "https://example.com/image3.jpg"
+                    ],
+                    "viewCount": 0,
+                    "published": true,
+                    "publishedAt": "2025-01-04T22:22:49.2943874"
+                  },
+                  "timestamp": "2025-01-04T22:22:49.2994026"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/schemas/ErrorResponse"
           }
         }
       },
@@ -278,9 +413,9 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer"
+              "type": "string"
             },
-            "description": "수정할 게시글의 ID"
+            "description": "수정할 게시글의 UUID"
           }
         ],
         "requestBody": {
@@ -290,12 +425,19 @@
                 "type": "object",
                 "properties": {
                   "title": {
-                    "type": "string",
-                    "example": "수정된 자유게시판 제목"
+                    "type": "string"
                   },
                   "content": {
-                    "type": "string",
-                    "example": "수정된 내용입니다."
+                    "type": "string"
+                  },
+                  "published": {
+                    "type": "boolean"
+                  },
+                  "contentImages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -304,82 +446,52 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "게시글 수정 성공",
+          "201": {
+            "description": "게시글 작성 성공",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "example": 1
-                    },
-                    "title": {
-                      "type": "string",
-                      "example": "수정된 자유게시판 제목"
-                    },
-                    "content": {
-                      "type": "string",
-                      "example": "수정된 내용입니다."
-                    },
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time",
-                      "example": "2024-12-22T14:00:00Z"
-                    }
-                  }
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "uuid": "9b7e0506-1205-4cbe-83e9-b0dde53df7a8",
+                    "title": "수정된 제목",
+                    "content": "수정된 내용",
+                    "contentImages": [
+                      "https://example.com/updated_image1.jpg",
+                      "https://example.com/updated_image2.jpg"
+                    ],
+                    "viewCount": 0,
+                    "published": true,
+                    "publishedAt": "2025-01-04T22:22:34.545354"
+                  },
+                  "timestamp": "2025-01-04T22:40:53.3258347"
                 }
               }
             }
           },
           "400": {
-            "description": "잘못된 요청 데이터",
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "description": "존재하지 않는 게시물",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 400
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Bad Request"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "유효하지 않은 데이터입니다."
-                    }
-                  }
+                "example": {
+                  "status": 404,
+                  "error": "COMMUNITY_NOT_FOUND",
+                  "message": "[MJS] 요청한 게시판을 찾을 수 없습니다."
                 }
               }
             }
           },
-          "404": {
-            "description": "게시글을 찾을 수 없음",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 404
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Not Found"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "게시글을 찾을 수 없습니다."
-                    }
-                  }
-                }
-              }
-            }
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       },
@@ -405,52 +517,28 @@
             "description": "게시글 삭제 성공"
           },
           "400": {
-            "description": "잘못된 요청 데이터",
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "description": "존재하지 않는 게시물",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 400
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Bad Request"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "삭제 요청이 유효하지 않습니다."
-                    }
-                  }
+                "example": {
+                  "status": 404,
+                  "error": "COMMUNITY_NOT_FOUND",
+                  "message": "[MJS] 요청한 게시판을 찾을 수 없습니다."
                 }
               }
             }
           },
-          "404": {
-            "description": "게시글을 찾을 수 없음",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 404
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Not Found"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "게시글을 찾을 수 없습니다."
-                    }
-                  }
-                }
-              }
-            }
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -543,7 +631,7 @@
             "example": {
               "status": 404,
               "error": "MEMBER_NOT_FOUND",
-              "message": "[MJS] 존재하지 않는 사용자입니다."
+              "message": "[MJS] 존재하지 않는 게시물입니다."
             }
           }
         }
@@ -577,16 +665,15 @@
         "properties": {
           "status": {
             "type": "integer",
-            "description": "HTTP 상태 코드",
-            "format": "int32"
+            "example": 400
           },
           "error": {
             "type": "string",
-            "description": "오류 코드"
+            "example": "Bad Request"
           },
           "message": {
             "type": "string",
-            "description": "오류 메시지"
+            "example": "요청이 잘못되었습니다."
           }
         }
       },
