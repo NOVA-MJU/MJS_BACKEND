@@ -31,8 +31,3 @@ spring:
   #     ddl-auto: update
   #   show-sql: true
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    url: /static/openapi/main.json
