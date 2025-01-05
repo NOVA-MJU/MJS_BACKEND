@@ -1,0 +1,114 @@
+package nova.mjs.community.entity;
+
+
+import jakarta.persistence.*;
+import lombok.*;
+import nova.mjs.community.DTO.CommunityBoardRequest;
+import nova.mjs.community.entity.enumList.CommunityCategory;
+import nova.mjs.util.entity.BaseEntity;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Entity
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "community_board")
+public class CommunityBoard extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "community_board_id")
+    private long id;
+
+    @Column(nullable = false, unique = true, updatable = false)
+    private UUID uuid;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CommunityCategory category; // 게시판 카테고리: 추후 확장성을 위하여 고려
+
+    @Column(nullable = false)
+    private String title; // 게시판 제목
+
+    @Lob
+    @Column(nullable = false)
+    private String content; // 내용
+
+//    @Embedded
+//    private Author author; // 작성자
+
+
+    @ElementCollection
+    @CollectionTable(
+            name = "community_board_images", // 테이블 이름
+            joinColumns = @JoinColumn(name = "community_board_id") // 외래 키
+    )
+    @Column(name = "content_image_url") // 컬럼 이름
+    @Builder.Default
+    private List<String> contentImages = new ArrayList<>(); // 기본 초기화
+
+    @Column(nullable = false)
+    private int viewCount; // 조회 수
+
+//    @Column
+//    private int likeCount; // 게시글 좋아요 여부
+
+    @Column
+    private Boolean published; // 임시저장 여부
+
+    @Column
+    private LocalDateTime publishedAt;  // 공개 게시 시간
+
+
+    // === 생성 메서드 ===
+    public static CommunityBoard create(String title, String content, CommunityCategory category, Boolean published, List<String> contentImages) {
+        CommunityBoard board = CommunityBoard.builder()
+                .uuid(UUID.randomUUID())
+                .title(title)
+                .content(content)
+                .category(category)
+                .published(published != null ? published : false)
+                .viewCount(0)
+                .publishedAt(published != null && published ? LocalDateTime.now() : null)
+                .build();
+
+        board.contentImages.addAll(contentImages != null ? contentImages : new ArrayList<>()); // null일 경우 빈 리스트 추가
+        return board;
+    }
+
+
+    // === 업데이트 메서드 ===
+    public void update(String title, String content, Boolean published, List<String> contentImages) {
+        if (title != null) this.title = title;
+        if (content != null) this.content = content;
+        if (published != null) {
+            updatePublishedState(published);
+        }
+        if (contentImages != null) {
+            updateContentImages(contentImages);
+        }
+    }
+
+    // 발행 상태 업데이트 메서드
+    private void updatePublishedState(Boolean isPublished) {
+        if (isPublished && !this.published) {
+            this.publishedAt = LocalDateTime.now();
+        } else if (!isPublished && this.published) {
+            this.publishedAt = null;
+        }
+        this.published = isPublished;
+    }
+
+    // 이미지 리스트 업데이트 메서드
+    private void updateContentImages(List<String> newContentImages) {
+        this.contentImages.clear();
+        this.contentImages.addAll(newContentImages);
+    }
+
+}
