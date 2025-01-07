@@ -1,0 +1,4 @@
+[submodule "MJS-BACK-SECURITY"]
+	path = MJS-BACK-SECURITY
+	url = git@github.com:NOVA-MJU/MJS-BACK-SECURITY.git
+	branch = main
