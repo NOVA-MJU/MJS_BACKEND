@@ -39,7 +39,7 @@ public class WeeklyMenu extends BaseEntity {
 
     public static WeeklyMenu create(String date, MenuCategory menuCategory, List<String> meals) {
         WeeklyMenu menu = WeeklyMenu.builder()
-                .date(date) //id는 안 하는 이유?
+                .date(date) //id는 안 하는 이유? 자동생성 되잖아 바보야
                 .menuCategory(menuCategory)
                 .build();
         menu.meals.addAll(meals != null ? meals : new ArrayList<>()); // null일 경우 빈 리스트 추가
