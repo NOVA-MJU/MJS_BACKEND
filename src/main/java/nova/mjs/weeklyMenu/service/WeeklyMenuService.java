@@ -1,9 +1,11 @@
 package nova.mjs.weeklyMenu.service;
 
 import lombok.extern.log4j.Log4j2;
+import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.weeklyMenu.DTO.WeeklyMenuResponseDTO;
 import nova.mjs.weeklyMenu.entity.WeeklyMenu;
 import nova.mjs.weeklyMenu.entity.enumList.MenuCategory;
+import nova.mjs.weeklyMenu.exception.WeeklyMenuNotFoundException;
 import nova.mjs.weeklyMenu.repository.WeeklyMenuRepository;
 import org.jsoup.*;
 import org.jsoup.nodes.*;
@@ -40,15 +42,19 @@ public class WeeklyMenuService {
             Element tableWrap = doc.selectFirst(".tableWrap.marT50");
 
             if (tableWrap == null) {
-                throw new IllegalArgumentException("테이블을 포함하는 div를 찾을 수 없습니다.");
+                log.error("테이블을 포함하는 div를 찾을 수 없습니다.");
             }
 
             Element table = tableWrap.selectFirst("table");
             if (table == null) {
-                throw new IllegalArgumentException("테이블을 찾을 수 없습니다.");
+                log.error("테이블을 찾을 수 없습니다.");
             }
 
             Elements rows = table.select("tbody tr");
+            if (rows.isEmpty()){
+                log.error("식단 데이터를 찾을 수 없습니다.");
+                throw new WeeklyMenuNotFoundException("식단 데이터를 찾을 수 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
+            }
             String currentDate = null;
 
             for (Element row : rows) {
@@ -75,6 +81,9 @@ public class WeeklyMenuService {
                             .toList() // 리스트로 변환
                             : Collections.singletonList("등록된 식단 내용이 없습니다."); // 메뉴 수집
 
+                    if (menuContent.isEmpty()){
+                        log.error("메뉴 데이터가 비어 있습니다.");
+                    }
                     WeeklyMenu weeklyMenu = WeeklyMenu.create(currentDate, menuCategory, menuContent);
                     weeklyMenus.add(weeklyMenu);
                     menuRepository.save(weeklyMenu);
@@ -82,9 +91,12 @@ public class WeeklyMenuService {
                     //vs. saveAndFlush() : 즉시 db에 반영
                 }
             }
+            if (weeklyMenus.isEmpty()){
+                throw new WeeklyMenuNotFoundException("크롤링된 데이터가 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
+            }
 
         } catch (Exception e) {
-            log.error("무슨 오류임?ㅋㅋ {}", e.getMessage(), e);
+            log.error("크롤링 오류 = {}", e.getMessage(), e);
         }
         return WeeklyMenuResponseDTO.fromEntityToList(weeklyMenus);
     }
