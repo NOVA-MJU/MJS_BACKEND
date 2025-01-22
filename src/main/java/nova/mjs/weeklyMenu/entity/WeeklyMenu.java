@@ -2,16 +2,12 @@ package nova.mjs.weeklyMenu.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.community.entity.CommunityBoard;
-import nova.mjs.community.entity.enumList.CommunityCategory;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.weeklyMenu.entity.enumList.MenuCategory;
 
-import java.awt.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+
 
 @Entity
 @Getter //vs. @data
@@ -41,8 +37,8 @@ public class WeeklyMenu extends BaseEntity {
         WeeklyMenu menu = WeeklyMenu.builder()
                 .date(date) //id는 안 하는 이유? 자동생성 되잖아 바보야
                 .menuCategory(menuCategory)
+                .meals(meals != null ? meals : new ArrayList<>())
                 .build();
-        menu.meals.addAll(meals != null ? meals : new ArrayList<>()); // null일 경우 빈 리스트 추가
         return menu;
     }
 }

@@ -86,11 +86,14 @@ public class WeeklyMenuService {
                     }
                     WeeklyMenu weeklyMenu = WeeklyMenu.create(currentDate, menuCategory, menuContent);
                     weeklyMenus.add(weeklyMenu);
-                    menuRepository.save(weeklyMenu);
-                    //save() : 영속성 컨텍스트의 cache에 먼저 저장 -> 나중에 flush()
-                    //vs. saveAndFlush() : 즉시 db에 반영
                 }
             }
+
+            menuRepository.saveAll(weeklyMenus);
+            //save() : 영속성 컨텍스트의 cache에 먼저 저장 -> 나중에 flush()
+            //vs. saveAndFlush() : 즉시 db에 반영
+            log.info("Successfully saved {} meals", weeklyMenus.size());
+
             if (weeklyMenus.isEmpty()){
                 throw new WeeklyMenuNotFoundException("크롤링된 데이터가 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
             }

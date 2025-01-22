@@ -15,15 +15,15 @@ public class WeeklyMenuResponseDTO {
     private List<String> meals; //메뉴 정보
 
     // 엔티티에서 DTO로 변환
-    public static WeeklyMenuResponseDTO fromEntity(WeeklyMenu entity) {
+    public static WeeklyMenuResponseDTO fromEntity(WeeklyMenu weeklyMenu) {
         return WeeklyMenuResponseDTO.builder()
-                .date(entity.getDate())
-                .menuCategory(entity.getMenuCategory())
-                .meals(entity.getMeals())
+                .date(weeklyMenu.getDate())
+                .menuCategory(weeklyMenu.getMenuCategory())
+                .meals(weeklyMenu.getMeals())
                 .build();
     }
-    public static List<WeeklyMenuResponseDTO> fromEntityToList(List<WeeklyMenu> entity) {
-        return entity.stream()
+    public static List<WeeklyMenuResponseDTO> fromEntityToList(List<WeeklyMenu> weeklyMenu) {
+        return weeklyMenu.stream()
                 .map(WeeklyMenuResponseDTO::fromEntity) // 각 엔티티를 DTO로 변환
                 .toList(); // 리스트로 변환
     }
