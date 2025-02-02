@@ -18,6 +18,5 @@ public class NoticeEntity {
     private String title;       // 공지 제목
     private String date;        // 공지 날짜
     private String category;    // 공지 카테고리
-    private String fetchedDate; // 크롤링 수행 날짜
     private String link;        // 공지 링크
 }

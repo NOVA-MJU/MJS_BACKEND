@@ -19,7 +19,7 @@ public enum ErrorCode {
     INVALID_S3_URL(HttpStatus.BAD_REQUEST, "INVALID_S3_URL", "[MJS] 유효하지 않은 S3 Url입니다."),
 
     // 공지사항 에러 관련 추가 코드
-    NOT_FOUND(HttpStatus.NOT_FOUND, "NOT_FOUND", "[MJS] 해당 조건의 공지사항을 찾을 수 없습니다."),
+    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTICE_NOT_FOUND", "[MJS] 해당 조건의 공지사항을 찾을 수 없습니다."),
 
     // 자유 게시판 관련 에러(C)
     COMMUNITY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMUNITY_NOT_FOUND", "[MJS] 요청한 게시판을 찾을 수 없습니다."),

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nova.mjs.notice.dto.NoticeResponseDto;
 import nova.mjs.util.exception.BusinessBaseException;
 import nova.mjs.util.exception.ErrorCode;
@@ -16,6 +17,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NoticeCrawlingService {
@@ -37,7 +39,7 @@ public class NoticeCrawlingService {
         // URL을 가져옴. 존재하지 않으면 예외 발생.
         String url = NOTICE_URLS.get(type);
         if (url == null) {
-            throw new BusinessBaseException("잘못된 공지 타입입니다: " + type, ErrorCode.INVALID_PARAM_REQUEST);
+            throw new IllegalArgumentException("잘못된 공지 타입입니다: " + type);
         }
 
         int cutoffYear = LocalDate.now().getYear() - 2;
@@ -50,8 +52,9 @@ public class NoticeCrawlingService {
 
             while (!stop) {
                 String fullUrl = BASE_URL + url + "?page=" + page;
-                System.out.println("Requesting URL: " + fullUrl); // 디버깅용 URL 출력
+                log.info("Requesting URL: {}", fullUrl); // SLF4J로 대체
 
+                // Jsoup을 통한 HTTP 요청 및 파싱
                 Document doc = Jsoup.connect(fullUrl).get();
                 Elements rows = doc.select("tr");
 
@@ -71,7 +74,7 @@ public class NoticeCrawlingService {
                         break;
                     }
 
-                    notices.add(new NoticeResponseDto(title, dateText, type, currentDateString, link));
+                    notices.add(new NoticeResponseDto(title, dateText, type, link));
                 }
 
                 if (rows.isEmpty() || stop) {
@@ -80,8 +83,12 @@ public class NoticeCrawlingService {
                     page++;
                 }
             }
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid argument error during crawling: {}", e.getMessage());
+            throw e; // GlobalExceptionHandler에서 처리
         } catch (Exception e) {
-            throw new BusinessBaseException("공지사항 크롤링 중 오류 발생: " + e.getMessage(), ErrorCode.INTERNAL_SERVER_ERROR);
+            log.error("Unexpected error during crawling: {}", e.getMessage());
+            throw new RuntimeException("크롤링 중 알 수 없는 오류가 발생했습니다.", e); // GlobalExceptionHandler에서 처리
         }
 
         return notices;

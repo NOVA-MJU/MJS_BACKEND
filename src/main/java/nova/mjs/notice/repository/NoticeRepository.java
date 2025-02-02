@@ -12,7 +12,7 @@ import java.util.List;
 
 @Repository
 public interface NoticeRepository extends JpaRepository<NoticeEntity, Long> {
-    @Query("SELECT new nova.mjs.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.fetchedDate, n.link) " +
+    @Query("SELECT new nova.mjs.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link) " +
             "FROM NoticeEntity n " +
             "WHERE n.category = :category AND (:year IS NULL OR n.date LIKE CONCAT(:year, '%'))")
     List<NoticeResponseDto> findNoticesByCategoryAndYear(
