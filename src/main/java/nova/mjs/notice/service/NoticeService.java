@@ -1,18 +1,18 @@
 package nova.mjs.notice.service;
 
 import java.util.List;
-
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import nova.mjs.notice.dto.NoticeResponseDto;
 import nova.mjs.notice.repository.NoticeRepository;
-import nova.mjs.util.exception.BusinessBaseException;
-import nova.mjs.util.exception.ErrorCode;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import nova.mjs.notice.exception.NoticeNotFoundExcetion;
+import org.springframework.transaction.annotation.Transactional;
+
+
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class NoticeService {
 
     private final NoticeRepository noticeRepository;

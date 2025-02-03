@@ -8,20 +8,26 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.notice.dto.NoticeResponseDto;
-import nova.mjs.util.exception.BusinessBaseException;
-import nova.mjs.util.exception.ErrorCode;
+import nova.mjs.notice.entity.Notice;
 
+import nova.mjs.notice.repository.NoticeRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import static nova.mjs.notice.dto.NoticeResponseDto.noticeEntity;
+import static nova.mjs.notice.entity.Notice.createNotice;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class NoticeCrawlingService {
 
+    private final NoticeRepository noticeRepository;
     // 공지 URL 매핑
     private static final String BASE_URL = "https://www.mju.ac.kr/";
     private static final Map<String, String> NOTICE_URLS = Map.of(
@@ -33,8 +39,11 @@ public class NoticeCrawlingService {
             "rule", "mjukr/4450/subview.do"  // 학칙개정 공지
     );
 
+    @Transactional
     public List<NoticeResponseDto> fetchNotices(String type) {
         List<NoticeResponseDto> notices = new ArrayList<>();
+        List<Notice> noticeEntities = new ArrayList<>(); // Batch Insert를 위한 리스트
+
 
         // URL을 가져옴. 존재하지 않으면 예외 발생.
         String url = NOTICE_URLS.get(type);
@@ -74,14 +83,22 @@ public class NoticeCrawlingService {
                         break;
                     }
 
-                    notices.add(new NoticeResponseDto(title, dateText, type, link));
+                    Notice notice = createNotice(title, dateText, type, link);
+                    noticeEntities.add(notice); // Entity 리스트에 추가
+                    notices.add(NoticeResponseDto.noticeEntity(notice)); // Response DTO 리스트에 추가
                 }
+                noticeRepository.saveAll(noticeEntities);
 
                 if (rows.isEmpty() || stop) {
                     break;
                 } else {
                     page++;
                 }
+            }
+            // 반복문이 끝난 후 한 번에 저장
+            if (!noticeEntities.isEmpty()) {
+                noticeRepository.saveAll(noticeEntities);
+                log.info("총 {}개의 공지를 저장했습니다.", noticeEntities.size());
             }
         } catch (IllegalArgumentException e) {
             log.error("Invalid argument error during crawling: {}", e.getMessage());
