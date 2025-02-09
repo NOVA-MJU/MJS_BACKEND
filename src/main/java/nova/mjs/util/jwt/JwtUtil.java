@@ -44,7 +44,7 @@ public class JwtUtil {
                 .compact(); //최종적으로 토큰 생성 -> jwt를 문자열로 반환하여 헤더에 포함되도록 함 - 문자열로 직렬화
     }
 
-    /** 🔹 JWT Refresh Token 생성 */
+    /** JWT Refresh Token 생성 */
     public String generateRefreshToken(String userId) {
         return Jwts.builder()
                 .setSubject(userId)  // 사용자 ID
@@ -56,42 +56,18 @@ public class JwtUtil {
                 .compact();
     }
 
-    /** ✅ JWT를 쿠키에 저장하는 메서드 */
-    public void addJwtToCookie(HttpServletResponse response, String token) {
-        ResponseCookie cookie = ResponseCookie.from("JWT-Token", token)
-                .httpOnly(true)   // JavaScript 접근 방지 (XSS 보호)
-                .secure(true)     // HTTPS 환경에서만 전송
-                .path("/")        // 모든 엔드포인트에서 접근 가능
-                .maxAge(60 * 60)  // 쿠키 만료 시간 (1시간)
-                .sameSite("Strict") // CSRF 보호
-                .build();
-
-        response.addHeader("Set-Cookie", cookie.toString());
-    }
-
-    /** ✅ 쿠키에서 JWT를 추출하는 메서드 */
-    public String getJwtFromCookie(HttpServletRequest request) {
-        if (request.getCookies() == null) return null;
-
-        Optional<Cookie> jwtCookie = Arrays.stream(request.getCookies())
-                .filter(cookie -> "JWT-Token".equals(cookie.getName()))
-                .findFirst();
-
-        return jwtCookie.map(Cookie::getValue).orElse(null);
-    }
-
-    /** 🔹 토큰에서 사용자 ID 추출 */
+    /** 토큰에서 사용자 ID 추출 */
     public String getUserIdFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject); //사용자의 아이디를 추출
     } //이미 아래에서 claim을 추출하는 메서드가 있으므로 필요 없을 수도 있어보임
 
-    /** 🔹 토큰에서 특정 Claim 추출 */ //필요한 부분만 추출
+    /** 토큰에서 특정 Claim 추출 */ //필요한 부분만 추출
     public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
         return claims != null ? claimsResolver.apply(claims) : null; //claim을 추출하기 위함 : claimResolver.apply(claims) -> claims.getSubject()
     }
 
-    /** 🔹 JWT 검증 및 Claim 정보 추출 */
+    /** JWT 검증 및 Claim 정보 추출 */
     private Claims getAllClaimsFromToken(String token) {
         try{
             return Jwts.parserBuilder()
@@ -104,26 +80,41 @@ public class JwtUtil {
         }
     }
 
-    /** 🔹 토큰 유효성 검증 */
+    /** 토큰 유효성 검증 */
     public boolean validateToken(String token) {
         Claims claims = getAllClaimsFromToken(token);
         return claims != null && !claims.getExpiration().before(new Date()); // 만료 여부 확인
     }
 
     
-    /** 🔹 JWT가 Refresh Token인지 확인 */
+    /** JWT가 Refresh Token인지 확인 */
     public boolean isRefreshToken(String token) {
         String type = getClaimFromToken(token, claims -> claims.get("type", String.class));
         return "RefreshToken".equals(type);
     }
 
-    /** 🔹 JWT가 만료되었는지 확인 */
+    /** JWT가 만료되었는지 확인 */
     public boolean isTokenExpired(String token) {
         Claims claims = getAllClaimsFromToken(token);
         return claims == null || claims.getExpiration().before(new Date());
     }
 
-    /** 🔹 JWT 쿠키 삭제 (로그아웃) */
+    /** Access Token 재발급 */
+    public Optional<String> reissueToken(String refreshToken) {
+        // 1. Refresh Token 유효성 검사
+        if (!validateToken(refreshToken) || !isRefreshToken(refreshToken)) {
+            return Optional.empty(); // 유효하지 않은 경우 빈 값 반환
+        }
+
+        // 2. Refresh Token에서 사용자 ID 및 역할(Role) 추출
+        String userId = getUserIdFromToken(refreshToken);
+        String role = getClaimFromToken(refreshToken, claims -> claims.get("role", String.class));
+
+        // 3. 새로운 Access Token 생성 후 반환
+        return Optional.of(generateAccessToken(userId, role));
+    }
+
+    /** JWT 쿠키 삭제 (로그아웃) */
     public void clearJwtCookie(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from("JWT-TOKEN", "")
                 .httpOnly(true)
