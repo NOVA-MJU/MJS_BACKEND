@@ -61,6 +61,15 @@ public class JwtUtil {
         return getClaimFromToken(token, Claims::getSubject); //사용자의 아이디를 추출
     } //이미 아래에서 claim을 추출하는 메서드가 있으므로 필요 없을 수도 있어보임
 
+    public String getRoleFromToken(String token) { //"role을 추출하는 메서드
+        Claims claims = getAllClaimsFromToken(token);
+        if (claims != null) {
+            Object roleClaim = claims.get("role");
+            return roleClaim != null ? roleClaim.toString() : null;
+        }
+        return null;
+    }
+
     /** 토큰에서 특정 Claim 추출 */ //필요한 부분만 추출
     public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);

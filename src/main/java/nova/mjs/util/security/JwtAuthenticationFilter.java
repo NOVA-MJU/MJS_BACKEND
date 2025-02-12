@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import nova.mjs.util.jwt.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -36,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             // 1. 요청에서 JWT 추출
-            String token = resolveToken(request);
+            String token = extractTokenFromRequest(request);
 
             // 2. 블랙리스트 체크 (추후 Redis 블랙리스트 구현과 연결)
 //            if (token != null && jwtUtil.isTokenBlacklisted(token)) {
@@ -45,12 +46,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 3. 토큰 검증 및 사용자 인증
             if (token != null && jwtUtil.validateToken(token)) {
-                authenticateUser(token);
+                Authentication authentication = authenticate(token);
+                
+                if (SecurityContextHolder.getContext().getAuthentication() == null){
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
-        } catch (SecurityException e) {
-//            log.error("보안 예외 발생: {}", e.getMessage());
-//            setErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "인증 실패: " + e.getMessage());
-//            return;
         } catch (Exception e) {
 //            log.error("예상치 못한 예외 발생: {}", e.getMessage());
 //            setErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "서버 오류 발생");
@@ -62,7 +63,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     //요청에서 JWT를 추출
-    private String resolveToken(HttpServletRequest request) {
+    private String extractTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
@@ -71,19 +72,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     //JWT를 검증하고 인증 객체를 생성하여 SecurityContext에 저장
-    private void authenticateUser(String token) {
+    private Authentication authenticate(String token) {
         String userId = jwtUtil.getUserIdFromToken(token);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(userId); // 사용자 정보 조회
+        String role = jwtUtil.getRoleFromToken(token);
+        //UserDetails userDetails = userDetailsService.loadUserByUsername(userId); // 사용자 정보 조회
 
-        //인증 객체 생성 - 사용자 권한을 SecurityContext에 설정
-        //getAuthorities() : 사용자의 권한 목록
-        //jwt에서는 password가 필요 없으므로 null 사용
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        UserPrincipal userPrincipal = new UserPrincipal(userId, role);
 
-        //spring security에 인증된 사용자 정보 저장
-        //ContextHolder는 security에서 현재 요청의 보안 컨텍스트를 저장하는 공간 - 저장되면 인증된 사용자로 간주
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
     }
 
     //HTTP 응답으로 에러 메시지를 반환하는 메서드
