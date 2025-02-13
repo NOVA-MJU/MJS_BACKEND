@@ -4,7 +4,7 @@ import nova.mjs.mypage.exception.UserNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.mypage.dto.UserProfileDto;
+import nova.mjs.mypage.dto.UserProfileDTO;
 import nova.mjs.mypage.dto.UserProfileRequest;
 import nova.mjs.mypage.entity.User;
 import nova.mjs.mypage.repository.UserRepository;
@@ -24,9 +24,9 @@ public class MyPageService {
     /**
      * 프로필 조회 트렌젝션 어노테이션이 없다
      */
-    public UserProfileDto getUserProfile() {
+    public UserProfileDTO getUserProfile() {
         User currentUser = getCurrentUser();
-        return new UserProfileDto.fromEntity(currentUser);
+        return UserProfileDTO.fromEntity(currentUser);
     }
 
     /**

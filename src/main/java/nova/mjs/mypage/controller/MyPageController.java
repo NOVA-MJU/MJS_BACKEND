@@ -2,7 +2,7 @@ package nova.mjs.mypage.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.mypage.dto.UserProfileDto;
+import nova.mjs.mypage.dto.UserProfileDTO;
 import nova.mjs.mypage.dto.UserProfileRequest;
 import nova.mjs.mypage.service.MyPageService;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +20,9 @@ public class MyPageController {
      * 프로필 조회
      */
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileDto> getUserProfile() {
+    public ResponseEntity<UserProfileDTO> getUserProfile() {
         log.info("Request received: Get user profile");
-        UserProfileDto userProfile = myPageService.getUserProfile();
+        UserProfileDTO userProfile = myPageService.getUserProfile();
         log.info("Response sent: User profile fetched successfully");
         return ResponseEntity.ok(userProfile);
     }
