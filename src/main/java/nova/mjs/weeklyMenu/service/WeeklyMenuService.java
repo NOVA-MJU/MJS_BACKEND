@@ -116,5 +116,15 @@ public class WeeklyMenuService {
                 return null; // 매핑되지 않은 값은 null 반환
         }
     }
+
+    //DB에서 전체 식단 데이터를 가져오는 메서드
+    public List<WeeklyMenuResponseDTO> getAllWeeklyMenus(){
+        List<WeeklyMenu> menus = menuRepository.findAll();
+
+        if (menus.isEmpty()){
+            throw new WeeklyMenuNotFoundException("저장된 식단 정보가 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
+        }
+        return WeeklyMenuResponseDTO.fromEntityToList(menus);
+    }
 }
 
