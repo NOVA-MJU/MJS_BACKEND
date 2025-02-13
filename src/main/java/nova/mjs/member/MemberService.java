@@ -2,7 +2,6 @@ package nova.mjs.member;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.community.DTO.CommunityBoardResponse;
 import nova.mjs.member.exception.DuplicateEmailException;
 import nova.mjs.member.exception.MemberNotFoundException;
 import nova.mjs.member.exception.PasswordIsInvalidException;
