@@ -22,6 +22,8 @@ public class WeeklyMenuResponseDTO {
                 .meals(weeklyMenu.getMeals())
                 .build();
     }
+
+    // 엔티티를 DTO로 변환
     public static List<WeeklyMenuResponseDTO> fromEntityToList(List<WeeklyMenu> weeklyMenu) {
         return weeklyMenu.stream()
                 .map(WeeklyMenuResponseDTO::fromEntity) // 각 엔티티를 DTO로 변환
