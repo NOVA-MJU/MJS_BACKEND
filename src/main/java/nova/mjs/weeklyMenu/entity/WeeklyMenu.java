@@ -18,7 +18,6 @@ import java.util.List;
 public class WeeklyMenu extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "menu_id")
     private long id;
 
     private String date; // 날짜 정보
@@ -28,17 +27,15 @@ public class WeeklyMenu extends BaseEntity {
     private MenuCategory menuCategory;
 
     @ElementCollection
-    @CollectionTable(name = "meal_details", joinColumns = @JoinColumn(name = "menu_id"))
-    @Column(name = "menu_content")
-    @Builder.Default //new를 하지 않으면, 위에서 annotation 오류가 발생함
+    @CollectionTable(name = "meal_details", joinColumns = @JoinColumn(name = "id"))
     private List<String> meals = new ArrayList<>(); // 메뉴
 
     public static WeeklyMenu create(String date, MenuCategory menuCategory, List<String> meals) {
-        WeeklyMenu menu = WeeklyMenu.builder()
-                .date(date) //id는 안 하는 이유? 자동생성 되잖아 바보야
+        return WeeklyMenu.builder()
+                .date(date)
                 .menuCategory(menuCategory)
-                .meals(meals != null ? meals : new ArrayList<>())
+                .meals(meals)
                 .build();
-        return menu;
     }
+
 }
