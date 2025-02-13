@@ -16,6 +16,7 @@ public enum ErrorCode {
 
     // 요청 에러 (R)
     INVALID_PARAM_REQUEST(HttpStatus.BAD_REQUEST, "INVALID_PARAM_REQUEST", "[MJS] 요청된 파람 값이 잘못되었습니다."),
+    INVALID_REQUEST(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "[MJS] 요청된 값이 잘못되었습니다."),
     OFFSET_IS_LESS_THEN_ONE(HttpStatus.BAD_REQUEST, "OFFSET_IS_LESS_THEN_ONE", "[MJS] offset은 1부터 시작합니다."),
     LIMIT_IS_LESS_THEN_ONE(HttpStatus.BAD_REQUEST, "LIMIT_IS_LESS_THEN_ONE", "[MJS] limit은 1부터 시작합니다."),
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "[MJS] 잘못된 입력입니다."),
@@ -25,7 +26,12 @@ public enum ErrorCode {
     COMMUNITY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMUNITY_NOT_FOUND", "[MJS] 요청한 게시판을 찾을 수 없습니다."),
 
     WEEKLYMENU_NOT_FOUND(HttpStatus.NOT_FOUND, "WEEKLYMENU_NOT_FOUND", "[MJS] 식단 내용을 찾을 수 없습니다."),
-    ;
+
+    // 회원 에러(M)
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND,"MEMBER_NOT_FOUND" ,"[MJS] 회원 정보를 찾을 수 없습니다." ),
+    PASSWORD_IS_INVALID(HttpStatus.BAD_REQUEST, "PASSWORD_IS_INVALID", "[MJS] 비밀번호가 잘못되었습니다" ),
+    SAME_PASSWORD_NOT_ALLOWED(HttpStatus.BAD_REQUEST,"SAME_PASSWORD_NOT_ALLOWED" , "[MJS] 이전과 동일한 비밀번호로는 변경할 수 없습니다."),
+    DUPLICATE_EMAIL_EXCEPTION(HttpStatus.BAD_REQUEST,"DUPLICATE_EMAIL_EXCEPTION", "[MJS] 이미 존재하는 이메일입니다." );
 
 
     private final HttpStatus status;
