@@ -661,7 +661,7 @@
       }
     },
     "/notice": {
-      "post": {
+      "get": {
         "tags": [
           "notice"
         ],
@@ -674,7 +674,9 @@
             "description": "공지사항 카테고리(일반, 학사, 장학/학자금, 진로/취업/창업, 학생활동, 학칙개정)",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": ["general", "academic", "scholarship", "career", "activity", "rule"],
+              "example": "general"
             }
           },
           {
@@ -722,30 +724,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "example": 1
-                          },
-                          "title": {
-                            "type": "string",
-                            "example": "[명지통합치료연구센터] 2025-1학기 돌봄 근로장학생 모집 안내"
-                          },
-                          "url": {
-                            "type": "string",
-                            "example": "https://www.mju.ac.kr/mjukr/255/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGbWp1a3IlMkYxNDElMkYyMTc0ODMlMkZhcnRjbFZpZXcuZG8lM0ZwYWdlJTNEMSUyNnNyY2hDb2x1bW4lM0QlMjZzcmNoV3JkJTNEJTI2YmJzQ2xTZXElM0QlMjZiYnNPcGVuV3JkU2VxJTNEJTI2cmdzQmduZGVTdHIlM0QlMjZyZ3NFbmRkZVN0ciUzRCUyNmlzVmlld01pbmUlM0RmYWxzZSUyNmlzVmlldyUzRHRydWUlMjZwYXNzd29yZCUzRCUyNg%3D%3D"
-                          },
-                          "created_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "example": "2024.12.20"
-                          },
-                          "category": {
-                            "type": "string",
-                            "example": "일반"
-                          }
-                        }
+                        "$ref": "#/components/schemas/NoticeResponseDto"
                       }
                     },
                     "pageInfo": {
@@ -837,30 +816,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "example": 1
-                    },
-                    "title": {
-                      "type": "string",
-                      "example": "[명지통합치료연구센터] 2025-1학기 돌봄 근로장학생 모집 안내"
-                    },
-                    "url": {
-                      "type": "string",
-                      "example": "https://www.mju.ac.kr/mjukr/255/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGbWp1a3IlMkYxNDElMkYyMTc0ODMlMkZhcnRjbFZpZXcuZG8lM0ZwYWdlJTNEMSUyNnNyY2hDb2x1bW4lM0QlMjZzcmNoV3JkJTNEJTI2YmJzQ2xTZXElM0QlMjZiYnNPcGVuV3JkU2VxJTNEJTI2cmdzQmduZGVTdHIlM0QlMjZyZ3NFbmRkZVN0ciUzRCUyNmlzVmlld01pbmUlM0RmYWxzZSUyNmlzVmlldyUzRHRydWUlMjZwYXNzd29yZCUzRCUyNg%3D%3D"
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "example": "2024.12.20"
-                    },
-                    "category": {
-                      "type": "string",
-                      "example": "일반"
-                    }
-                  }
+                  "$ref": "#/components/schemas/NoticeResponseDto"
                 }
               }
             }
@@ -1361,6 +1317,32 @@
         "properties": {
           "accessToken": {
             "type": "string"
+          }
+        }
+      },
+      "NoticeResponseDto": {
+        "example": "succese",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example" : "[명지통합치료연구센터] 2025-1학기 돌봄 근로장학생 모집 안내"
+          },
+          "date": {
+            "type" : "string",
+            "example": "2024-12-20"
+          },
+          "category": {
+            "type": "string",
+            "example" : "일반"
+          },
+          "link": {
+            "type" : "string",
+            "example" : "https://www.mju.ac.kr/bbs/mjukr/141/218279/artclView.do"
           }
         }
       }
