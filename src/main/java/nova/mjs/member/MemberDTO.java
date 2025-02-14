@@ -41,6 +41,14 @@ public class MemberDTO {
                 .build();
     }
 
+    //로그인 응답을 위한 DTO 변환(JWT 포함)
+    public static LoginResponseDTO fromEntityForLogin(Member member, String token) {
+        return LoginResponseDTO.builder()
+                .token(token)
+                .member(fromEntity(member))
+                .build();
+    }
+
     /**
      * 회원가입 요청을 위한 DTO (내부 클래스)
      */
@@ -68,5 +76,25 @@ public class MemberDTO {
     public static class PasswordRequestDTO {
         private String password;
         private String newPassword;
+    }
+
+    //로그인 요청 DTO
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class LoginRequestDTO {
+        private String email;
+        private String password;
+    }
+
+    //로그인 응답 DTO
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class LoginResponseDTO {
+        private String token;
+        private MemberDTO member;
     }
 }

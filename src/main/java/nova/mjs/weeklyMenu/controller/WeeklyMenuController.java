@@ -17,7 +17,7 @@ public class WeeklyMenuController {
 
     private final WeeklyMenuService menuService;
 
-    @GetMapping("/weeklymenu/crawling")
+    @PostMapping("/weeklymenu/crawling")
     public ResponseEntity<ApiResponse<List<WeeklyMenuResponseDTO>>> crawlMenu() {
         List<WeeklyMenuResponseDTO> menu = menuService.crawlWeeklyMenu();
         return ResponseEntity

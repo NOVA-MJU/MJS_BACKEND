@@ -97,5 +97,24 @@ public class MemberService {
         memberRepository.delete(member);
         log.info("회원 삭제 - UUID: {}", userUUID);
     }
+
+//    public LoginResponseDTO login(LoginRequestDTO request) {
+//        // 이메일로 사용자 조회
+//        Member member = memberRepository.findByEmail(request.getEmail())
+//                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+//
+//        // 비밀번호 검증
+//        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+//            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
+//        }
+//
+//        // JWT 토큰 생성
+//        String token = jwtUtil.generateAccessToken(member.getUuid().toString(), "ROLE_USER");
+//
+//        return LoginResponseDTO.builder()
+//                .email(member.getEmail())
+//                .token(token)
+//                .build();
+//    }
 }
 

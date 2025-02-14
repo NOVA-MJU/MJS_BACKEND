@@ -34,7 +34,7 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity, AuthenticationManager authenticationManager, JwtUtil jwtUtil) throws Exception {
@@ -57,7 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/**").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService),
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, customUserDetailsService),
                         UsernamePasswordAuthenticationFilter.class);
 
 

@@ -2,7 +2,7 @@ package nova.mjs.util.security;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.util.entity.User;
+import nova.mjs.member.Member;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,17 +27,6 @@ public class UserPrincipal implements UserDetails {
         this.email = null;
         this.password = null;
     }
-
-    //User 엔티티를 기반으로 UserPrincipal 생성
-//    public static UserPrincipal fromEntity(User user) {
-//        return new UserPrincipal(
-//                user.getUserId(),
-//                user.getPassword(),
-//                user.getEmail(),
-//                user.getFullName(),
-//                user.getRole()
-//        );
-//    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
