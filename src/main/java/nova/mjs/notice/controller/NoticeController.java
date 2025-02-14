@@ -5,6 +5,7 @@ import nova.mjs.notice.service.NoticeCrawlingService;
 import nova.mjs.notice.service.NoticeService;
 import nova.mjs.notice.dto.NoticeResponseDto;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,7 +18,7 @@ public class NoticeController {
     private final NoticeService noticeService;
 
     // 공지사항 크롤링 가져오기
-    @GetMapping("/api/v1/notice/crawl")
+    @PostMapping ("/api/v1/notice/crawl")
     public List<NoticeResponseDto> fetchNotices(
             @RequestParam("type") String type) { // 공지 종류
         return noticeCrawlingServiceService.fetchNotices(type);
