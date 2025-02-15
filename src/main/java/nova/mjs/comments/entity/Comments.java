@@ -27,8 +27,8 @@ public class Comments extends BaseEntity {
     private long id; // 댓글 id
 
     @ManyToOne
-    @JoinColumn(name = "uuid", nullable = false)
-    private Member member; // 작성자의 nickname, uuid
+    @JoinColumn(name = "id", nullable = false)
+    private Member member; // 작성자의 nickname, id
 
     @Column(nullable = false)
     private String content; // 내용
