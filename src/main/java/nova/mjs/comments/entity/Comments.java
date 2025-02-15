@@ -28,11 +28,7 @@ public class Comments extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "uuid", nullable = false)
-    private Member uuid; // 작성자 아이디
-
-    @ManyToOne
-    @JoinColumn(name = "nickname", nullable = false)
-    private Member nickname; // 작성자 닉네임
+    private Member member; // 작성자의 nickname, uuid
 
     @Column(nullable = false)
     private String content; // 내용
@@ -47,7 +43,7 @@ public class Comments extends BaseEntity {
 
     public static Comments create(Member nickname, String content, int likes) {
         return Comments.builder()
-                .nickname(nickname)
+                .member(nickname)
                 .content(content)
                 .likes(likes)
                 .build();
