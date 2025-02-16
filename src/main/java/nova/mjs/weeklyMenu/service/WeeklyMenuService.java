@@ -89,13 +89,16 @@ public class WeeklyMenuService {
                 }
             }
 
-            menuRepository.saveAll(weeklyMenus);
             //save() : 영속성 컨텍스트의 cache에 먼저 저장 -> 나중에 flush()
             //vs. saveAndFlush() : 즉시 db에 반영
-            log.info("Successfully saved {} meals", weeklyMenus.size());
+            if (!weeklyMenus.isEmpty()){
+                deleteAllWeeklyMenus();
+                log.info("기존 식단 데이터를 삭제했습니다.");
 
-            if (weeklyMenus.isEmpty()){
-                throw new WeeklyMenuNotFoundException("크롤링된 데이터가 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
+                menuRepository.saveAll(weeklyMenus);
+                log.info("새로운 식단 데이터를 저장했습니다. 총 {} 개의 메뉴", weeklyMenus.size());
+            } else{
+                log.warn("크롤링된 데이터가 없어 기존 데이터를 삭제하지 않았습니다.");
             }
 
         } catch (Exception e) {
@@ -115,6 +118,22 @@ public class WeeklyMenuService {
             default:
                 return null; // 매핑되지 않은 값은 null 반환
         }
+    }
+
+    //식단을 크롤링했을 때 중복 발생을 고려한 식단 데이터 삭제하는 메서드
+    @Transactional
+    public void deleteAllWeeklyMenus(){
+        menuRepository.deleteAll();
+    }
+
+    //DB에서 전체 식단 데이터를 가져오는 메서드
+    public List<WeeklyMenuResponseDTO> getAllWeeklyMenus(){
+        List<WeeklyMenu> menus = menuRepository.findAll();
+
+        if (menus.isEmpty()){
+            throw new WeeklyMenuNotFoundException("저장된 식단 정보가 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
+        }
+        return WeeklyMenuResponseDTO.fromEntityToList(menus);
     }
 }
 

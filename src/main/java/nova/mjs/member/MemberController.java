@@ -73,5 +73,6 @@ public class MemberController {
         memberService.deleteMember(userUUID, password);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
 }
 
