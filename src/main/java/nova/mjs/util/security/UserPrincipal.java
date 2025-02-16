@@ -9,23 +9,42 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 @Getter
 @RequiredArgsConstructor
 public class UserPrincipal implements UserDetails {
 
-    private final String userId;
-    private final String password;
+    private final UUID uuid;
     private final String email;
+    private final String password;
     private final String fullName;
     private final String role;
 
-    public UserPrincipal(String userId, String role) {
-        this.userId = userId;
+    public UserPrincipal(String email, UUID uuid, String password, String fullName, String role) {
+        this.email = email;
+        this.uuid = uuid;
+        this.password = password;
+        this.fullName = fullName;
         this.role = role;
-        this.fullName = null;
-        this.email = null;
+    }
+
+    public UserPrincipal(String email, String role) {
+        this.email = email;
+        this.role = role;
+        this.uuid = null;
         this.password = null;
+        this.fullName = null;
+    }
+
+    public static UserPrincipal fromMember(Member member){
+        return new UserPrincipal(
+                member.getEmail(),
+                member.getUuid(),
+                member.getPassword(),
+                member.getName(),
+                "ROLE_USER"
+        );
     }
 
     @Override
@@ -35,7 +54,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public String getUsername() {
-        return userId;
+        return email;
     }
 
     @Override

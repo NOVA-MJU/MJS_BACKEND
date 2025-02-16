@@ -36,6 +36,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
+
+            log.info("JWT filter 실행 - 요청 URL: {}", request.getRequestURI());
+
+            if (request.getRequestURI().equals("/api/v1/auth/login")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
             // 1. 요청에서 JWT 추출
             String token = extractTokenFromRequest(request);
 
@@ -45,15 +52,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 //            }
 
             // 3. 토큰 검증 및 사용자 인증
-            if (token != null && jwtUtil.validateToken(token)) {
-                Authentication authentication = authenticate(token);
-                
-                if (SecurityContextHolder.getContext().getAuthentication() == null){
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (token == null){
+                log.warn("JWT 토큰이 없음. 인증 없이 진행");
+            } else{
+                log.info("받은 JWT 토큰 : {}", token);
+                if (jwtUtil.validateToken(token)) {
+                    Authentication authentication = authenticate(token);
+
+                    // 3. SecurityContext에 저장
+                    if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        log.info("JWT 인증 성공 - 사용자: {}", authentication.getName());
+                    } else {
+                        log.warn("SecurityContext에 이미 인증 정보가 존재함");
+                    }
+                } else {
+                    log.error("JWT 검증 실패! 잘못된 토큰");
                 }
             }
         } catch (Exception e) {
-//            log.error("예상치 못한 예외 발생: {}", e.getMessage());
+              log.error("예외 발생: {}", e.getMessage());
 //            setErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "서버 오류 발생");
 //            return;
         }
@@ -73,11 +91,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     //JWT를 검증하고 인증 객체를 생성하여 SecurityContext에 저장
     private Authentication authenticate(String token) {
-        String userId = jwtUtil.getUserIdFromToken(token);
+        String email = jwtUtil.getEmailFromToken(token);
         String role = jwtUtil.getRoleFromToken(token);
-        //UserDetails userDetails = userDetailsService.loadUserByUsername(userId); // 사용자 정보 조회
 
-        UserPrincipal userPrincipal = new UserPrincipal(userId, role);
+        UserPrincipal userPrincipal = new UserPrincipal(email, role);
 
         return new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
     }

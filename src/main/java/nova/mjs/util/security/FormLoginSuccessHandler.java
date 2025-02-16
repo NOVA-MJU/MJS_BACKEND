@@ -36,21 +36,30 @@ public class FormLoginSuccessHandler implements AuthenticationSuccessHandler {//
         log.info("로그인 성공 {}", authentication.getName());
 
         //인증된 사용자 정보 가져오기
-        String email = authentication.getName(); //SecurityContext에서 username(email) 가져오기
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        String email = principal.getEmail(); //SecurityContext에서 username(email) 가져오기
+        //String email = authentication.getName(); 이것도 맞을 수 있음. principal에서 getUserName을 email로 반환하기 때문
+
 
         //JWT 생성
         String accessToken = jwtUtil.generateAccessToken(email, "ROLE_USER");
+        String refreshToken = jwtUtil.generateRefreshToken(email);
+
+        log.info("발급된 Access Token: {}", accessToken);
+        log.info("발급된 Refresh Token: {}", refreshToken);
 
         //응답 json 생성 - 데이터 준비
         Map<String, Object> responseData = new HashMap<>();
-        responseData.put("email", email);
         responseData.put("accessToken", accessToken);
-        responseData.put("message", "로그인 성공");
+        responseData.put("refreshToken", refreshToken);
+
+        // 실제 응답이 정상적으로 반환되는지 확인
+        log.info("로그인 응답 데이터: {}", responseData);
 
         //json 응답 설정
         response.setContentType("application/json"); //response가 json 형식임을 명시
         response.getWriter().write(objectMapper.writeValueAsString(responseData)); //Map 객체를 json 문자열로 변환 후 응답
 
-        log.info("발급된 JWT : {}", accessToken);
+        log.info("JWT 응답 전송 완료");
     }
 }
