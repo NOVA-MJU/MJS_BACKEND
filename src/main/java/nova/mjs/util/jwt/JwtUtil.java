@@ -32,9 +32,9 @@ public class JwtUtil {
     }
 
     // JWT Access Token 생성 */
-    public String generateAccessToken(String userId, String role) {
+    public String generateAccessToken(String email, String role) {
         return Jwts.builder()
-                .setSubject(userId)  // 사용자 ID
+                .setSubject(email)  // 사용자 ID
                 .claim("role", role)  // 사용자 역할
                 .setIssuedAt(new Date())  // 발행 시간
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))  // 만료 시간 - 밀리세컨드
@@ -44,10 +44,10 @@ public class JwtUtil {
                 .compact(); //최종적으로 토큰 생성 -> jwt를 문자열로 반환하여 헤더에 포함되도록 함 - 문자열로 직렬화
     }
 
-    /** JWT Refresh Token 생성 */
-    public String generateRefreshToken(String userId) {
+    //JWT Refresh Token 생성
+    public String generateRefreshToken(String email) {
         return Jwts.builder()
-                .setSubject(userId)  // 사용자 ID
+                .setSubject(email)  // 사용자 ID
                 .setId(UUID.randomUUID().toString())  // JWT 고유 식별자 (JTI) - 블랙리스트 관리 가능
                 .setIssuedAt(new Date())  // 발행 시간
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))  // 만료 시간
@@ -56,9 +56,9 @@ public class JwtUtil {
                 .compact();
     }
 
-    /** 토큰에서 사용자 ID 추출 */
-    public String getUserIdFromToken(String token) {
-        return getClaimFromToken(token, Claims::getSubject); //사용자의 아이디를 추출
+    // 토큰에서 사용자 ID 추출
+    public String getEmailFromToken(String token){
+        return getClaimFromToken(token, Claims::getSubject);
     } //이미 아래에서 claim을 추출하는 메서드가 있으므로 필요 없을 수도 있어보임
 
     public String getRoleFromToken(String token) { //"role을 추출하는 메서드
@@ -96,19 +96,19 @@ public class JwtUtil {
     }
 
     
-    /** JWT가 Refresh Token인지 확인 */
+    // JWT가 Refresh Token인지 확인
     public boolean isRefreshToken(String token) {
         String type = getClaimFromToken(token, claims -> claims.get("type", String.class));
         return "RefreshToken".equals(type);
     }
 
-    /** JWT가 만료되었는지 확인 */
+    // JWT가 만료되었는지 확인
     public boolean isTokenExpired(String token) {
         Claims claims = getAllClaimsFromToken(token);
         return claims == null || claims.getExpiration().before(new Date());
     }
 
-    /** Access Token 재발급 */
+    // Access Token 재발급
     public Optional<String> reissueToken(String refreshToken) {
         // 1. Refresh Token 유효성 검사
         if (!validateToken(refreshToken) || !isRefreshToken(refreshToken)) {
@@ -116,11 +116,11 @@ public class JwtUtil {
         }
 
         // 2. Refresh Token에서 사용자 ID 및 역할(Role) 추출
-        String userId = getUserIdFromToken(refreshToken);
+        String email = getEmailFromToken(refreshToken);
         String role = getClaimFromToken(refreshToken, claims -> claims.get("role", String.class));
 
         // 3. 새로운 Access Token 생성 후 반환
-        return Optional.of(generateAccessToken(userId, role));
+        return Optional.of(generateAccessToken(email, role));
     }
 
     /** JWT 쿠키 삭제 (로그아웃) */
