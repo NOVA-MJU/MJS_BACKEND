@@ -593,40 +593,48 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "date": {
-                        "type": "string",
-                        "example": "12.30 ( 월 )"
-                      },
-                      "meals": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
                         "type": "object",
                         "properties": {
-                          "조식": {
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "example": "등록된 식단 내용이 없습니다."
-                            }
+                          "date": {
+                            "type": "string",
+                            "example": "02.10 ( 월 )"
                           },
-                          "중식": {
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "example": "장칼국수, 추가밥, 새우튀김&김말이, 햄야채볶음, 치커리오리엔탈무침, 깍두기, 새우칩"
-                            }
+                          "menuCategory": {
+                            "type": "string",
+                            "enum": ["BREAKFAST", "LUNCH", "DINNER"],
+                            "example": "LUNCH"
                           },
-                          "석식": {
+                          "meals": {
                             "type": "array",
                             "items": {
-                              "type": "string",
-                              "example": "등록된 식단 내용이 없습니다."
-                            }
+                              "type": "string"
+                            },
+                            "example": [
+                              "사골떡국",
+                              "쌀밥",
+                              "생선가스&칠리소스",
+                              "두부양념조림",
+                              "해초샐러드",
+                              "깍두기",
+                              "따뜻한 유자차"
+                            ]
                           }
                         }
                       }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-02-09T18:36:48.4756431"
                     }
                   }
                 }
@@ -817,6 +825,30 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NoticeResponseDto"
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "[명지통합치료연구센터] 2025-1학기 돌봄 근로장학생 모집 안내"
+                    },
+                    "url": {
+                      "type": "string",
+                      "example": "https://www.mju.ac.kr/mjukr/255/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGbWp1a3IlMkYxNDElMkYyMTc0ODMlMkZhcnRjbFZpZXcuZG8lM0ZwYWdlJTNEMSUyNnNyY2hDb2x1bW4lM0QlMjZzcmNoV3JkJTNEJTI2YmJzQ2xTZXElM0QlMjZiYnNPcGVuV3JkU2VxJTNEJTI2cmdzQmduZGVTdHIlM0QlMjZyZ3NFbmRkZVN0ciUzRCUyNmlzVmlld01pbmUlM0RmYWxzZSUyNmlzVmlldyUzRHRydWUlMjZwYXNzd29yZCUzRCUyNg%3D%3D"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024.12.20"
+                    },
+                    "category": {
+                      "type": "string",
+                      "example": "일반"
+                    }
+                  }
                 }
               }
             }
@@ -835,6 +867,26 @@
                     "message": {
                       "type": "string",
                       "example": "유효하지 않은 요청입니다."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "공지사항을 찾을 수 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "fail"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "해당 공지사항을 찾을 수 없습니다"
                     }
                   }
                 }
@@ -915,6 +967,59 @@
             }
           }
         }
+      }
+    },
+    "/mypage/profile": {
+      "get": {
+        "tags": ["mypage"],
+        "summary": "프로필 조회",
+        "operationId": "getUserProfile",
+        "responses": {
+          "200": {
+            "description": "프로필 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nickname": { "type": "string", "example": "남퍼플" },
+                    "email": { "type": "string", "example": "skaqhfk00@mju.ac.kr" },
+                    "profileImage": { "type": "string", "example": "https://example.com/profile.jpg" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청 데이터",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 부족 및 접근 금지",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "status": 403,
+                  "error": "FORBIDDEN",
+                  "message": "로그인이 필요합니다."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "프로필을 찾을 수 없음",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
       },
       "patch": {
         "tags": ["mypage"],
@@ -929,6 +1034,36 @@
                 "properties": {
                   "nickname": { "type": "string", "example": "새로운 닉네임" },
                   "profileImage": { "type": "string", "example": "https://example.com/new-profile.jpg" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "프로필 수정 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "message": { "type": "string", "example": "프로필이 성공적으로 수정되었습니다." }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청 데이터",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "fail" },
+                    "message": { "type": "string", "example": "닉네임은 필수입니다." }
+                  }
                 }
               }
             }
