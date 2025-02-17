@@ -669,7 +669,7 @@
       }
     },
     "/notice": {
-      "post": {
+      "get": {
         "tags": [
           "notice"
         ],
@@ -682,7 +682,9 @@
             "description": "공지사항 카테고리(일반, 학사, 장학/학자금, 진로/취업/창업, 학생활동, 학칙개정)",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": ["general", "academic", "scholarship", "career", "activity", "rule"],
+              "example": "general"
             }
           },
           {
@@ -730,30 +732,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "example": 1
-                          },
-                          "title": {
-                            "type": "string",
-                            "example": "[명지통합치료연구센터] 2025-1학기 돌봄 근로장학생 모집 안내"
-                          },
-                          "url": {
-                            "type": "string",
-                            "example": "https://www.mju.ac.kr/mjukr/255/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGbWp1a3IlMkYxNDElMkYyMTc0ODMlMkZhcnRjbFZpZXcuZG8lM0ZwYWdlJTNEMSUyNnNyY2hDb2x1bW4lM0QlMjZzcmNoV3JkJTNEJTI2YmJzQ2xTZXElM0QlMjZiYnNPcGVuV3JkU2VxJTNEJTI2cmdzQmduZGVTdHIlM0QlMjZyZ3NFbmRkZVN0ciUzRCUyNmlzVmlld01pbmUlM0RmYWxzZSUyNmlzVmlldyUzRHRydWUlMjZwYXNzd29yZCUzRCUyNg%3D%3D"
-                          },
-                          "created_at": {
-                            "type": "string",
-                            "format": "date-time",
-                            "example": "2024.12.20"
-                          },
-                          "category": {
-                            "type": "string",
-                            "example": "일반"
-                          }
-                        }
+                        "$ref": "#/components/schemas/NoticeResponseDto"
                       }
                     },
                     "pageInfo": {
@@ -845,6 +824,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$ref": "#/components/schemas/NoticeResponseDto"
                   "type": "object",
                   "properties": {
                     "id": {
@@ -887,6 +867,26 @@
                     "message": {
                       "type": "string",
                       "example": "유효하지 않은 요청입니다."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "공지사항을 찾을 수 없음",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "fail"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "해당 공지사항을 찾을 수 없습니다"
                     }
                   }
                 }
@@ -967,6 +967,59 @@
             }
           }
         }
+      }
+    },
+    "/mypage/profile": {
+      "get": {
+        "tags": ["mypage"],
+        "summary": "프로필 조회",
+        "operationId": "getUserProfile",
+        "responses": {
+          "200": {
+            "description": "프로필 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nickname": { "type": "string", "example": "남퍼플" },
+                    "email": { "type": "string", "example": "skaqhfk00@mju.ac.kr" },
+                    "profileImage": { "type": "string", "example": "https://example.com/profile.jpg" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청 데이터",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 부족 및 접근 금지",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "status": 403,
+                  "error": "FORBIDDEN",
+                  "message": "로그인이 필요합니다."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "프로필을 찾을 수 없음",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
       },
       "patch": {
         "tags": ["mypage"],
@@ -981,6 +1034,36 @@
                 "properties": {
                   "nickname": { "type": "string", "example": "새로운 닉네임" },
                   "profileImage": { "type": "string", "example": "https://example.com/new-profile.jpg" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "프로필 수정 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "message": { "type": "string", "example": "프로필이 성공적으로 수정되었습니다." }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청 데이터",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "fail" },
+                    "message": { "type": "string", "example": "닉네임은 필수입니다." }
+                  }
                 }
               }
             }
@@ -1369,6 +1452,32 @@
         "properties": {
           "accessToken": {
             "type": "string"
+          }
+        }
+      },
+      "NoticeResponseDto": {
+        "example": "succese",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example" : "[명지통합치료연구센터] 2025-1학기 돌봄 근로장학생 모집 안내"
+          },
+          "date": {
+            "type" : "string",
+            "example": "2024-12-20"
+          },
+          "category": {
+            "type": "string",
+            "example" : "일반"
+          },
+          "link": {
+            "type" : "string",
+            "example" : "https://www.mju.ac.kr/bbs/mjukr/141/218279/artclView.do"
           }
         }
       }
