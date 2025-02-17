@@ -1,10 +1,6 @@
 package nova.mjs.comments.entity;
-
+import lombok.*;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import nova.mjs.comments.DTO.CommentsResponseDto;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.community.entity.CommunityBoard;
