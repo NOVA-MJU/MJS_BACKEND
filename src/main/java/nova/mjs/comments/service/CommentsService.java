@@ -42,8 +42,8 @@ public class CommentsService {
 
 
     // 2. GET 단일 댓글 조회
-    public CommentsResponseDto getComment(Long commentId) {
-        Comments comment = getExistingComment(commentId);
+    public CommentsResponseDto getCommentByUuid(UUID commentUuid) {
+        Comments comment = getExistingCommentByUuid(commentUuid);
         return CommentsResponseDto.fromEntity(comment);
     }
 
@@ -56,16 +56,16 @@ public class CommentsService {
         Comments comment = request.toEntity(communityBoard, member);
         Comments savedComment = commentsRepository.save(comment);
 
-        log.debug("댓글 작성 성공. ID = {}", savedComment.getId());
+        log.debug("댓글 작성 성공. UUID = {}", savedComment.getUuid());
         return CommentsResponseDto.fromEntity(savedComment);
     }
 
     // 4. DELETE 댓글 삭제
     @Transactional
-    public void deleteComment(Long commentId) {
-        Comments comment = getExistingComment(commentId);
+    public void deleteCommentByUuid(UUID commentUuid) {
+        Comments comment = getExistingCommentByUuid(commentUuid);
         commentsRepository.delete(comment);
-        log.debug("댓글 삭제 성공. ID = {}", commentId);
+        log.debug("댓글 삭제 성공. ID = {}", commentUuid);
     }
 
     // 5. 특정 게시글 존재 여부 확인
@@ -81,8 +81,8 @@ public class CommentsService {
     }
 
     // 7. 특정 댓글 존재 여부 확인
-    private Comments getExistingComment(Long commentId) {
-        return commentsRepository.findById(commentId)
-                .orElseThrow(() -> new CommentNotFoundException(commentId));
+    private Comments getExistingCommentByUuid(UUID commentUuid) {
+        return commentsRepository.findByUuid(commentUuid)
+                .orElseThrow(() -> new CommentNotFoundException(commentUuid));
     }
 }
