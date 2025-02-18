@@ -1,11 +1,15 @@
 package nova.mjs.weather;
 
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.weather.exception.WeatherAPICallException;
+import nova.mjs.weather.exception.WeatherJsonParseException;
+import nova.mjs.weather.exception.WeatherNotFoundException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -21,11 +25,11 @@ public class WeatherService {
     @Value("${weather.apikey}")
     private String apiKey;
 
-    private static final String WEATHER_API_URL = "https://api.openweathermap.org/data/3.0/onecall"
+    private static final String WEATHER_API_URL = "/data/3.0/onecall"
             + "?lat=37.5687&lon=126.9221&exclude=hourly,minutely"
             + "&appid=%s&units=metric&lang=kr";
 
-    private static final String AIR_POLLUTION_API_URL = "http://api.openweathermap.org/data/2.5/air_pollution"
+    private static final String AIR_POLLUTION_API_URL = "/data/2.5/air_pollution"
             + "?lat=37.5687&lon=126.9221&appid=%s";
 
     private static final String ICON_BASE_URL = "https://openweathermap.org/img/wn/%s@2x.png";
@@ -36,6 +40,7 @@ public class WeatherService {
     }
 
     @Scheduled(cron = "0 0 * * * ?") // 매 정각에 실행
+    @Transactional
     public void fetchAndStoreWeatherData() {
         String weatherUrl = String.format(WEATHER_API_URL, apiKey);
         String airPollutionUrl = String.format(AIR_POLLUTION_API_URL, apiKey);
@@ -48,13 +53,13 @@ public class WeatherService {
                     log.info("Weather API Response: {}", weatherResponse);
                     return webClient.get().uri(airPollutionUrl).retrieve().bodyToMono(String.class)
                             .map(airPollutionResponse -> {
-                                log.info("🌫️ Air Pollution API Response: {}", airPollutionResponse);
+                                log.info("Air Pollution API Response: {}", airPollutionResponse);
                                 return parseAndSaveWeatherData(weatherResponse, airPollutionResponse);
                             });
                 })
                 .onErrorResume(e -> {
-                    log.error("API 호출 오류: {} ", e.getMessage());
-                    return Mono.empty();
+                    log.error("API 호출 오류 발생 {}", e.getMessage(), e);
+                    return Mono.error(new WeatherAPICallException());
                 })
                 .subscribe();
     }
@@ -109,8 +114,8 @@ public class WeatherService {
 
             return weatherEntity;
         } catch (Exception e) {
-            log.error("JSON 파싱 오류: {} ", e.getMessage());
-            return null;
+            log.error("JSON 데이터 파싱 오류 발생: {}", e.getMessage(), e);
+            throw new WeatherJsonParseException();
         }
     }
 
@@ -128,8 +133,10 @@ public class WeatherService {
         return "매우 나쁨";
     }
 
+
     public Weather getStoredWeather() {
-        log.info("저장된 날씨 데이터 요청");
-        return weatherRepository.findAll().stream().findFirst().orElse(null);
+        return weatherRepository.findAll().stream()
+                .findFirst()
+                .orElseThrow(WeatherNotFoundException::new);
     }
 }
