@@ -12,6 +12,7 @@ import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.*;
 
@@ -32,6 +33,12 @@ public class WeeklyMenuService {
 
     // URL 상수 선언
     private static final String url = "https://www.mju.ac.kr/mjukr/8595/subview.do";
+
+    @Scheduled(cron = "0 0 19 * * SAT,SUN,MON") // 매주 토, 일, 월 19:00에 크롤링 (한국 시간 기준)
+    public void scheduledCrawlWeeklyMenu(){
+        log.info("[스케쥴러] 매주 토요일 19시에 식단 크롤링 실행");
+        crawlWeeklyMenu();
+    }
 
     @Transactional
     public List<WeeklyMenuResponseDTO> crawlWeeklyMenu() {
