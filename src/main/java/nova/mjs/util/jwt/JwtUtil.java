@@ -3,6 +3,7 @@ package nova.mjs.util.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,6 +18,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 @Component
+@Slf4j
 public class JwtUtil {
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
@@ -92,7 +94,16 @@ public class JwtUtil {
     /** 토큰 유효성 검증 */
     public boolean validateToken(String token) {
         Claims claims = getAllClaimsFromToken(token);
-        return claims != null && !claims.getExpiration().before(new Date()); // 만료 여부 확인
+        if (claims == null){
+            log.error("JWT 파싱 실패 : 올바른 토큰이 아닙니다.");
+            return false;
+        }
+        boolean isExpired = claims.getExpiration().before(new Date());
+
+        if (isExpired){ //만료 여부 확인
+            log.warn("JWT 토큰이 만료되었습니다.");
+        }
+        return !isExpired;
     }
 
     
@@ -121,17 +132,5 @@ public class JwtUtil {
 
         // 3. 새로운 Access Token 생성 후 반환
         return Optional.of(generateAccessToken(email, role));
-    }
-
-    /** JWT 쿠키 삭제 (로그아웃) */
-    public void clearJwtCookie(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from("JWT-TOKEN", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)  // 🔹 즉시 삭제
-                .build();
-
-        response.addHeader("Set-Cookie", cookie.toString());
     }
 }

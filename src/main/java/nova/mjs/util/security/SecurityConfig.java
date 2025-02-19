@@ -4,7 +4,9 @@ package nova.mjs.util.security;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.util.jwt.AccessTokenBlacklistRepository;
 import nova.mjs.util.jwt.JwtUtil;
+import nova.mjs.util.jwt.TokenRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -42,7 +44,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity,
                                            AuthenticationManager authenticationManager,
                                            JwtUtil jwtUtil,
-                                           FormLoginSuccessHandler successHandler) throws Exception {
+                                           FormLoginSuccessHandler successHandler,
+                                           AccessTokenBlacklistRepository accessTokenBlacklistRepository, TokenRepository tokenRepository) throws Exception {
 
         FormLoginJwtFilter formLoginJwtFilter = new FormLoginJwtFilter(authenticationManager, jwtUtil, successHandler);
         //formLoginJwtFilter.setAuthenticationManager(authenticationManager);
@@ -63,6 +66,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) //JWT 사용 -> 세션 미사용
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/**").permitAll() //이걸 로그인으로 해놔서 config가 가로채감(주의)
                         .anyRequest().authenticated()) //나머지 요청은 인증 필요
                 .addFilterAt(formLoginJwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -70,7 +74,9 @@ public class SecurityConfig {
                         .loginProcessingUrl("/api/v1/auth/login") //로그인 url 지정
                         .successHandler(new FormLoginSuccessHandler(jwtUtil)) //로그인 성공 핸들러
                         .permitAll()) //로그인 실패 핸들러는 없어도 무방 -> 내부적으로 실패 로직으로 401을 뱈음
-                .addFilterAfter(new JwtAuthenticationFilter(jwtUtil, customUserDetailsService),
+                .addFilterAfter(new JwtAuthenticationFilter(jwtUtil, customUserDetailsService, accessTokenBlacklistRepository),
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new LogoutFilter(jwtUtil, tokenRepository, accessTokenBlacklistRepository),
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
