@@ -37,7 +37,7 @@ public class CommunityBoard extends BaseEntity {
     private String title; // 게시판 제목
 
     @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String content; // 내용
 
 //    @Embedded
