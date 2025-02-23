@@ -41,7 +41,7 @@ public class DataInitializer {
         } else {
             log.info("Member 데이터가 이미 존재함. 추가하지 않음.");
         }
-        // 2️⃣ CommunityBoard 더미 데이터 추가
+        // CommunityBoard 더미 데이터 추가
         CommunityBoard board = communityBoardRepository.findAll().stream().findFirst().orElse(null);
         if (board == null) {
             board = CommunityBoard.create(
@@ -57,7 +57,7 @@ public class DataInitializer {
             log.info("CommunityBoard 데이터가 이미 존재하여 추가하지 않음.");
         }
 
-        // 3️⃣ Comments 더미 데이터 추가
+        // Comments 더미 데이터 추가
         if (commentsRepository.count() == 0) {
             Comments comment = Comments.create(board, member, "테스트 댓글이야");
             commentsRepository.save(comment);
