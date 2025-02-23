@@ -1,5 +1,6 @@
 package nova.mjs.comments.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.*;
 import lombok.extern.log4j.Log4j2;
 import nova.mjs.comments.DTO.CommentsResponseDto;
@@ -7,6 +8,7 @@ import nova.mjs.comments.entity.Comments;
 import nova.mjs.comments.exception.CommentNotFoundException;
 import nova.mjs.comments.repository.CommentsRepository;
 import nova.mjs.community.entity.CommunityBoard;
+import nova.mjs.community.entity.enumList.CommunityCategory;
 import nova.mjs.community.repository.CommunityBoardRepository;
 import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
@@ -33,34 +35,29 @@ public class CommentsService {
     private final MemberRepository memberRepository;
     private final CommunityBoardRepository communityBoardRepository;
 
+
+
     // 1. GEt 댓글 목록 (게시글 ID 기반)
-    public Page<CommentsResponseDto> getCommentsByBoard(UUID communityBoardUuid, Pageable pageable) {
+    public Page<CommentsResponseDto.CommentSummaryDto> getCommentsByBoard(UUID communityBoardUuid, Pageable pageable) {
         CommunityBoard board = getExistingBoard(communityBoardUuid);
         return commentsRepository.findByCommunityBoard(board, pageable)
-                .map(CommentsResponseDto::fromEntity);
+                .map(CommentsResponseDto.CommentSummaryDto::fromEntity);
     }
 
-
-    // 2. GET 단일 댓글 조회
-    public CommentsResponseDto getCommentByUuid(UUID commentUuid) {
-        Comments comment = getExistingCommentByUuid(commentUuid);
-        return CommentsResponseDto.fromEntity(comment);
-    }
-
-    // 3. POST 댓글 작성
+    // 2. POST 댓글 작성
     @Transactional
-    public CommentsResponseDto createComment(UUID communityBoardUuid, CommentsResponseDto request, UUID memberUuid) {
+    public CommentsResponseDto.CommentSummaryDto createComment(UUID communityBoardUuid, String content, UUID memberUuid) {
         Member member = getExistingMember(memberUuid);
         CommunityBoard communityBoard = getExistingBoard(communityBoardUuid);
 
-        Comments comment = request.toEntity(communityBoard, member);
+        Comments comment = Comments.create(communityBoard, member,content);
         Comments savedComment = commentsRepository.save(comment);
 
         log.debug("댓글 작성 성공. UUID = {}", savedComment.getUuid());
-        return CommentsResponseDto.fromEntity(savedComment);
+        return CommentsResponseDto.CommentSummaryDto.fromEntity(savedComment);
     }
 
-    // 4. DELETE 댓글 삭제
+    // 3. DELETE 댓글 삭제
     @Transactional
     public void deleteCommentByUuid(UUID commentUuid) {
         Comments comment = getExistingCommentByUuid(commentUuid);
@@ -68,19 +65,19 @@ public class CommentsService {
         log.debug("댓글 삭제 성공. ID = {}", commentUuid);
     }
 
-    // 5. 특정 게시글 존재 여부 확인
+    // 4. 특정 게시글 존재 여부 확인
     private CommunityBoard getExistingBoard(UUID uuid) {
         return communityBoardRepository.findByUuid(uuid)
                 .orElseThrow(CommunityNotFoundException::new);
     }
 
-    // 6. 특정 회원 존재 여부 확인
+    // 5. 특정 회원 존재 여부 확인
     private Member getExistingMember(UUID uuid) {
         return memberRepository.findByUuid(uuid)
                 .orElseThrow(MemberNotFoundException::new);
     }
 
-    // 7. 특정 댓글 존재 여부 확인
+    // 6. 특정 댓글 존재 여부 확인
     private Comments getExistingCommentByUuid(UUID commentUuid) {
         return commentsRepository.findByUuid(commentUuid)
                 .orElseThrow(() -> new CommentNotFoundException(commentUuid));

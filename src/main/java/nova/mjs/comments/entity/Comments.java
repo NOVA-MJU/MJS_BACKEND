@@ -28,7 +28,7 @@ public class Comments extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "community_board_id", nullable = false)
-    private CommunityBoard community_board ; // 댓글이 속한 게시물
+    private CommunityBoard communityBoard ; // 댓글이 속한 게시물
 
     @ManyToOne
     @JoinColumn(name = "member_id", nullable = false)
@@ -40,17 +40,14 @@ public class Comments extends BaseEntity {
     @Column
     private int likes; // 좋아요 수
 
-    @Column(nullable = false)
-    private LocalDateTime createDate; // 댓글 작성 날짜
 
-
-    public static Comments create(CommunityBoard communityBoard, Member member, String content, int likes, LocalDateTime createDate) {
+    public static Comments create(CommunityBoard communityBoard, Member member, String content) {
         return Comments.builder()
-                .community_board(communityBoard)
-                .member(member) // 왜 이렇게 해? Nickname이나 id 이렇게 가져오면 안되는건가
+                .uuid(UUID.randomUUID())
+                .communityBoard(communityBoard)
+                .member(member)
                 .content(content)
-                .likes(likes)
-                .createDate(createDate)
+                .likes(0) // 기본값 설정
                 .build();
     }
 }

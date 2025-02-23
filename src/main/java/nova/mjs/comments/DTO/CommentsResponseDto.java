@@ -52,18 +52,17 @@ public class CommentsResponseDto {
     //Entity 하나 -> DTO 변환 (단일 댓글 조회)
     public static CommentsResponseDto fromEntity(Comments comment) {
         return CommentsResponseDto.builder()
-                .communityBoardUuid(comment.getCommunity_board().getUuid())
+                .communityBoardUuid(comment.getCommunityBoard().getUuid())
                 .comments(List.of(CommentSummaryDto.fromEntity(comment)))
                 .build();
     }
 
     public Comments toEntity(CommunityBoard communityBoard, Member member) {
         return Comments.builder()
-                .community_board(communityBoard)
+                .communityBoard(communityBoard)
                 .member(member)
-                .content(this.comments.get(0).getContent()) // 첫 번째 댓글 내용 가져오기
-                .likes(this.comments.get(0).getLikes()) // 첫 번째 댓글 좋아요 수 가져오기
-                .createDate(LocalDateTime.now())
+                .content(this.comments.get(0).getContent()) // 요청 받은 content 사용
+                .likes(0) // 새 댓글은 좋아요 수 0
                 .uuid(UUID.randomUUID()) // 댓글 UUID 자동 생성
                 .build();
     }
