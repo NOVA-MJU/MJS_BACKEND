@@ -18,6 +18,8 @@ public class CommunityBoardResponse {
     private int viewCount;              // 조회 수
     private Boolean published;          // 게시글 공개 여부
     private LocalDateTime publishedAt;  // 게시 시간
+    private LocalDateTime createdAt;  // 게시 시간
+    private LocalDateTime updatedAt;  // 게시 시간
 
     // 엔티티에서 DTO로 변환하는 메서드
     public static CommunityBoardResponse fromEntity(CommunityBoard entity) {
@@ -29,6 +31,8 @@ public class CommunityBoardResponse {
                 .viewCount(entity.getViewCount())
                 .published(entity.getPublished())
                 .publishedAt(entity.getPublishedAt())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 }
