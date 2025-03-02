@@ -77,9 +77,12 @@ public class CommentsService {
                 .orElseThrow(MemberNotFoundException::new);
     }
 
-    // 6. 특정 댓글 존재 여부 확인
     private Comments getExistingCommentByUuid(UUID commentUuid) {
         return commentsRepository.findByUuid(commentUuid)
-                .orElseThrow(() -> new CommentNotFoundException(commentUuid));
+                .orElseThrow(() -> {
+                    log.warn("[MJS] 요청한 댓글을 찾을 수 없습니다. ID = {}", commentUuid);
+                    return new CommentNotFoundException(commentUuid);
+                });
     }
+
 }

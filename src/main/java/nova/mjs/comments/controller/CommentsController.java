@@ -15,13 +15,13 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/comments")
+@RequestMapping("/api/v1/boards")
 @RequiredArgsConstructor
 public class CommentsController {
     private final CommentsService service;
 
     // 1. 특정 게시물 댓글 목록 조회
-    @GetMapping("/board/{boardUUID}")
+    @GetMapping("/{boardUUID}/comments")
     public ResponseEntity<ApiResponse<Page<CommentsResponseDto.CommentSummaryDto>>> getCommentsByBoard(
             @PathVariable UUID boardUUID,
             @RequestParam(defaultValue = "0") int page,   // 기본 페이지 번호
@@ -35,18 +35,18 @@ public class CommentsController {
 
 
     // 2. POSt 댓글 작성
-    @PostMapping("/{communityBoardUuid}/member/{memberUuid}")
+    @PostMapping("/{boardUUID}/comments/member/{memberUUID}")
     public ResponseEntity<ApiResponse<CommentsResponseDto.CommentSummaryDto>> createComment(
-            @PathVariable UUID communityBoardUuid,
-            @PathVariable UUID memberUuid,
+            @PathVariable UUID boardUUID,
+            @PathVariable UUID memberUUID,
             @RequestBody CommentsRequestDto requestDto
             ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(service.createComment(communityBoardUuid, requestDto.getContent(), memberUuid)));
+                .body(ApiResponse.success(service.createComment(boardUUID, requestDto.getContent(), memberUUID)));
     }
 
     // 3. DELETE 댓글 삭제
-    @DeleteMapping("/{commentUUID}")
+    @DeleteMapping("/comments/{commentUUID}")
     public ResponseEntity<Void> deleteComment(@PathVariable UUID commentUUID) {
         service.deleteCommentByUuid(commentUUID);
         return ResponseEntity.noContent().build();

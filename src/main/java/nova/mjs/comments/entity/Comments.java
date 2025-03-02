@@ -26,7 +26,7 @@ public class Comments extends BaseEntity {
     @Column(nullable = false, unique = true, updatable = false)
     private UUID uuid;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "community_board_id", nullable = false)
     private CommunityBoard communityBoard ; // 댓글이 속한 게시물
 

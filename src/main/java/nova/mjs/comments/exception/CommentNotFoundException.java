@@ -9,6 +9,5 @@ import java.util.UUID;
 public class CommentNotFoundException extends BusinessBaseException {
     public CommentNotFoundException(UUID commentUuid) {
         super(ErrorCode.INVALID_REQUEST);
-        log.error("[MJS] 요청한 댓글을 찾을 수 없습니다. ID = {}", commentUuid);
     }
 }
