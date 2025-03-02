@@ -6,18 +6,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.util.jwt.AccessTokenBlacklistRepository;
 import nova.mjs.util.jwt.JwtUtil;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -30,6 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final AccessTokenBlacklistRepository accessTokenBlacklistRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -43,13 +41,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
+
             // 1. 요청에서 JWT 추출
             String token = extractTokenFromRequest(request);
 
             // 2. 블랙리스트 체크 (추후 Redis 블랙리스트 구현과 연결)
-//            if (token != null && jwtUtil.isTokenBlacklisted(token)) {
-//                throw new SecurityException("로그아웃된 토큰입니다.");
-//            }
+            if (token != null && accessTokenBlacklistRepository.existsByAccessToken(token)) {
+                log.warn("블랙리스트에 등록된 Access Token 감지. 인증 거부");
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "로그아웃된 토큰입니다.");
+                throw new SecurityException("로그아웃된 토큰입니다.");
+            }
 
             // 3. 토큰 검증 및 사용자 인증
             if (token == null){
