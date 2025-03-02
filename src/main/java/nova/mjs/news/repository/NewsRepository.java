@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface NewsRepository extends JpaRepository<News, Long> {
     List<News> findByCategory(News.Category category);
+    boolean existsByTitle(String title);
+    void deleteByCategory(News.Category category);
 }
