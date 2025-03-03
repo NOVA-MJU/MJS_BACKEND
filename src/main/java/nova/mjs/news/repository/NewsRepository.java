@@ -8,7 +8,16 @@ import java.util.List;
 
 @Repository
 public interface NewsRepository extends JpaRepository<News, Long> {
+
+    //카테고리 기준으로 탐색
     List<News> findByCategory(News.Category category);
+
+    //기사 제목을 기준으로 존재 여부 확인
     boolean existsByTitle(String title);
+
+    //카테고리 기준으로 존재 여부 확인
+    boolean existsByCategory(News.Category category);
+
+    //카테고리를 기준으로 삭제
     void deleteByCategory(News.Category category);
 }

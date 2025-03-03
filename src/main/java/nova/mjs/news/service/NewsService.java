@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.news.DTO.NewsResponseDTO;
 import nova.mjs.news.entity.News;
+import nova.mjs.news.exception.NewsNotFoundException;
 import nova.mjs.news.repository.NewsRepository;
+import nova.mjs.util.exception.ErrorCode;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -161,6 +163,7 @@ public class NewsService {
         log.info("'{}' 카테고리 뉴스 조회 요청", category);
 
         News.Category categoryEnum;
+
         try {
             categoryEnum = News.Category.valueOf(category.toUpperCase());
         } catch (IllegalArgumentException e) {
@@ -171,7 +174,7 @@ public class NewsService {
 
         if (newsList.isEmpty()) {
             log.warn("'{}' 카테고리 뉴스 없음", category);
-            throw new RuntimeException("해당 카테고리에서 기사를 찾을 수 없습니다.");
+            throw new NewsNotFoundException("해당 카테고리에서 기사를 찾을 수 없습니다.", ErrorCode.NEWS_NOT_FOUND);
         }
         return NewsResponseDTO.fromEntityToList(newsList);
     }
@@ -179,9 +182,16 @@ public class NewsService {
     @Transactional
     public void deleteAllNews(String category){
         if (category == null) {
+            if (newsRepository.count() == 0){
+                throw new NewsNotFoundException("저장된 기사가 없습니다.", ErrorCode.NEWS_NOT_FOUND);
+            }
             log.info("모든 기사 데이터를 삭제합니다.");
             newsRepository.deleteAll();
         } else {
+            News.Category categoryEnum = News.Category.valueOf(category.toUpperCase());
+            if(!newsRepository.existsByCategory(categoryEnum)){
+                throw new NewsNotFoundException("해당 카테고리의 기사가 없습니다.", ErrorCode.NEWS_NOT_FOUND);
+            }
             log.info("'{}' 카테고리의 기사 데이터를 삭제합니다.", category);
             newsRepository.deleteByCategory(News.Category.valueOf(category.toUpperCase()));
         }
