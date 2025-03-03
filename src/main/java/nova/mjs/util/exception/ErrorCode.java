@@ -29,7 +29,11 @@ public enum ErrorCode {
     // 자유 게시판 관련 에러(C)
     COMMUNITY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMUNITY_NOT_FOUND", "[MJS] 요청한 게시판을 찾을 수 없습니다."),
 
+    //식단 관련 에러
     WEEKLYMENU_NOT_FOUND(HttpStatus.NOT_FOUND, "WEEKLYMENU_NOT_FOUND", "[MJS] 식단 내용을 찾을 수 없습니다."),
+
+    //명대신문 관련 에러
+    NEWS_NOT_FOUND(HttpStatus.NOT_FOUND, "NEWS_NOT_FOUND", "[MJS] 요청한 기사 내용을 찾을 수 없습니다."),
 
     // 회원 에러(M)
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND,"MEMBER_NOT_FOUND" ,"[MJS] 회원 정보를 찾을 수 없습니다." ),

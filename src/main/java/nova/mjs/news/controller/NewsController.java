@@ -20,7 +20,12 @@ public class NewsController {
     }
 
     @PostMapping("/fetch")
-    public List<NewsResponseDTO> crawlAndSaveNews(@RequestParam String category) {
+    public List<NewsResponseDTO> crawlAndSaveNews(@RequestParam(required = false) String category) {
         return newsService.crawlAndSaveNews(category);
+    }
+
+    @DeleteMapping("/delete")
+    public void deleteAllNews(@RequestParam(required = false) String category) {
+        newsService.deleteAllNews(category);
     }
 }
