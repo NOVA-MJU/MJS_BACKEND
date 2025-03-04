@@ -113,6 +113,6 @@ public class CommunityBoard extends BaseEntity {
     }
 
     // 댓글
-    @OneToMany(mappedBy = "communityBoard", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "communityBoard", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<Comments> comments;
 }
