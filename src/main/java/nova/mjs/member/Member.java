@@ -8,7 +8,7 @@ import java.util.UUID;
 
 // Entity
 @Entity
-@Table(schema = "member")
+@Table(name = "member")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
