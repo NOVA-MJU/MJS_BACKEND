@@ -26,6 +26,7 @@ public class WeeklyMenu extends BaseEntity {
     @Column(nullable = false)
     private MenuCategory menuCategory;
 
+    @Builder.Default
     @ElementCollection
     @CollectionTable(name = "meal_details", joinColumns = @JoinColumn(name = "id"))
     private List<String> meals = new ArrayList<>(); // 메뉴
