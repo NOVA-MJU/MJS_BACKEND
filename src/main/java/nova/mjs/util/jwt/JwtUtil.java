@@ -1,10 +1,13 @@
 package nova.mjs.util.jwt;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
+import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,17 +16,22 @@ import java.util.function.Function;
 @Component
 @Slf4j
 public class JwtUtil {
-    private final SecretKey secretKey;
+    private final Key secretKey;
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
 
     public JwtUtil(
-            SecretKey secretKey, //yml에서 로드
+            @Value("${jwt.secret}") String secretKey, //yml에서 로드
             @Value("${jwt.access-token-expiration}") long accessTokenExpiration,
             @Value("${jwt.refresh-token-expiration}") long refreshTokenExpiration) {
-        this.secretKey = secretKey; //인코딩 오류를 막으면서 암호화 적용
+        this.secretKey = decodeSecretKey(secretKey); //인코딩 오류를 막으면서 암호화 적용
         this.accessTokenExpiration = accessTokenExpiration;
         this.refreshTokenExpiration = refreshTokenExpiration;
+    }
+
+    private Key decodeSecretKey(String encodedKey){
+        byte[] keyBytes = Base64.getDecoder().decode(encodedKey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     // JWT Access Token 생성 */
