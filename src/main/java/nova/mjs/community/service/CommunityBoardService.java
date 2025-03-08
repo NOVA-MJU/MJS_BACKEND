@@ -9,6 +9,9 @@ import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.entity.enumList.CommunityCategory;
 import nova.mjs.community.exception.CommunityNotFoundException;
 import nova.mjs.community.repository.CommunityBoardRepository;
+import nova.mjs.member.Member;
+import nova.mjs.member.MemberRepository;
+import nova.mjs.member.exception.MemberNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,7 @@ import java.util.UUID;
 public class CommunityBoardService {
 
     private final CommunityBoardRepository communityBoardRepository;
+    private final MemberRepository memberRepository;
 
     // 1. GET 페이지네이션
     public Page<CommunityBoardResponse> getBoards(Pageable pageable) {
@@ -40,13 +44,17 @@ public class CommunityBoardService {
 
     // 3. POST 게시글 작성
     @Transactional
-    public CommunityBoardResponse createBoard(CommunityBoardRequest request) {
+    public CommunityBoardResponse createBoard(CommunityBoardRequest request, String emailId) {
+        Member author = memberRepository.findByEmail(emailId)
+                .orElseThrow(MemberNotFoundException::new);
+
         CommunityBoard board = CommunityBoard.create(
                 request.getTitle(),
                 request.getContent(),
                 CommunityCategory.FREE,
                 request.getPublished(),
-                request.getContentImages() // 이미지 리스트 처리
+                request.getContentImages(), // 이미지 리스트 처리
+                author
         );
         communityBoardRepository.save(board);
         return CommunityBoardResponse.fromEntity(board);

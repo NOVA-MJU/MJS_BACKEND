@@ -4,14 +4,13 @@ package nova.mjs.community.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.comments.entity.Comments;
-import nova.mjs.community.DTO.CommunityBoardRequest;
 import nova.mjs.community.entity.enumList.CommunityCategory;
+import nova.mjs.member.Member;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Entity
@@ -41,8 +40,10 @@ public class CommunityBoard extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content; // 내용
 
-//    @Embedded
-//    private Author author; // 작성자
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member author; // 작성자
+
 
 
     @ElementCollection
@@ -57,8 +58,8 @@ public class CommunityBoard extends BaseEntity {
     @Column(nullable = false)
     private int viewCount; // 조회 수
 
-//    @Column
-//    private int likeCount; // 게시글 좋아요 여부
+    @Column
+    private int likeCount; // 게시글 좋아요 여부
 
     @Column
     private Boolean published; // 임시저장 여부
@@ -68,7 +69,7 @@ public class CommunityBoard extends BaseEntity {
 
 
     // === 생성 메서드 ===
-    public static CommunityBoard create(String title, String content, CommunityCategory category, Boolean published, List<String> contentImages) {
+    public static CommunityBoard create(String title, String content, CommunityCategory category, Boolean published, List<String> contentImages, Member member) {
         CommunityBoard board = CommunityBoard.builder()
                 .uuid(UUID.randomUUID())
                 .title(title)
@@ -76,12 +77,15 @@ public class CommunityBoard extends BaseEntity {
                 .category(category)
                 .published(published != null ? published : false)
                 .viewCount(0)
+                .likeCount(0)
                 .publishedAt(published != null && published ? LocalDateTime.now() : null)
+                .author(member)
                 .build();
 
         board.contentImages.addAll(contentImages != null ? contentImages : new ArrayList<>()); // null일 경우 빈 리스트 추가
         return board;
     }
+
 
 
     // === 업데이트 메서드 ===
