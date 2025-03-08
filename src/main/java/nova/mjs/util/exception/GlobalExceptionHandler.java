@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -55,9 +56,16 @@ public class GlobalExceptionHandler {
     // 형식에 맞지 않는 요청
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        log.error("MethodArgumentNotValidException error: {}", ex.getMessage());
-        return createErrorResponseEntity(HttpStatus.UNPROCESSABLE_ENTITY, "UNPROCESSABLE_ENTITY", ex.getMessage());
+        log.error("Validation error: {}", ex.getMessage());
+
+        // 어떤 필드에서 검증 오류가 발생했는지 수집
+        List<String> errorDetails = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + " : " + error.getDefaultMessage())
+                .toList();
+
+        return createErrorResponseEntity(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", String.join(", ", errorDetails));
     }
+
     @ExceptionHandler(MalformedJwtException.class)
     public ResponseEntity<ErrorResponse> handleMalformedJwtException(MalformedJwtException ex) {
         log.error("MalformedJwtException error: {}", ex.getMessage());

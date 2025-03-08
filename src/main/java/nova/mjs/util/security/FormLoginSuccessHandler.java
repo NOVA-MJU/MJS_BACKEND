@@ -39,7 +39,7 @@ public class FormLoginSuccessHandler implements AuthenticationSuccessHandler {//
         UUID uuid = principal.getUuid();
         String email = principal.getEmail(); //SecurityContext에서 username(email) 가져오기
         //String email = authentication.getName(); 이것도 맞을 수 있음. principal에서 getUserName을 email로 반환하기 때문
-        String role = "ROLE_USER";
+        String role = principal.getRole();
 
 
         //JWT 생성

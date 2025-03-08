@@ -3,6 +3,7 @@ package nova.mjs.member;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.util.response.ApiResponse;
+import nova.mjs.util.security.AuthDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,11 +44,11 @@ public class MemberController {
 
     // 회원 정보 생성 (회원 가입)
     @PostMapping
-    public ResponseEntity<ApiResponse<MemberDTO>> registerMember(@RequestBody MemberDTO.MemberRequestDTO requestDTO) {
-        Member newMember = memberService.registerMember(requestDTO);
+    public ResponseEntity<ApiResponse<?>> registerMember(@RequestBody MemberDTO.MemberRequestDTO requestDTO) {
+        AuthDTO.LoginResponseDTO newMember = memberService.registerMember(requestDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.success(MemberDTO.fromEntity(newMember)));
+                .body(ApiResponse.success(newMember));
     }
 
     // 일반 정보 수정
