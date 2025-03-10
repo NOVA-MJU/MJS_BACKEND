@@ -33,6 +33,17 @@ public class MemberService {
         return MemberDTO.fromEntity(member);
     }
 
+  public MemberDTO getMemberByEmailId(String emailId) {
+      Member member = getMemberByEmail(emailId);
+
+      return MemberDTO.fromEntity(member);
+    }
+
+    private Member getMemberByEmail(String emailId) {
+        return memberRepository.findByEmail(emailId)
+                .orElseThrow(MemberNotFoundException::new);
+    }
+
     public Page<MemberDTO> getAllMember(Pageable pageable) {
         return memberRepository.findAll(pageable).map(MemberDTO::fromEntity);
     }
@@ -72,10 +83,8 @@ public class MemberService {
 
     // 회원 정보 수정
     @Transactional
-    public Member updateMember(UUID userUUID, MemberDTO requestDTO) {
-        Member member = memberRepository.findByUuid(userUUID)
-                .orElseThrow(MemberNotFoundException::new);
-
+    public Member updateMember(String emailId, MemberDTO requestDTO) {
+        Member member = getMemberByEmail(emailId);
         if (requestDTO.getNickname() != null && !requestDTO.getNickname().equals(member.getNickname())
                 && memberRepository.existsByNickname(requestDTO.getNickname())) {
             throw new DuplicateNicknameException();
@@ -87,9 +96,8 @@ public class MemberService {
 
     // 비밀번호 변경
     @Transactional
-    public void updatePassword(UUID userUUID, MemberDTO.PasswordRequestDTO requestDTO) {
-        Member member = memberRepository.findByUuid(userUUID)
-                .orElseThrow(MemberNotFoundException::new);
+    public void updatePassword(String emailId, MemberDTO.PasswordRequestDTO requestDTO) {
+        Member member = getMemberByEmail(emailId);
         if (!passwordEncoder.matches(requestDTO.getPassword(), member.getPassword())) {
             throw new PasswordIsInvalidException(); // 기존 비밀번호가 틀린 경우 예외 발생
         }
@@ -110,10 +118,8 @@ public class MemberService {
 
     // 회원 삭제
     @Transactional
-    public void deleteMember(UUID userUUID, MemberDTO.PasswordRequestDTO requestPassword) {
-        Member member = memberRepository.findByUuid(userUUID)
-                .orElseThrow(MemberNotFoundException::new);
-
+    public void deleteMember(String emailId, MemberDTO.PasswordRequestDTO requestPassword) {
+        Member member = getMemberByEmail(emailId);
         // 비밀번호 검증
         boolean passwordMatches = passwordEncoder.matches(requestPassword.getPassword(), member.getPassword());
 
@@ -121,7 +127,7 @@ public class MemberService {
             throw new PasswordIsInvalidException();
         }
         memberRepository.delete(member);
-        log.info("회원 삭제 - UUID: {}", userUUID);
+        log.info("회원 삭제 - emailId: {}", emailId);
     }
 
     // ✅ 이메일 수동 검증 메서드 추가
