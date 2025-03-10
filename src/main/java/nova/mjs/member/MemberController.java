@@ -40,7 +40,7 @@ public class MemberController {
 
     // 회원 정보 조회
     @GetMapping()
-    @PreAuthorize("isAuthenticated() and ((#userPrincipal.uuid.toString().equals(principal.username)) or hasRole('ADMIN'))")
+    @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<MemberDTO>> getMember(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         MemberDTO member = memberService.getMemberByEmailId(userPrincipal.getUsername());
         return ResponseEntity.ok(ApiResponse.success(member));
@@ -57,7 +57,7 @@ public class MemberController {
 
     // 일반 정보 수정
     @PatchMapping("/{userUUID}")
-    @PreAuthorize("isAuthenticated() and ((#userPrincipal.uuid.toString().equals(principal.username)) or hasRole('ADMIN'))")
+    @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<MemberDTO>> updateMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                                @RequestBody MemberDTO requestDTO) {
         Member updatedMember = memberService.updateMember(userPrincipal.getUsername(), requestDTO);
@@ -66,7 +66,7 @@ public class MemberController {
 
     // 비밀번호 변경
     @PatchMapping("/{userUUID}/password")
-    @PreAuthorize("isAuthenticated() and ((#userPrincipal.uuid.toString().equals(principal.username)) or hasRole('ADMIN'))")
+    @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<Void>> updatePassword(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                             @RequestBody MemberDTO.PasswordRequestDTO request) {
         memberService.updatePassword(userPrincipal.getUsername(), request);
@@ -75,7 +75,7 @@ public class MemberController {
 
     // 회원 정보 삭제
     @DeleteMapping("/{userUUID}")
-    @PreAuthorize("isAuthenticated() and ((#userPrincipal.uuid.toString().equals(principal.username)) or hasRole('ADMIN'))")
+    @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<Void>> deleteMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                           @RequestBody MemberDTO.PasswordRequestDTO password) {
         memberService.deleteMember(userPrincipal.getUsername(), password);
