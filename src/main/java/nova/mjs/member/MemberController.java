@@ -39,7 +39,7 @@ public class MemberController {
 
 
     // 회원 정보 조회
-    @GetMapping()
+    @GetMapping("info")
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<MemberDTO>> getMember(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         MemberDTO member = memberService.getMemberByEmailId(userPrincipal.getUsername());
@@ -56,7 +56,7 @@ public class MemberController {
     }
 
     // 일반 정보 수정
-    @PatchMapping("/{userUUID}")
+    @PatchMapping("/info")
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<MemberDTO>> updateMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                                @RequestBody MemberDTO requestDTO) {
@@ -65,7 +65,7 @@ public class MemberController {
     }
 
     // 비밀번호 변경
-    @PatchMapping("/{userUUID}/password")
+    @PatchMapping("/info/password")
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<Void>> updatePassword(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                             @RequestBody MemberDTO.PasswordRequestDTO request) {
@@ -74,7 +74,7 @@ public class MemberController {
     }
 
     // 회원 정보 삭제
-    @DeleteMapping("/{userUUID}")
+    @DeleteMapping("/info")
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<Void>> deleteMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                           @RequestBody MemberDTO.PasswordRequestDTO password) {
