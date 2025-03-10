@@ -4,11 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.AuthDTO;
+import nova.mjs.util.security.UserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -36,9 +39,10 @@ public class MemberController {
 
 
     // 회원 정보 조회
-    @GetMapping("/{userUUID}")
-    public ResponseEntity<ApiResponse<MemberDTO>> getMember(@PathVariable UUID userUUID) {
-        MemberDTO member = memberService.getMemberByUuid(userUUID);
+    @GetMapping()
+    @PreAuthorize("isAuthenticated() and ((#userPrincipal.uuid.toString().equals(principal.username)) or hasRole('ADMIN'))")
+    public ResponseEntity<ApiResponse<MemberDTO>> getMember(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        MemberDTO member = memberService.getMemberByEmailId(userPrincipal.getUsername());
         return ResponseEntity.ok(ApiResponse.success(member));
     }
 
@@ -53,25 +57,28 @@ public class MemberController {
 
     // 일반 정보 수정
     @PatchMapping("/{userUUID}")
-    public ResponseEntity<ApiResponse<MemberDTO>> updateMember(@PathVariable UUID userUUID,
+    @PreAuthorize("isAuthenticated() and ((#userPrincipal.uuid.toString().equals(principal.username)) or hasRole('ADMIN'))")
+    public ResponseEntity<ApiResponse<MemberDTO>> updateMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                                @RequestBody MemberDTO requestDTO) {
-        Member updatedMember = memberService.updateMember(userUUID, requestDTO);
+        Member updatedMember = memberService.updateMember(userPrincipal.getUsername(), requestDTO);
         return ResponseEntity.ok(ApiResponse.success(MemberDTO.fromEntity(updatedMember)));
     }
 
     // 비밀번호 변경
     @PatchMapping("/{userUUID}/password")
-    public ResponseEntity<ApiResponse<Void>> updatePassword(@PathVariable UUID userUUID,
+    @PreAuthorize("isAuthenticated() and ((#userPrincipal.uuid.toString().equals(principal.username)) or hasRole('ADMIN'))")
+    public ResponseEntity<ApiResponse<Void>> updatePassword(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                             @RequestBody MemberDTO.PasswordRequestDTO request) {
-        memberService.updatePassword(userUUID, request);
+        memberService.updatePassword(userPrincipal.getUsername(), request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     // 회원 정보 삭제
     @DeleteMapping("/{userUUID}")
-    public ResponseEntity<ApiResponse<Void>> deleteMember(@PathVariable UUID userUUID,
+    @PreAuthorize("isAuthenticated() and ((#userPrincipal.uuid.toString().equals(principal.username)) or hasRole('ADMIN'))")
+    public ResponseEntity<ApiResponse<Void>> deleteMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                           @RequestBody MemberDTO.PasswordRequestDTO password) {
-        memberService.deleteMember(userUUID, password);
+        memberService.deleteMember(userPrincipal.getUsername(), password);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
