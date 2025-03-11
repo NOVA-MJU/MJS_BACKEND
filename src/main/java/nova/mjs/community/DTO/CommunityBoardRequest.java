@@ -14,6 +14,7 @@ public class CommunityBoardRequest {
     private String content;             // 게시글 내용
     private Boolean published;          // 게시글 공개 여부
     private List<String> contentImages; // 게시글 이미지 리스트
+    private Integer likeCount;
 
     // category는 무조건 FREE로 설정
     public CommunityBoard toEntity() {
@@ -22,7 +23,8 @@ public class CommunityBoardRequest {
                 this.content,
                 CommunityCategory.FREE, // 무조건 FREE 설정
                 this.published != null ? this.published : false,
-                this.contentImages
+                this.contentImages,
+                this.likeCount != null ? this.likeCount : 0
         );
     }
 }

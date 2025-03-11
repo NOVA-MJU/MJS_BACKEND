@@ -20,9 +20,10 @@ public class CommunityBoardResponse {
     private LocalDateTime publishedAt;  // 게시 시간
     private LocalDateTime createdAt;  // 게시 시간
     private LocalDateTime updatedAt;  // 게시 시간
+    private int likeCount; // 좋아요 개수 추가
 
     // 엔티티에서 DTO로 변환하는 메서드
-    public static CommunityBoardResponse fromEntity(CommunityBoard entity) {
+    public static CommunityBoardResponse fromEntity(CommunityBoard entity, int likeCount) {
         return CommunityBoardResponse.builder()
                 .uuid(entity.getUuid())
                 .title(entity.getTitle())
@@ -33,6 +34,7 @@ public class CommunityBoardResponse {
                 .publishedAt(entity.getPublishedAt())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .likeCount(likeCount)
                 .build();
     }
 }

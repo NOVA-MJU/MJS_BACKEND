@@ -41,6 +41,9 @@ public class CommunityBoard extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content; // 내용
 
+
+
+
 //    @Embedded
 //    private Author author; // 작성자
 
@@ -57,8 +60,8 @@ public class CommunityBoard extends BaseEntity {
     @Column(nullable = false)
     private int viewCount; // 조회 수
 
-//    @Column
-//    private int likeCount; // 게시글 좋아요 여부
+    @Column
+    private int likeCount; // 게시글 좋아요 여부
 
     @Column
     private Boolean published; // 임시저장 여부
@@ -68,7 +71,7 @@ public class CommunityBoard extends BaseEntity {
 
 
     // === 생성 메서드 ===
-    public static CommunityBoard create(String title, String content, CommunityCategory category, Boolean published, List<String> contentImages) {
+    public static CommunityBoard create(String title, String content, CommunityCategory category, Boolean published, List<String> contentImages, int likeCount) {
         CommunityBoard board = CommunityBoard.builder()
                 .uuid(UUID.randomUUID())
                 .title(title)
@@ -76,6 +79,7 @@ public class CommunityBoard extends BaseEntity {
                 .category(category)
                 .published(published != null ? published : false)
                 .viewCount(0)
+                .likeCount(likeCount)
                 .publishedAt(published != null && published ? LocalDateTime.now() : null)
                 .build();
 
@@ -115,4 +119,15 @@ public class CommunityBoard extends BaseEntity {
     // 댓글
     @OneToMany(mappedBy = "communityBoard", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<Comments> comments;
+
+    // 게시물 좋아요
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
 }
