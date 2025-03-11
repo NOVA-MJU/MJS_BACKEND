@@ -45,7 +45,6 @@ public class CommunityBoard extends BaseEntity {
     private Member author; // 작성자
 
 
-
     @ElementCollection
     @CollectionTable(
             name = "community_board_images", // 테이블 이름
@@ -119,4 +118,15 @@ public class CommunityBoard extends BaseEntity {
     // 댓글
     @OneToMany(mappedBy = "communityBoard", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<Comments> comments;
+
+    // 게시물 좋아요
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
 }
