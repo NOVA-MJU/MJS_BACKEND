@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/weeklymenus")
 @RequiredArgsConstructor
 public class WeeklyMenuController {
 
     private final WeeklyMenuService menuService;
 
-    @PostMapping("/weeklymenu/crawling")
+    @PostMapping("/crawling")
     public ResponseEntity<ApiResponse<List<WeeklyMenuResponseDTO>>> crawlMenu() {
         List<WeeklyMenuResponseDTO> menu = menuService.crawlWeeklyMenu();
         return ResponseEntity
@@ -25,7 +25,7 @@ public class WeeklyMenuController {
                 .body(ApiResponse.success(menu));
     }
 
-    @GetMapping("/weeklymenu/get")
+    @GetMapping()
     public ResponseEntity<ApiResponse<List<WeeklyMenuResponseDTO>>> getAllMenu() {
         List<WeeklyMenuResponseDTO> menu = menuService.getAllWeeklyMenus();
         return ResponseEntity
