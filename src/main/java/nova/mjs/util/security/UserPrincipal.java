@@ -43,7 +43,7 @@ public class UserPrincipal implements UserDetails {
                 member.getUuid(),
                 member.getPassword(),
                 member.getName(),
-                "ROLE_USER"
+                String.valueOf(member.getRole())
         );
     }
 

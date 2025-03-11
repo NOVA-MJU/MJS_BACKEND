@@ -24,7 +24,7 @@ public class AuthDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class LoginResponseDTO{
-        private String accesstoken;
-        private String refreshtoken;
+        private String accessToken;
+        private String refreshToken;
     }
 }

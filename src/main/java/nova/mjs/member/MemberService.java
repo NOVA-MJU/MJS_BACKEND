@@ -2,11 +2,11 @@ package nova.mjs.member;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.member.exception.DuplicateEmailException;
-import nova.mjs.member.exception.MemberNotFoundException;
-import nova.mjs.member.exception.PasswordIsInvalidException;
+import nova.mjs.member.exception.*;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.exception.request.RequestException;
+import nova.mjs.util.jwt.JwtUtil;
+import nova.mjs.util.security.AuthDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +23,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
 
     public MemberDTO getMemberByUuid(UUID userUUID) {
@@ -32,28 +33,62 @@ public class MemberService {
         return MemberDTO.fromEntity(member);
     }
 
+  public MemberDTO getMemberByEmailId(String emailId) {
+      Member member = getMemberByEmail(emailId);
+
+      return MemberDTO.fromEntity(member);
+    }
+
+    private Member getMemberByEmail(String emailId) {
+        return memberRepository.findByEmail(emailId)
+                .orElseThrow(MemberNotFoundException::new);
+    }
+
     public Page<MemberDTO> getAllMember(Pageable pageable) {
         return memberRepository.findAll(pageable).map(MemberDTO::fromEntity);
     }
 
     // 회원 가입
     @Transactional
-    public Member registerMember(MemberDTO.MemberRequestDTO requestDTO) {
+    public AuthDTO.LoginResponseDTO registerMember(MemberDTO.MemberRequestDTO requestDTO) {
+        validateEmail(requestDTO.getEmail());
         if (memberRepository.existsByEmail(requestDTO.getEmail())) {
             throw new DuplicateEmailException();
         }
 
-        String encodePassword = passwordEncoder.encode(requestDTO.getPassword());
-        log.info(encodePassword);
-        Member newMember = Member.create(requestDTO, encodePassword);
-        return memberRepository.save(newMember);
+        // 닉네임 중복 체크
+        if (requestDTO.getNickname() != null && memberRepository.existsByNickname(requestDTO.getNickname())) {
+            throw new DuplicateNicknameException();
+        }
+
+        String encodedPassword = passwordEncoder.encode(requestDTO.getPassword());
+        Member newMember = Member.create(requestDTO, encodedPassword);
+        newMember = memberRepository.save(newMember);
+
+        // 회원 정보에서 UUID, 이메일, 기본 Role 가져오기
+        UUID userId = newMember.getUuid();
+        String email = newMember.getEmail();
+        String role = String.valueOf(newMember.getRole()); // Member 엔티티에 role 필드가 있어야 함
+
+        // Access Token & Refresh Token 생성
+        String accessToken = jwtUtil.generateAccessToken(userId, email, role);
+        String refreshToken = jwtUtil.generateRefreshToken(userId, email);
+
+        // ✅ 응답 DTO 반환
+        return AuthDTO.LoginResponseDTO.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     // 회원 정보 수정
     @Transactional
-    public Member updateMember(UUID userUUID, MemberDTO requestDTO) {
-        Member member = memberRepository.findByUuid(userUUID)
-                .orElseThrow(MemberNotFoundException::new);
+    public Member updateMember(String emailId, MemberDTO requestDTO) {
+        Member member = getMemberByEmail(emailId);
+        if (requestDTO.getNickname() != null && !requestDTO.getNickname().equals(member.getNickname())
+                && memberRepository.existsByNickname(requestDTO.getNickname())) {
+            throw new DuplicateNicknameException();
+        }
 
         member.update(requestDTO);
         return memberRepository.save(member);
@@ -61,9 +96,8 @@ public class MemberService {
 
     // 비밀번호 변경
     @Transactional
-    public void updatePassword(UUID userUUID, MemberDTO.PasswordRequestDTO requestDTO) {
-        Member member = memberRepository.findByUuid(userUUID)
-                .orElseThrow(MemberNotFoundException::new);
+    public void updatePassword(String emailId, MemberDTO.PasswordRequestDTO requestDTO) {
+        Member member = getMemberByEmail(emailId);
         if (!passwordEncoder.matches(requestDTO.getPassword(), member.getPassword())) {
             throw new PasswordIsInvalidException(); // 기존 비밀번호가 틀린 경우 예외 발생
         }
@@ -84,10 +118,8 @@ public class MemberService {
 
     // 회원 삭제
     @Transactional
-    public void deleteMember(UUID userUUID, MemberDTO.PasswordRequestDTO requestPassword) {
-        Member member = memberRepository.findByUuid(userUUID)
-                .orElseThrow(MemberNotFoundException::new);
-
+    public void deleteMember(String emailId, MemberDTO.PasswordRequestDTO requestPassword) {
+        Member member = getMemberByEmail(emailId);
         // 비밀번호 검증
         boolean passwordMatches = passwordEncoder.matches(requestPassword.getPassword(), member.getPassword());
 
@@ -95,7 +127,14 @@ public class MemberService {
             throw new PasswordIsInvalidException();
         }
         memberRepository.delete(member);
-        log.info("회원 삭제 - UUID: {}", userUUID);
+        log.info("회원 삭제 - emailId: {}", emailId);
+    }
+
+    // ✅ 이메일 수동 검증 메서드 추가
+    private void validateEmail(String email) {
+        if (email == null || !email.matches("^[a-zA-Z0-9._%+-]+@mju\\.ac\\.kr$")) {
+            throw new EmailIsInvalidException();
+        }
     }
 }
 

@@ -11,8 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -37,21 +36,24 @@ public class FormLoginSuccessHandler implements AuthenticationSuccessHandler {//
 
         //인증된 사용자 정보 가져오기
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        UUID uuid = principal.getUuid();
         String email = principal.getEmail(); //SecurityContext에서 username(email) 가져오기
         //String email = authentication.getName(); 이것도 맞을 수 있음. principal에서 getUserName을 email로 반환하기 때문
+        String role = principal.getRole();
 
 
         //JWT 생성
-        String accessToken = jwtUtil.generateAccessToken(email, "ROLE_USER");
-        String refreshToken = jwtUtil.generateRefreshToken(email);
+        String accessToken = jwtUtil.generateAccessToken(uuid, email, role);
+        String refreshToken = jwtUtil.generateRefreshToken(uuid, email);
 
         log.info("발급된 Access Token: {}", accessToken);
         log.info("발급된 Refresh Token: {}", refreshToken);
 
         //응답 json 생성 - 데이터 준비
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("accessToken", accessToken);
-        responseData.put("refreshToken", refreshToken);
+        AuthDTO.LoginResponseDTO responseData = AuthDTO.LoginResponseDTO.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
 
         // 실제 응답이 정상적으로 반환되는지 확인
         log.info("로그인 응답 데이터: {}", responseData);

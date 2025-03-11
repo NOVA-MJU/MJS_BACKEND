@@ -1,5 +1,8 @@
 package nova.mjs.member;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +26,7 @@ public class MemberDTO {
     private Integer studentNumber;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Member.Role role;
 
     /**
      * Member 엔티티를 MemberDTO로 변환하는 메서드 (응답용)
@@ -38,6 +42,7 @@ public class MemberDTO {
                 .studentNumber(member.getStudentNumber())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
+                .role(member.getRole())
                 .build();
     }
 

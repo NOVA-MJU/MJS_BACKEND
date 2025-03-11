@@ -22,6 +22,10 @@ public class Member extends BaseEntity {
     @Column(nullable = false, unique = true)
     private UUID uuid;
 
+    @Enumerated(EnumType.STRING) // `role` 필드 추가
+    @Column(nullable = false)
+    private Role role;  // Role enum 타입으로 설정
+
     @Column(nullable = false)
     private String name;
 
@@ -50,6 +54,10 @@ public class Member extends BaseEntity {
         }
     }
 
+    public enum Role {
+        USER, ADMIN, DEVELOPER
+    }
+
     public static Member create(MemberDTO.MemberRequestDTO memberDTO, String encodePassword) {
         return Member.builder()
                 .uuid(UUID.randomUUID()) // UUID 자동 생성
@@ -60,6 +68,7 @@ public class Member extends BaseEntity {
                 .nickname(memberDTO.getNickname())
                 .department(memberDTO.getDepartment())
                 .studentNumber(memberDTO.getStudentNumber())
+                .role(Role.USER)
                 .build();
     }
 

@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class CommunityBoardResponse {
+public class CommunityBoardResponse { 
     private UUID uuid;                  // 외부적으로 사용할 UUID
     private String title;               // 게시글 제목
     private String content;             // 게시글 내용
@@ -21,9 +21,11 @@ public class CommunityBoardResponse {
     private LocalDateTime createdAt;  // 게시 시간
     private LocalDateTime updatedAt;  // 게시 시간
     private int likeCount; // 좋아요 개수 추가
+    private String author;
 
     // 엔티티에서 DTO로 변환하는 메서드
     public static CommunityBoardResponse fromEntity(CommunityBoard entity, int likeCount) {
+
         return CommunityBoardResponse.builder()
                 .uuid(entity.getUuid())
                 .title(entity.getTitle())
@@ -35,6 +37,7 @@ public class CommunityBoardResponse {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .likeCount(likeCount)
+                .author(entity.getAuthor() != null ? entity.getAuthor().getNickname() : "Unknown") // ✅ 작성자 닉네임 처리
                 .build();
     }
 }

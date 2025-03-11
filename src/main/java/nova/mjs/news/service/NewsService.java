@@ -35,12 +35,6 @@ public class NewsService {
 
     private static final String DEFAULT_IMAGE_URL = "https://news.mju.ac.kr/default-image.jpg"; // 기본 이미지
 
-    @Scheduled(cron = "0 0 * * * *") //매 시간 정각에 실행
-    public void scheduledCrawlNews(){
-        log.info("[스케쥴러] 매시간 정각 기사 크롤링 실행");
-        crawlAndSaveNews(null);
-    }
-
     @Transactional
     public List<NewsResponseDTO> crawlAndSaveNews(String category) {
         List<String> categoriesToFetch = new ArrayList<>();

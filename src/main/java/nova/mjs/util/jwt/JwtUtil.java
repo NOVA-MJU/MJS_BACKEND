@@ -2,16 +2,12 @@ package nova.mjs.util.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseCookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,23 +16,29 @@ import java.util.function.Function;
 @Component
 @Slf4j
 public class JwtUtil {
-    private final SecretKey secretKey;
+    private final Key secretKey;
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
 
     public JwtUtil(
-            @Value("${jwt.secret}") String secret, //yml에서 로드
+            @Value("${jwt.secret}") String secretKey, //yml에서 로드
             @Value("${jwt.access-token-expiration}") long accessTokenExpiration,
             @Value("${jwt.refresh-token-expiration}") long refreshTokenExpiration) {
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)); //인코딩 오류를 막으면서 암호화 적용
+        this.secretKey = decodeSecretKey(secretKey); //인코딩 오류를 막으면서 암호화 적용
         this.accessTokenExpiration = accessTokenExpiration;
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
+    private Key decodeSecretKey(String encodedKey){
+        byte[] keyBytes = Base64.getDecoder().decode(encodedKey);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
     // JWT Access Token 생성 */
-    public String generateAccessToken(String email, String role) {
+    public String generateAccessToken(UUID uuid, String email, String role) {
         return Jwts.builder()
-                .setSubject(email)  // 사용자 ID
+                .setSubject(uuid.toString())  // 사용자 uuid
+                .claim("email", email)
                 .claim("role", role)  // 사용자 역할
                 .setIssuedAt(new Date())  // 발행 시간
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))  // 만료 시간 - 밀리세컨드
@@ -47,9 +49,10 @@ public class JwtUtil {
     }
 
     //JWT Refresh Token 생성
-    public String generateRefreshToken(String email) {
+    public String generateRefreshToken(UUID uuid, String email) {
         return Jwts.builder()
-                .setSubject(email)  // 사용자 ID
+                .setSubject(uuid.toString())  // 사용자 uuid
+                .claim("email", email)
                 .setId(UUID.randomUUID().toString())  // JWT 고유 식별자 (JTI) - 블랙리스트 관리 가능
                 .setIssuedAt(new Date())  // 발행 시간
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))  // 만료 시간
@@ -58,10 +61,16 @@ public class JwtUtil {
                 .compact();
     }
 
-    // 토큰에서 사용자 ID 추출
+    //토큰에서 사용자 uuid 추출
+    public UUID getUserIdFromToken(String token) {
+        String uuidString = getClaimFromToken(token, Claims::getSubject);
+        return uuidString != null ? UUID.fromString(uuidString) : null;
+    }
+
+    // 토큰에서 사용자 email 추출
     public String getEmailFromToken(String token){
-        return getClaimFromToken(token, Claims::getSubject);
-    } //이미 아래에서 claim을 추출하는 메서드가 있으므로 필요 없을 수도 있어보임
+        return getClaimFromToken(token, claims -> claims.get("email", String.class));
+    }
 
     public String getRoleFromToken(String token) { //"role을 추출하는 메서드
         Claims claims = getAllClaimsFromToken(token);
@@ -72,13 +81,13 @@ public class JwtUtil {
         return null;
     }
 
-    /** 토큰에서 특정 Claim 추출 */ //필요한 부분만 추출
+    //토큰에서 특정 Claim 추출 - 필요한 부분만 추출
     public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
         return claims != null ? claimsResolver.apply(claims) : null; //claim을 추출하기 위함 : claimResolver.apply(claims) -> claims.getSubject()
     }
 
-    /** JWT 검증 및 Claim 정보 추출 */
+    //JWT 검증 및 Claim 정보 추출
     private Claims getAllClaimsFromToken(String token) {
         try{
             return Jwts.parserBuilder()
@@ -91,7 +100,7 @@ public class JwtUtil {
         }
     }
 
-    /** 토큰 유효성 검증 */
+    //토큰 유효성 검증
     public boolean validateToken(String token) {
         Claims claims = getAllClaimsFromToken(token);
         if (claims == null){
@@ -127,10 +136,14 @@ public class JwtUtil {
         }
 
         // 2. Refresh Token에서 사용자 ID 및 역할(Role) 추출
+        UUID uuid = getUserIdFromToken(refreshToken);
         String email = getEmailFromToken(refreshToken);
         String role = getClaimFromToken(refreshToken, claims -> claims.get("role", String.class));
 
+        if (uuid == null || email == null){
+            return Optional.empty();
+        }
         // 3. 새로운 Access Token 생성 후 반환
-        return Optional.of(generateAccessToken(email, role));
+        return Optional.of(generateAccessToken(uuid, email, role));
     }
 }

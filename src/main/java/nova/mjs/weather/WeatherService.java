@@ -39,7 +39,6 @@ public class WeatherService {
         this.weatherRepository = weatherRepository;
     }
 
-    @Scheduled(cron = "0 0 * * * ?") // 매 정각에 실행
     @Transactional
     public void fetchAndStoreWeatherData() {
         String weatherUrl = String.format(WEATHER_API_URL, apiKey);

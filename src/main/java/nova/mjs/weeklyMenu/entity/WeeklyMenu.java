@@ -26,8 +26,10 @@ public class WeeklyMenu extends BaseEntity {
     @Column(nullable = false)
     private MenuCategory menuCategory;
 
+    @Builder.Default
     @ElementCollection
-    @CollectionTable(name = "meal_details", joinColumns = @JoinColumn(name = "id"))
+    @CollectionTable(name = "meal_details", joinColumns = @JoinColumn(name = "weekly_menu_id"))
+    @Column(name = "meal", nullable = false)
     private List<String> meals = new ArrayList<>(); // 메뉴
 
     public static WeeklyMenu create(String date, MenuCategory menuCategory, List<String> meals) {

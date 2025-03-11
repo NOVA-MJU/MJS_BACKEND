@@ -5,11 +5,13 @@ import nova.mjs.community.DTO.CommunityBoardRequest;
 import nova.mjs.community.DTO.CommunityBoardResponse;
 import nova.mjs.community.service.CommunityBoardService;
 import nova.mjs.util.response.ApiResponse;
+import nova.mjs.util.security.UserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -46,8 +48,11 @@ public class CommunityBoardController {
 
     // 3. POST 게시글 작성
     @PostMapping
-    public ResponseEntity<ApiResponse<CommunityBoardResponse>> createBoard(@RequestBody CommunityBoardRequest request) {
-        CommunityBoardResponse board = service.createBoard(request);
+    public ResponseEntity<ApiResponse<CommunityBoardResponse>> createBoard(
+            @RequestBody CommunityBoardRequest request,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        CommunityBoardResponse board = service.createBoard(request, "mjs@mju.ac.kr");
+//        CommunityBoardResponse board = service.createBoard(request, userPrincipal.getUsername());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board)); // HTTP 201 Created
