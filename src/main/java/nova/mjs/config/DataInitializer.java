@@ -20,11 +20,14 @@ public class DataInitializer {
     private final CommunityBoardRepository communityBoardRepository;
     private final CommentsRepository commentsRepository;
 
-    /*@PostConstruct
+    @PostConstruct
     public void initData() {
         log.info("초기 더미 데이터 생성 시작...");
-        Member member = memberRepository.findByEmail("test@example.com").orElse(null);
 
+        Member member = memberRepository.findByEmail("test@example.com").orElse(null);
+        CommunityBoard board = communityBoardRepository.findAll().stream().findFirst().orElse(null);
+
+        /*
         // Member Dummy Data
         if (memberRepository.count() == 0) { // 데이터가 없다면
             member = Member.builder()
@@ -40,16 +43,17 @@ public class DataInitializer {
             log.info("Member 더미 데이터 추가 완료: {}", member.getEmail());
         } else {
             log.info("Member 데이터가 이미 존재함. 추가하지 않음.");
-        }
+        }*/
         // CommunityBoard 더미 데이터 추가
-        CommunityBoard board = communityBoardRepository.findAll().stream().findFirst().orElse(null);
-        if (board == null) {
+        /*if (board == null) {
             board = CommunityBoard.create(
                     "1 게시글",
                     "테스트 용이다잉",
                     nova.mjs.community.entity.enumList.CommunityCategory.FREE,
                     true,
-                    null
+                    null,
+
+
             );
             communityBoardRepository.save(board);
             log.info("CommunityBoard 더미 데이터 추가 완료: {}", board.getTitle());
@@ -57,6 +61,9 @@ public class DataInitializer {
             log.info("CommunityBoard 데이터가 이미 존재하여 추가하지 않음.");
         }
 
+        */
+
+        /*
         // Comments 더미 데이터 추가
         if (commentsRepository.count() == 0) {
             Comments comment = Comments.create(board, member, "테스트 댓글이야");
@@ -66,6 +73,6 @@ public class DataInitializer {
             log.info("Comments 데이터가 이미 존재함. 추가하지 않음.");
         }
 
-        log.info("초기 더미 데이터 삽입 완료!");
-    }*/
+        log.info("초기 더미 데이터 삽입 완료!");*/
+    }
 }
