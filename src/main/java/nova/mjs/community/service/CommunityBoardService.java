@@ -64,7 +64,6 @@ public class CommunityBoardService {
                 CommunityCategory.FREE,
                 request.getPublished(),
                 request.getContentImages(), // 이미지 리스트 처리
-                request.getLikeCount(),
                 author
         );
         communityBoardRepository.save(board);
