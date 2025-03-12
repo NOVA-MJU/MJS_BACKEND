@@ -11,7 +11,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,15 +71,23 @@ public class NewsService {
                     }
 
                     for (Element article : articles) {
-                        String title = article.select(".list-titles a strong").text().trim();
-                        if (title.isEmpty()) continue;
+                        String link = "https://news.mju.ac.kr" + article.select(".list-titles a").attr("href");
 
-                        //기존에 있던 기사가 발견되면 크롤링 종료
-                        if (newsRepository.existsByTitle(title)){
-                            log.info("기존 기사 발견: '{}', 크롤링 중단", title);
+                        boolean exists = newsRepository.existsByLink(link);
+                        log.info("기사 링크 '{}' 존재 여부 : {}", link, exists);
+
+                        //기존 기사 링크와 비교해서 존재 여부 확인 후 크롤링 결정
+                        if (exists) {
+                            log.info("기존 기사 발견 : '{}', 크롤링 중단", link);
                             stop = true;
                             break;
                         }
+
+                        //기사 정보 추출
+                        String title = article.select(".list-titles a strong").text().trim(); //제목
+                        String imageUrl = extractImageUrl(article); //이미지 url
+                        String summary = article.select(".list-summary").text().trim(); //헤더 요약
+
                         // 날짜 & 기자 정보 추출
                         String date = "날짜 정보 없음";
                         String reporter = "기자 정보 없음";
@@ -106,10 +113,6 @@ public class NewsService {
                             stop = true;
                             break;
                         }
-
-                        String link = "https://news.mju.ac.kr" + article.select(".list-titles a").attr("href");
-                        String imageUrl = extractImageUrl(article);
-                        String summary = article.select(".list-summary").text().trim();
 
                         News news = News.createNews(title, date, reporter, imageUrl, summary, link, cat);
                         newsList.add(news);

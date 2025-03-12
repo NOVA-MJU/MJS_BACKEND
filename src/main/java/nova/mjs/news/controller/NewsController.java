@@ -2,7 +2,6 @@ package nova.mjs.news.controller;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.news.DTO.NewsResponseDTO;
-import nova.mjs.news.entity.News;
 import nova.mjs.news.service.NewsService;
 import org.springframework.web.bind.annotation.*;
 
