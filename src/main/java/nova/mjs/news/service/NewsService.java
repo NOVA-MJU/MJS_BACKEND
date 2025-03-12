@@ -75,20 +75,16 @@ public class NewsService {
                     for (Element article : articles) {
                         String link = "https://news.mju.ac.kr" + article.select(".list-titles a").attr("href");
 
-                        Long idxNo = extractIdxNo(link);
-                        if (idxNo == null) {
-                            log.info("기사 아이디를 찾을 수 없음");
+                        Long newsIndex = extractNewsIndex(link);
+                        log.info("기사 발견 : {}", newsIndex);
+                        if (newsIndex == null) {
+                            log.warn("인덱스에 맞는 기사를 찾을 수 없음 : {}", link);
                             continue;
                         }
 
-                        boolean exists = newsRepository.existsById(idxNo);
-                        log.info("기사 링크 '{}' 존재 여부 : {}", link, exists);
-
-                        //기존 기사 링크와 비교해서 존재 여부 확인 후 크롤링 결정
-                        if (exists) {
-                            log.info("기존 기사 발견 : '{}', 크롤링 중단", link);
-                            stop = true;
-                            break;
+                        if (newsRepository.existsByNewsIndex(newsIndex)) {
+                            log.info("이미 존재하는 기사 (newsIndex={}): 크롤링 제외", newsIndex);
+                            continue; // 해당 기사만 제외하고 계속 크롤링 진행
                         }
 
                         //기사 정보 추출
@@ -122,7 +118,7 @@ public class NewsService {
                             break;
                         }
 
-                        News news = News.createNews(idxNo, title, date, reporter, imageUrl, summary, link, cat);
+                        News news = News.createNews(newsIndex, title, date, reporter, imageUrl, summary, link, cat);
                         newsList.add(news);
                     }
                     page++;
@@ -145,7 +141,7 @@ public class NewsService {
         return responseList; // 각 카테고리별로 저장된 뉴스 목록 반환
     }
 
-    private Long extractIdxNo(String url){
+    private Long extractNewsIndex(String url){
         Pattern pattern = Pattern.compile("idxno=(\\d+)");
         Matcher matcher = pattern.matcher(url);
         if (matcher.find()){
