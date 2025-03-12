@@ -43,8 +43,8 @@ public class SchedulerService {
         });
     }
 
-    //뉴스 크롤링 스케줄링 (매시간 정각 실행)
-    @Scheduled(cron = "0 0 * * * *")
+    //뉴스 크롤링 스케줄링 (매주 월요일 정각마다 실행)
+    @Scheduled(cron = "0 0 * * 1 *")
     public void scheduledCrawlNews() {
         log.info("[스케쥴러] 매시간 5분마다 기사 크롤링 실행");
         CompletableFuture.runAsync(() -> {
@@ -65,7 +65,9 @@ public class SchedulerService {
     }
 
     //식단 데이터 크롤링 스케줄링 (매주 토, 일, 월 19:00 실행)
-    @Scheduled(cron = "0 0 19 * * SAT,SUN,MON")
+    @Scheduled(cron = "0 0 19 * * 6") // 매주 토요일 19:00 실행
+    @Scheduled(cron = "0 0 19 * * 7") // 매주 일요일 19:00 실행
+    @Scheduled(cron = "0 0 19 * * 1") // 매주 월요일 19:00 실행
     public void scheduledCrawlWeeklyMenu() {
         log.info("[스케쥴러] 매주 토, 일, 월 19시에 식단 크롤링 실행");
         CompletableFuture.runAsync(() -> {
