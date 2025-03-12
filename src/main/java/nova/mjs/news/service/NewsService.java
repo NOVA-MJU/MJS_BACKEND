@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -73,7 +75,13 @@ public class NewsService {
                     for (Element article : articles) {
                         String link = "https://news.mju.ac.kr" + article.select(".list-titles a").attr("href");
 
-                        boolean exists = newsRepository.existsByLink(link);
+                        Long idxNo = extractIdxNo(link);
+                        if (idxNo == null) {
+                            log.info("기사 아이디를 찾을 수 없음");
+                            continue;
+                        }
+
+                        boolean exists = newsRepository.existsById(idxNo);
                         log.info("기사 링크 '{}' 존재 여부 : {}", link, exists);
 
                         //기존 기사 링크와 비교해서 존재 여부 확인 후 크롤링 결정
@@ -114,7 +122,7 @@ public class NewsService {
                             break;
                         }
 
-                        News news = News.createNews(title, date, reporter, imageUrl, summary, link, cat);
+                        News news = News.createNews(idxNo, title, date, reporter, imageUrl, summary, link, cat);
                         newsList.add(news);
                     }
                     page++;
@@ -135,6 +143,15 @@ public class NewsService {
         }
 
         return responseList; // 각 카테고리별로 저장된 뉴스 목록 반환
+    }
+
+    private Long extractIdxNo(String url){
+        Pattern pattern = Pattern.compile("idxno=(\\d+)");
+        Matcher matcher = pattern.matcher(url);
+        if (matcher.find()){
+            return Long.parseLong(matcher.group(1));
+        }
+        return null;
     }
 
     private String extractImageUrl(Element article) {

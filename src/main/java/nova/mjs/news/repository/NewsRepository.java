@@ -18,6 +18,9 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     //링크를 기준으로 중복 여부 확인
     boolean existsByLink(String link);
 
+    //기사 아이디를 기준으로 중복 여부 확인
+    boolean existsById(Long id);
+
     //카테고리 기준으로 존재 여부 확인
     boolean existsByCategory(News.Category category);
 

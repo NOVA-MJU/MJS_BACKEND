@@ -12,9 +12,8 @@ import nova.mjs.member.Member;
 @Table(name = "MJU_News")
 public class News {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "news_id")
-    private Long id;
+    private Long id; //기사 id
 
     @Column(nullable = false)
     private String title; //기사 제목
@@ -31,7 +30,7 @@ public class News {
     @Column(columnDefinition = "TEXT")
     private String summary; //기사 첫 문단
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String link; //기사 링크
 
     @Column(nullable = false, length = 20)
@@ -53,8 +52,9 @@ public class News {
         }
     }
 
-    public static News createNews(String title, String date, String reporter, String imageUrl, String summary, String link, String category) {
+    public static News createNews(Long id, String title, String date, String reporter, String imageUrl, String summary, String link, String category) {
         return News.builder()
+                .id(id)
                 .title(title)
                 .date(date)
                 .reporter(reporter)
