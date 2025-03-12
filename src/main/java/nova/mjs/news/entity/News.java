@@ -16,6 +16,9 @@ public class News {
     @Column(name = "news_id")
     private Long id;
 
+    @Column(name = "news_index", nullable = false, unique = true)
+    private Long newsIndex; //기사 인덱스
+
     @Column(nullable = false)
     private String title; //기사 제목
 
@@ -31,7 +34,7 @@ public class News {
     @Column(columnDefinition = "TEXT")
     private String summary; //기사 첫 문단
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String link; //기사 링크
 
     @Column(nullable = false, length = 20)
@@ -53,8 +56,9 @@ public class News {
         }
     }
 
-    public static News createNews(String title, String date, String reporter, String imageUrl, String summary, String link, String category) {
+    public static News createNews(Long newsIndex, String title, String date, String reporter, String imageUrl, String summary, String link, String category) {
         return News.builder()
+                .newsIndex(newsIndex)
                 .title(title)
                 .date(date)
                 .reporter(reporter)

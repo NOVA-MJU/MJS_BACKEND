@@ -11,7 +11,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +18,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -72,15 +73,25 @@ public class NewsService {
                     }
 
                     for (Element article : articles) {
-                        String title = article.select(".list-titles a strong").text().trim();
-                        if (title.isEmpty()) continue;
+                        String link = "https://news.mju.ac.kr" + article.select(".list-titles a").attr("href");
 
-                        //기존에 있던 기사가 발견되면 크롤링 종료
-                        if (newsRepository.existsByTitle(title)){
-                            log.info("기존 기사 발견: '{}', 크롤링 중단", title);
-                            stop = true;
-                            break;
+                        Long newsIndex = extractNewsIndex(link);
+                        log.info("기사 발견 : {}", newsIndex);
+                        if (newsIndex == null) {
+                            log.warn("인덱스에 맞는 기사를 찾을 수 없음 : {}", link);
+                            continue;
                         }
+
+                        if (newsRepository.existsByNewsIndex(newsIndex)) {
+                            log.info("이미 존재하는 기사 (newsIndex={}): 크롤링 제외", newsIndex);
+                            continue; // 해당 기사만 제외하고 계속 크롤링 진행
+                        }
+
+                        //기사 정보 추출
+                        String title = article.select(".list-titles a strong").text().trim(); //제목
+                        String imageUrl = extractImageUrl(article); //이미지 url
+                        String summary = article.select(".list-summary").text().trim(); //헤더 요약
+
                         // 날짜 & 기자 정보 추출
                         String date = "날짜 정보 없음";
                         String reporter = "기자 정보 없음";
@@ -107,11 +118,7 @@ public class NewsService {
                             break;
                         }
 
-                        String link = "https://news.mju.ac.kr" + article.select(".list-titles a").attr("href");
-                        String imageUrl = extractImageUrl(article);
-                        String summary = article.select(".list-summary").text().trim();
-
-                        News news = News.createNews(title, date, reporter, imageUrl, summary, link, cat);
+                        News news = News.createNews(newsIndex, title, date, reporter, imageUrl, summary, link, cat);
                         newsList.add(news);
                     }
                     page++;
@@ -132,6 +139,15 @@ public class NewsService {
         }
 
         return responseList; // 각 카테고리별로 저장된 뉴스 목록 반환
+    }
+
+    private Long extractNewsIndex(String url){
+        Pattern pattern = Pattern.compile("idxno=(\\d+)");
+        Matcher matcher = pattern.matcher(url);
+        if (matcher.find()){
+            return Long.parseLong(matcher.group(1));
+        }
+        return null;
     }
 
     private String extractImageUrl(Element article) {
