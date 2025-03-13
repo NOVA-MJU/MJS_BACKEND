@@ -80,8 +80,8 @@ public class CommentsService {
     private Comments getExistingCommentByUuid(UUID commentUuid) {
         return commentsRepository.findByUuid(commentUuid)
                 .orElseThrow(() -> {
-                    log.warn("[MJS] 요청한 댓글을 찾을 수 없습니다. ID = {}", commentUuid);
-                    return new CommentNotFoundException(commentUuid);
+                    log.warn("[MJS] 요청한 댓글을 찾을 수 없습니다. UUID = {}", commentUuid);
+                    return new CommentNotFoundException();
                 });
     }
 
