@@ -1,4 +1,4 @@
-package nova.mjs.community.likes;
+package nova.mjs.comments.likes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,19 +17,18 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/boards")
-public class LikeController {
+public class LikeControllerComment {
 
-    private final LikeService likeService;
-    private final MemberRepository memberRepository;
+    private final LikeServiceComment likeServiceComment;
 
     // 좋아요 추가 및 삭제 (토글 방식)
 //    @PreAuthorize(isAuthrization() && userOr')
     @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
 
-    @PostMapping("/{boardUUID}/like")
-    public ResponseEntity<ApiResponse<String>> toggleLike(@PathVariable UUID boardUUID,
+    @PostMapping("/{boardUUID}/comments/{commentUUID}/like")
+    public ResponseEntity<ApiResponse<String>> toggleLike(@PathVariable UUID boardUUID, @PathVariable UUID commentUUID,
                                                           @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        boolean isLiked = likeService.toggleLike(boardUUID, userPrincipal.getUsername());
+        boolean isLiked = likeServiceComment.toggleLike(boardUUID, commentUUID, userPrincipal.getUsername());
         String message = isLiked ? "좋아요가 추가되었습니다." : "좋아요가 취소되었습니다.";
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(message));
     }

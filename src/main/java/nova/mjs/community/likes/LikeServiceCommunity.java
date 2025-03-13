@@ -5,7 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.exception.CommunityNotFoundException;
 import nova.mjs.community.likes.entity.LikeCommunity;
-import nova.mjs.community.likes.repository.LikeRepository;
+import nova.mjs.community.likes.repository.LikeRepositoryCommunity;
 import nova.mjs.community.repository.CommunityBoardRepository;
 import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
@@ -20,8 +20,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 @Transactional(readOnly = true)
-public class LikeService {
-    private final LikeRepository likeRepository;
+public class LikeServiceCommunity {
+    private final LikeRepositoryCommunity likeRepositoryCommunity;
     private final MemberRepository memberRepository;
     private final CommunityBoardRepository communityBoardRepository;
 
@@ -33,16 +33,16 @@ public class LikeService {
         CommunityBoard communityBoard = communityBoardRepository.findByUuid(boardUUID)
                 .orElseThrow(CommunityNotFoundException::new);
 
-        Optional<LikeCommunity> existingLike = likeRepository.findByMemberAndCommunityBoard(member, communityBoard);
+        Optional<LikeCommunity> existingLike = likeRepositoryCommunity.findByMemberAndCommunityBoard(member, communityBoard);
 
         if (existingLike.isPresent()) {
-            likeRepository.delete(existingLike.get());
+            likeRepositoryCommunity.delete(existingLike.get());
             communityBoard.decreaseLikeCount();  // 좋아요 감소 메서드
             log.debug("좋아요 삭제 완료: member_emailId={}, boardUUID={}", emailId, boardUUID);
             return false; // 좋아요 취소됨
         } else {
             LikeCommunity likeCommunity = new LikeCommunity(member, communityBoard);
-            likeRepository.save(likeCommunity);
+            likeRepositoryCommunity.save(likeCommunity);
             communityBoard.increaseLikeCount();  // 좋아요 증가 메서드
             log.debug("좋아요 추가 완료: member_emailId={}, boardUUID={}",emailId, boardUUID);
             return true; // 좋아요 추가됨

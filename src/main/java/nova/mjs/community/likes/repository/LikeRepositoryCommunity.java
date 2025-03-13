@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface LikeRepository extends JpaRepository<LikeCommunity, Long> {
+public interface LikeRepositoryCommunity extends JpaRepository<LikeCommunity, Long> {
 
     // 회원과 게시글을 기준으로 좋아요 여부 확인
     Optional<LikeCommunity> findByMemberAndCommunityBoard(Member member, CommunityBoard communityBoard);

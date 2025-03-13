@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Log4j2
 public class CommentNotFoundException extends BusinessBaseException {
-    public CommentNotFoundException(UUID commentUuid) {
+    public CommentNotFoundException() {
         super(ErrorCode.INVALID_REQUEST);
     }
 }

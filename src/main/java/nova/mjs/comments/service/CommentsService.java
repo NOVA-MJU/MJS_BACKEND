@@ -37,32 +37,41 @@ public class CommentsService {
 
 
 
-    // 1. GEt 댓글 목록 (게시글 ID 기반)
-    public Page<CommentsResponseDto.CommentSummaryDto> getCommentsByBoard(UUID communityBoardUuid, Pageable pageable) {
+    // 1. GEt 댓글 목록 (게시글 ID 기반, 페이지네이션 제거)
+    public List<CommentsResponseDto.CommentSummaryDto> getCommentsByBoard(UUID communityBoardUuid) {
         CommunityBoard board = getExistingBoard(communityBoardUuid);
-        return commentsRepository.findByCommunityBoard(board, pageable)
-                .map(CommentsResponseDto.CommentSummaryDto::fromEntity);
+        List<Comments> comments = commentsRepository.findByCommunityBoard(board);
+        return comments.stream()
+                .map(CommentsResponseDto.CommentSummaryDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    // 2. POST 댓글 작성
+    // 2. POST 댓글 작성, 로그인 연동 추가
     @Transactional
-    public CommentsResponseDto.CommentSummaryDto createComment(UUID communityBoardUuid, String content, UUID memberUuid) {
-        Member member = getExistingMember(memberUuid);
+    public CommentsResponseDto.CommentSummaryDto createComment(UUID communityBoardUuid, String content, String email) {
+        // 이메일을 이용하여 현재 로그인한 회원 정보 가져오기
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(MemberNotFoundException::new);
         CommunityBoard communityBoard = getExistingBoard(communityBoardUuid);
 
         Comments comment = Comments.create(communityBoard, member,content);
         Comments savedComment = commentsRepository.save(comment);
 
-        log.debug("댓글 작성 성공. UUID = {}", savedComment.getUuid());
+        log.debug("댓글 작성 성공. UUID = {}, 작성자 : {}", savedComment.getUuid(), email);
         return CommentsResponseDto.CommentSummaryDto.fromEntity(savedComment);
     }
 
-    // 3. DELETE 댓글 삭제
+    // 3. DELETE 댓글 삭제, 로그인 연동 추가
     @Transactional
-    public void deleteCommentByUuid(UUID commentUuid) {
+    public void deleteCommentByUuid(UUID commentUuid, String email) {
         Comments comment = getExistingCommentByUuid(commentUuid);
+        // 현재 로그인한 사용자가 댓글 작성자인지 체크
+        if (!comment.getMember().getEmail().equals(email)) {
+            throw new IllegalArgumentException("본인이 작성한 댓글만 삭제할 수 있습니다.");
+        }
+
         commentsRepository.delete(comment);
-        log.debug("댓글 삭제 성공. ID = {}", commentUuid);
+        log.debug("댓글 삭제 성공. ID = {}, 작성자: {}", commentUuid, email);
     }
 
     // 4. 특정 게시글 존재 여부 확인
@@ -80,8 +89,8 @@ public class CommentsService {
     private Comments getExistingCommentByUuid(UUID commentUuid) {
         return commentsRepository.findByUuid(commentUuid)
                 .orElseThrow(() -> {
-                    log.warn("[MJS] 요청한 댓글을 찾을 수 없습니다. ID = {}", commentUuid);
-                    return new CommentNotFoundException(commentUuid);
+                    log.warn("[MJS] 요청한 댓글을 찾을 수 없습니다. UUID = {}", commentUuid);
+                    return new CommentNotFoundException();
                 });
     }
 

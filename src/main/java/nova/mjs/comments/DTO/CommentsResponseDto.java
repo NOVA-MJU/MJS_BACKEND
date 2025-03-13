@@ -25,14 +25,17 @@ public class CommentsResponseDto {
         private UUID commentUUID;
         private String content;
         private String nickname;
-        private int likes;
+        private int likeCount;
+        private LocalDateTime createdAt;  // 생성 시간 추가
+
 
         public static CommentSummaryDto fromEntity(Comments comment) {
             return CommentSummaryDto.builder()
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
-                    .likes(comment.getLikes())
+                    .likeCount(comment.getLikeCount())
+                    .createdAt(comment.getCreatedAt())
                     .build();
         }
     }
@@ -62,7 +65,7 @@ public class CommentsResponseDto {
                 .communityBoard(communityBoard)
                 .member(member)
                 .content(this.comments.get(0).getContent()) // 요청 받은 content 사용
-                .likes(0) // 새 댓글은 좋아요 수 0
+                .likeCount(0) // 새 댓글은 좋아요 수 0
                 .uuid(UUID.randomUUID()) // 댓글 UUID 자동 생성
                 .build();
     }

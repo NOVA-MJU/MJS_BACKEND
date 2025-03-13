@@ -38,7 +38,7 @@ public class Comments extends BaseEntity {
     private String content; // 내용
 
     @Column
-    private int likes; // 좋아요 수
+    private int likeCount; // 좋아요 수
 
 
     public static Comments create(CommunityBoard communityBoard, Member member, String content) {
@@ -47,7 +47,18 @@ public class Comments extends BaseEntity {
                 .communityBoard(communityBoard)
                 .member(member)
                 .content(content)
-                .likes(0) // 기본값 설정
+                .likeCount(0) // 기본값 설정
                 .build();
+    }
+
+    // 게시물 좋아요
+    public void increaseLikeCommentCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCommentCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 }
