@@ -11,6 +11,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -169,7 +171,7 @@ public class NewsService {
         }
     }
 
-    public List<NewsResponseDTO> getNewsByCategory(String category) {
+    public Page<NewsResponseDTO> getNewsByCategory(String category, Pageable pageable) {
         log.info("'{}' 카테고리 뉴스 조회 요청", category);
 
         News.Category categoryEnum;
@@ -180,13 +182,13 @@ public class NewsService {
             throw new RuntimeException("잘못된 카테고리 입력: " + category);
         }
 
-        List<News> newsList = newsRepository.findByCategory(categoryEnum);
+        Page<News> newsPage = newsRepository.findByCategory(categoryEnum, pageable);
 
-        if (newsList.isEmpty()) {
+        if (newsPage.isEmpty()) {
             log.warn("'{}' 카테고리 뉴스 없음", category);
             throw new NewsNotFoundException("해당 카테고리에서 기사를 찾을 수 없습니다.", ErrorCode.NEWS_NOT_FOUND);
         }
-        return NewsResponseDTO.fromEntityToList(newsList);
+        return newsPage.map(NewsResponseDTO::fromEntity);
     }
 
     @Transactional
