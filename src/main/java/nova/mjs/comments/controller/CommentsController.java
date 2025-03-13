@@ -5,10 +5,13 @@ import nova.mjs.comments.DTO.CommentsRequestDto;
 import nova.mjs.comments.DTO.CommentsResponseDto;
 import nova.mjs.comments.service.CommentsService;
 import nova.mjs.util.response.ApiResponse;
+import nova.mjs.util.security.UserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
@@ -35,20 +38,25 @@ public class CommentsController {
 
 
     // 2. POSt 댓글 작성
-    @PostMapping("/{boardUUID}/comments/member/{memberUUID}")
+    @PostMapping("/{boardUUID}/comments")
+    @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<CommentsResponseDto.CommentSummaryDto>> createComment(
             @PathVariable UUID boardUUID,
-            @PathVariable UUID memberUUID,
+            @AuthenticationPrincipal UserPrincipal userPrincipal, // 로그인 해야만 댓글 작성 가능
             @RequestBody CommentsRequestDto requestDto
             ) {
+        CommentsResponseDto.CommentSummaryDto response = service.createComment(boardUUID, requestDto.getContent(), userPrincipal.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(service.createComment(boardUUID, requestDto.getContent(), memberUUID)));
+                .body(ApiResponse.success(response));
     }
 
     // 3. DELETE 댓글 삭제
     @DeleteMapping("/comments/{commentUUID}")
-    public ResponseEntity<Void> deleteComment(@PathVariable UUID commentUUID) {
-        service.deleteCommentByUuid(commentUUID);
+    @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable UUID commentUUID,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        service.deleteCommentByUuid(commentUUID, userPrincipal.getUsername());
         return ResponseEntity.noContent().build();
     }
 }
