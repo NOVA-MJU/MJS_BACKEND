@@ -15,6 +15,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,14 +27,9 @@ public class CommentsController {
 
     // 1. 특정 게시물 댓글 목록 조회
     @GetMapping("/{boardUUID}/comments")
-    public ResponseEntity<ApiResponse<Page<CommentsResponseDto.CommentSummaryDto>>> getCommentsByBoard(
-            @PathVariable UUID boardUUID,
-            @RequestParam(defaultValue = "0") int page,   // 기본 페이지 번호
-            @RequestParam(defaultValue = "10") int size   // 기본 페이지 크기
-
-    ){
-        Pageable pageable = PageRequest.of(page, size);
-        Page<CommentsResponseDto.CommentSummaryDto> response = service.getCommentsByBoard(boardUUID, pageable);
+    public ResponseEntity<ApiResponse<List<CommentsResponseDto.CommentSummaryDto>>> getCommentsByBoard(
+            @PathVariable UUID boardUUID) {
+        List<CommentsResponseDto.CommentSummaryDto> response = service.getCommentsByBoard(boardUUID);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

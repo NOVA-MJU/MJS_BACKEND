@@ -37,14 +37,16 @@ public class CommentsService {
 
 
 
-    // 1. GEt 댓글 목록 (게시글 ID 기반)
-    public Page<CommentsResponseDto.CommentSummaryDto> getCommentsByBoard(UUID communityBoardUuid, Pageable pageable) {
+    // 1. GEt 댓글 목록 (게시글 ID 기반, 페이지네이션 제거)
+    public List<CommentsResponseDto.CommentSummaryDto> getCommentsByBoard(UUID communityBoardUuid) {
         CommunityBoard board = getExistingBoard(communityBoardUuid);
-        return commentsRepository.findByCommunityBoard(board, pageable)
-                .map(CommentsResponseDto.CommentSummaryDto::fromEntity);
+        List<Comments> comments = commentsRepository.findByCommunityBoard(board);
+        return comments.stream()
+                .map(CommentsResponseDto.CommentSummaryDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    // 2. POST 댓글 작성
+    // 2. POST 댓글 작성, 로그인 연동 추가
     @Transactional
     public CommentsResponseDto.CommentSummaryDto createComment(UUID communityBoardUuid, String content, String email) {
         // 이메일을 이용하여 현재 로그인한 회원 정보 가져오기
@@ -59,7 +61,7 @@ public class CommentsService {
         return CommentsResponseDto.CommentSummaryDto.fromEntity(savedComment);
     }
 
-    // 3. DELETE 댓글 삭제
+    // 3. DELETE 댓글 삭제, 로그인 연동 추가
     @Transactional
     public void deleteCommentByUuid(UUID commentUuid, String email) {
         Comments comment = getExistingCommentByUuid(commentUuid);
