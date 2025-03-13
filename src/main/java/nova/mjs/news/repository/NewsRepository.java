@@ -1,16 +1,16 @@
 package nova.mjs.news.repository;
 
 import nova.mjs.news.entity.News;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface NewsRepository extends JpaRepository<News, Long> {
 
     //카테고리 기준으로 탐색
-    List<News> findByCategory(News.Category category);
+    Page<News> findByCategory(News.Category category, Pageable pageable);
 
     //링크를 기준으로 중복 여부 확인
     boolean existsByLink(String link);
