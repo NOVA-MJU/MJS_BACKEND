@@ -26,6 +26,8 @@ public class CommentsResponseDto {
         private String content;
         private String nickname;
         private int likeCount;
+        private LocalDateTime createdAt;  // 생성 시간 추가
+
 
         public static CommentSummaryDto fromEntity(Comments comment) {
             return CommentSummaryDto.builder()
@@ -33,6 +35,7 @@ public class CommentsResponseDto {
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
                     .likeCount(comment.getLikeCount())
+                    .createdAt(comment.getCreatedAt())
                     .build();
         }
     }
