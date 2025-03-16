@@ -1,11 +1,13 @@
 package nova.mjs.community.repository;
 
 import nova.mjs.community.entity.CommunityBoard;
+import nova.mjs.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,4 +20,7 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     // 쿼리 최적화 (N + 1 문제 방지)로 성능을 향상시킬 수 있음
     @Query("SELECT cb from CommunityBoard cb JOIN fetch cb.comments where cb.uuid = :uuid")
     Optional<CommunityBoard> findByUuidWithComments(@Param("uuid") UUID uuid);
+
+    // 내가 작성한 게시글 조회
+    List<CommunityBoard> findByAuthor(Member author);
 }
