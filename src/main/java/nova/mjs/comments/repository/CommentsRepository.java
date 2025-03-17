@@ -2,6 +2,7 @@ package nova.mjs.comments.repository;
 
 import nova.mjs.comments.entity.Comments;
 import nova.mjs.community.entity.CommunityBoard;
+import nova.mjs.member.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,5 +23,9 @@ public interface CommentsRepository extends JpaRepository<Comments, Long> {
 
     @Query("SELECT COUNT(c) FROM Comments c WHERE c.communityBoard.uuid = :boardUUID")
     int countByCommunityBoardUuid(@Param("boardUUID") UUID boardUUID);
+
+    // 특정 회원이 댓글을 작성한 게시물 리스트 조회 (중복 방지)
+    @Query("SELECT DISTINCT c.communityBoard FROM Comments c WHERE c.member = :member")
+    List<CommunityBoard> findDistinctCommunityBoardByMember(@Param("member") Member member);
 
 }
