@@ -29,7 +29,7 @@ public class MypageController {
     }
 
     // 2. 내가 작성한 댓글이 속한 게시물 조회
-    @GetMapping("/commentedPosts")
+    @GetMapping("/commented_posts")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<CommunityBoardResponse>>> getMyCommentedPosts(
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
@@ -38,7 +38,7 @@ public class MypageController {
     }
 
     // 3. 내가 찜한 글 조회
-    @GetMapping("/likedPosts")
+    @GetMapping("/liked_posts")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<CommunityBoardResponse>>> getLikedPosts(
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
