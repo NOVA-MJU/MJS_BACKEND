@@ -6,7 +6,7 @@ import nova.mjs.comments.entity.Comments;
 import nova.mjs.comments.likes.entity.LikeComment;
 import nova.mjs.comments.repository.CommentsRepository;
 import nova.mjs.comments.exception.CommentNotFoundException;
-import nova.mjs.comments.likes.repository.LikeRepositoryComment;
+import nova.mjs.comments.likes.repository.LikeCommentRepository;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.exception.CommunityNotFoundException;
 import nova.mjs.community.repository.CommunityBoardRepository;
@@ -23,8 +23,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 @Transactional(readOnly = true)
-public class LikeServiceComment {
-    private final LikeRepositoryComment likeRepositoryComment;
+public class LikeCommentService {
+    private final LikeCommentRepository likeCommentRepository;
     private final MemberRepository memberRepository;
     private final CommentsRepository commentsRepository;
     private final CommunityBoardRepository communityBoardRepository;
@@ -39,16 +39,16 @@ public class LikeServiceComment {
         CommunityBoard communityBoard = communityBoardRepository.findByUuid(boardUUID)
                 .orElseThrow(CommunityNotFoundException::new);
 
-        Optional<LikeComment> existingLike = likeRepositoryComment.findByMemberAndComments(member, comments);
+        Optional<LikeComment> existingLike = likeCommentRepository.findByMemberAndComments(member, comments);
 
         if (existingLike.isPresent()) {
-            likeRepositoryComment.delete(existingLike.get());
+            likeCommentRepository.delete(existingLike.get());
             comments.decreaseLikeCommentCount();  // 좋아요 감소 메서드
             log.debug("좋아요 삭제 완료: member_emailId={}, boardUUID={} , commentUUID={}", emailId, boardUUID, commentsUUID);
             return false; // 좋아요 취소됨
         } else {
             LikeComment likeComment = new LikeComment(member, comments);
-            likeRepositoryComment.save(likeComment);
+            likeCommentRepository.save(likeComment);
             comments.increaseLikeCommentCount();  // 좋아요 증가 메서드
             log.debug("좋아요 추가 완료: member_emailId={}, boardUUID={}, commentsUUID={}",emailId, boardUUID, commentsUUID);
             return true; // 좋아요 추가됨

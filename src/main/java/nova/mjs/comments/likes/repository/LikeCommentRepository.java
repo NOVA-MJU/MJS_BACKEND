@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface LikeRepositoryComment extends JpaRepository<LikeComment, Long> {
+public interface LikeCommentRepository extends JpaRepository<LikeComment, Long> {
 
     // 회원과 댓글을 기준으로 좋아요 여부 확인
     Optional<LikeComment> findByMemberAndComments(Member member, Comments comments);
