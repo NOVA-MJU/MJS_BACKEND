@@ -66,7 +66,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) //JWT 사용 -> 세션 미사용
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/v1/auth/logout").authenticated()
+                        .requestMatchers("/api/v1/auth/logout", "/api/v1/auth/reissue").authenticated()
                         .requestMatchers("/**").permitAll() //이걸 로그인으로 해놔서 config가 가로채감(주의)
                         .anyRequest().authenticated()) //나머지 요청은 인증 필요
                 .addFilterAt(formLoginJwtFilter, UsernamePasswordAuthenticationFilter.class)

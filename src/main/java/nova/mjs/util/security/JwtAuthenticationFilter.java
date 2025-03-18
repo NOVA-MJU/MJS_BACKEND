@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,6 +38,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             log.info("JWT filter 실행 - 요청 URL: {}", request.getRequestURI());
 
+            //토큰 재발급 요청 감지
+            if (request.getRequestURI().equals("/api/v1/auth/reissue") && "POST".equalsIgnoreCase(request.getMethod())) {
+                tokenReissue(request, response);
+                return;
+            }
+
+            //로그인 요청
             if (request.getRequestURI().equals("/api/v1/auth/login")) {
                 filterChain.doFilter(request, response);
                 return;
@@ -80,6 +88,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 4. 정상적인 요청이면 필터 체인 계속 진행
         filterChain.doFilter(request, response);
     }
+
+    private void tokenReissue(HttpServletRequest request, HttpServletResponse response) throws IOException{
+        log.info("토큰 재발급 요청 처리");
+
+        String refreshToken =  extractTokenFromRequest(request);
+        if(refreshToken == null){
+            log.warn("Refresh Token이 없음");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No Refresh Token provided");
+            return;
+        }
+
+        Optional<String> newAccessToken = jwtUtil.reissueToken(refreshToken);
+
+        if (newAccessToken.isPresent()) {
+            log.info("새로운 Access Token 발급 완료");
+            response.setContentType("application/json");
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write("{\"accessToken\": \"" + newAccessToken.get() + "\"}");
+        } else{
+            log.warn("Refresh Token이 유효하지 않음");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or Expired Refresh Token");
+        }
+    }
+
 
     //요청에서 JWT를 추출
     private String extractTokenFromRequest(HttpServletRequest request) {
