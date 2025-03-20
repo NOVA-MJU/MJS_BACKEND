@@ -102,17 +102,31 @@ public class JwtUtil {
 
     //토큰 유효성 검증
     public boolean validateToken(String token) {
-        Claims claims = getAllClaimsFromToken(token);
-        if (claims == null){
-            log.error("JWT 파싱 실패 : 올바른 토큰이 아닙니다.");
+        if (token == null || token.trim().isEmpty()) {
+            log.warn("[MJS] JWT 토큰이 제공되지 않았습니다.");
             return false;
         }
-        boolean isExpired = claims.getExpiration().before(new Date());
 
-        if (isExpired){ //만료 여부 확인
-            log.warn("JWT 토큰이 만료되었습니다.");
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token); //만료된 토큰이면, 여기서 예외 발생
+
+            return true; // 토큰이 유효하면 true 반환
+
+        } catch (ExpiredJwtException e) {
+            log.warn("[MJS] JWT 토큰이 만료되었습니다: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            log.warn("[MJS] JWT 토큰이 변조되었거나 잘못된 형식입니다: {}", e.getMessage());
+        } catch (SignatureException e) {
+            log.warn("[MJS] JWT 토큰 서명이 올바르지 않습니다: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            log.warn("[MJS] 지원되지 않는 JWT 토큰입니다: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.warn("[MJS] 유효하지 않은 JWT 토큰입니다: {}", e.getMessage());
         }
-        return !isExpired;
+        return false; // 예외 발생 시 false 반환
     }
 
     
@@ -120,12 +134,6 @@ public class JwtUtil {
     public boolean isRefreshToken(String token) {
         String type = getClaimFromToken(token, claims -> claims.get("type", String.class));
         return "RefreshToken".equals(type);
-    }
-
-    // JWT가 만료되었는지 확인
-    public boolean isTokenExpired(String token) {
-        Claims claims = getAllClaimsFromToken(token);
-        return claims == null || claims.getExpiration().before(new Date());
     }
 
     // Access Token 재발급

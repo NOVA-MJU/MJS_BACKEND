@@ -27,4 +27,12 @@ public class AuthDTO {
         private String accessToken;
         private String refreshToken;
     }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class TokenResponseDTO{
+        private String accessToken;
+    }
 }
