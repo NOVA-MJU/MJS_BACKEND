@@ -3,9 +3,11 @@ package nova.mjs.util.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.util.exception.BusinessBaseException;
+import nova.mjs.util.exception.ErrorCode;
+import nova.mjs.util.security.AuthDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
@@ -17,15 +19,15 @@ import java.util.function.Function;
 @Slf4j
 public class JwtUtil {
     private final Key secretKey;
-    private final long accessTokenExpiration;
+    private final long accessTokenExpiration = 60 * 1000L;
     private final long refreshTokenExpiration;
 
     public JwtUtil(
             @Value("${jwt.secret}") String secretKey, //yml에서 로드
-            @Value("${jwt.access-token-expiration}") long accessTokenExpiration,
+            //@Value("${jwt.access-token-expiration}") long accessTokenExpiration,
             @Value("${jwt.refresh-token-expiration}") long refreshTokenExpiration) {
         this.secretKey = decodeSecretKey(secretKey); //인코딩 오류를 막으면서 암호화 적용
-        this.accessTokenExpiration = accessTokenExpiration;
+        //this.accessTokenExpiration = accessTokenExpiration;
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
@@ -100,11 +102,20 @@ public class JwtUtil {
         }
     }
 
+    //토큰 형식 검증
+    public String extractToken(String bearerToken){
+        if (bearerToken == null || !bearerToken.startsWith("Bearer ")){
+            log.warn("[MJS] 유효하지 않은 JWT 형식입니다.");
+            throw new BusinessBaseException("유효하지 않은 JWT 형식입니다.", ErrorCode.INVALID_REQUEST);
+        }
+        return bearerToken.substring(7);
+    }
+
     //토큰 유효성 검증
     public boolean validateToken(String token) {
         if (token == null || token.trim().isEmpty()) {
             log.warn("[MJS] JWT 토큰이 제공되지 않았습니다.");
-            return false;
+            throw new BusinessBaseException("JWT 토큰이 제공되지 않았습니다.", ErrorCode.INVALID_REQUEST);
         }
 
         try {
@@ -117,19 +128,23 @@ public class JwtUtil {
 
         } catch (ExpiredJwtException e) {
             log.warn("[MJS] JWT 토큰이 만료되었습니다: {}", e.getMessage());
+            throw new BusinessBaseException("토큰이 만료되었습니다.", ErrorCode.INVALID_REQUEST);
         } catch (MalformedJwtException e) {
             log.warn("[MJS] JWT 토큰이 변조되었거나 잘못된 형식입니다: {}", e.getMessage());
+            throw new BusinessBaseException("JWT 토큰이 변조되었거나 잘못된 형식입니다", ErrorCode.INVALID_REQUEST);
         } catch (SignatureException e) {
             log.warn("[MJS] JWT 토큰 서명이 올바르지 않습니다: {}", e.getMessage());
+            throw new BusinessBaseException("JWT 토큰 서명이 올바르지 않습니다", ErrorCode.INVALID_REQUEST);
         } catch (UnsupportedJwtException e) {
             log.warn("[MJS] 지원되지 않는 JWT 토큰입니다: {}", e.getMessage());
+            throw new BusinessBaseException("지원되지 않는 JWT 토큰입니다", ErrorCode.INVALID_REQUEST);
         } catch (JwtException e) {
             log.warn("[MJS] 유효하지 않은 JWT 토큰입니다: {}", e.getMessage());
+            throw new BusinessBaseException("유효하지 않은 JWT 토큰입니다", ErrorCode.INVALID_REQUEST);
         }
-        return false; // 예외 발생 시 false 반환
+
     }
 
-    
     // JWT가 Refresh Token인지 확인
     public boolean isRefreshToken(String token) {
         String type = getClaimFromToken(token, claims -> claims.get("type", String.class));
@@ -137,21 +152,27 @@ public class JwtUtil {
     }
 
     // Access Token 재발급
-    public Optional<String> reissueToken(String refreshToken) {
-        // 1. Refresh Token 유효성 검사
-        if (!validateToken(refreshToken) || !isRefreshToken(refreshToken)) {
-            return Optional.empty(); // 유효하지 않은 경우 빈 값 반환
+    public AuthDTO.TokenResponseDTO reissueToken(String refreshToken) {
+        String token = extractToken(refreshToken);
+        validateToken(token);
+
+        if (!isRefreshToken(token)) {
+            throw new BusinessBaseException("유효한 Refresh Token이 아닙니다.", ErrorCode.INVALID_REQUEST);
         }
 
-        // 2. Refresh Token에서 사용자 ID 및 역할(Role) 추출
-        UUID uuid = getUserIdFromToken(refreshToken);
-        String email = getEmailFromToken(refreshToken);
-        String role = getClaimFromToken(refreshToken, claims -> claims.get("role", String.class));
+        //Refresh Token에서 사용자 ID 및 역할(Role) 추출
+        UUID uuid = getUserIdFromToken(token);
+        String email = getEmailFromToken(token);
+        String role = getClaimFromToken(token, claims -> claims.get("role", String.class));
 
-        if (uuid == null || email == null){
-            return Optional.empty();
+        if (uuid == null || email == null) {
+            throw new BusinessBaseException("Refresh Token에서 사용자 정보를 추출할 수 없습니다.", ErrorCode.INVALID_REQUEST);
         }
-        // 3. 새로운 Access Token 생성 후 반환
-        return Optional.of(generateAccessToken(uuid, email, role));
+
+        String newAccessToken = generateAccessToken(uuid, email, role);
+
+        return AuthDTO.TokenResponseDTO.builder()
+                .accessToken(newAccessToken)
+                .build();
     }
 }

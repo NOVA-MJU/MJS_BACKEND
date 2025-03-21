@@ -26,26 +26,11 @@ public class AuthController {
             @RequestHeader("Authorization") String refreshToken) {
         log.info("토큰 재발급 요청");
 
-        if (refreshToken == null || !refreshToken.startsWith("Bearer ")) {
-            log.warn("유효하지 않은 Refresh Token 형식");
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.success(null));
-        }
+        AuthDTO.TokenResponseDTO newAccessToken = jwtUtil.reissueToken(refreshToken);
 
-        String token = refreshToken.substring(7);
-        Optional<String> newAccessToken = jwtUtil.reissueToken(token);
+        log.info("새로운 Access Token 발급 완료");
 
-        return newAccessToken.map(accessToken -> {
-            log.info("새로운 Access Token 발급 완료");
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(ApiResponse.success(new AuthDTO.TokenResponseDTO(accessToken)));
-        }).orElseGet(() -> {
-            log.warn("Refresh Token이 유효하지 않음");
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.success(null)); // 에러 메시지 없이 null 반환
-        });
+        return ResponseEntity
+                .ok(ApiResponse.success(newAccessToken));
     }
 }
