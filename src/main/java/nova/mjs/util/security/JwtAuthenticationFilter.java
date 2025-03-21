@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -37,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             log.info("JWT filter 실행 - 요청 URL: {}", request.getRequestURI());
 
+            //로그인 요청
             if (request.getRequestURI().equals("/api/v1/auth/login")) {
                 filterChain.doFilter(request, response);
                 return;
@@ -80,6 +82,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 4. 정상적인 요청이면 필터 체인 계속 진행
         filterChain.doFilter(request, response);
     }
+
 
     //요청에서 JWT를 추출
     private String extractTokenFromRequest(HttpServletRequest request) {
