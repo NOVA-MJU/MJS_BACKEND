@@ -2,6 +2,7 @@ package nova.mjs.notice.dto;
 
 import lombok.*;
 import nova.mjs.notice.entity.Notice;
+import nova.mjs.notice.search.NoticeSearchDocument;
 
 @Getter
 @Builder
@@ -21,4 +22,14 @@ public class NoticeResponseDto {
                 .link(notice.getLink())
                 .build();
     }
+
+    public static NoticeResponseDto fromSearchDocument(NoticeSearchDocument document) {
+        return NoticeResponseDto.builder()
+                .title(document.getTitle())
+                .date(document.getDate())
+                .category(document.getCategory())
+                .link(document.getLink())
+                .build();
+    }
+
 }

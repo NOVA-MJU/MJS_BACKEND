@@ -65,6 +65,8 @@ dependencies {
 	//Json parse
 	implementation 'org.json:json:20210307'
 
+	//elastic search
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 }
 
 test {
