@@ -2,12 +2,15 @@ package nova.mjs.comments.entity;
 import lombok.*;
 import jakarta.persistence.*;
 import nova.mjs.comments.DTO.CommentsResponseDto;
+import nova.mjs.comments.likes.entity.LikeComment;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
 import org.w3c.dom.Text;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -39,6 +42,10 @@ public class Comments extends BaseEntity {
 
     @Column
     private int likeCount; // 좋아요 수
+
+    @OneToMany(mappedBy = "comments", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LikeComment> likeComments = new ArrayList<>();
+
 
 
     public static Comments create(CommunityBoard communityBoard, Member member, String content) {
