@@ -24,20 +24,22 @@ public class CommentResponseDto {
         private String content;
         private String nickname;
         private int likeCount;
-        private LocalDateTime createdAt;  // 생성 시간 추가
+        private LocalDateTime createdAt;
+        private boolean isLiked; // 현재 로그인 한 사용자가 좋아요를 눌렀는가 T/F
 
 
-        public static CommentSummaryDto fromEntity(Comment comment) {
+        public static CommentSummaryDto fromEntity(Comment comment, boolean isLiked) {
             return CommentSummaryDto.builder()
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
                     .likeCount(comment.getLikeCount())
                     .createdAt(comment.getCreatedAt())
+                    .isLiked(isLiked)
                     .build();
         }
     }
-
+/*
     // Entity 리스트 -> DTO 변환 (게시글의 모든 댓글)
     public static CommentResponseDto fromEntities(UUID communityBoardUuid, List<Comment> comments) {
         List<CommentSummaryDto> commentList = comments.stream()
@@ -67,6 +69,6 @@ public class CommentResponseDto {
                 .uuid(UUID.randomUUID()) // 댓글 UUID 자동 생성
                 .build();
     }
-
+*/
 
 }

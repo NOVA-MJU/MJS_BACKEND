@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,4 +22,9 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> 
     @Query("SELECT COUNT(l) FROM CommentLike l WHERE l.comment.uuid = :commentsUUID")
     int countByCommentUuid(@Param("commentsUUID") UUID commentsUUID);
 
+    @Query(" SELECT cl.comment.uuid FROM CommentLike cl WHERE cl.member = :member AND cl.comment.uuid IN :commentUUID")
+    List<UUID> findCommentUuidsLikedByMember(
+            @Param("member") Member member,
+            @Param("commentUUID") List<UUID> commentUUID
+    );
 }
