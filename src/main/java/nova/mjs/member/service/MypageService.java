@@ -3,7 +3,7 @@ package nova.mjs.member.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import nova.mjs.community.DTO.CommunityBoardResponse;
-import nova.mjs.community.likes.repository.LikeCommunityRepository;
+import nova.mjs.community.likes.repository.CommunityLikeRepository;
 import nova.mjs.community.repository.CommunityBoardRepository;
 import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
@@ -23,7 +23,7 @@ public class MypageService {
 
     private final CommunityBoardRepository communityBoardRepository;
     private final CommentRepository commentRepository;
-    private final LikeCommunityRepository likeCommunityRepository;
+    private final CommunityLikeRepository communityLikeRepository;
     private final MemberRepository memberRepository;
 
     // 1. 내가 작성한 글 조회
@@ -33,7 +33,7 @@ public class MypageService {
 
         return communityBoardRepository.findByAuthor(member).stream()
                 .map(board -> {
-                    int likeCount = likeCommunityRepository.countByCommunityBoardUuid(board.getUuid());
+                    int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
                     int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
                     return CommunityBoardResponse.fromEntity(board, likeCount, commentCount);
                 })
@@ -47,7 +47,7 @@ public class MypageService {
 
         return commentRepository.findDistinctCommunityBoardByMember(member).stream()
                 .map(board -> {
-                    int likeCount = likeCommunityRepository.countByCommunityBoardUuid(board.getUuid());
+                    int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
                     int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
                     return CommunityBoardResponse.fromEntity(board, likeCount, commentCount);
                 })
@@ -59,9 +59,9 @@ public class MypageService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
 
-        return likeCommunityRepository.findCommunityBoardsByMember(member).stream()
+        return communityLikeRepository.findCommunityBoardsByMember(member).stream()
                 .map(board -> {
-                    int likeCount = likeCommunityRepository.countByCommunityBoardUuid(board.getUuid());
+                    int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
                     int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
                     return CommunityBoardResponse.fromEntity(board, likeCount, commentCount);
                 })

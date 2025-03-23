@@ -9,7 +9,7 @@ import nova.mjs.member.Member;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "like_comment")
-public class LikeComment {
+public class CommentLike {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_like_id")
@@ -23,7 +23,7 @@ public class LikeComment {
     @JoinColumn(name = "comments_id", nullable = false)
     private Comment comment;
 
-    public LikeComment(Member member, Comment comment) {
+    public CommentLike(Member member, Comment comment) {
         this.member = member;
         this.comment = comment;
     }

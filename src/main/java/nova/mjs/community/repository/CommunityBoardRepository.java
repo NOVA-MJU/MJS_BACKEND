@@ -18,8 +18,8 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     // 댓글 lazy loading 해결을 위한 fetch join
     // 댓글을 한 번에 가져옴
     // 쿼리 최적화 (N + 1 문제 방지)로 성능을 향상시킬 수 있음
-    @Query("SELECT cb from CommunityBoard cb JOIN fetch cb.comments where cb.uuid = :uuid")
-    Optional<CommunityBoard> findByUuidWithComments(@Param("uuid") UUID uuid);
+    @Query("SELECT cb from CommunityBoard cb JOIN fetch cb.comment where cb.uuid = :uuid")
+    Optional<CommunityBoard> findByUuidWithComment(@Param("uuid") UUID uuid);
 
     // 내가 작성한 게시글 조회
     List<CommunityBoard> findByAuthor(Member author);

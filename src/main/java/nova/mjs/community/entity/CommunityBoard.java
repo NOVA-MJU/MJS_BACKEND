@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.comment.entity.Comment;
 import nova.mjs.community.entity.enumList.CommunityCategory;
-import nova.mjs.community.likes.entity.LikeCommunity;
+import nova.mjs.community.likes.entity.CommunityLike;
 import nova.mjs.member.Member;
 import nova.mjs.util.entity.BaseEntity;
 
@@ -68,7 +68,7 @@ public class CommunityBoard extends BaseEntity {
     private LocalDateTime publishedAt;  // 공개 게시 시간
 
     @OneToMany(mappedBy = "communityBoard", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LikeCommunity> likeCommunity = new ArrayList<>();
+    private List<CommunityLike> communityLike = new ArrayList<>();
 
 
     // === 생성 메서드 ===
@@ -121,7 +121,7 @@ public class CommunityBoard extends BaseEntity {
 
     // 댓글
     @OneToMany(mappedBy = "communityBoard", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
-    private List<Comment> comments;
+    private List<Comment> comment;
 
     // 게시물 좋아요
     public void increaseLikeCount() {

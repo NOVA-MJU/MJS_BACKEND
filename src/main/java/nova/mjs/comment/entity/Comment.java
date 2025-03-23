@@ -1,7 +1,7 @@
 package nova.mjs.comment.entity;
 import lombok.*;
 import jakarta.persistence.*;
-import nova.mjs.comment.likes.entity.LikeComment;
+import nova.mjs.comment.likes.entity.CommentLike;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "comments")
+@Table(name = "comment")
 public class Comment extends BaseEntity {
 
     @Id
@@ -40,8 +40,8 @@ public class Comment extends BaseEntity {
     @Column
     private int likeCount; // 좋아요 수
 
-    @OneToMany(mappedBy = "comments", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LikeComment> likeComments = new ArrayList<>();
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommentLike> commentLike = new ArrayList<>();
 
 
 

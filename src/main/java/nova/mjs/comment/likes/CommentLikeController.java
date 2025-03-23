@@ -16,9 +16,9 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/boards")
-public class LikeCommentController {
+public class CommentLikeController {
 
-    private final LikeCommentService likeCommentService;
+    private final CommentLikeService commentLikeService;
 
     // 좋아요 추가 및 삭제 (토글 방식)
 //    @PreAuthorize(isAuthrization() && userOr')
@@ -27,7 +27,7 @@ public class LikeCommentController {
     @PostMapping("/{boardUUID}/comments/{commentUUID}/like")
     public ResponseEntity<ApiResponse<String>> toggleLike(@PathVariable UUID boardUUID, @PathVariable UUID commentUUID,
                                                           @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        boolean isLiked = likeCommentService.toggleLike(boardUUID, commentUUID, userPrincipal.getUsername());
+        boolean isLiked = commentLikeService.toggleLike(boardUUID, commentUUID, userPrincipal.getUsername());
         String message = isLiked ? "좋아요가 추가되었습니다." : "좋아요가 취소되었습니다.";
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(message));
     }
