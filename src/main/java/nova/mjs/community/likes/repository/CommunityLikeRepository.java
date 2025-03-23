@@ -1,6 +1,6 @@
 package nova.mjs.community.likes.repository;
 
-import nova.mjs.community.likes.entity.LikeCommunity;
+import nova.mjs.community.likes.entity.CommunityLike;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,17 +13,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface LikeCommunityRepository extends JpaRepository<LikeCommunity, Long> {
+public interface CommunityLikeRepository extends JpaRepository<CommunityLike, Long> {
 
     // 회원과 게시글을 기준으로 좋아요 여부 확인
-    Optional<LikeCommunity> findByMemberAndCommunityBoard(Member member, CommunityBoard communityBoard);
+    Optional<CommunityLike> findByMemberAndCommunityBoard(Member member, CommunityBoard communityBoard);
 
     // 특정 게시글의 좋아요 개수 조회
-    @Query("SELECT COUNT(likeCommunity) FROM LikeCommunity likeCommunity WHERE likeCommunity.communityBoard.uuid = :boardUUID")
+    @Query("SELECT COUNT(likeCommunity) FROM CommunityLike likeCommunity WHERE likeCommunity.communityBoard.uuid = :boardUUID")
     int countByCommunityBoardUuid(@Param("boardUUID") UUID boardUUID);
 
     // 특정 회원이 찜한 게시물 리스트 조회
-    @Query("SELECT likeCommunity.communityBoard FROM LikeCommunity likeCommunity WHERE likeCommunity.member = :member")
+    @Query("SELECT likeCommunity.communityBoard FROM CommunityLike likeCommunity WHERE likeCommunity.member = :member")
     List<CommunityBoard> findCommunityBoardsByMember(@Param("member") Member member);
 
 }

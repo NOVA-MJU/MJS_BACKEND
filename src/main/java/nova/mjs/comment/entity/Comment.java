@@ -1,13 +1,13 @@
-package nova.mjs.comments.entity;
+package nova.mjs.comment.entity;
 import lombok.*;
 import jakarta.persistence.*;
-import nova.mjs.comments.DTO.CommentsResponseDto;
+import nova.mjs.comment.likes.entity.CommentLike;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
-import org.w3c.dom.Text;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -15,8 +15,8 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "comments")
-public class Comments extends BaseEntity {
+@Table(name = "comment")
+public class Comment extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,9 +40,13 @@ public class Comments extends BaseEntity {
     @Column
     private int likeCount; // 좋아요 수
 
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommentLike> commentLike = new ArrayList<>();
 
-    public static Comments create(CommunityBoard communityBoard, Member member, String content) {
-        return Comments.builder()
+
+
+    public static Comment create(CommunityBoard communityBoard, Member member, String content) {
+        return Comment.builder()
                 .uuid(UUID.randomUUID())
                 .communityBoard(communityBoard)
                 .member(member)

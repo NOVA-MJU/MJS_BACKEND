@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.exception.CommunityNotFoundException;
-import nova.mjs.community.likes.entity.LikeCommunity;
-import nova.mjs.community.likes.repository.LikeCommunityRepository;
+import nova.mjs.community.likes.entity.CommunityLike;
+import nova.mjs.community.likes.repository.CommunityLikeRepository;
 import nova.mjs.community.repository.CommunityBoardRepository;
 import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
@@ -20,8 +20,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 @Transactional(readOnly = true)
-public class LikeCommunityService {
-    private final LikeCommunityRepository likeCommunityRepository;
+public class CommunityLikeService {
+    private final CommunityLikeRepository communityLikeRepository;
     private final MemberRepository memberRepository;
     private final CommunityBoardRepository communityBoardRepository;
 
@@ -33,16 +33,16 @@ public class LikeCommunityService {
         CommunityBoard communityBoard = communityBoardRepository.findByUuid(boardUUID)
                 .orElseThrow(CommunityNotFoundException::new);
 
-        Optional<LikeCommunity> existingLike = likeCommunityRepository.findByMemberAndCommunityBoard(member, communityBoard);
+        Optional<CommunityLike> existingLike = communityLikeRepository.findByMemberAndCommunityBoard(member, communityBoard);
 
         if (existingLike.isPresent()) {
-            likeCommunityRepository.delete(existingLike.get());
+            communityLikeRepository.delete(existingLike.get());
             communityBoard.decreaseLikeCount();  // 좋아요 감소 메서드
             log.debug("좋아요 삭제 완료: member_emailId={}, boardUUID={}", emailId, boardUUID);
             return false; // 좋아요 취소됨
         } else {
-            LikeCommunity likeCommunity = new LikeCommunity(member, communityBoard);
-            likeCommunityRepository.save(likeCommunity);
+            CommunityLike communityLike = new CommunityLike(member, communityBoard);
+            communityLikeRepository.save(communityLike);
             communityBoard.increaseLikeCount();  // 좋아요 증가 메서드
             log.debug("좋아요 추가 완료: member_emailId={}, boardUUID={}",emailId, boardUUID);
             return true; // 좋아요 추가됨
