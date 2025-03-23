@@ -1,20 +1,16 @@
-package nova.mjs.comments.controller;
+package nova.mjs.comment.controller;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.comments.DTO.CommentsRequestDto;
-import nova.mjs.comments.DTO.CommentsResponseDto;
-import nova.mjs.comments.service.CommentsService;
+import nova.mjs.comment.DTO.CommentRequestDto;
+import nova.mjs.comment.DTO.CommentResponseDto;
+import nova.mjs.comment.service.CommentService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,14 +18,14 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/boards")
 @RequiredArgsConstructor
-public class CommentsController {
-    private final CommentsService service;
+public class CommentController {
+    private final CommentService service;
 
     // 1. 특정 게시물 댓글 목록 조회
     @GetMapping("/{boardUUID}/comments")
-    public ResponseEntity<ApiResponse<List<CommentsResponseDto.CommentSummaryDto>>> getCommentsByBoard(
+    public ResponseEntity<ApiResponse<List<CommentResponseDto.CommentSummaryDto>>> getCommentsByBoard(
             @PathVariable UUID boardUUID) {
-        List<CommentsResponseDto.CommentSummaryDto> response = service.getCommentsByBoard(boardUUID);
+        List<CommentResponseDto.CommentSummaryDto> response = service.getCommentsByBoard(boardUUID);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -37,12 +33,12 @@ public class CommentsController {
     // 2. POSt 댓글 작성
     @PostMapping("/{boardUUID}/comments")
     @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
-    public ResponseEntity<ApiResponse<CommentsResponseDto.CommentSummaryDto>> createComment(
+    public ResponseEntity<ApiResponse<CommentResponseDto.CommentSummaryDto>> createComment(
             @PathVariable UUID boardUUID,
             @AuthenticationPrincipal UserPrincipal userPrincipal, // 로그인 해야만 댓글 작성 가능
-            @RequestBody CommentsRequestDto requestDto
+            @RequestBody CommentRequestDto requestDto
             ) {
-        CommentsResponseDto.CommentSummaryDto response = service.createComment(boardUUID, requestDto.getContent(), userPrincipal.getUsername());
+        CommentResponseDto.CommentSummaryDto response = service.createComment(boardUUID, requestDto.getContent(), userPrincipal.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response));
     }

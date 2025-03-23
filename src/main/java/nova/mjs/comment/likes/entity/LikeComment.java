@@ -1,11 +1,9 @@
-package nova.mjs.comments.likes.entity;
+package nova.mjs.comment.likes.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.comments.entity.Comments;
+import nova.mjs.comment.entity.Comment;
 import nova.mjs.member.Member;
-
-import java.util.UUID;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -23,10 +21,10 @@ public class LikeComment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comments_id", nullable = false)
-    private Comments comments;
+    private Comment comment;
 
-    public LikeComment(Member member, Comments comments) {
+    public LikeComment(Member member, Comment comment) {
         this.member = member;
-        this.comments = comments;
+        this.comment = comment;
     }
 }

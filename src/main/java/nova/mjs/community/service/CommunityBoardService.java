@@ -2,7 +2,7 @@ package nova.mjs.community.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.comments.repository.CommentsRepository;
+import nova.mjs.comment.repository.CommentRepository;
 import nova.mjs.community.DTO.CommunityBoardRequest;
 import nova.mjs.community.DTO.CommunityBoardResponse;
 import nova.mjs.community.entity.CommunityBoard;
@@ -32,14 +32,14 @@ public class CommunityBoardService {
 
     private final MemberRepository memberRepository;
 
-    private final CommentsRepository commentsRepository;
+    private final CommentRepository commentRepository;
 
     // 1. GET 페이지네이션
     public Page<CommunityBoardResponse> getBoards(Pageable pageable) {
         return communityBoardRepository.findAll(pageable)
                 .map(board -> {
                     int likeCount = likeCommunityRepository.countByCommunityBoardUuid(board.getUuid());
-                    int commentCount = commentsRepository.countByCommunityBoardUuid(board.getUuid()); // 댓글 개수 조회
+                    int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid()); // 댓글 개수 조회
                     return CommunityBoardResponse.fromEntity(board, likeCount, commentCount);
                 });
 
@@ -50,7 +50,7 @@ public class CommunityBoardService {
         CommunityBoard board = getExistingBoard(uuid);
         int likeCount = likeCommunityRepository.countByCommunityBoardUuid(uuid);
 
-        int commentCount = commentsRepository.countByCommunityBoardUuid(uuid); // 댓글 개수 조회
+        int commentCount = commentRepository.countByCommunityBoardUuid(uuid); // 댓글 개수 조회
 
         log.debug("자유 게시글 조회 성공. = {}, 좋아요 개수 = {}, 댓글 개수 = {}", uuid, likeCount, commentCount);
         return CommunityBoardResponse.fromEntity(board, likeCount, commentCount);
@@ -73,7 +73,7 @@ public class CommunityBoardService {
         communityBoardRepository.save(board);
 
         int likeCount = likeCommunityRepository.countByCommunityBoardUuid(board.getUuid());
-        int commentCount = commentsRepository.countByCommunityBoardUuid(board.getUuid()); // 추가
+        int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid()); // 추가
 
         return CommunityBoardResponse.fromEntity(board, likeCount, commentCount);
     }
@@ -91,7 +91,7 @@ public class CommunityBoardService {
                 request.getContentImages() // contentImages 추가
         );
         int likeCount = likeCommunityRepository.countByCommunityBoardUuid(board.getUuid());
-        int commentCount = commentsRepository.countByCommunityBoardUuid(board.getUuid()); // 추가
+        int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid()); // 추가
 
         // 엔티티를 DTO로 변환하여 반환
         return CommunityBoardResponse.fromEntity(board, likeCount, commentCount);

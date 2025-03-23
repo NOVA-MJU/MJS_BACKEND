@@ -1,7 +1,7 @@
-package nova.mjs.comments.likes.repository;
+package nova.mjs.comment.likes.repository;
 
-import nova.mjs.comments.entity.Comments;
-import nova.mjs.comments.likes.entity.LikeComment;
+import nova.mjs.comment.entity.Comment;
+import nova.mjs.comment.likes.entity.LikeComment;
 import nova.mjs.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface LikeCommentRepository extends JpaRepository<LikeComment, Long> {
 
     // 회원과 댓글을 기준으로 좋아요 여부 확인
-    Optional<LikeComment> findByMemberAndComments(Member member, Comments comments);
+    Optional<LikeComment> findByMemberAndComments(Member member, Comment comment);
 
     // 특정 댓글의 좋아요 개수 조회
     @Query("SELECT COUNT(l) FROM LikeComment l WHERE l.comments.uuid = :commentsUUID")
