@@ -48,7 +48,7 @@ public class CommentController {
     }
 
     // 3. DELETE 댓글 삭제
-    @DeleteMapping("/comments/{commentUUID}")
+    @DeleteMapping("/{boardUUID/comments/{commentUUID}")
     @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
     public ResponseEntity<Void> deleteComment(
             @PathVariable UUID commentUUID,
