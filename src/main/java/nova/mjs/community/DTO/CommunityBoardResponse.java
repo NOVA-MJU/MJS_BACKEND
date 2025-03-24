@@ -21,10 +21,11 @@ public class CommunityBoardResponse {
     private LocalDateTime createdAt;  // 게시 시간
     private LocalDateTime updatedAt;  // 게시 시간
     private int likeCount; // 좋아요 개수 추가
+    private int commentCount; // 좋아요 개수 추가
     private String author;
 
     // 엔티티에서 DTO로 변환하는 메서드
-    public static CommunityBoardResponse fromEntity(CommunityBoard entity, int likeCount) {
+    public static CommunityBoardResponse fromEntity(CommunityBoard entity, int likeCount, int commentCount) {
 
         return CommunityBoardResponse.builder()
                 .uuid(entity.getUuid())
@@ -37,6 +38,24 @@ public class CommunityBoardResponse {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .likeCount(likeCount)
+                .commentCount(entity.getLikeCount())
+                .author(entity.getAuthor() != null ? entity.getAuthor().getNickname() : "Unknown") // ✅ 작성자 닉네임 처리
+                .build();
+    }
+
+    public static CommunityBoardResponse fromEntity(CommunityBoard entity) {
+
+        return CommunityBoardResponse.builder()
+                .uuid(entity.getUuid())
+                .title(entity.getTitle())
+                .content(entity.getContent())
+                .contentImages(entity.getContentImages())
+                .viewCount(entity.getViewCount())
+                .published(entity.getPublished())
+                .publishedAt(entity.getPublishedAt())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .commentCount(entity.getLikeCount())
                 .author(entity.getAuthor() != null ? entity.getAuthor().getNickname() : "Unknown") // ✅ 작성자 닉네임 처리
                 .build();
     }

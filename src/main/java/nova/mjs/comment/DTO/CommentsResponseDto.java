@@ -1,14 +1,11 @@
-package nova.mjs.comments.DTO;
+package nova.mjs.comment.DTO;
 import lombok.*;
-import nova.mjs.comments.entity.Comments;
+import nova.mjs.comment.entity.Comment;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
-import static org.springframework.data.repository.util.ReactiveWrapperConverters.map;
 
 @Getter
 @Builder
@@ -27,7 +24,7 @@ public class CommentsResponseDto {
         private String nickname;
         private int likes;
 
-        public static CommentSummaryDto fromEntity(Comments comment) {
+        public static CommentSummaryDto fromEntity(Comment comment) {
             return CommentSummaryDto.builder()
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
@@ -38,7 +35,7 @@ public class CommentsResponseDto {
     }
 
     // Entity 리스트 -> DTO 변환 (게시글의 모든 댓글)
-    public static CommentsResponseDto fromEntities(UUID communityBoardUuid, List<Comments> comments) {
+    public static CommentsResponseDto fromEntities(UUID communityBoardUuid, List<Comment> comments) {
         List<CommentSummaryDto> commentList = comments.stream()
                 .map(CommentSummaryDto::fromEntity)
                 .toList();
@@ -50,15 +47,15 @@ public class CommentsResponseDto {
     }
 
     //Entity 하나 -> DTO 변환 (단일 댓글 조회)
-    public static CommentsResponseDto fromEntity(Comments comment) {
+    public static CommentsResponseDto fromEntity(Comment comment) {
         return CommentsResponseDto.builder()
                 .communityBoardUuid(comment.getCommunityBoard().getUuid())
                 .comments(List.of(CommentSummaryDto.fromEntity(comment)))
                 .build();
     }
 
-    public Comments toEntity(CommunityBoard communityBoard, Member member) {
-        return Comments.builder()
+    public Comment toEntity(CommunityBoard communityBoard, Member member) {
+        return Comment.builder()
                 .communityBoard(communityBoard)
                 .member(member)
                 .content(this.comments.get(0).getContent()) // 요청 받은 content 사용

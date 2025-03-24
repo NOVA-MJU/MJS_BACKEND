@@ -1,4 +1,4 @@
-package nova.mjs.comments.exception;
+package nova.mjs.comment.exception;
 import lombok.extern.log4j.Log4j2;
 import nova.mjs.util.exception.BusinessBaseException;
 import nova.mjs.util.exception.ErrorCode;

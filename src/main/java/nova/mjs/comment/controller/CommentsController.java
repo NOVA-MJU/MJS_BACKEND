@@ -1,9 +1,9 @@
-package nova.mjs.comments.controller;
+package nova.mjs.comment.controller;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.comments.DTO.CommentsRequestDto;
-import nova.mjs.comments.DTO.CommentsResponseDto;
-import nova.mjs.comments.service.CommentsService;
+import nova.mjs.comment.DTO.CommentsRequestDto;
+import nova.mjs.comment.DTO.CommentsResponseDto;
+import nova.mjs.comment.service.CommentsService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

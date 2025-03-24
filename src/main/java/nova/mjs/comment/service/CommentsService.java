@@ -1,14 +1,12 @@
-package nova.mjs.comments.service;
+package nova.mjs.comment.service;
 
-import jakarta.annotation.PostConstruct;
 import lombok.*;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.comments.DTO.CommentsResponseDto;
-import nova.mjs.comments.entity.Comments;
-import nova.mjs.comments.exception.CommentNotFoundException;
-import nova.mjs.comments.repository.CommentsRepository;
+import nova.mjs.comment.DTO.CommentsResponseDto;
+import nova.mjs.comment.entity.Comment;
+import nova.mjs.comment.exception.CommentNotFoundException;
+import nova.mjs.comment.repository.CommentsRepository;
 import nova.mjs.community.entity.CommunityBoard;
-import nova.mjs.community.entity.enumList.CommunityCategory;
 import nova.mjs.community.repository.CommunityBoardRepository;
 import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
@@ -19,11 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import nova.mjs.community.exception.CommunityNotFoundException;
 import nova.mjs.member.exception.MemberNotFoundException;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -50,8 +45,8 @@ public class CommentsService {
         Member member = getExistingMember(memberUuid);
         CommunityBoard communityBoard = getExistingBoard(communityBoardUuid);
 
-        Comments comment = Comments.create(communityBoard, member,content);
-        Comments savedComment = commentsRepository.save(comment);
+        Comment comment = Comment.create(communityBoard, member,content);
+        Comment savedComment = commentsRepository.save(comment);
 
         log.debug("댓글 작성 성공. UUID = {}", savedComment.getUuid());
         return CommentsResponseDto.CommentSummaryDto.fromEntity(savedComment);
@@ -60,7 +55,7 @@ public class CommentsService {
     // 3. DELETE 댓글 삭제
     @Transactional
     public void deleteCommentByUuid(UUID commentUuid) {
-        Comments comment = getExistingCommentByUuid(commentUuid);
+        Comment comment = getExistingCommentByUuid(commentUuid);
         commentsRepository.delete(comment);
         log.debug("댓글 삭제 성공. ID = {}", commentUuid);
     }
@@ -77,7 +72,7 @@ public class CommentsService {
                 .orElseThrow(MemberNotFoundException::new);
     }
 
-    private Comments getExistingCommentByUuid(UUID commentUuid) {
+    private Comment getExistingCommentByUuid(UUID commentUuid) {
         return commentsRepository.findByUuid(commentUuid)
                 .orElseThrow(() -> {
                     log.warn("[MJS] 요청한 댓글을 찾을 수 없습니다. ID = {}", commentUuid);

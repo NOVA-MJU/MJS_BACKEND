@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,11 +49,11 @@ public class CommunityBoardController {
 
     // 3. POST 게시글 작성
     @PostMapping
+    @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<CommunityBoardResponse>> createBoard(
             @RequestBody CommunityBoardRequest request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        CommunityBoardResponse board = service.createBoard(request, "mjs@mju.ac.kr");
-//        CommunityBoardResponse board = service.createBoard(request, userPrincipal.getUsername());
+        CommunityBoardResponse board = service.createBoard(request, userPrincipal.getUsername());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board)); // HTTP 201 Created
@@ -60,8 +61,12 @@ public class CommunityBoardController {
 
     // 4. PATCH 게시글 수정
     @PatchMapping("/{uuid}")
-    public ResponseEntity<ApiResponse<CommunityBoardResponse>> updateBoard(@PathVariable UUID uuid, @RequestBody CommunityBoardRequest request) {
-        CommunityBoardResponse board = service.updateBoard(uuid, request);
+    @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
+    public ResponseEntity<ApiResponse<CommunityBoardResponse>> updateBoard(
+            @PathVariable UUID uuid,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestBody CommunityBoardRequest request) {
+        CommunityBoardResponse board = service.updateBoard(uuid, request, userPrincipal.getUsername());
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board)); // HTTP 200 OK
@@ -69,6 +74,7 @@ public class CommunityBoardController {
 
     // 5. DELETE 게시글 삭제
     @DeleteMapping("/{uuid}")
+    @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
     public ResponseEntity<Void> deleteBoard(@PathVariable UUID uuid) {
         service.deleteBoard(uuid);
         return ResponseEntity.noContent().build(); // HTTP 204 No Content

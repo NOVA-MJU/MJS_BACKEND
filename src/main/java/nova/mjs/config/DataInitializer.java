@@ -3,15 +3,13 @@ package nova.mjs.config;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.comments.entity.Comments;
-import nova.mjs.comments.repository.CommentsRepository;
+import nova.mjs.comment.repository.CommentsRepository;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.repository.CommunityBoardRepository;
 import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Log4j2

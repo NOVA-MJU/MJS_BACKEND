@@ -3,7 +3,7 @@ package nova.mjs.community.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.comments.entity.Comments;
+import nova.mjs.comment.entity.Comment;
 import nova.mjs.community.entity.enumList.CommunityCategory;
 import nova.mjs.member.Member;
 import nova.mjs.util.entity.BaseEntity;
@@ -117,7 +117,7 @@ public class CommunityBoard extends BaseEntity {
 
     // 댓글
     @OneToMany(mappedBy = "communityBoard", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
-    private List<Comments> comments;
+    private List<Comment> comments;
 
     // 게시물 좋아요
     public void increaseLikeCount() {

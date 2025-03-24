@@ -25,7 +25,6 @@ public class LikeController {
     // 좋아요 추가 및 삭제 (토글 방식)
 //    @PreAuthorize(isAuthrization() && userOr')
     @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
-
     @PostMapping("/{boardUUID}/like")
     public ResponseEntity<ApiResponse<String>> toggleLike(@PathVariable UUID boardUUID,
                                                           @AuthenticationPrincipal UserPrincipal userPrincipal) {

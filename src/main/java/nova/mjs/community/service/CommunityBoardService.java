@@ -3,6 +3,7 @@ package nova.mjs.community.service;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import nova.mjs.comment.repository.CommentsRepository;
 import nova.mjs.community.DTO.CommunityBoardRequest;
 import nova.mjs.community.DTO.CommunityBoardResponse;
 import nova.mjs.community.entity.CommunityBoard;
@@ -28,17 +29,17 @@ import java.util.UUID;
 public class CommunityBoardService {
 
     private final CommunityBoardRepository communityBoardRepository;
-
     private final LikeRepository likeRepository;
-
     private final MemberRepository memberRepository;
+    private final CommentsRepository commentsRepository;
 
     // 1. GET 페이지네이션
     public Page<CommunityBoardResponse> getBoards(Pageable pageable) {
         return communityBoardRepository.findAll(pageable)
                 .map(board -> {
                     int likeCount = likeRepository.countByCommunityBoardUuid(board.getUuid());
-                    return CommunityBoardResponse.fromEntity(board,likeCount);
+                    int commentCount = commentsRepository.countByCommunityBoardUuid(board.getUuid());
+                    return CommunityBoardResponse.fromEntity(board,likeCount, commentCount);
                         });
 
     }
@@ -47,9 +48,9 @@ public class CommunityBoardService {
     public CommunityBoardResponse getBoardDetail(UUID uuid) {
         CommunityBoard board = getExistingBoard(uuid);
         int likeCount = likeRepository.countByCommunityBoardUuid(uuid);
-
+        int commentCount = commentsRepository.countByCommunityBoardUuid(board.getUuid());
         log.debug("자유 게시글 조회 성공. = {}, 좋아요 개수 = {}", uuid, likeCount);
-        return CommunityBoardResponse.fromEntity(board, likeCount);
+        return CommunityBoardResponse.fromEntity(board, likeCount,commentCount);
     }
 
     // 3. POST 게시글 작성
@@ -69,12 +70,12 @@ public class CommunityBoardService {
         communityBoardRepository.save(board);
 
         int likeCount = likeRepository.countByCommunityBoardUuid(board.getUuid());
-        return CommunityBoardResponse.fromEntity(board, likeCount);
+        return CommunityBoardResponse.fromEntity(board);
     }
 
 
     @Transactional
-    public CommunityBoardResponse updateBoard(UUID uuid, CommunityBoardRequest request) {
+    public CommunityBoardResponse updateBoard(UUID uuid, CommunityBoardRequest request, String emailId) {
         CommunityBoard board = getExistingBoard(uuid);
 
         // 게시글 업데이트
@@ -86,9 +87,8 @@ public class CommunityBoardService {
         );
         int likeCount = likeRepository.countByCommunityBoardUuid(board.getUuid());
         // 엔티티를 DTO로 변환하여 반환
-        return CommunityBoardResponse.fromEntity(board, likeCount);
+        return CommunityBoardResponse.fromEntity(board);
     }
-
 
 
     // 5. DELETE 게시글 삭제
