@@ -1,6 +1,7 @@
 package nova.mjs.notice.search;
 
 import lombok.*;
+import nova.mjs.notice.entity.Notice;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -27,4 +28,14 @@ public class NoticeSearchDocument {
 
     @Field(type = FieldType.Keyword)
     private String link;
+
+    public static NoticeSearchDocument fromEntity(Notice notice) {
+        return NoticeSearchDocument.builder()
+                .id(String.valueOf(notice.getId()))
+                .title(notice.getTitle())
+                .date(notice.getDate())
+                .category(notice.getCategory())
+                .link(notice.getLink())
+                .build();
+    }
 }
