@@ -23,9 +23,10 @@ public class CommunityBoardResponse {
     private int likeCount; // 좋아요 개수 추가
     private String author;
     private int commentCount;
+    private boolean isLiked; // 현재 로그인 한 사용자가 좋아요를 눌렀는가 T/F
 
     // 엔티티에서 DTO로 변환하는 메서드
-    public static CommunityBoardResponse fromEntity(CommunityBoard entity, int likeCount, int commentCount) {
+    public static CommunityBoardResponse fromEntity(CommunityBoard entity, int likeCount, int commentCount, boolean isLiked) {
 
         return CommunityBoardResponse.builder()
                 .uuid(entity.getUuid())
@@ -40,6 +41,7 @@ public class CommunityBoardResponse {
                 .likeCount(likeCount)
                 .commentCount(commentCount)
                 .author(entity.getAuthor() != null ? entity.getAuthor().getNickname() : "Unknown") // ✅ 작성자 닉네임 처리
+                .isLiked(isLiked)
                 .build();
     }
 }

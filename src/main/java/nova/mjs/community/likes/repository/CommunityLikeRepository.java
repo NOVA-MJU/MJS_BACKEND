@@ -26,4 +26,9 @@ public interface CommunityLikeRepository extends JpaRepository<CommunityLike, Lo
     @Query("SELECT likeCommunity.communityBoard FROM CommunityLike likeCommunity WHERE likeCommunity.member = :member")
     List<CommunityBoard> findCommunityBoardsByMember(@Param("member") Member member);
 
+    @Query(" SELECT cl.communityBoard.uuid FROM CommunityLike cl WHERE cl.member = :member AND cl.communityBoard.uuid IN :communityBoardUUID")
+    List<UUID> findCommunityUuidsLikedByMember(
+            @Param("member") Member member,
+            @Param("communityBoardUUID") List<UUID> communityBoardUUID
+    );
 }

@@ -24,8 +24,12 @@ public class CommentController {
     // 1. 특정 게시물 댓글 목록 조회
     @GetMapping("/{boardUUID}/comments")
     public ResponseEntity<ApiResponse<List<CommentResponseDto.CommentSummaryDto>>> getCommentsByBoard(
-            @PathVariable UUID boardUUID) {
-        List<CommentResponseDto.CommentSummaryDto> response = service.getCommentsByBoard(boardUUID);
+            @PathVariable UUID boardUUID,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
+        // userPrincipal이 null일 수도 있으니 체크
+        List<CommentResponseDto.CommentSummaryDto> response = service.getCommentsByBoard(boardUUID, email);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -44,7 +48,7 @@ public class CommentController {
     }
 
     // 3. DELETE 댓글 삭제
-    @DeleteMapping("/comments/{commentUUID}")
+    @DeleteMapping("/{boardUUID/comments/{commentUUID}")
     @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
     public ResponseEntity<Void> deleteComment(
             @PathVariable UUID commentUUID,
