@@ -48,12 +48,30 @@ public class CommentController {
     }
 
     // 3. DELETE 댓글 삭제
-    @DeleteMapping("/{boardUUID/comments/{commentUUID}")
+    @DeleteMapping("/{boardUUID}/comments/{commentUUID}")
     @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
     public ResponseEntity<Void> deleteComment(
             @PathVariable UUID commentUUID,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         service.deleteCommentByUuid(commentUUID, userPrincipal.getUsername());
         return ResponseEntity.noContent().build();
+    }
+
+    // 4. POST 대댓글 작성
+    @PostMapping("/{boardUUID}/comments/{parentCommentUUID}/reply")
+    public ResponseEntity<ApiResponse<CommentResponseDto.CommentSummaryDto>> createReply(
+            @PathVariable UUID parentCommentUUID,
+            @RequestBody CommentRequestDto request,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        // 로그인 사용자 email
+        String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
+
+        // 실제 서비스 호출
+        CommentResponseDto.CommentSummaryDto replyDto =
+                service.createReply(parentCommentUUID, request.getContent(), email);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(replyDto));
     }
 }
