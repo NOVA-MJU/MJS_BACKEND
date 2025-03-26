@@ -19,4 +19,12 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
             @Param("category") String category,
             @Param("year") Integer year,
             Pageable pageable);
+    // NoticeRepository.java
+
+    // 중복 여부 확인용: 날짜, 카테고리, 링크가 모두 같은지, 근데 링크는 중복 못알아 먹더라
+    boolean existsByDateAndCategoryAndLink(String date, String category, String link);
+
+    // 중복 여부 확인용: 제목, 카테고리, 날짜 모두 같은지
+    boolean existsByDateAndCategoryAndTitle(String date, String category, String title);
+
 }
