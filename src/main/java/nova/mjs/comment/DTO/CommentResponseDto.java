@@ -52,6 +52,15 @@ public class CommentResponseDto {
                     .build();
         }
 
+        public static CommentSummaryDto fromEntity(Comment comment) {
+            return CommentSummaryDto.builder()
+                    .commentUUID(comment.getUuid())
+                    .content(comment.getContent())
+                    .nickname(comment.getMember().getNickname())
+                    .likeCount(comment.getLikeCount())
+                    .createdAt(comment.getCreatedAt())
+                    .build();
+        }
         // "부모 댓글"을 DTO로 변환하되, 자식 목록도 함께 변환하는 메서드
         public static CommentSummaryDto fromEntityWithReplies(Comment comment, boolean isLiked, Set<UUID> likedSet) {
             // 1) 부모 댓글의 기본 정보

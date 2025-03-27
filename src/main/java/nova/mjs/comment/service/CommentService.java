@@ -88,7 +88,7 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
 
         log.debug("댓글 작성 성공. UUID = {}, 작성자 : {}", savedComment.getUuid(), email);
-        return CommentResponseDto.CommentSummaryDto.fromEntity(savedComment, false);
+        return CommentResponseDto.CommentSummaryDto.fromEntity(savedComment);
     }
 
     // 3. DELETE 댓글 삭제, 로그인 연동 추가
@@ -129,7 +129,7 @@ public class CommentService {
             log.error("[MJS] 대댓글 생성 실패: 이미 대댓글인 댓글에는 다시 대댓글을 달 수 없습니다. parentCommentUuid={}", parentCommentUuid);
 
             // 커스텀 예외 던지기
-            throw new CommentReplyDepthException("이미 대댓글인 댓글에는 다시 대댓글을 달 수 없습니다.");
+            throw new CommentReplyDepthException();
         }
 
 
@@ -144,7 +144,7 @@ public class CommentService {
         Comment savedReply = commentRepository.save(reply);
 
         // 6) DTO 변환 (isLiked=false 초기값)
-        return CommentResponseDto.CommentSummaryDto.fromEntity(savedReply, false);
+        return CommentResponseDto.CommentSummaryDto.fromEntity(savedReply);
     }
 
 

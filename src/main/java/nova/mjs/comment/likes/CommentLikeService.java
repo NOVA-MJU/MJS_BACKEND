@@ -47,7 +47,7 @@ public class CommentLikeService {
             log.debug("좋아요 삭제 완료: member_emailId={}, boardUUID={} , commentUUID={}", emailId, boardUUID, commentsUUID);
             return false; // 좋아요 취소됨
         } else {
-            CommentLike commentLike = new CommentLike(member, comment);
+            CommentLike commentLike = CommentLike.create(member, comment);
             commentLikeRepository.save(commentLike);
             comment.increaseLikeCommentCount();  // 좋아요 증가 메서드
             log.debug("좋아요 추가 완료: member_emailId={}, boardUUID={}, commentsUUID={}",emailId, boardUUID, commentsUUID);
