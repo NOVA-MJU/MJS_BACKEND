@@ -40,6 +40,14 @@ public class Comment extends BaseEntity {
     @Column
     private int likeCount; // 좋아요 수
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")  // 부모 댓글 ID 저장
+    private Comment parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> replies = new ArrayList<>();
+
+
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommentLike> commentLike = new ArrayList<>();
 
@@ -53,6 +61,26 @@ public class Comment extends BaseEntity {
                 .content(content)
                 .likeCount(0) // 기본값 설정
                 .build();
+    }
+
+    // 부모가 있는 댓글(대댓글) 생성
+    public static Comment createReply(Comment parent, Member member, String content) {
+        // 부모 댓글이 속한 CommunityBoard를 그대로 사용 (부모와 같은 게시글)
+        CommunityBoard board = parent.getCommunityBoard();
+
+        Comment reply = Comment.builder()
+                .uuid(UUID.randomUUID())
+                .communityBoard(board)
+                .member(member)
+                .content(content)
+                .likeCount(0)
+                .parent(parent)  // 부모 설정
+                .build();
+
+        // 부모의 replies에도 연결
+        parent.getReplies().add(reply);
+
+        return reply;
     }
 
     // 게시물 좋아요

@@ -8,6 +8,8 @@ import nova.mjs.member.Member;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@AllArgsConstructor
+@Builder
 @Table(name = "like_comment")
 public class CommentLike {
     @Id
@@ -23,8 +25,11 @@ public class CommentLike {
     @JoinColumn(name = "comments_id", nullable = false)
     private Comment comment;
 
-    public CommentLike(Member member, Comment comment) {
-        this.member = member;
-        this.comment = comment;
+    public static CommentLike create(Member member, Comment comment) {
+        return CommentLike.builder()
+                .member(member)
+                .comment(comment)
+                .build();
+
     }
 }
