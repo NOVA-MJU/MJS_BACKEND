@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
+import io.jsonwebtoken.security.SignatureException;
 
 @Component
 @Slf4j
@@ -128,19 +129,19 @@ public class JwtUtil {
 
         } catch (ExpiredJwtException e) {
             log.warn("[MJS] JWT 토큰이 만료되었습니다: {}", e.getMessage());
-            throw new BusinessBaseException("토큰이 만료되었습니다.", ErrorCode.INVALID_REQUEST);
+            throw new BusinessBaseException("토큰이 만료되었습니다.", ErrorCode.TOKEN_EXPIRED);
         } catch (MalformedJwtException e) {
             log.warn("[MJS] JWT 토큰이 변조되었거나 잘못된 형식입니다: {}", e.getMessage());
-            throw new BusinessBaseException("JWT 토큰이 변조되었거나 잘못된 형식입니다", ErrorCode.INVALID_REQUEST);
+            throw new BusinessBaseException("JWT 토큰이 변조되었거나 잘못된 형식입니다", ErrorCode.TOKEN_MALFORMED);
         } catch (SignatureException e) {
             log.warn("[MJS] JWT 토큰 서명이 올바르지 않습니다: {}", e.getMessage());
-            throw new BusinessBaseException("JWT 토큰 서명이 올바르지 않습니다", ErrorCode.INVALID_REQUEST);
+            throw new BusinessBaseException("JWT 토큰 서명이 올바르지 않습니다", ErrorCode.TOKEN_SIGNATURE_INVALID);
         } catch (UnsupportedJwtException e) {
             log.warn("[MJS] 지원되지 않는 JWT 토큰입니다: {}", e.getMessage());
-            throw new BusinessBaseException("지원되지 않는 JWT 토큰입니다", ErrorCode.INVALID_REQUEST);
+            throw new BusinessBaseException("지원되지 않는 JWT 토큰입니다", ErrorCode.TOKEN_UNSUPPORTED);
         } catch (JwtException e) {
             log.warn("[MJS] 유효하지 않은 JWT 토큰입니다: {}", e.getMessage());
-            throw new BusinessBaseException("유효하지 않은 JWT 토큰입니다", ErrorCode.INVALID_REQUEST);
+            throw new BusinessBaseException("유효하지 않은 JWT 토큰입니다", ErrorCode.TOKEN_INVALID);
         }
 
     }

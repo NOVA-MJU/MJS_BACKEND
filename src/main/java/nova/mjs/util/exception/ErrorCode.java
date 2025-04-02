@@ -28,6 +28,16 @@ public enum ErrorCode {
     EMAIL_IS_INVALID(HttpStatus.BAD_REQUEST, "EMAIL_IS_INVALID", "[MJS] 잘못된 이메일 형식입니다."),
     INVALID_S3_URL(HttpStatus.BAD_REQUEST, "INVALID_S3_URL", "[MJS] 유효하지 않은 S3 Url입니다."),
 
+    // JWT 관련 에러 코드 (모두 401로 통일)
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN_EXPIRED", "[MJS] JWT 토큰이 만료되었습니다."),
+    TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "TOKEN_INVALID", "[MJS] JWT 토큰이 유효하지 않습니다."),
+    TOKEN_MALFORMED(HttpStatus.UNAUTHORIZED, "TOKEN_MALFORMED", "[MJS] JWT 토큰의 형식이 올바르지 않습니다."),
+    TOKEN_SIGNATURE_INVALID(HttpStatus.UNAUTHORIZED, "TOKEN_SIGNATURE_INVALID", "[MJS] JWT 토큰의 서명이 유효하지 않습니다."),
+    TOKEN_UNSUPPORTED(HttpStatus.UNAUTHORIZED, "TOKEN_UNSUPPORTED", "[MJS] 지원되지 않는 JWT 토큰입니다."),
+    TOKEN_NOT_PROVIDED(HttpStatus.UNAUTHORIZED, "TOKEN_NOT_PROVIDED", "[MJS] JWT 토큰이 제공되지 않았습니다."),
+    NOT_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "NOT_REFRESH_TOKEN", "[MJS] 제공된 토큰은 Refresh Token이 아닙니다."),
+
+
     // 공지사항 에러 관련 추가 코드
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTICE_NOT_FOUND", "[MJS] 해당 조건의 공지사항을 찾을 수 없습니다."),
 
