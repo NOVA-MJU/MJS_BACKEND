@@ -2,10 +2,13 @@ package nova.mjs.member.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import nova.mjs.comment.entity.Comment;
 import nova.mjs.community.DTO.CommunityBoardResponse;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.likes.repository.CommunityLikeRepository;
 import nova.mjs.community.repository.CommunityBoardRepository;
+import nova.mjs.member.DTO.CommentWithBoardResponse;
+import nova.mjs.member.DTO.ProfileCountResponse;
 import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
 import nova.mjs.member.exception.MemberNotFoundException;
@@ -17,13 +20,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 @Transactional(readOnly = true)
-public class MypageService {
+public class ProfileService {
 
     private final CommunityBoardRepository communityBoardRepository;
     private final CommentRepository commentRepository;
@@ -31,7 +33,7 @@ public class MypageService {
     private final MemberRepository memberRepository;
 
     // 1. 내가 작성한 글 조회
-    public List<CommunityBoardResponse> getMyPosts(String email) {
+    public List<CommunityBoardResponse.SummaryDTO> getMyPosts(String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -56,13 +58,13 @@ public class MypageService {
                     int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
                     int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
                     boolean isLiked = likedSet.contains(board.getUuid());
-                    return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, isLiked);
+                    return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, isLiked);
                 })
                 .toList();
     }
-
+    /*
     // 2. 내가 작성한 댓글이 속한 게시물 조회
-    public List<CommunityBoardResponse> getMyCommentedPosts(String email) {
+    public List<CommunityBoardResponse.SummaryDTO> getMyCommentedPosts(String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -87,13 +89,13 @@ public class MypageService {
                     int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
                     int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
                     boolean isLiked = likedSet.contains(board.getUuid());
-                    return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, isLiked);
+                    return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, isLiked);
                 })
                 .toList();
-    }
+    }*/
 
     // 3. 내가 찜한 글 조회
-    public List<CommunityBoardResponse> getLikedPosts(String email) {
+    public List<CommunityBoardResponse.SummaryDTO> getLikedPosts(String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -109,8 +111,44 @@ public class MypageService {
                 .map(board -> {
                     int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
                     int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
-                    return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, true);
+                    return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, true);
                 })
                 .toList();
+    }
+
+    public List<CommentWithBoardResponse> getMyCommentListWithBoard(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(MemberNotFoundException::new);
+
+        List<Comment> myComments = commentRepository.findByMember(member);
+        if (myComments.isEmpty()) return List.of();
+
+        return myComments.stream()
+                .map(comment -> {
+                    CommunityBoard board = comment.getCommunityBoard();
+                    return CommentWithBoardResponse.builder()
+                            .boardUuid(board.getUuid())
+                            .boardTitle(board.getTitle())
+                            .boardPreviewContent(board.getPreviewContent())
+                            .commentUuid(comment.getUuid())
+                            .commentPreviewContent(comment.getPreviewContent())
+                            .build();
+                })
+                .toList();
+    }
+    public ProfileCountResponse getMyProfileSummary(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(MemberNotFoundException::new);
+
+        int postCount = communityBoardRepository.countByAuthor(member);
+        int commentCount = commentRepository.countByMember(member);
+        int likedPostCount = communityLikeRepository.countByMember(member);
+
+        return ProfileCountResponse.builder()
+                .nickname(member.getNickname()) // 닉네임 포함
+                .postCount(postCount)
+                .commentCount(commentCount)
+                .likedPostCount(likedPostCount)
+                .build();
     }
 }

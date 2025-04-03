@@ -45,6 +45,9 @@ public class CommunityBoard extends BaseEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member author; // 작성자
 
+    @Column(columnDefinition = "TEXT")
+    private String previewContent; // 댓글 미리보기
+
 
     @ElementCollection
     @CollectionTable(
@@ -79,6 +82,7 @@ public class CommunityBoard extends BaseEntity {
                 .content(content)
                 .category(category)
                 .published(published != null ? published : false)
+                .previewContent(makePreview(content))
                 .viewCount(0)
                 .likeCount(0)
                 .publishedAt(published != null && published ? LocalDateTime.now() : null)
@@ -132,5 +136,9 @@ public class CommunityBoard extends BaseEntity {
         if (this.likeCount > 0) {
             this.likeCount--;
         }
+    }
+    // 미리보기 생성 유틸
+    private static String makePreview(String content) {
+        return content.length() <= 60 ? content : content.substring(0, 60);
     }
 }

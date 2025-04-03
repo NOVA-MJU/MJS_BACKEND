@@ -25,7 +25,7 @@ public class CommunityBoardController {
 
     // 1. GET 페이지네이션
     @GetMapping
-    public  ResponseEntity<ApiResponse<Page<CommunityBoardResponse>>> getBoards(
+    public  ResponseEntity<ApiResponse<Page<CommunityBoardResponse.SummaryDTO>>> getBoards(
             @RequestParam(defaultValue = "0") int page, // 기본 페이지 번호
             @RequestParam(defaultValue = "10") int size, // 기본 페이지 크기
             @AuthenticationPrincipal UserPrincipal userPrincipal
@@ -34,7 +34,7 @@ public class CommunityBoardController {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<CommunityBoardResponse> boards = service.getBoards(pageable, email);
+        Page<CommunityBoardResponse.SummaryDTO> boards = service.getBoards(pageable, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(boards));
@@ -43,12 +43,12 @@ public class CommunityBoardController {
 
     // 2. GET 상세 content 조회
     @GetMapping("/{uuid}")
-    public ResponseEntity<ApiResponse<CommunityBoardResponse>> getBoardDetail(
+    public ResponseEntity<ApiResponse<CommunityBoardResponse.DetailDTO>> getBoardDetail(
             @PathVariable UUID uuid,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
-        CommunityBoardResponse board = service.getBoardDetail(uuid, email);
+        CommunityBoardResponse.DetailDTO board = service.getBoardDetail(uuid, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board));
@@ -56,11 +56,11 @@ public class CommunityBoardController {
 
     // 3. POST 게시글 작성
     @PostMapping
-    public ResponseEntity<ApiResponse<CommunityBoardResponse>> createBoard(
+    public ResponseEntity<ApiResponse<CommunityBoardResponse.DetailDTO>> createBoard(
             @RequestBody CommunityBoardRequest request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
-        CommunityBoardResponse board = service.createBoard(request, email);
+        CommunityBoardResponse.DetailDTO board = service.createBoard(request, email);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board)); // HTTP 201 Created
@@ -68,13 +68,13 @@ public class CommunityBoardController {
 
     // 4. PATCH 게시글 수정
     @PatchMapping("/{uuid}")
-    public ResponseEntity<ApiResponse<CommunityBoardResponse>> updateBoard(
+    public ResponseEntity<ApiResponse<CommunityBoardResponse.DetailDTO>> updateBoard(
             @PathVariable UUID uuid,
             @RequestBody CommunityBoardRequest request,
             @AuthenticationPrincipal UserPrincipal userPrincipal // ★추가
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
-        CommunityBoardResponse board = service.updateBoard(uuid, request, email);
+        CommunityBoardResponse.DetailDTO board = service.updateBoard(uuid, request, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board)); // HTTP 200 OK

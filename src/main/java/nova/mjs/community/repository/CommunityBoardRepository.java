@@ -23,4 +23,7 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
 
     // 내가 작성한 게시글 조회
     List<CommunityBoard> findByAuthor(Member author);
+
+    int countByAuthor(Member author);
+
 }
