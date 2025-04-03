@@ -5,13 +5,14 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.util.exception.BusinessBaseException;
 import nova.mjs.util.exception.ErrorCode;
+import nova.mjs.util.jwt.exception.*;
+import nova.mjs.util.jwt.exception.JwtException;
 import nova.mjs.util.security.AuthDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import io.jsonwebtoken.security.SignatureException;
@@ -98,7 +99,7 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token)
                     .getBody(); //전체 claims 반환 - 모든 claims 데이터를 claims 객체로 가져옴 -> 한 번에 접근 가능
-        } catch (JwtException e){
+        } catch (nova.mjs.util.jwt.exception.JwtException e){
             return null;
         }
     }
@@ -107,7 +108,7 @@ public class JwtUtil {
     public String extractToken(String bearerToken){
         if (bearerToken == null || !bearerToken.startsWith("Bearer ")){
             log.warn("[MJS] 유효하지 않은 JWT 형식입니다.");
-            throw new BusinessBaseException("유효하지 않은 JWT 형식입니다.", ErrorCode.INVALID_REQUEST);
+            throw new InvalidTokenFormatException("유효하지 않은 JWT 형식입니다.");
         }
         return bearerToken.substring(7);
     }
@@ -116,7 +117,7 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         if (token == null || token.trim().isEmpty()) {
             log.warn("[MJS] JWT 토큰이 제공되지 않았습니다.");
-            throw new BusinessBaseException("JWT 토큰이 제공되지 않았습니다.", ErrorCode.INVALID_REQUEST);
+            throw new TokenNotProvidedException("JWT 토큰이 제공되지 않았습니다.");
         }
 
         try {
@@ -129,19 +130,19 @@ public class JwtUtil {
 
         } catch (ExpiredJwtException e) {
             log.warn("[MJS] JWT 토큰이 만료되었습니다: {}", e.getMessage());
-            throw new BusinessBaseException("토큰이 만료되었습니다.", ErrorCode.TOKEN_EXPIRED); //401
+            throw new JwtExpiredException("토큰이 만료되었습니다."); //401
         } catch (MalformedJwtException e) {
             log.warn("[MJS] JWT 토큰이 변조되었거나 잘못된 형식입니다: {}", e.getMessage());
-            throw new BusinessBaseException("JWT 토큰이 변조되었거나 잘못된 형식입니다", ErrorCode.TOKEN_MALFORMED); //401
+            throw new JwtMalformedException("JWT 토큰이 변조되었거나 잘못된 형식입니다"); //401
         } catch (SignatureException e) {
             log.warn("[MJS] JWT 토큰 서명이 올바르지 않습니다: {}", e.getMessage());
-            throw new BusinessBaseException("JWT 토큰 서명이 올바르지 않습니다", ErrorCode.TOKEN_SIGNATURE_INVALID); //401
+            throw new JwtSignatureInvalidException("JWT 토큰 서명이 올바르지 않습니다"); //401
         } catch (UnsupportedJwtException e) {
             log.warn("[MJS] 지원되지 않는 JWT 토큰입니다: {}", e.getMessage());
-            throw new BusinessBaseException("지원되지 않는 JWT 토큰입니다", ErrorCode.TOKEN_UNSUPPORTED); //401
+            throw new JwtUnsupportedException("지원되지 않는 JWT 토큰입니다"); //401
         } catch (JwtException e) {
             log.warn("[MJS] 유효하지 않은 JWT 토큰입니다: {}", e.getMessage());
-            throw new BusinessBaseException("유효하지 않은 JWT 토큰입니다", ErrorCode.TOKEN_INVALID); //401
+            throw new JwtInvalidException("유효하지 않거나 일반적이지 않은 JWT 토큰입니다."); //401
         }
 
     }
@@ -158,7 +159,7 @@ public class JwtUtil {
         validateToken(token);
 
         if (!isRefreshToken(token)) {
-            throw new BusinessBaseException("유효한 Refresh Token이 아닙니다.", ErrorCode.INVALID_REQUEST);
+            throw new NotRefreshTokenException("유효한 Refresh Token이 아닙니다.");
         }
 
         //Refresh Token에서 사용자 ID 및 역할(Role) 추출
@@ -167,7 +168,7 @@ public class JwtUtil {
         String role = getClaimFromToken(token, claims -> claims.get("role", String.class));
 
         if (uuid == null || email == null) {
-            throw new BusinessBaseException("Refresh Token에서 사용자 정보를 추출할 수 없습니다.", ErrorCode.INVALID_REQUEST);
+            throw new RefreshTokenParseFailedException("Refresh Token에서 사용자 정보를 추출할 수 없습니다.");
         }
 
         String newAccessToken = generateAccessToken(uuid, email, role);
