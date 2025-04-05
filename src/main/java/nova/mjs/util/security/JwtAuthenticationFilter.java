@@ -1,13 +1,16 @@
 package nova.mjs.util.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.util.exception.ErrorResponse;
 import nova.mjs.util.jwt.AccessTokenBlacklistRepository;
 import nova.mjs.util.jwt.JwtUtil;
+import nova.mjs.util.jwt.exception.JwtException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,7 +61,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (token == null){
                 log.warn("JWT 토큰이 없음. 인증 없이 진행");
             } else{
-                log.info("받은 JWT 토큰 : {}", token);
                 if (jwtUtil.validateToken(token)) {
                     Authentication authentication = authenticate(token);
 
@@ -73,6 +75,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     log.error("JWT 검증 실패! 잘못된 토큰");
                 }
             }
+        } catch (JwtException ex){
+            ErrorResponse errorResponse = ErrorResponse.of(ex.getErrorCode(), ex.getMessage());
+
+            response.setStatus(ex.getStatus().value());
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+            return;
+
         } catch (Exception e) {
               log.error("예외 발생: {}", e.getMessage());
 //            setErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "서버 오류 발생");

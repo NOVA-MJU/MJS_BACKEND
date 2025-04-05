@@ -99,7 +99,7 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token)
                     .getBody(); //전체 claims 반환 - 모든 claims 데이터를 claims 객체로 가져옴 -> 한 번에 접근 가능
-        } catch (nova.mjs.util.jwt.exception.JwtException e){
+        } catch (JwtException e){
             return null;
         }
     }
@@ -130,19 +130,19 @@ public class JwtUtil {
 
         } catch (ExpiredJwtException e) {
             log.warn("[MJS] JWT 토큰이 만료되었습니다: {}", e.getMessage());
-            throw new JwtExpiredException("토큰이 만료되었습니다."); //401
+            throw new JwtExpiredException(); //401
         } catch (MalformedJwtException e) {
             log.warn("[MJS] JWT 토큰이 변조되었거나 잘못된 형식입니다: {}", e.getMessage());
-            throw new JwtMalformedException("JWT 토큰이 변조되었거나 잘못된 형식입니다"); //401
+            throw new JwtMalformedException(); //401
         } catch (SignatureException e) {
             log.warn("[MJS] JWT 토큰 서명이 올바르지 않습니다: {}", e.getMessage());
-            throw new JwtSignatureInvalidException("JWT 토큰 서명이 올바르지 않습니다"); //401
+            throw new JwtSignatureInvalidException(); //401
         } catch (UnsupportedJwtException e) {
             log.warn("[MJS] 지원되지 않는 JWT 토큰입니다: {}", e.getMessage());
-            throw new JwtUnsupportedException("지원되지 않는 JWT 토큰입니다"); //401
+            throw new JwtUnsupportedException(); //401
         } catch (JwtException e) {
             log.warn("[MJS] 유효하지 않은 JWT 토큰입니다: {}", e.getMessage());
-            throw new JwtInvalidException("유효하지 않거나 일반적이지 않은 JWT 토큰입니다."); //401
+            throw new JwtInvalidException(); //401
         }
 
     }
@@ -159,7 +159,7 @@ public class JwtUtil {
         validateToken(token);
 
         if (!isRefreshToken(token)) {
-            throw new NotRefreshTokenException("유효한 Refresh Token이 아닙니다.");
+            throw new NotRefreshTokenException();
         }
 
         //Refresh Token에서 사용자 ID 및 역할(Role) 추출
