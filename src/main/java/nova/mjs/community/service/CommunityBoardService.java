@@ -13,6 +13,8 @@ import nova.mjs.community.repository.CommunityBoardRepository;
 import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
 import nova.mjs.member.exception.MemberNotFoundException;
+import nova.mjs.util.s3.S3Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,12 +32,18 @@ import java.util.UUID;
 public class CommunityBoardService {
 
     private final CommunityBoardRepository communityBoardRepository;
-
     private final CommunityLikeRepository communityLikeRepository;
-
     private final MemberRepository memberRepository;
-
     private final CommentRepository commentRepository;
+    private final S3Service s3Service;
+
+    @Value("${s3.path.custom.board-temp}")
+    private String boardTempPrefix;
+
+    @Value("${s3.path.custom.board-post}")
+    private String boardPostPrefix;
+
+
 
     // 1. GET 페이지네이션
     public Page<CommunityBoardResponse> getBoards(Pageable pageable, String email) {
@@ -115,55 +123,129 @@ public class CommunityBoardService {
     }
 
     // 3. POST 게시글 작성
+
+/* flow
+    프론트에서 이미지 선택
+    백엔드 /upload-image로 업로드 요청
+    백엔드는 S3에 posts/temp/{uuid}/{filename}으로 업로드
+    백엔드는 업로드 성공 후, CloudFront URL을 만들어 응답함 → 예: https://d2zppxfma88m3u.cloudfront.net/posts/temp/uuid/filename.jpg
+    게시글 작성 시 contentImages에 위 URL들을 포함하여 전달
+    게시글 등록 성공 시 posts/temp → posts/{게시글UUID}/로 이동 (S3 내부에서 copy + delete)
+*/
+
     @Transactional
     public CommunityBoardResponse createBoard(CommunityBoardRequest request, String emailId) {
-        Member author = memberRepository.findByEmail(emailId)
-                .orElseThrow(MemberNotFoundException::new);
+        log.info("[게시글 작성 요청] 사용자 이메일: {}", emailId);
 
+        // 작성자 조회
+        Member author = memberRepository.findByEmail(emailId)
+                .orElseThrow(() -> {
+                    log.warn("[작성자 조회 실패] 이메일: {}", emailId);
+                    return new MemberNotFoundException();
+                });
+
+        // 게시글 생성
         CommunityBoard board = CommunityBoard.create(
                 request.getTitle(),
                 request.getContent(),
                 CommunityCategory.FREE,
                 request.getPublished(),
-                request.getContentImages(), // 이미지 리스트 처리
+                request.getContentImages(),
                 author
         );
         communityBoardRepository.save(board);
+        log.info("[게시글 저장 완료] UUID: {}", board.getUuid());
+
+        // 이미지 이동 처리 (temp → post)
+        log.info("[이미지 이동 시작] 총 이미지 수: {}", request.getContentImages().size());
+
+        List<String> tempImages = request.getContentImages().stream()
+                .filter(url -> s3Service.extractKeyFromUrl(url).startsWith(boardTempPrefix))
+                .toList();
+
+        log.info("[temp 이미지 추출] 이동 대상 수: {}", tempImages.size());
+
+        for (String tempImageUrl : tempImages) {
+            String tempKey = s3Service.extractKeyFromUrl(tempImageUrl); // board/temp/{uuid}/파일명
+            String fileName = tempKey.substring(tempKey.lastIndexOf('/') + 1);
+            String realKey = boardPostPrefix + board.getUuid() + "/" + fileName;
+
+            log.info("[이미지 복사] from: {}, to: {}", tempKey, realKey);
+            s3Service.copyFile(tempKey, realKey);
+
+            log.info("[임시 이미지 삭제] key: {}", tempKey);
+            s3Service.deleteFile(tempKey);
+        }
+
+        log.info("[이미지 이동 완료] 게시글 UUID: {}", board.getUuid());
 
         int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
-        int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid()); // 추가
+        int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
+
+        log.info("[게시글 작성 완료] UUID: {}, 좋아요: {}, 댓글: {}", board.getUuid(), likeCount, commentCount);
 
         return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, false);
     }
 
 
+
     @Transactional
     public CommunityBoardResponse updateBoard(UUID uuid, CommunityBoardRequest request, String email) {
+        // 1. 게시글 존재 여부 확인
         CommunityBoard board = getExistingBoard(uuid);
 
-        // 게시글 업데이트
+        // 2. 사용자 존재 및 권한 확인
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(MemberNotFoundException::new);
+        if (!board.getAuthor().equals(member)) {
+            throw new IllegalArgumentException("작성자만 수정할 수 있습니다.");
+        }
+
+        // 3. 기존 vs 새로운 이미지 리스트 비교
+        List<String> oldImages = board.getContentImages();
+        List<String> newImages = request.getContentImages();
+
+        // 3-1. 삭제 대상 이미지 제거
+        List<String> toDelete = oldImages.stream()
+                .filter(old -> !newImages.contains(old))
+                .toList();
+        toDelete.forEach(imageUrl -> {
+            String key = s3Service.extractKeyFromUrl(imageUrl);
+            s3Service.deleteFile(key);
+        });
+
+        // 3-2. 새로 추가된 이미지 중 temp 경로에 있는 것만 복사 후 삭제
+        List<String> addedTempImages = newImages.stream()
+                .filter(newImg -> !oldImages.contains(newImg))
+                .filter(newImg -> s3Service.extractKeyFromUrl(newImg).startsWith(boardTempPrefix))
+                .toList();
+
+        for (String tempImageUrl : addedTempImages) {
+            String tempKey = s3Service.extractKeyFromUrl(tempImageUrl); // board/temp/{tempUuid}/filename
+            String filename = tempKey.substring(tempKey.lastIndexOf('/') + 1);
+            String realKey = boardPostPrefix + uuid + "/" + filename;
+
+            s3Service.copyFile(tempKey, realKey);
+            s3Service.deleteFile(tempKey);
+        }
+
+        // 4. 게시글 업데이트
         board.update(
                 request.getTitle(),
                 request.getContent(),
                 request.getPublished(),
-                request.getContentImages() // contentImages 추가
+                request.getContentImages()
         );
-        int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
-        int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid()); // 추가
-        boolean isLiked = false;
-        if (email != null) {
-            Member member = memberRepository.findByEmail(email).orElse(null);
-            if (member != null) {
-                isLiked = communityLikeRepository
-                        .findByMemberAndCommunityBoard(member, board)
-                        .isPresent();
-            }
-        }
 
-        // 엔티티를 DTO로 변환하여 반환
+        // 5. 응답 생성
+        int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
+        int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
+        boolean isLiked = communityLikeRepository
+                .findByMemberAndCommunityBoard(member, board)
+                .isPresent();
+
         return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, isLiked);
     }
-
 
     // 게시글 삭제
     @Transactional
@@ -184,11 +266,16 @@ public class CommunityBoardService {
         //    (추가로 관리자(ADMIN)면 통과시킬 수도 있음)
         if (!board.getAuthor().getEmail().equals(email)) {
             // 본인이 아님
-            throw new IllegalArgumentException("본인이 작성한 게시글만 삭제할 수 있습니다.");
+            throw new MemberNotFoundException();
         }
 
         // 5) 삭제
+        // 게시글 삭제 로직에 추가
         communityBoardRepository.delete(board);
+        // s3에서도 삭제하기
+        String postFolder = boardPostPrefix + board.getUuid() + "/";
+        s3Service.deleteFolder(postFolder);
+
         log.debug("게시글 삭제 성공. ID = {}, 작성자: {}", uuid, email);
     }
 

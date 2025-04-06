@@ -1,9 +1,7 @@
 package nova.mjs.notice.entity;
 
-import com.amazonaws.services.ec2.model.Purchase;
 import jakarta.persistence.*;
 import lombok.*;
-
 
 @Entity
 @Table(name = "notice")
