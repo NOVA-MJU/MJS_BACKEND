@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static nova.mjs.util.ContentPreviewUtil.makePreview;
+
 @Entity
 @Getter
 @Builder
@@ -136,9 +138,5 @@ public class CommunityBoard extends BaseEntity {
         if (this.likeCount > 0) {
             this.likeCount--;
         }
-    }
-    // 미리보기 생성 유틸
-    private static String makePreview(String content) {
-        return content.length() <= 60 ? content : content.substring(0, 60);
     }
 }

@@ -5,6 +5,7 @@ import nova.mjs.comment.likes.entity.CommentLike;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
+import static nova.mjs.util.ContentPreviewUtil.makePreview;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,8 +61,8 @@ public class Comment extends BaseEntity {
                 .communityBoard(communityBoard)
                 .member(member)
                 .content(content)
-                .previewContent(makePreview(content))
-                .likeCount(0) // 기본값 설정
+                .previewContent(makePreview(content)) // 유틸 사용
+                .likeCount(0)
                 .build();
     }
 
@@ -75,7 +76,7 @@ public class Comment extends BaseEntity {
                 .communityBoard(board)
                 .member(member)
                 .content(content)
-                .previewContent(makePreview(content))
+                .previewContent(makePreview(content)) // 유틸 사용
                 .likeCount(0)
                 .parent(parent)  // 부모 설정
                 .build();
@@ -84,11 +85,6 @@ public class Comment extends BaseEntity {
         parent.getReplies().add(reply);
 
         return reply;
-    }
-
-    // 미리보기 생성 유틸
-    private static String makePreview(String content) {
-        return content.length() <= 60 ? content : content.substring(0, 60);
     }
 
 
