@@ -52,6 +52,10 @@ public class MemberService {
     @Transactional
     public AuthDTO.LoginResponseDTO registerMember(MemberDTO.MemberRequestDTO requestDTO) {
         validateEmail(requestDTO.getEmail());
+
+        if (requestDTO.getNickname() == null) {
+            throw new NicknameIsInvalidException();
+        }
         if (memberRepository.existsByEmail(requestDTO.getEmail())) {
             throw new DuplicateEmailException();
         }
