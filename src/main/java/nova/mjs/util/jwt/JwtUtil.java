@@ -19,7 +19,7 @@ import java.util.function.Function;
 @Slf4j
 public class JwtUtil {
     private final Key secretKey;
-    private final long accessTokenExpiration = 60 * 1000L * 30;
+    private final long accessTokenExpiration = 60 * 1000L;
     private final long refreshTokenExpiration;
 
     public JwtUtil(
