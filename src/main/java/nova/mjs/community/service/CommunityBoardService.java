@@ -48,7 +48,7 @@ public class CommunityBoardService {
     // 1. GET 페이지네이션
     public Page<CommunityBoardResponse> getBoards(Pageable pageable, String email) {
         // 1) 페이지네이션으로 게시글 목록 조회
-        Page<CommunityBoard> boardPage = communityBoardRepository.findAll(pageable);
+        Page<CommunityBoard> boardPage = communityBoardRepository.findAllWithAuthor(pageable);
 
         // 2) 게시글이 없으면 바로 반환
         if (boardPage.isEmpty()) {
@@ -91,6 +91,7 @@ public class CommunityBoardService {
             int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
             int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
             boolean isLiked = likedSet.contains(board.getUuid());
+            log.info("작성자 닉네임 = {}", board.getAuthor() != null ? board.getAuthor().getNickname() : "null");
             return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, isLiked);
         });
     }
@@ -173,8 +174,8 @@ public class CommunityBoardService {
             log.info("[이미지 복사] from: {}, to: {}", tempKey, realKey);
             s3Service.copyFile(tempKey, realKey);
 
-            log.info("[임시 이미지 삭제] key: {}", tempKey);
-            s3Service.deleteFile(tempKey);
+//            log.info("[임시 이미지 삭제] key: {}", tempKey);
+//            s3Service.deleteFile(tempKey);
         }
 
         log.info("[이미지 이동 완료] 게시글 UUID: {}", board.getUuid());

@@ -30,17 +30,28 @@ public class CommunityBoardImageController {
     }
 
     // 2. image 업로드
+//    @PostMapping("/images")
+//    public ResponseEntity<ApiResponse<String>> uploadImage(
+//            @RequestParam() MultipartFile file,
+//            @RequestParam() UUID tempFolderUuid) throws IOException {
+//        String key = boardTempPrefix + tempFolderUuid + "/" + file.getOriginalFilename();
+//
+//        String imageUrl = s3Service.uploadFileAndGetUrl(file, key);
+//
+//        return ResponseEntity
+//                .status(HttpStatus.OK).body(ApiResponse.success(imageUrl));
+//    }
+
     @PostMapping("/images")
     public ResponseEntity<ApiResponse<String>> uploadImage(
-            @RequestParam() MultipartFile file,
-            @RequestParam() UUID tempFolderUuid) throws IOException {
-        String key = boardTempPrefix + tempFolderUuid + "/" + file.getOriginalFilename();
+            @RequestParam MultipartFile file,
+            @RequestParam UUID tempFolderUuid) throws IOException {
 
-        String imageUrl = s3Service.uploadFileAndGetUrl(file, key);
+        String imageUrl = s3Service.uploadCommunityBoardImage(file, tempFolderUuid);
 
-        return ResponseEntity
-                .status(HttpStatus.OK).body(ApiResponse.success(imageUrl));
+        return ResponseEntity.ok(ApiResponse.success(imageUrl));
     }
+
 
     // 3. 게시글 취소 시 temp 이미지 직접 삭제
     @DeleteMapping("/images")

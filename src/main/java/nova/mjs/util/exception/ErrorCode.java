@@ -26,6 +26,7 @@ public enum ErrorCode {
     LIMIT_IS_LESS_THEN_ONE(HttpStatus.BAD_REQUEST, "LIMIT_IS_LESS_THEN_ONE", "[MJS] limit은 1부터 시작합니다."),
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "[MJS] 잘못된 입력입니다."),
     EMAIL_IS_INVALID(HttpStatus.BAD_REQUEST, "EMAIL_IS_INVALID", "[MJS] 잘못된 이메일 형식입니다."),
+    NICKNAME_IS_INVALID(HttpStatus.BAD_REQUEST, "EMAIL_IS_INVALID", "[MJS] 회원 닉네임이 잘못된 형식입니다."),
     INVALID_S3_URL(HttpStatus.BAD_REQUEST, "INVALID_S3_URL", "[MJS] 유효하지 않은 S3 Url입니다."),
 
     // 공지사항 에러 관련 추가 코드

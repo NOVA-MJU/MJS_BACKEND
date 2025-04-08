@@ -2,6 +2,7 @@ package nova.mjs.util.s3;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -30,33 +32,62 @@ public class S3Service {
 
 
     /**
-    uploadFileAndGetUrl:	파일 업로드 + CloudFront URL 반환
     listKeys(prefix):	특정 prefix(폴더) 아래 S3 key 목록 조회
     copyFile(oldKey, newKey):	S3 객체 복사 (임시 → 실제 위치 이동)
     deleteFile(key):	단일 파일 삭제
-    deleteFolder(prefix):	폴더 내 전체 파일 삭제
+    deleteFolder(prefix):	폴더 내 전체 파일 삭제l
     moveFolder(from, to):	폴더 전체 이동 (copy + delete)
     extractKeyFromUrl:	이미지 URL로부터 S3 key 추출
     */
 
-    public String uploadFileAndGetUrl(MultipartFile file, String key) throws IOException {
-        String originalFileName = file.getOriginalFilename();
-        String safeFileName = URLEncoder.encode(originalFileName, StandardCharsets.UTF_8); // URL-safe 처리
-        String finalKey = key.substring(0, key.lastIndexOf("/") + 1) + safeFileName;
+    public String uploadFile(MultipartFile file, String keyPrefix) throws IOException {
+        // 해시 기반 파일명 생성
+        String extension = getExtension(Objects.requireNonNull(file.getOriginalFilename()));
+        String fileHash = DigestUtils.sha256Hex(file.getInputStream()); // apache commons-codec 필요
+        String finalKey = keyPrefix + fileHash + extension;
 
-        log.info("[S3 업로드 요청] 원본 파일명: {}, 인코딩 파일명: {}", originalFileName, safeFileName);
+        log.info("[S3 업로드 요청] 파일 해시: {}, key: {}", fileHash, finalKey);
 
-        PutObjectRequest request = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(finalKey)
-                .contentType(file.getContentType())
-                .build();
+        // 이미 존재하는지 확인
+        if (!doesObjectExist(finalKey)) {
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(finalKey)
+                    .contentType(file.getContentType())
+                    .build();
+            s3Client.putObject(request, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            log.info("[S3 업로드 완료] key: {}", finalKey);
+        } else {
+            log.info("[S3에 동일한 파일 존재. 업로드 생략] key: {}", finalKey);
+        }
 
-        s3Client.putObject(request, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-
-        log.info("[S3 업로드 완료] key: {}", finalKey);
         return cloudFrontUrl + "/" + finalKey;
     }
+
+    public boolean doesObjectExist(String key) {
+        try {
+            HeadObjectRequest headRequest = HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+            s3Client.headObject(headRequest);
+            return true;
+        } catch (S3Exception e) {
+            return false;
+        }
+    }
+
+
+    public String uploadCommunityBoardImage(MultipartFile file, UUID tempFolderUuid) throws IOException {
+        String keyPrefix = "boards/temp/" + tempFolderUuid + "/";
+        return uploadFile(file, keyPrefix);
+    }
+
+    private String getExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf(".");
+        return dotIndex != -1 ? fileName.substring(dotIndex) : "";
+    }
+
     // 전체 폴더 이동
     public void moveFolder(String fromPrefix, String toPrefix) {
         List<String> keys = listKeys(fromPrefix);
