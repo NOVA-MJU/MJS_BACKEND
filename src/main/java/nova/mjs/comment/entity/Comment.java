@@ -5,6 +5,7 @@ import nova.mjs.comment.likes.entity.CommentLike;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
+import static nova.mjs.util.ContentPreviewUtil.makePreview;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,10 +48,11 @@ public class Comment extends BaseEntity {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> replies = new ArrayList<>();
 
-
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommentLike> commentLike = new ArrayList<>();
 
+    @Column(columnDefinition = "TEXT")
+    private String previewContent; // 댓글 미리보기
 
 
     public static Comment create(CommunityBoard communityBoard, Member member, String content) {
@@ -59,7 +61,8 @@ public class Comment extends BaseEntity {
                 .communityBoard(communityBoard)
                 .member(member)
                 .content(content)
-                .likeCount(0) // 기본값 설정
+                .previewContent(makePreview(content)) // 유틸 사용
+                .likeCount(0)
                 .build();
     }
 
@@ -73,6 +76,7 @@ public class Comment extends BaseEntity {
                 .communityBoard(board)
                 .member(member)
                 .content(content)
+                .previewContent(makePreview(content)) // 유틸 사용
                 .likeCount(0)
                 .parent(parent)  // 부모 설정
                 .build();
@@ -82,6 +86,7 @@ public class Comment extends BaseEntity {
 
         return reply;
     }
+
 
     // 게시물 좋아요
     public void increaseLikeCommentCount() {

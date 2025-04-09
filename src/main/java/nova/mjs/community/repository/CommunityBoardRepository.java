@@ -27,6 +27,9 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     // 내가 작성한 게시글 조회
     List<CommunityBoard> findByAuthor(Member author);
 
+
+    int countByAuthor(Member author);
+
     @EntityGraph(attributePaths = "author")
     Page<CommunityBoard> findAll(Pageable pageable);
 
@@ -36,6 +39,5 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     JOIN FETCH cb.author
     """)
     Page<CommunityBoard> findAllWithAuthor(Pageable pageable);
-
 
 }

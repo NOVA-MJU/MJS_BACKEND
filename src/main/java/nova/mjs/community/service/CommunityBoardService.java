@@ -46,7 +46,7 @@ public class CommunityBoardService {
 
 
     // 1. GET 페이지네이션
-    public Page<CommunityBoardResponse> getBoards(Pageable pageable, String email) {
+    public Page<CommunityBoardResponse.SummaryDTO> getBoards(Pageable pageable, String email) {
         // 1) 페이지네이션으로 게시글 목록 조회
         Page<CommunityBoard> boardPage = communityBoardRepository.findAllWithAuthor(pageable);
 
@@ -62,7 +62,7 @@ public class CommunityBoardService {
                 int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
                 int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
                 // isLiked = false
-                return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, false);
+                return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, false);
             });
         }
 
@@ -73,7 +73,7 @@ public class CommunityBoardService {
             return boardPage.map(board -> {
                 int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
                 int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
-                return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, false);
+                return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, false);
             });
         }
 
@@ -91,13 +91,17 @@ public class CommunityBoardService {
             int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
             int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
             boolean isLiked = likedSet.contains(board.getUuid());
+
+            return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, isLiked);
+
             log.info("작성자 닉네임 = {}", board.getAuthor() != null ? board.getAuthor().getNickname() : "null");
             return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, isLiked);
+
         });
     }
 
     // 2. GET 상세 content 조회
-    public CommunityBoardResponse getBoardDetail(UUID uuid, String email) {
+    public CommunityBoardResponse.DetailDTO getBoardDetail(UUID uuid, String email) {
         CommunityBoard board = getExistingBoard(uuid);
         int likeCount = communityLikeRepository.countByCommunityBoardUuid(uuid);
 
@@ -105,13 +109,13 @@ public class CommunityBoardService {
 
         // 1) 비로그인 -> isLiked = false
         if (email == null) {
-            return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, false);
+            return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount, false);
         }
 
         // 2) 로그인된 사용자 찾기
         Member member = memberRepository.findByEmail(email).orElse(null);
         if (member == null) {
-            return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, false);
+            return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount, false);
         }
 
         // 3) 좋아요 여부 확인
@@ -120,7 +124,7 @@ public class CommunityBoardService {
                 .isPresent();
 
         log.debug("자유 게시글 조회 성공. = {}, 좋아요 개수 = {}, 댓글 개수 = {}, 좋아요 = {}", uuid, likeCount, commentCount, isLiked);
-        return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, isLiked);
+        return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount, isLiked);
     }
 
     // 3. POST 게시글 작성
@@ -135,8 +139,9 @@ public class CommunityBoardService {
 */
 
     @Transactional
-    public CommunityBoardResponse createBoard(CommunityBoardRequest request, String emailId) {
+    public CommunityBoardResponse.DetailDTO createBoard(CommunityBoardRequest request, String emailId) {
         log.info("[게시글 작성 요청] 사용자 이메일: {}", emailId);
+    
 
         // 작성자 조회
         Member author = memberRepository.findByEmail(emailId)
@@ -185,13 +190,14 @@ public class CommunityBoardService {
 
         log.info("[게시글 작성 완료] UUID: {}, 좋아요: {}, 댓글: {}", board.getUuid(), likeCount, commentCount);
 
-        return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, false);
+        return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount, false);
     }
 
 
 
     @Transactional
-    public CommunityBoardResponse updateBoard(UUID uuid, CommunityBoardRequest request, String email) {
+    public CommunityBoardResponse.DetailDTO updateBoard(UUID uuid, CommunityBoardRequest request, String email) {
+
         // 1. 게시글 존재 여부 확인
         CommunityBoard board = getExistingBoard(uuid);
 
@@ -245,7 +251,9 @@ public class CommunityBoardService {
                 .findByMemberAndCommunityBoard(member, board)
                 .isPresent();
 
-        return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, isLiked);
+
+        // 엔티티를 DTO로 변환하여 반환
+        return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount, isLiked);
     }
 
     // 게시글 삭제

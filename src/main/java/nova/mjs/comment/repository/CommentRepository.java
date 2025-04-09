@@ -26,4 +26,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("SELECT DISTINCT c.communityBoard FROM Comment c WHERE c.member = :member")
     List<CommunityBoard> findDistinctCommunityBoardByMember(@Param("member") Member member);
 
+    @Query("SELECT c FROM Comment c JOIN FETCH c.communityBoard WHERE c.member = :member")
+    List<Comment> findByMember(@Param("member") Member member);
+
+    int countByMember(Member member);
+
+
 }
