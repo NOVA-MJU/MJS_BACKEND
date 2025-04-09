@@ -5,6 +5,7 @@ import nova.mjs.community.DTO.CommunityBoardRequest;
 import nova.mjs.community.DTO.CommunityBoardResponse;
 import nova.mjs.community.service.CommunityBoardService;
 import nova.mjs.util.response.ApiResponse;
+import nova.mjs.util.s3.S3Service;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.UUID;
 
 @RestController
@@ -21,7 +21,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CommunityBoardController {
 
-    private final CommunityBoardService service;
+    private final CommunityBoardService communityBoardService;
+    private final S3Service s3Service;
 
     // 1. GET 페이지네이션
     @GetMapping
@@ -48,6 +49,7 @@ public class CommunityBoardController {
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
+      
         CommunityBoardResponse.DetailDTO board = service.getBoardDetail(uuid, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -60,13 +62,14 @@ public class CommunityBoardController {
             @RequestBody CommunityBoardRequest request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
+
         CommunityBoardResponse.DetailDTO board = service.createBoard(request, email);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board)); // HTTP 201 Created
     }
 
-    // 4. PATCH 게시글 수정
+    // 4. PATCH 게시글 수정 (기존 이미지 + 새로운 이미지 비교)
     @PatchMapping("/{uuid}")
     public ResponseEntity<ApiResponse<CommunityBoardResponse.DetailDTO>> updateBoard(
             @PathVariable UUID uuid,
@@ -74,11 +77,13 @@ public class CommunityBoardController {
             @AuthenticationPrincipal UserPrincipal userPrincipal // ★추가
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
+
         CommunityBoardResponse.DetailDTO board = service.updateBoard(uuid, request, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board)); // HTTP 200 OK
     }
+
     @DeleteMapping("/{uuid}")
     public ResponseEntity<Void> deleteBoard(
             @PathVariable UUID uuid,
@@ -88,7 +93,7 @@ public class CommunityBoardController {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
         // 서비스에 게시글 UUID와 사용자 email을 넘김
-        service.deleteBoard(uuid, email);
+        communityBoardService.deleteBoard(uuid, email);
 
         return ResponseEntity.noContent().build(); // HTTP 204 No Content
     }

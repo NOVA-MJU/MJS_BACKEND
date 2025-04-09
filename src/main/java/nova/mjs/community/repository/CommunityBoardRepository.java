@@ -2,6 +2,9 @@ package nova.mjs.community.repository;
 
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,6 +27,17 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     // 내가 작성한 게시글 조회
     List<CommunityBoard> findByAuthor(Member author);
 
+
     int countByAuthor(Member author);
+
+    @EntityGraph(attributePaths = "author")
+    Page<CommunityBoard> findAll(Pageable pageable);
+
+    @Query("""
+    SELECT cb
+    FROM CommunityBoard cb
+    JOIN FETCH cb.author
+    """)
+    Page<CommunityBoard> findAllWithAuthor(Pageable pageable);
 
 }
