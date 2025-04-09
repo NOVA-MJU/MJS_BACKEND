@@ -21,9 +21,13 @@ public class CommunityDocument implements SearchDocument {
 
     private String title;
 
-    private String content; // date나 category를 문자열로 통합해서 넣어도 좋음
+    private String content;
+
+    private String date;
 
     private String type;
+
+    private String link;
 
     @Override
     public String getType() {
@@ -35,6 +39,7 @@ public class CommunityDocument implements SearchDocument {
                 .id(String.valueOf(board.getId()))
                 .title(board.getTitle())
                 .content(board.getContent())
+                .date(board.getPublishedAt().toString())
                 .type("community")
                 .build();
     }

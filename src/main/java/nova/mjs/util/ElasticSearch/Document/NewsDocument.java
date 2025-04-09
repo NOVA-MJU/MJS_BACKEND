@@ -20,7 +20,11 @@ public class NewsDocument implements SearchDocument {
 
     private String title;
 
-    private String content; // date나 category를 문자열로 통합해서 넣어도 좋음
+    private String content;
+
+    private String date;
+
+    private String link;
 
     private String type;
 
@@ -34,6 +38,8 @@ public class NewsDocument implements SearchDocument {
                 .id(news.getId().toString())
                 .title(news.getTitle())
                 .content(news.getSummary())
+                .date(news.getDate().toString())
+                .link(news.getLink())
                 .type("news")
                 .build();
     }

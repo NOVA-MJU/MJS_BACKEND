@@ -5,4 +5,6 @@ public interface SearchDocument {
     String getTitle();
     String getContent();
     String getType();
+    String getDate();
+    String getLink();
 }

@@ -20,7 +20,11 @@ public class NoticeDocument implements SearchDocument{
 
     private String title;
 
-    private String content; // date나 category를 문자열로 통합해서 넣어도 좋음
+    private String content;
+
+    private String date;
+
+    private String link;
 
     private String type;
 
@@ -34,6 +38,8 @@ public class NoticeDocument implements SearchDocument{
                 .id(notice.getId().toString())
                 .title(notice.getTitle())
                 .content("") // Notice는 content 없으면 빈 문자열 처리
+                .date(notice.getDate().toString())
+                .link(notice.getLink())
                 .type("notice")
                 .build();
     }
