@@ -35,7 +35,7 @@ public class CommunityBoardController {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<CommunityBoardResponse.SummaryDTO> boards = service.getBoards(pageable, email);
+        Page<CommunityBoardResponse.SummaryDTO> boards = communityBoardService.getBoards(pageable, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(boards));
@@ -50,7 +50,7 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
       
-        CommunityBoardResponse.DetailDTO board = service.getBoardDetail(uuid, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardService.getBoardDetail(uuid, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board));
@@ -63,7 +63,7 @@ public class CommunityBoardController {
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = service.createBoard(request, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardService.createBoard(request, email);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board)); // HTTP 201 Created
@@ -78,7 +78,7 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = service.updateBoard(uuid, request, email);
+        CommunityBoardResponse.DetailDTO board =communityBoardService.updateBoard(uuid, request, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board)); // HTTP 200 OK

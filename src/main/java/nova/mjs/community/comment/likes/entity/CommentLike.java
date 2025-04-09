@@ -1,8 +1,8 @@
-package nova.mjs.comment.likes.entity;
+package nova.mjs.community.comment.likes.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.comment.entity.Comment;
+import nova.mjs.community.comment.entity.Comment;
 import nova.mjs.member.Member;
 
 @Getter

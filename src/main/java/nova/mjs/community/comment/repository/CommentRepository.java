@@ -1,6 +1,6 @@
-package nova.mjs.comment.repository;
+package nova.mjs.community.comment.repository;
 
-import nova.mjs.comment.entity.Comment;
+import nova.mjs.community.comment.entity.Comment;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;

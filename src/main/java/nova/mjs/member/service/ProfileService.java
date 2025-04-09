@@ -2,7 +2,7 @@ package nova.mjs.member.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.comment.entity.Comment;
+import nova.mjs.community.comment.entity.Comment;
 import nova.mjs.community.DTO.CommunityBoardResponse;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.likes.repository.CommunityLikeRepository;
@@ -12,7 +12,7 @@ import nova.mjs.member.DTO.ProfileCountResponse;
 import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
 import nova.mjs.member.exception.MemberNotFoundException;
-import nova.mjs.comment.repository.CommentRepository;
+import nova.mjs.community.comment.repository.CommentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

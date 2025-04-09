@@ -1,14 +1,11 @@
-package nova.mjs.comment.DTO;
+package nova.mjs.community.comment.DTO;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
-import nova.mjs.comment.entity.Comment;
-import nova.mjs.community.entity.CommunityBoard;
-import nova.mjs.member.Member;
+import nova.mjs.community.comment.entity.Comment;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.UUID;
 
 @Getter

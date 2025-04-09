@@ -1,7 +1,7 @@
-package nova.mjs.comment.likes.repository;
+package nova.mjs.community.comment.likes.repository;
 
-import nova.mjs.comment.entity.Comment;
-import nova.mjs.comment.likes.entity.CommentLike;
+import nova.mjs.community.comment.entity.Comment;
+import nova.mjs.community.comment.likes.entity.CommentLike;
 import nova.mjs.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

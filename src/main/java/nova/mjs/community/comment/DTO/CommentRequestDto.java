@@ -1,4 +1,4 @@
-package nova.mjs.comment.DTO;
+package nova.mjs.community.comment.DTO;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

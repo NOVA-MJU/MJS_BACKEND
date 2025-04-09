@@ -1,12 +1,12 @@
-package nova.mjs.comment.likes;
+package nova.mjs.community.comment.likes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.comment.entity.Comment;
-import nova.mjs.comment.likes.entity.CommentLike;
-import nova.mjs.comment.repository.CommentRepository;
-import nova.mjs.comment.exception.CommentNotFoundException;
-import nova.mjs.comment.likes.repository.CommentLikeRepository;
+import nova.mjs.community.comment.entity.Comment;
+import nova.mjs.community.comment.likes.entity.CommentLike;
+import nova.mjs.community.comment.repository.CommentRepository;
+import nova.mjs.community.comment.exception.CommentNotFoundException;
+import nova.mjs.community.comment.likes.repository.CommentLikeRepository;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.exception.CommunityNotFoundException;
 import nova.mjs.community.repository.CommunityBoardRepository;
