@@ -47,7 +47,7 @@ public class SearchRepositoryImpl implements SearchRepository {
                             .should(s -> s.match(m -> m.field("content").query(keyword)))
                             .minimumShouldMatch("1");
 
-                    if (type != null && !type.isBlank()) {
+                    if (!type.isBlank()) {
                         boolBuilder.filter(f -> f.term(t -> t.field("type").value(type)));
                     }
 
