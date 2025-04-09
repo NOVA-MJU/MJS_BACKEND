@@ -14,15 +14,17 @@ import nova.mjs.util.ElasticSearch.Document.SearchDocument;
 import nova.mjs.util.ElasticSearch.Repository.CommunitySearchRepository;
 import nova.mjs.util.ElasticSearch.Repository.NewsSearchRepository;
 import nova.mjs.util.ElasticSearch.Repository.NoticeSearchRepository;
+import nova.mjs.util.ElasticSearch.Repository.SearchRepository;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CombinedSearchService {
+
     private final NoticeRepository noticeRepository;
     private final NewsRepository newsRepository;
     private final CommunityBoardRepository communityBoardRepository;
@@ -31,25 +33,11 @@ public class CombinedSearchService {
     private final NewsSearchRepository newsSearchRepository;
     private final CommunitySearchRepository communitySearchRepository;
 
-    public List<SearchDocument> unifiedSearch(String keyword) {
-        List<SearchDocument> results = new ArrayList<>();
+    private final SearchRepository searchRepository;
 
-        results.addAll(noticeSearchRepository.searchByTitleOrContent(keyword));
-        results.addAll(newsSearchRepository.searchByTitleOrContent(keyword));
-        results.addAll(communitySearchRepository.searchByTitleOrContent(keyword));
-
-        // Notice > News > Community 순 정렬
-        results.sort(Comparator.comparing(doc -> switch (doc.getType()) {
-            case "notice" -> 0;
-            case "news" -> 1;
-            case "community" -> 2;
-            default -> 3;
-        }));
-
-        return results;
-    }
-
-
+    /**
+     * 모든 데이터를 Elasticsearch에 동기화
+     */
     public void syncAll() {
         // Notice
         List<Notice> notices = noticeRepository.findAll();
@@ -73,5 +61,38 @@ public class CombinedSearchService {
         communitySearchRepository.saveAll(communityDocuments);
     }
 
+    /**
+     * @param keyword 검색어
+     * @param type 필터 (notice / news / community)
+     * @param page 페이지 번호
+     * @param size 페이지 크기
+     * @return 하이라이트 포함된 검색 결과 리스트
+     */
+    public List<SearchResponseDTO> unifiedSearch(String keyword, String type, int page, int size) {
+        return searchRepository.search(keyword, type, page, size)
+                .getSearchHits().stream()
+                .map(searchHit -> convertToDTO((SearchHit<SearchDocument>) searchHit))
+                .collect(Collectors.toList());
+    }
 
+    /**
+     * SearchHit를 SearchResponseDTO로 변환
+     * @param searchHit SearchHit 객체
+     * @return 변환된 SearchResponseDTO
+     */
+    private SearchResponseDTO convertToDTO(SearchHit<SearchDocument> searchHit) {
+        String highlightedTitle = searchHit.getHighlightFields().get("title") != null ?
+                searchHit.getHighlightFields().get("title").get(0) : searchHit.getContent().getTitle();
+        String highlightedContent = searchHit.getHighlightFields().get("content") != null ?
+                searchHit.getHighlightFields().get("content").get(0) : searchHit.getContent().getContent();
+
+        return new SearchResponseDTO(
+                searchHit.getContent().getId(),
+                highlightedTitle,
+                highlightedContent,
+                searchHit.getContent().getDate(),
+                searchHit.getContent().getLink(),
+                searchHit.getContent().getType()
+        );
+    }
 }
