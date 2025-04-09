@@ -38,7 +38,7 @@ public class NewsDocument implements SearchDocument {
                 .id(news.getId().toString())
                 .title(news.getTitle())
                 .content(news.getSummary())
-                .date(news.getDate().toString())
+                .date(news.getDate())
                 .link(news.getLink())
                 .type("news")
                 .build();

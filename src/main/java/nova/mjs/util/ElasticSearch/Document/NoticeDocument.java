@@ -38,7 +38,7 @@ public class NoticeDocument implements SearchDocument{
                 .id(notice.getId().toString())
                 .title(notice.getTitle())
                 .content("") // Notice는 content 없으면 빈 문자열 처리
-                .date(notice.getDate().toString())
+                .date(notice.getDate())
                 .link(notice.getLink())
                 .type("notice")
                 .build();

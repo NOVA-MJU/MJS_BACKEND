@@ -1,7 +1,6 @@
 package nova.mjs.util.ElasticSearch;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.util.ElasticSearch.Document.SearchDocument;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
