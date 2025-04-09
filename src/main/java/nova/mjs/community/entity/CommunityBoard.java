@@ -3,7 +3,7 @@ package nova.mjs.community.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.comment.entity.Comment;
+import nova.mjs.community.comment.entity.Comment;
 import nova.mjs.community.entity.enumList.CommunityCategory;
 import nova.mjs.community.likes.entity.CommunityLike;
 import nova.mjs.member.Member;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static nova.mjs.util.ContentPreviewUtil.makePreview;
+import static nova.mjs.community.util.ContentPreviewUtil.makePreview;
 
 @Entity
 @Getter

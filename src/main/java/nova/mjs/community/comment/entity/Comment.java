@@ -1,11 +1,11 @@
-package nova.mjs.comment.entity;
+package nova.mjs.community.comment.entity;
 import lombok.*;
 import jakarta.persistence.*;
-import nova.mjs.comment.likes.entity.CommentLike;
+import nova.mjs.community.comment.likes.entity.CommentLike;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
-import static nova.mjs.util.ContentPreviewUtil.makePreview;
+import static nova.mjs.community.util.ContentPreviewUtil.makePreview;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,13 +1,13 @@
-package nova.mjs.comment.service;
+package nova.mjs.community.comment.service;
 
 import lombok.*;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.comment.DTO.CommentResponseDto;
-import nova.mjs.comment.entity.Comment;
-import nova.mjs.comment.exception.CommentNotFoundException;
-import nova.mjs.comment.exception.CommentReplyDepthException;
-import nova.mjs.comment.likes.repository.CommentLikeRepository;
-import nova.mjs.comment.repository.CommentRepository;
+import nova.mjs.community.comment.DTO.CommentResponseDto;
+import nova.mjs.community.comment.entity.Comment;
+import nova.mjs.community.comment.exception.CommentNotFoundException;
+import nova.mjs.community.comment.exception.CommentReplyDepthException;
+import nova.mjs.community.comment.likes.repository.CommentLikeRepository;
+import nova.mjs.community.comment.repository.CommentRepository;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.repository.CommunityBoardRepository;
 import nova.mjs.member.Member;
@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Log4j2

@@ -2,7 +2,7 @@ package nova.mjs.community.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.comment.repository.CommentRepository;
+import nova.mjs.community.comment.repository.CommentRepository;
 import nova.mjs.community.DTO.CommunityBoardRequest;
 import nova.mjs.community.DTO.CommunityBoardResponse;
 import nova.mjs.community.entity.CommunityBoard;
@@ -92,10 +92,8 @@ public class CommunityBoardService {
             int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
             boolean isLiked = likedSet.contains(board.getUuid());
 
-            return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, isLiked);
-
             log.info("작성자 닉네임 = {}", board.getAuthor() != null ? board.getAuthor().getNickname() : "null");
-            return CommunityBoardResponse.fromEntity(board, likeCount, commentCount, isLiked);
+            return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, isLiked);
 
         });
     }

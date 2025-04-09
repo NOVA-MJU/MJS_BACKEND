@@ -1,4 +1,4 @@
-package nova.mjs.util;
+package nova.mjs.community.util;
 
 public class ContentPreviewUtil {
 
