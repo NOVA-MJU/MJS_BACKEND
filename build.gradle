@@ -65,6 +65,17 @@ dependencies {
 	//Json parse
 	implementation 'org.json:json:20210307'
 
+	//FixtureMonkey core
+	testImplementation 'com.navercorp.fixturemonkey:fixture-monkey-starter:0.6.12'
+
+	// Jackson 기반 직렬화 지원 (DTO/Entity 생성 시 유용)
+	testImplementation 'com.navercorp.fixturemonkey:fixture-monkey-jackson:0.6.12'
+
+	// JUnit
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+
+
 }
 
 test {
