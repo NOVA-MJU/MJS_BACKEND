@@ -3,6 +3,7 @@ package nova.mjs.util.scheduler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.news.service.NewsService;
+import nova.mjs.notice.exception.NoticeCrawlingException;
 import nova.mjs.notice.service.NoticeCrawlingService;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.scheduler.exception.SchedulerCronInvalidException;
@@ -101,12 +102,20 @@ public class SchedulerService {
     @Scheduled(cron = "0 00 15 * * *") // 매일 15:00
     @Scheduled(cron = "0 30 16 * * *") // 매일 16:30
     @Scheduled(cron = "0 0 18 * * *")  // 매일 18:00
-    @Scheduled(cron = "0 18 16 * * *")  // TEST
+    //@Scheduled(cron = "0 36 16 * * *")  // TEST
     public void crawlAllNotices() {
         log.info("[MJS] Scheduled crawling started.");
-        List<String> noticeTypes = List.of("general", "academic", "scholarship", "career", "activity", "rule");
-        for (String type : noticeTypes) {
-            noticeCrawlingService.fetchNotices(type);
-        }
+        CompletableFuture.runAsync(() -> {
+            List<String> noticeTypes = List.of("general", "academic", "scholarship", "career", "activity", "rule");
+            for (String type : noticeTypes) {
+                try {
+                    noticeCrawlingService.fetchNotices(type);
+                } catch (NoticeCrawlingException e) {
+                    log.error("[MJS] {} 공지 크롤링 실패: {}", type, e.getMessage());
+                    // continue; // 이거 쓰면 해당 타입만 건너뛰고 다음으로 감
+                    throw e;     // 이거 쓰면 전체 중단
+                }
+            }
+        });
     }
 }
