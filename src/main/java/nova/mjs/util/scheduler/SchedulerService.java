@@ -3,6 +3,7 @@ package nova.mjs.util.scheduler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.news.service.NewsService;
+import nova.mjs.notice.service.NoticeCrawlingService;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.scheduler.exception.SchedulerCronInvalidException;
 import nova.mjs.util.scheduler.exception.SchedulerTaskFailedException;
@@ -11,6 +12,8 @@ import nova.mjs.weather.WeatherService;
 import nova.mjs.weeklyMenu.service.WeeklyMenuService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -21,6 +24,7 @@ public class SchedulerService {
     private final NewsService newsService;
     private final WeatherService weatherService;
     private final WeeklyMenuService weeklyMenuService;
+    private final NoticeCrawlingService noticeCrawlingService;
 
     //날씨 데이터 스케줄링 (매 정각 실행)
     @Scheduled(cron = "0 0 * * * *")
@@ -85,5 +89,24 @@ public class SchedulerService {
                 throw new SchedulerUnknownException("알 수 없는 스케줄러 오류 발생", ErrorCode.SCHEDULER_UNKNOWN_ERROR);
             }
         });
+    }
+    // 보통 출근-퇴근 중간에 틈틈히 올리시니까
+    // 오전 오후 1시간 ~ 1시간 반 쯤 격차 두고 크롤링
+    // 퇴근시간 이후는 크롤링 하지 않고 혹시 전날 저녁에 올라온 게 있을 수 있으니 다음날 8시에 크롤링
+    @Scheduled(cron = "0 0 8 * * *")   // 매일 08:00
+    @Scheduled(cron = "0 30 9 * * *")  // 매일 09:30
+    @Scheduled(cron = "0 30 10 * * *") // 매일 10:30
+    @Scheduled(cron = "0 0 12 * * *")  // 매일 12:00
+    @Scheduled(cron = "0 30 13 * * *") // 매일 13:30
+    @Scheduled(cron = "0 00 15 * * *") // 매일 15:00
+    @Scheduled(cron = "0 30 16 * * *") // 매일 16:30
+    @Scheduled(cron = "0 0 18 * * *")  // 매일 18:00
+    @Scheduled(cron = "0 18 16 * * *")  // TEST
+    public void crawlAllNotices() {
+        log.info("[MJS] Scheduled crawling started.");
+        List<String> noticeTypes = List.of("general", "academic", "scholarship", "career", "activity", "rule");
+        for (String type : noticeTypes) {
+            noticeCrawlingService.fetchNotices(type);
+        }
     }
 }
