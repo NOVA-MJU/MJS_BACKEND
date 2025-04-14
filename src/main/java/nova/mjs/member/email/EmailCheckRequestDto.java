@@ -1,4 +1,4 @@
-package nova.mjs.util.email;
+package nova.mjs.member.email;
 import lombok.Getter;
 
 @Getter
