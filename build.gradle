@@ -65,6 +65,13 @@ dependencies {
 	//Json parse
 	implementation 'org.json:json:20210307'
 
+	//Email 인증
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' // (이메일 템플릿 사용 시)
+
+	// Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 }
 
 test {

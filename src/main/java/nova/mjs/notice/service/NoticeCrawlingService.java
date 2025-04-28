@@ -10,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import nova.mjs.notice.dto.NoticeResponseDto;
 import nova.mjs.notice.entity.Notice;
 
+import nova.mjs.notice.exception.NoticeCrawlingException;
 import nova.mjs.notice.repository.NoticeRepository;
+import nova.mjs.util.exception.ErrorCode;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -137,10 +139,10 @@ public class NoticeCrawlingService {
                 page++;
 
             } catch (Exception e) {
-                log.error("[MJS] 크롤링 중 오류 발생: {}", e.getMessage(), e);
-                // 필요하다면 throw new RuntimeException(...) 처리
-                break;
+                log.error("[MJS] {} 타입 공지 크롤링 중 오류 발생: {}", type, e.getMessage(), e);
+                throw new NoticeCrawlingException("공지 크롤링 실패", ErrorCode.SCHEDULER_TASK_FAILED); // ← 예외 던지기
             }
+
         }
 
         // (8) 최종 결과 로그
