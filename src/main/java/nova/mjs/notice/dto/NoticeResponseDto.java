@@ -23,4 +23,5 @@ public class NoticeResponseDto {
                 .link(notice.getLink())
                 .build();
     }
+
 }
