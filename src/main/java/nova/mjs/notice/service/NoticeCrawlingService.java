@@ -10,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import nova.mjs.notice.dto.NoticeResponseDto;
 import nova.mjs.notice.entity.Notice;
 
+import nova.mjs.notice.exception.NoticeCrawlingException;
 import nova.mjs.notice.repository.NoticeRepository;
+import nova.mjs.util.exception.ErrorCode;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -78,19 +80,19 @@ public class NoticeCrawlingService {
                     String rawLink = row.select(".artclLinkView").attr("href");
 
                     // (b) 문자열 전처리 (trim, 공백제거, link 정규화 등)
-                    String dateText = normalizeDate(rawDate);
+                    LocalDate date = normalizeDate(rawDate);
                     String title = normalizeTitle(rawTitle);
                     String link = normalizeLink(rawLink);
                     String category = normalizeCategory(type);
 
                     // 필수 정보가 하나라도 없으면 무시
-                    if (dateText.isEmpty() || title.isEmpty() || link.isEmpty()) {
+                    if (date == null || title.isEmpty() || link.isEmpty()) {
                         continue;
                     }
 
                     // (c) cutoffYear 보다 오래된 날짜면 중단
                     //    (ex: dateText가 "2022-03-25" 라고 가정 시, "2022" >= cutoffYear?)
-                    if (dateText.startsWith(String.valueOf(cutoffYear))) {
+                    if (date.getYear() <= cutoffYear) {
                         log.info("[MJS] {}년도 이전 공지 발견 -> 크롤링 중단", cutoffYear);
                         stop = true;
                         break;
@@ -98,12 +100,12 @@ public class NoticeCrawlingService {
 
                     // (d) 이미 DB에 존재하는 공지인지 확인
                     log.info("[MJS] Checking exists: date='{}', category='{}', title='{}'",
-                            dateText, category, title);
+                            date, category, title);
 
-                    boolean exists = noticeRepository.existsByDateAndCategoryAndTitle(dateText, category, title);
+                    boolean exists = noticeRepository.existsByDateAndCategoryAndTitle(date, category, title);
                     if (exists) {
                         log.info("[MJS] 이미 DB에 존재하는 공지 발견 -> 크롤링 중단. date={}, category={}, title={}",
-                                dateText, category, title);
+                                date, category, title);
                         stop = true;
                         break;
                     }
@@ -114,7 +116,7 @@ public class NoticeCrawlingService {
                     }
 
                     // (f) 새로운 공지 -> DB에 저장할 리스트에 담기
-                    Notice notice = Notice.createNotice(title, dateText, type, link);
+                    Notice notice = Notice.createNotice(title, date, type, link);
                     noticeEntities.add(notice);
 
                     // (g) 클라이언트 응답용 DTO
@@ -137,25 +139,31 @@ public class NoticeCrawlingService {
                 page++;
 
             } catch (Exception e) {
-                log.error("[MJS] 크롤링 중 오류 발생: {}", e.getMessage(), e);
-                // 필요하다면 throw new RuntimeException(...) 처리
-                break;
+                log.error("[MJS] {} 타입 공지 크롤링 중 오류 발생: {}", type, e.getMessage(), e);
+                throw new NoticeCrawlingException("공지 크롤링 실패", ErrorCode.SCHEDULER_TASK_FAILED); // ← 예외 던지기
             }
+
         }
 
         // (8) 최종 결과 로그
         log.info("[MJS] {}타입 공지 크롤링 완료. 총 {}개의 새 공지를 수집했습니다.", type, notices.size());
         return notices;
     }
-    // 날짜 문자열 전처리 - 공백제거, yyyy.mm.dd
-    private String normalizeDate(String rawDate) {
-        if (rawDate == null) return "";
-        // 공백 제거
-        String cleaned = rawDate.trim().replaceAll("\\s+", "");
-        // 예) 2023. 03. 26 → 2023.03.26
-        cleaned = cleaned.replaceAll("\\.\\s+", ".");
-        return cleaned;
+    private LocalDate normalizeDate(String rawDate) {
+        if (rawDate == null || rawDate.isBlank()) return null;
+
+        // 공백 제거 및 포맷 맞춤
+        String cleaned = rawDate.trim().replaceAll("\\s+", "").replaceAll("\\.\\s*", "-");
+
+        // 예: "2025.04.08" → "2025-04-08"
+        try {
+            return LocalDate.parse(cleaned);
+        } catch (Exception e) {
+            log.warn("[MJS] 날짜 파싱 실패: {}", cleaned);
+            return null;
+        }
     }
+
 
     // 제목 문자열 전처리 - 공백제거
     private String normalizeTitle(String rawTitle) {

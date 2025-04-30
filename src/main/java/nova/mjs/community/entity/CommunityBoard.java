@@ -3,7 +3,7 @@ package nova.mjs.community.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.comment.entity.Comment;
+import nova.mjs.community.comment.entity.Comment;
 import nova.mjs.community.entity.enumList.CommunityCategory;
 import nova.mjs.community.likes.entity.CommunityLike;
 import nova.mjs.member.Member;
@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import static nova.mjs.community.util.ContentPreviewUtil.makePreview;
 
 @Entity
 @Getter
@@ -44,6 +46,9 @@ public class CommunityBoard extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member author; // 작성자
+
+    @Column(columnDefinition = "TEXT")
+    private String previewContent; // 댓글 미리보기
 
 
     @ElementCollection
@@ -79,6 +84,7 @@ public class CommunityBoard extends BaseEntity {
                 .content(content)
                 .category(category)
                 .published(published != null ? published : false)
+                .previewContent(makePreview(content))
                 .viewCount(0)
                 .likeCount(0)
                 .publishedAt(published != null && published ? LocalDateTime.now() : null)

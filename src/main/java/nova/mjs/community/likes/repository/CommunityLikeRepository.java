@@ -31,4 +31,7 @@ public interface CommunityLikeRepository extends JpaRepository<CommunityLike, Lo
             @Param("member") Member member,
             @Param("communityBoardUUID") List<UUID> communityBoardUUID
     );
+
+    int countByMember(Member member);
+
 }

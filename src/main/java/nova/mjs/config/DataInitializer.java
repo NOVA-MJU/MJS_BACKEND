@@ -3,7 +3,7 @@ package nova.mjs.config;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.comment.repository.CommentRepository;
+import nova.mjs.community.comment.repository.CommentRepository;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.community.repository.CommunityBoardRepository;
 import nova.mjs.member.Member;
