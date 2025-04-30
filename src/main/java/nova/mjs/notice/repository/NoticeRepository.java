@@ -18,9 +18,19 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
     SELECT new nova.mjs.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
     FROM Notice n
     WHERE n.category = :category
-    AND (:start IS NULL OR n.date BETWEEN :start AND :end)
     """)
-    Page<NoticeResponseDto> findNoticesByCategoryAndYear(
+    Page<NoticeResponseDto> findNoticesByCategory(
+            @Param("category") String category,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT new nova.mjs.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
+    FROM Notice n
+    WHERE n.category = :category
+    AND n.date BETWEEN :start AND :end
+    """)
+    Page<NoticeResponseDto> findNoticesByCategoryAndDateRange(
             @Param("category") String category,
             @Param("start") LocalDate start,
             @Param("end") LocalDate end,
@@ -28,10 +38,11 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
     );
 
 
+
     // 중복 여부 확인용: 날짜, 카테고리, 링크가 모두 같은지, 근데 링크는 중복 못알아 먹더라
-    boolean existsByDateAndCategoryAndLink(String date, String category, String link);
+    boolean existsByDateAndCategoryAndLink(LocalDate date, String category, String link);
 
     // 중복 여부 확인용: 제목, 카테고리, 날짜 모두 같은지
-    boolean existsByDateAndCategoryAndTitle(String date, String category, String title);
+    boolean existsByDateAndCategoryAndTitle(LocalDate date, String category, String title);
 
 }
