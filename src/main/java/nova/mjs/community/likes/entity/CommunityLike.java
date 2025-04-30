@@ -5,13 +5,11 @@ import lombok.*;
 import nova.mjs.community.entity.CommunityBoard;
 import nova.mjs.member.Member;
 
-import java.util.UUID;
-
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "like_community")
-public class LikeCommunity {
+public class CommunityLike {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "community_like_id")
@@ -25,7 +23,7 @@ public class LikeCommunity {
     @JoinColumn(name = "community_board_id", nullable = false)
     private CommunityBoard communityBoard;
 
-    public LikeCommunity(Member member, CommunityBoard communityBoard) {
+    public CommunityLike(Member member, CommunityBoard communityBoard) {
         this.member = member;
         this.communityBoard = communityBoard;
     }

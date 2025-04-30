@@ -2,6 +2,7 @@ package nova.mjs.util.exception;
 
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.util.jwt.exception.JwtException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -115,6 +116,13 @@ public class GlobalExceptionHandler {
         log.error("Exception: {}", ex.getMessage());
         return createErrorResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", ex.getMessage());
     }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ErrorResponse> handleJwtException(JwtException ex) {
+        log.warn("[MJS] {}", ex.getMessage());
+        return createErrorResponseEntity(ex);
+    }
+
 
     private ResponseEntity<ErrorResponse> createErrorResponseEntity(BusinessBaseException ex) {
         ErrorResponse errorResponse;
