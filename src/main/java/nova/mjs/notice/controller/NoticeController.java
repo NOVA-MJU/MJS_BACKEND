@@ -34,4 +34,11 @@ public class NoticeController {
     ) {
         return noticeService.getNotices(category, year, page, size, sort);
     }
+
+    // (3) 전체 공지 크롤링 (모든 카테고리)
+    @PostMapping("/crawl/all")
+    public List<NoticeResponseDto> fetchAllNotices() {
+        return noticeCrawlingServiceService.fetchAllNotices();
+    }
+
 }
