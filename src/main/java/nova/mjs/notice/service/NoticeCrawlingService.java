@@ -1,7 +1,10 @@
 package nova.mjs.notice.service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +35,9 @@ public class NoticeCrawlingService {
     private final NoticeRepository noticeRepository;
     // 공지 URL 매핑
     private static final String BASE_URL = "https://www.mju.ac.kr/";
+    private static final String SUBVIEW_BASE = "https://www.mju.ac.kr/mjukr/255/subview.do?enc=";
+
+    // 카테고리
     private static final Map<String, String> NOTICE_URLS = Map.of(
             "general", "mjukr/255/subview.do", // 일반 공지
             "academic", "mjukr/257/subview.do", // 학사 공지
@@ -40,6 +46,15 @@ public class NoticeCrawlingService {
             "activity", "mjukr/5364/subview.do", // 학생활동 공지
             "rule", "mjukr/4450/subview.do"  // 학칙개정 공지
     );
+
+    @Transactional
+    public List<NoticeResponseDto> fetchAllNotices() {
+        List<NoticeResponseDto> result = new ArrayList<>();
+        for (String type : NOTICE_URLS.keySet()) {
+            result.addAll(fetchNotices(type));
+        }
+        return result;
+    }
 
     @Transactional // 크롤링 후 DB 저장
     public List<NoticeResponseDto> fetchNotices(String type) {
@@ -110,13 +125,13 @@ public class NoticeCrawlingService {
                         break;
                     }
 
-                    // (e) link 처리
-                    if (!link.startsWith("http")) {
-                        link = BASE_URL + link;
-                    }
+                    // (e) link raw link -> 암호화된 링크로 변환하여 처리
+                    String encodedUrl = encodeArtclViewToEnc(rawLink);
+                    String finalUrl = SUBVIEW_BASE + encodedUrl;
+
 
                     // (f) 새로운 공지 -> DB에 저장할 리스트에 담기
-                    Notice notice = Notice.createNotice(title, date, type, link);
+                    Notice notice = Notice.createNotice(title, date, type, finalUrl);
                     noticeEntities.add(notice);
 
                     // (g) 클라이언트 응답용 DTO
@@ -191,5 +206,16 @@ public class NoticeCrawlingService {
         if (rawCategory == null) return "";
         // 소문자로 통일
         return rawCategory.trim().toLowerCase();
+    }
+
+    private String encodeArtclViewToEnc(String rawLink) {
+        String path = rawLink.split("\\?")[0];
+        if (!path.startsWith("/")) path = "/" + path;
+
+        String query = "?page=1&srchColumn=&srchWrd=&bbsClSeq=&bbsOpenWrdSeq=" +
+                "&rgsBgndeStr=&rgsEnddeStr=&isViewMine=false&isView=true&password=";
+
+        String full = "fnct1|@@|" + path + query;
+        return URLEncoder.encode(Base64.getEncoder().encodeToString(full.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
     }
 }
