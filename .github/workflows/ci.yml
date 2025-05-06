@@ -37,6 +37,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e  # 오류 발생 시 즉시 종료
             echo "[1] Move to project directory"
             cd ~/MJS_BACKEND || { echo "Project directory not found"; exit 1; }
 
@@ -52,17 +53,12 @@ jobs:
             echo "[3] Pull latest code"
             git reset --hard HEAD
             git clean -fd
-            git pull origin main || { echo "Git pull failed"; exit 1; }
+            git pull origin main
 
             echo "[4] Clean and build"
             ./gradlew clean
-            ./gradlew build -x test --warning-mode all 2>&1 | tee gradle-build.log
-            if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-            echo "Build failed. Check gradle-build.log for details"
-            exit 1
-            fi
-  
-  
+            ./gradlew build -x test --warning-mode all
+
             echo "[4-1] Wait to ensure JAR write finishes"
             sleep 3
 
