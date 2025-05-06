@@ -35,23 +35,30 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            PROJECT_DIR=~/MJS_BACKEND
-            cd $PROJECT_DIR
+            echo "[Step 1] Move to project directory"
+            cd ~/MJS_BACKEND || { echo "Project directory not found"; exit 1; }
 
-            echo "[1] Stop existing server"
-            pkill -f 'java -jar' || true
+            echo "[Step 2] Stop existing server"
+            pkill -f 'java -jar' || echo "No running server found"
             sleep 2
 
-            echo "[2] Reset local changes"
+            echo "[Step 3] Clean up and pull latest code"
             git reset --hard HEAD
             git clean -fd
+            git pull origin main || { echo "Failed to pull latest code"; exit 1; }
 
-            echo "[3] Pull latest code from origin"
-            git pull origin main
+            echo "[Step 4] Build the project (skip tests)"
+            ./gradlew clean build -x test || { echo "Build failed"; exit 1; }
 
-            echo "[4] Build project without tests"
-            ./gradlew build -x test
+            echo "[Step 5] Find and run the latest JAR"
+            JAR_PATH=$(find build/libs -type f -name "*.jar" | grep -v "plain" | head -n 1)
+            if [ -z "$JAR_PATH" ]; then
+              echo "No JAR file found"
+              exit 1
+            fi
+            nohup java -jar "$JAR_PATH" > nohup.out 2>&1 &
+            echo "Application started successfully"
 
-            echo "[5] Run latest JAR"
-            JAR_PATH=$(ls build/libs/*.jar | head -n 1)
-            nohup java -jar $JAR_PATH > nohup.out 2>&1 &
+            echo "[Step 6] Show last 20 lines of nohup.out"
+            tail -n 20 nohup.out
+      
