@@ -26,7 +26,9 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build project without tests
-        run: ./gradlew clean build -x test
+        run: |
+          echo "[CI] Clean and build (without test)"
+          ./gradlew clean build -x test --warning-mode all
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.0
@@ -41,7 +43,7 @@ jobs:
             echo "[2] Stop old server if running"
             PID=$(pgrep -f 'MJS_BACKEND-0.0.1-SNAPSHOT.jar')
             if [ -n "$PID" ]; then
-              kill -9 $PID
+              kill -9 "$PID"
               echo "Killed process $PID"
             else
               echo "No running server found"
@@ -54,16 +56,26 @@ jobs:
 
             echo "[4] Clean and build"
             ./gradlew clean
-            ./gradlew build -x test || { echo "Build failed"; exit 1; }
+            ./gradlew build -x test --warning-mode all 2>&1 | tee gradle-build.log
+            if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+            echo "Build failed. Check gradle-build.log for details"
+            exit 1
+            fi
+  
+  
+            echo "[4-1] Wait to ensure JAR write finishes"
+            sleep 3
 
             echo "[5] Run new JAR"
             cd build/libs
             JAR_NAME=$(ls MJS_BACKEND-*.jar | grep -v "plain" | head -n 1)
             if [ -z "$JAR_NAME" ]; then
               echo "No JAR file found"
+              ls -al
               exit 1
             fi
-            nohup java -jar $JAR_NAME > nohup.out 2>&1 &
+            nohup java -jar "$JAR_NAME" > nohup.out 2>&1 &
+            sleep 3
             echo "Application started: $JAR_NAME"
 
             echo "[6] Show logs"
