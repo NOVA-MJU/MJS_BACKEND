@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main repo with submodules
+      - name: Checkout main repo (with submodules)
         uses: actions/checkout@v3
         with:
           submodules: recursive
@@ -35,30 +35,36 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            echo "[Step 1] Move to project directory"
+            echo "[1] Move to project directory"
             cd ~/MJS_BACKEND || { echo "Project directory not found"; exit 1; }
 
-            echo "[Step 2] Stop existing server"
-            pkill -f 'java -jar' || echo "No running server found"
-            sleep 2
+            echo "[2] Stop old server if running"
+            PID=$(pgrep -f 'MJS_BACKEND-0.0.1-SNAPSHOT.jar')
+            if [ -n "$PID" ]; then
+              kill -9 $PID
+              echo "Killed process $PID"
+            else
+              echo "No running server found"
+            fi
 
-            echo "[Step 3] Clean up and pull latest code"
+            echo "[3] Pull latest code"
             git reset --hard HEAD
             git clean -fd
-            git pull origin main || { echo "Failed to pull latest code"; exit 1; }
+            git pull origin main || { echo "Git pull failed"; exit 1; }
 
-            echo "[Step 4] Build the project (skip tests)"
-            ./gradlew clean build -x test || { echo "Build failed"; exit 1; }
+            echo "[4] Clean and build"
+            ./gradlew clean
+            ./gradlew build -x test || { echo "Build failed"; exit 1; }
 
-            echo "[Step 5] Find and run the latest JAR"
-            JAR_PATH=$(find build/libs -type f -name "*.jar" | grep -v "plain" | head -n 1)
-            if [ -z "$JAR_PATH" ]; then
+            echo "[5] Run new JAR"
+            cd build/libs
+            JAR_NAME=$(ls MJS_BACKEND-*.jar | grep -v "plain" | head -n 1)
+            if [ -z "$JAR_NAME" ]; then
               echo "No JAR file found"
               exit 1
             fi
-            nohup java -jar "$JAR_PATH" > nohup.out 2>&1 &
-            echo "Application started successfully"
+            nohup java -jar $JAR_NAME > nohup.out 2>&1 &
+            echo "Application started: $JAR_NAME"
 
-            echo "[Step 6] Show last 20 lines of nohup.out"
-            tail -n 20 nohup.out
-      
+            echo "[6] Show logs"
+            tail -n 100 nohup.out
