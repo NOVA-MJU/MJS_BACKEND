@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Docker Build & Deploy to DockerHub
 
 on:
   push:
@@ -6,73 +6,47 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  docker-build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main repo (with submodules)
+      - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
         with:
-          submodules: recursive
-          token: ${{ secrets.SUBMODULE_TOKEN }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: mjsearch/mjs-backend:latest
 
-      - name: Grant execute permission to gradlew
-        run: chmod +x ./gradlew
-
-      - name: Build project without tests
-        run: |
-          echo "[CI] Clean and build (without test)"
-          ./gradlew clean build -x test --warning-mode all
-
-      - name: Deploy to EC2
+      - name: Deploy to EC2 and Run Container
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
-            set -e  # 오류 발생 시 즉시 종료
-            echo "[1] Move to project directory"
-            cd ~/MJS_BACKEND || { echo "Project directory not found"; exit 1; }
+            echo "[1] Pull latest Docker image"
+            docker pull mjsearch/mjs-backend:latest
 
-            echo "[2] Stop old server if running"
-            PID=$(pgrep -f 'MJS_BACKEND-0.0.1-SNAPSHOT.jar')
-            if [ -n "$PID" ]; then
-              kill -9 "$PID"
-              echo "Killed process $PID"
-            else
-              echo "No running server found"
-            fi
+            echo "[2] Stop and remove existing container if exists"
+            docker stop mjs-backend-container || true
+            docker rm mjs-backend-container || true
 
-            echo "[3] Pull latest code"
-            git reset --hard HEAD
-            git clean -fd
-            git pull origin main
+            echo "[3] Run latest container"
+            docker run -d -p 80:8080 --name mjs-backend-container mjsearch/mjs-backend:latest
 
-            echo "[4] Clean and build"
-            ./gradlew clean
-            ./gradlew build -x test --warning-mode all
-
-            echo "[4-1] Wait to ensure JAR write finishes"
-            sleep 3
-
-            echo "[5] Run new JAR"
-            cd build/libs
-            JAR_NAME=$(ls MJS_BACKEND-*.jar | grep -v "plain" | head -n 1)
-            if [ -z "$JAR_NAME" ]; then
-              echo "No JAR file found"
-              ls -al
-              exit 1
-            fi
-            nohup java -jar "$JAR_NAME" > nohup.out 2>&1 &
-            sleep 3
-            echo "Application started: $JAR_NAME"
-
-            echo "[6] Show logs"
-            tail -n 100 nohup.out
+            echo "[4] Show container status"
+            docker ps -a | grep mjs-backend-container

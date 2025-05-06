@@ -21,6 +21,19 @@ repositories {
 	mavenCentral()
 }
 
+sourceSets {
+	main {
+		resources {
+			srcDir 'MJS-BACK-SECURITY'
+			include 'application.yml'
+		}
+	}
+}
+
+tasks.named('processResources') {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 // 빌드시 jar 파일 한개만 생성하기
 jar {
 	enabled = false

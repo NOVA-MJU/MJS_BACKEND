@@ -1,3 +1,0 @@
-spring:
-  config:
-    import: "file:MJS-BACK-SECURITY/application.yml"
