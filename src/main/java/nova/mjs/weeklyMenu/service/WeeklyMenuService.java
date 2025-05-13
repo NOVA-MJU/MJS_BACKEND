@@ -124,7 +124,7 @@ public class WeeklyMenuService {
     //식단을 크롤링했을 때 중복 발생을 고려한 식단 데이터 삭제하는 메서드
     @Transactional
     public void deleteAllWeeklyMenus(){
-        menuRepository.deleteAll();
+        menuRepository.truncateAllWithCascade();
     }
 
     //DB에서 전체 식단 데이터를 가져오는 메서드

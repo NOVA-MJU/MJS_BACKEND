@@ -49,6 +49,7 @@ dependencies {
 
 	//AWS S3
 	implementation 'software.amazon.awssdk:s3:2.20.136'
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
 	// API 문서 openAPI swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
@@ -77,6 +78,17 @@ dependencies {
 
 	//Json parse
 	implementation 'org.json:json:20210307'
+
+	//FixtureMonkey core
+	testImplementation 'com.navercorp.fixturemonkey:fixture-monkey-starter:0.6.12'
+
+	// Jackson 기반 직렬화 지원 (DTO/Entity 생성 시 유용)
+	testImplementation 'com.navercorp.fixturemonkey:fixture-monkey-jackson:0.6.12'
+
+	// JUnit
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+
 
 	//Email 인증
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
