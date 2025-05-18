@@ -2,6 +2,7 @@ package nova.mjs.notice.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.util.ElasticSearch.EntityListner.NoticeEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(NoticeEntityListener.class)
 public class Notice {
 
     @Id

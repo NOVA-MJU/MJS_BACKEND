@@ -12,6 +12,7 @@ import java.util.List;
 public class CombinedSearchController {
     private final CombinedSearchService combinedSearchService;
 
+    // 초기 일괄 동기화
     @PostMapping("/sync")
     public ResponseEntity<String> syncElasticsearch() {
         combinedSearchService.syncAll();

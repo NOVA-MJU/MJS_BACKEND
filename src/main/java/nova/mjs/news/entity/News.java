@@ -2,6 +2,7 @@ package nova.mjs.news.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.util.ElasticSearch.EntityListner.NewsEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@EntityListeners(NewsEntityListener.class)
 @Table(name = "MJU_News")
 public class News {
     @Id
