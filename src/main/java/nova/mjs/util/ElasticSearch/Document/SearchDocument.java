@@ -1,11 +1,13 @@
 package nova.mjs.util.ElasticSearch.Document;
 
+import java.time.LocalDateTime;
+
 public interface SearchDocument {
     String getId();
     String getTitle();
     String getContent();
     String getType();
-    String getDate();
+    LocalDateTime getDate();
     String getLink();
 
     default String getCategory() {
