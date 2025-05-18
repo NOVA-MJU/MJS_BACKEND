@@ -2,7 +2,8 @@ package nova.mjs.news.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.member.Member;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -23,7 +24,7 @@ public class News {
     private String title; //기사 제목
 
     @Column(nullable = false)
-    private String date; //기사 날짜
+    private LocalDateTime date; // 기사 날짜
 
     @Column(nullable = false)
     private String reporter; //기자 이름
@@ -56,7 +57,7 @@ public class News {
         }
     }
 
-    public static News createNews(Long newsIndex, String title, String date, String reporter, String imageUrl, String summary, String link, String category) {
+    public static News createNews(Long newsIndex, String title, LocalDateTime date, String reporter, String imageUrl, String summary, String link, String category) {
         return News.builder()
                 .newsIndex(newsIndex)
                 .title(title)
