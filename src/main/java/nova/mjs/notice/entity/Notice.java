@@ -3,7 +3,7 @@ package nova.mjs.notice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notice")
@@ -22,7 +22,7 @@ public class Notice {
     private String title;       // 공지 제목
 
     @Column(nullable = false)
-    private LocalDate date;        // 공지 날짜
+    private LocalDateTime date;        // 공지 날짜
 
     @Column(nullable = false)
     private String category;    // 공지 카테고리
@@ -30,7 +30,7 @@ public class Notice {
     @Column(nullable = false)
     private String link;        // 공지 링크
 
-    public static Notice createNotice(String title, LocalDate date, String type, String link) {
+    public static Notice createNotice(String title, LocalDateTime date, String type, String link) {
         return Notice.builder()
                 .title(title)
                 .date(date)

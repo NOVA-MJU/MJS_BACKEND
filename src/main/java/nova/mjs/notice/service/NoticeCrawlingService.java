@@ -1,6 +1,7 @@
 package nova.mjs.notice.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,9 +20,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import static nova.mjs.notice.dto.NoticeResponseDto.noticeEntity;
-import static nova.mjs.notice.entity.Notice.createNotice;
 
 @Slf4j
 @Service
@@ -80,7 +78,7 @@ public class NoticeCrawlingService {
                     String rawLink = row.select(".artclLinkView").attr("href");
 
                     // (b) 문자열 전처리 (trim, 공백제거, link 정규화 등)
-                    LocalDate date = normalizeDate(rawDate);
+                    LocalDateTime date = normalizeDate(rawDate);
                     String title = normalizeTitle(rawTitle);
                     String link = normalizeLink(rawLink);
                     String category = normalizeCategory(type);
@@ -149,7 +147,7 @@ public class NoticeCrawlingService {
         log.info("[MJS] {}타입 공지 크롤링 완료. 총 {}개의 새 공지를 수집했습니다.", type, notices.size());
         return notices;
     }
-    private LocalDate normalizeDate(String rawDate) {
+    private LocalDateTime normalizeDate(String rawDate) {
         if (rawDate == null || rawDate.isBlank()) return null;
 
         // 공백 제거 및 포맷 맞춤
@@ -157,7 +155,7 @@ public class NoticeCrawlingService {
 
         // 예: "2025.04.08" → "2025-04-08"
         try {
-            return LocalDate.parse(cleaned);
+            return LocalDateTime.parse(cleaned);
         } catch (Exception e) {
             log.warn("[MJS] 날짜 파싱 실패: {}", cleaned);
             return null;
