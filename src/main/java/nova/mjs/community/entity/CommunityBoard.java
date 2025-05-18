@@ -3,8 +3,9 @@ package nova.mjs.community.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.comments.entity.Comments;
+import nova.mjs.community.comment.entity.Comment;
 import nova.mjs.community.entity.enumList.CommunityCategory;
+import nova.mjs.community.likes.entity.CommunityLike;
 import nova.mjs.member.Member;
 import nova.mjs.util.entity.BaseEntity;
 
@@ -12,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import static nova.mjs.community.util.ContentPreviewUtil.makePreview;
 
 @Entity
 @Getter
@@ -44,6 +47,9 @@ public class CommunityBoard extends BaseEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member author; // 작성자
 
+    @Column(columnDefinition = "TEXT")
+    private String previewContent; // 댓글 미리보기
+
 
     @ElementCollection
     @CollectionTable(
@@ -66,6 +72,9 @@ public class CommunityBoard extends BaseEntity {
     @Column
     private LocalDateTime publishedAt;  // 공개 게시 시간
 
+    @OneToMany(mappedBy = "communityBoard", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommunityLike> communityLike = new ArrayList<>();
+
 
     // === 생성 메서드 ===
     public static CommunityBoard create(String title, String content, CommunityCategory category, Boolean published, List<String> contentImages, Member member) {
@@ -75,6 +84,7 @@ public class CommunityBoard extends BaseEntity {
                 .content(content)
                 .category(category)
                 .published(published != null ? published : false)
+                .previewContent(makePreview(content))
                 .viewCount(0)
                 .likeCount(0)
                 .publishedAt(published != null && published ? LocalDateTime.now() : null)
@@ -117,7 +127,7 @@ public class CommunityBoard extends BaseEntity {
 
     // 댓글
     @OneToMany(mappedBy = "communityBoard", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
-    private List<Comments> comments;
+    private List<Comment> comment;
 
     // 게시물 좋아요
     public void increaseLikeCount() {

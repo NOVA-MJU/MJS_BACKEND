@@ -1,14 +1,16 @@
 package nova.mjs.notice.service;
 
-import java.util.List;
-import lombok.*;
+import java.time.LocalDate;
+import lombok.RequiredArgsConstructor;
 import nova.mjs.notice.dto.NoticeResponseDto;
-import nova.mjs.notice.repository.NoticeRepository;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
 import nova.mjs.notice.exception.NoticeNotFoundExcetion;
+import nova.mjs.notice.repository.NoticeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 @Service
 @RequiredArgsConstructor
@@ -17,23 +19,23 @@ public class NoticeService {
 
     private final NoticeRepository noticeRepository;
 
-    /**
-     * 공지사항 조회 메서드
-     *
-     * @param category 공지 카테고리 (예: general, academic 등)
-     * @param year     조회할 연도 (선택)
-     * @param page     페이지 번호 (기본값: 0)
-     * @param size     한 페이지당 항목 수 (기본값: 15)
-     * @return 공지사항 리스트
-     */
-    public List<NoticeResponseDto> getNotices(String category, Integer year, int page, int size) {
+    public Page<NoticeResponseDto> getNotices(String category, Integer year, int page, int size, String sort) {
         if (category == null || category.isEmpty()) {
             throw new NoticeNotFoundExcetion();
         }
 
-        List<NoticeResponseDto> notices = noticeRepository.findNoticesByCategoryAndYear(
-                category, year, PageRequest.of(page, size)
-        );
+        Sort.Direction direction = sort.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, "date"));
+
+        Page<NoticeResponseDto> notices;
+
+        if (year != null) {
+            LocalDate startDate = LocalDate.of(year, 1, 1);
+            LocalDate endDate = LocalDate.of(year, 12, 31);
+            notices = noticeRepository.findNoticesByCategoryAndDateRange(category, startDate, endDate, pageable);
+        } else {
+            notices = noticeRepository.findNoticesByCategory(category, pageable);
+        }
 
         if (notices.isEmpty()) {
             throw new NoticeNotFoundExcetion();

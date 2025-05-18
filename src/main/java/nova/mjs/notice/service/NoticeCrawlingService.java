@@ -10,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import nova.mjs.notice.dto.NoticeResponseDto;
 import nova.mjs.notice.entity.Notice;
 
+import nova.mjs.notice.exception.NoticeCrawlingException;
 import nova.mjs.notice.repository.NoticeRepository;
+import nova.mjs.util.exception.ErrorCode;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -39,75 +41,155 @@ public class NoticeCrawlingService {
             "rule", "mjukr/4450/subview.do"  // 학칙개정 공지
     );
 
-    @Transactional
+    @Transactional // 크롤링 후 DB 저장
     public List<NoticeResponseDto> fetchNotices(String type) {
-        List<NoticeResponseDto> notices = new ArrayList<>();
-        List<Notice> noticeEntities = new ArrayList<>(); // Batch Insert를 위한 리스트
-
-
-        // URL을 가져옴. 존재하지 않으면 예외 발생.
+        // (1) URL 유효성 체크
         String url = NOTICE_URLS.get(type);
         if (url == null) {
             throw new IllegalArgumentException("잘못된 공지 타입입니다: " + type);
         }
 
+        // (2) 크롤링 로직 준비
         int cutoffYear = LocalDate.now().getYear() - 2;
-        LocalDate currentDate = LocalDate.now();
-        String currentDateString = currentDate.toString();
+        int page = 1;
+        boolean stop = false;
 
-        try {
-            int page = 1;
-            boolean stop = false;
+        List<NoticeResponseDto> notices = new ArrayList<>();
+        List<Notice> noticeEntities = new ArrayList<>();
 
-            while (!stop) {
-                String fullUrl = BASE_URL + url + "?page=" + page;
-                log.info("Requesting URL: {}", fullUrl); // SLF4J로 대체
+        // (3) 페이지를 돌면서 크롤링
+        while (!stop) {
+            String fullUrl = BASE_URL + url + "?page=" + page;
+            log.info("[MJS] Requesting URL: {}", fullUrl);
 
-                // Jsoup을 통한 HTTP 요청 및 파싱
+            try {
+                // Jsoup 파싱
                 Document doc = Jsoup.connect(fullUrl).get();
-                Elements rows = doc.select("tr");
+                Elements rows = doc.select("tr:not(.headline):not(._artclOdd)");
 
+                // 만약 가져온 row가 없으면 -> 더 이상 공지가 없다고 판단
+                if (rows.isEmpty()) {
+                    break;
+                }
+
+                // (4) 각 row 파싱
                 for (Element row : rows) {
-                    String dateText = row.select("._artclTdRdate").text();
-                    String title = row.select(".artclLinkView strong").text();
-                    String link = row.select(".artclLinkView").attr("href");
+                    // (a) 데이터 추출
+                    String rawDate = row.select("._artclTdRdate").text();
+                    String rawTitle = row.select(".artclLinkView strong").text();
+                    String rawLink = row.select(".artclLinkView").attr("href");
 
-                    if (!link.isEmpty()) {
-                        link = BASE_URL + link;
+                    // (b) 문자열 전처리 (trim, 공백제거, link 정규화 등)
+                    LocalDate date = normalizeDate(rawDate);
+                    String title = normalizeTitle(rawTitle);
+                    String link = normalizeLink(rawLink);
+                    String category = normalizeCategory(type);
+
+                    // 필수 정보가 하나라도 없으면 무시
+                    if (date == null || title.isEmpty() || link.isEmpty()) {
+                        continue;
                     }
 
-                    if (dateText.isEmpty() || title.isEmpty() || link.isEmpty()) continue;
-
-                    if (dateText.startsWith(String.valueOf(cutoffYear))) {
+                    // (c) cutoffYear 보다 오래된 날짜면 중단
+                    //    (ex: dateText가 "2022-03-25" 라고 가정 시, "2022" >= cutoffYear?)
+                    if (date.getYear() <= cutoffYear) {
+                        log.info("[MJS] {}년도 이전 공지 발견 -> 크롤링 중단", cutoffYear);
                         stop = true;
                         break;
                     }
 
-                    Notice notice = createNotice(title, dateText, type, link);
-                    noticeEntities.add(notice); // Entity 리스트에 추가
-                    notices.add(NoticeResponseDto.noticeEntity(notice)); // Response DTO 리스트에 추가
-                }
-                noticeRepository.saveAll(noticeEntities);
+                    // (d) 이미 DB에 존재하는 공지인지 확인
+                    log.info("[MJS] Checking exists: date='{}', category='{}', title='{}'",
+                            date, category, title);
 
-                if (rows.isEmpty() || stop) {
-                    break;
-                } else {
-                    page++;
+                    boolean exists = noticeRepository.existsByDateAndCategoryAndTitle(date, category, title);
+                    if (exists) {
+                        log.info("[MJS] 이미 DB에 존재하는 공지 발견 -> 크롤링 중단. date={}, category={}, title={}",
+                                date, category, title);
+                        stop = true;
+                        break;
+                    }
+
+                    // (e) link 처리
+                    if (!link.startsWith("http")) {
+                        link = BASE_URL + link;
+                    }
+
+                    // (f) 새로운 공지 -> DB에 저장할 리스트에 담기
+                    Notice notice = Notice.createNotice(title, date, type, link);
+                    noticeEntities.add(notice);
+
+                    // (g) 클라이언트 응답용 DTO
+                    notices.add(NoticeResponseDto.noticeEntity(notice));
                 }
+
+                // (5) 중간 저장: 페이지 크롤링이 끝나면, 수집된 Notice들을 DB에 저장
+                //    (중복체크가 끝났으니 중복 저장은 발생X)
+                if (!noticeEntities.isEmpty()) {
+                    noticeRepository.saveAll(noticeEntities);
+                    noticeEntities.clear(); // 다음 페이지를 위해 비움
+                }
+
+                // (6) 만약 중단 플래그가 세워졌으면 -> while문 탈출
+                if (stop) {
+                    break;
+                }
+
+                // (7) 다음 페이지
+                page++;
+
+            } catch (Exception e) {
+                log.error("[MJS] {} 타입 공지 크롤링 중 오류 발생: {}", type, e.getMessage(), e);
+                throw new NoticeCrawlingException("공지 크롤링 실패", ErrorCode.SCHEDULER_TASK_FAILED); // ← 예외 던지기
             }
-            // 반복문이 끝난 후 한 번에 저장
-            if (!noticeEntities.isEmpty()) {
-                noticeRepository.saveAll(noticeEntities);
-                log.info("총 {}개의 공지를 저장했습니다.", noticeEntities.size());
-            }
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid argument error during crawling: {}", e.getMessage());
-            throw e; // GlobalExceptionHandler에서 처리
-        } catch (Exception e) {
-            log.error("Unexpected error during crawling: {}", e.getMessage());
-            throw new RuntimeException("크롤링 중 알 수 없는 오류가 발생했습니다.", e); // GlobalExceptionHandler에서 처리
+
         }
 
+        // (8) 최종 결과 로그
+        log.info("[MJS] {}타입 공지 크롤링 완료. 총 {}개의 새 공지를 수집했습니다.", type, notices.size());
         return notices;
+    }
+    private LocalDate normalizeDate(String rawDate) {
+        if (rawDate == null || rawDate.isBlank()) return null;
+
+        // 공백 제거 및 포맷 맞춤
+        String cleaned = rawDate.trim().replaceAll("\\s+", "").replaceAll("\\.\\s*", "-");
+
+        // 예: "2025.04.08" → "2025-04-08"
+        try {
+            return LocalDate.parse(cleaned);
+        } catch (Exception e) {
+            log.warn("[MJS] 날짜 파싱 실패: {}", cleaned);
+            return null;
+        }
+    }
+
+
+    // 제목 문자열 전처리 - 공백제거
+    private String normalizeTitle(String rawTitle) {
+        if (rawTitle == null) return "";
+        // 공백 제거
+        String cleaned = rawTitle.trim().replaceAll("\\s+", " ");
+        return cleaned;
+    }
+
+    // 링크 문자열 전처리 - 공백제거, 마지막 슬래쉬 제거
+    // 얘 중복 못알아 먹어서 걍 제목으로 변경
+    private String normalizeLink(String rawLink) {
+        if (rawLink == null) return "";
+        // 공백 제거
+        String cleaned = rawLink.trim();
+        // 필요하면 마지막 슬래시 제거 등 추가 처리
+        if (cleaned.endsWith("/")) {
+            cleaned = cleaned.substring(0, cleaned.length() - 1);
+        }
+        return cleaned;
+    }
+
+    // 카테고리 문자열 전처리 - 소문자로 통일
+    private String normalizeCategory(String rawCategory) {
+        if (rawCategory == null) return "";
+        // 소문자로 통일
+        return rawCategory.trim().toLowerCase();
     }
 }

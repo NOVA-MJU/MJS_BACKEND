@@ -52,6 +52,10 @@ public class MemberService {
     @Transactional
     public AuthDTO.LoginResponseDTO registerMember(MemberDTO.MemberRequestDTO requestDTO) {
         validateEmail(requestDTO.getEmail());
+
+        if (requestDTO.getNickname() == null) {
+            throw new NicknameIsInvalidException();
+        }
         if (memberRepository.existsByEmail(requestDTO.getEmail())) {
             throw new DuplicateEmailException();
         }
@@ -74,7 +78,7 @@ public class MemberService {
         String accessToken = jwtUtil.generateAccessToken(userId, email, role);
         String refreshToken = jwtUtil.generateRefreshToken(userId, email);
 
-        // ✅ 응답 DTO 반환
+        // 응답 DTO 반환
         return AuthDTO.LoginResponseDTO.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -130,7 +134,7 @@ public class MemberService {
         log.info("회원 삭제 - emailId: {}", emailId);
     }
 
-    // ✅ 이메일 수동 검증 메서드 추가
+    // 이메일 수동 검증 메서드 추가
     private void validateEmail(String email) {
         if (email == null || !email.matches("^[a-zA-Z0-9._%+-]+@mju\\.ac\\.kr$")) {
             throw new EmailIsInvalidException();
