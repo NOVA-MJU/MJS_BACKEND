@@ -7,4 +7,8 @@ public interface SearchDocument {
     String getType();
     String getDate();
     String getLink();
+
+    default String getCategory() {
+        return null; // 필요 없는 경우 null 반환
+    }
 }

@@ -26,6 +26,8 @@ public class NewsDocument implements SearchDocument {
 
     private String link;
 
+    private String category;
+
     private String type;
 
     @Override
@@ -40,6 +42,7 @@ public class NewsDocument implements SearchDocument {
                 .content(news.getSummary())
                 .date(news.getDate())
                 .link(news.getLink())
+                .category(news.getCategory().name())
                 .type("news")
                 .build();
     }

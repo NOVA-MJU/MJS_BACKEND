@@ -13,5 +13,6 @@ public class SearchResponseDTO {
     private String highlightedContent;
     private String date;
     private String link;
+    private String category;
     private String type;
 }

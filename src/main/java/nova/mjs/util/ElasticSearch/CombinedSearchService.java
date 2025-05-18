@@ -92,6 +92,7 @@ public class CombinedSearchService {
                 highlightedContent,
                 searchHit.getContent().getDate(),
                 searchHit.getContent().getLink(),
+                searchHit.getContent().getCategory(),
                 searchHit.getContent().getType()
         );
     }

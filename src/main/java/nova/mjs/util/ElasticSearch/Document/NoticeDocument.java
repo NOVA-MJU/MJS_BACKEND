@@ -26,6 +26,8 @@ public class NoticeDocument implements SearchDocument{
 
     private String link;
 
+    private String category;
+
     private String type;
 
     @Override
@@ -40,6 +42,7 @@ public class NoticeDocument implements SearchDocument{
                 .content("") // Notice는 content 없으면 빈 문자열 처리
                 .date(notice.getDate())
                 .link(notice.getLink())
+                .category(notice.getCategory())
                 .type("notice")
                 .build();
     }
