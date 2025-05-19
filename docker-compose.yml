@@ -1,13 +1,22 @@
-version: '3.7'
+version: '3.8'
+
 services:
+  app:
+    image: mjsearch/mjs-backend:latest
+    container_name: mjs-backend-container
+    ports:
+      - "80:8080"
+    depends_on:
+      - elasticsearch
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false  # 인증 비활성화 (개발용)
+      - xpack.security.enabled=false
     ports:
-      - 9200:9200
+      - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
     command: >
@@ -24,7 +33,7 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
-      - 5601:5601
+      - "5601:5601"
     depends_on:
       - elasticsearch
 
