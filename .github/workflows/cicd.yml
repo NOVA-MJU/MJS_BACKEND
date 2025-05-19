@@ -45,13 +45,14 @@ jobs:
             docker pull mjsearch/mjs-backend:latest
 
             echo "[2] GitHub에서 최신 docker-compose 파일 다운로드"
-            curl -o docker-compose.yml https://raw.githubusercontent.com/NOVA-MJU/mjs-backend/main/compose-docker.yml
+            curl -fLo docker-compose.yml https://raw.githubusercontent.com/NOVA-MJU/MJS_BACKEND/main/docker-compose.yml
 
             echo "[3] 기존 컨테이너 중지 및 제거"
-            docker compose -f docker-compose.yml down || true
-
+            docker-compose -f docker-compose.yml down || true
+  
+  
             echo "[4] 새 컨테이너 실행"
-            docker compose -f docker-compose.yml up -d
+            docker-compose -f docker-compose.yml up -d
 
             echo "[5] 상태 확인"
             docker ps
