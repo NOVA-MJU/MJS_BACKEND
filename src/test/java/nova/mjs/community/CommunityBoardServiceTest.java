@@ -1,4 +1,4 @@
-package nova.community;
+package nova.mjs.community;
 
 import nova.mjs.comment.repository.CommentRepository;
 import nova.mjs.community.DTO.CommunityBoardRequest;
@@ -108,7 +108,7 @@ class CommunityBoardServiceTest {
 
         CommunityBoardResponse response = communityBoardService.createBoard(request, "test@example.com");
 
-        assertThat(response.getTitle()).isEqualTo("title");
+        assertThat(response.getTitle()).isEqualTo("New Post");
         assertThat(response.getLikeCount()).isEqualTo(0);
     }
 
@@ -134,33 +134,51 @@ class CommunityBoardServiceTest {
         assertThat(response.isLiked()).isFalse();
     }
 
-    /*@Test
+    @Test
     @DisplayName("게시글 삭제 - 작성자 본인")
     void testDeleteBoard() {
-        when(communityBoardRepository.findByUuid(board.getUuid())).thenReturn(Optional.of(board));
+        // 작성자가 본인인 board 객체 생성
+        CommunityBoard authoredBoard = CommunityBoard.builder()
+                .title("title")
+                .content("content")
+                .published(true)
+                .category(CommunityCategory.FREE)
+                .contentImages(List.of("img1.jpg"))
+                .author(member)  // 작성자 지정
+                .build();
+
+        when(communityBoardRepository.findByUuid(authoredBoard.getUuid())).thenReturn(Optional.of(authoredBoard));
         when(memberRepository.findByEmail("test@example.com")).thenReturn(Optional.of(member));
-        doNothing().when(communityBoardRepository).delete(board);
+        doNothing().when(communityBoardRepository).delete(authoredBoard);
 
-        board.setAuthor(member); // 작성자 지정
-        communityBoardService.deleteBoard(board.getUuid(), "test@example.com");
+        communityBoardService.deleteBoard(authoredBoard.getUuid(), "test@example.com");
 
-        verify(communityBoardRepository, times(1)).delete(board);
+        verify(communityBoardRepository, times(1)).delete(authoredBoard);
     }
 
     @Test
     @DisplayName("게시글 삭제 - 본인 아님")
     void testDeleteBoardNotAuthor() {
         Member another = Member.builder().email("other@example.com").build();
-        board.setAuthor(another);
 
-        when(communityBoardRepository.findByUuid(board.getUuid())).thenReturn(Optional.of(board));
+        CommunityBoard authoredByAnother = CommunityBoard.builder()
+                .title("title")
+                .content("content")
+                .published(true)
+                .category(CommunityCategory.FREE)
+                .contentImages(List.of("img1.jpg"))
+                .author(another)  // 다른 작성자
+                .build();
+
+        when(communityBoardRepository.findByUuid(authoredByAnother.getUuid())).thenReturn(Optional.of(authoredByAnother));
         when(memberRepository.findByEmail("test@example.com")).thenReturn(Optional.of(member));
 
         assertThatThrownBy(() ->
-                communityBoardService.deleteBoard(board.getUuid(), "test@example.com"))
+                communityBoardService.deleteBoard(authoredByAnother.getUuid(), "test@example.com"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("본인이 작성한 게시글만 삭제할 수 있습니다.");
-    }*/
+    }
+
 
     @Test
     @DisplayName("게시글 상세 조회 - 존재하지 않는 게시글")

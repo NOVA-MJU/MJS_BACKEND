@@ -1,4 +1,4 @@
-package nova.news;
+package nova.mjs.news.news;
 
 import nova.mjs.MjsApplication;
 import nova.mjs.news.entity.News;

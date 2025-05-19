@@ -1,4 +1,4 @@
-package nova.weeklyMenu;
+package nova.mjs.weeklyMenu.weeklyMenu;
 
 import nova.mjs.MjsApplication;
 import nova.mjs.weeklyMenu.DTO.WeeklyMenuResponseDTO;

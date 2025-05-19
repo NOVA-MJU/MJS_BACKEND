@@ -1,4 +1,4 @@
-package nova.weeklyMenu;
+package nova.mjs.weeklyMenu.weeklyMenu;
 
 import nova.mjs.weeklyMenu.entity.WeeklyMenu;
 import nova.mjs.weeklyMenu.entity.enumList.MenuCategory;

@@ -1,4 +1,4 @@
-package nova.notice;
+package nova.mjs.notice.notice;
 
 import nova.mjs.MjsApplication;
 import nova.mjs.notice.entity.Notice;

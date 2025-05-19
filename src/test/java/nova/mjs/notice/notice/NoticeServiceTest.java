@@ -1,4 +1,4 @@
-package nova.notice;
+package nova.mjs.notice.notice;
 
 import nova.mjs.notice.dto.NoticeResponseDto;
 import nova.mjs.notice.exception.NoticeNotFoundExcetion;

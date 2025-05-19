@@ -1,4 +1,4 @@
-package nova.weather;
+package nova.mjs.weather.weather;
 
 import nova.mjs.weather.Weather;
 import nova.mjs.weather.WeatherController;

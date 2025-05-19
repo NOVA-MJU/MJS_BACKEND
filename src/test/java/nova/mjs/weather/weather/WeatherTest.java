@@ -1,4 +1,4 @@
-package nova.weather;
+package nova.mjs.weather.weather;
 
 import nova.mjs.weather.Weather;
 import org.junit.jupiter.api.DisplayName;
