@@ -33,7 +33,7 @@ jobs:
           push: true
           tags: mjsearch/mjs-backend:latest
 
-      - name: Deploy All Services with Docker Compose on EC2
+      - name: Deploy All Services with Git Pull + Docker Compose on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -41,17 +41,20 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            echo "[1] 이동: docker-compose.yml이 있는 경로로"
-            cd /home/ubuntu/mjs  # docker-compose.yml 위치에 맞게 수정하세요
+            echo "[1] 프로젝트 디렉토리로 이동"
+            cd /home/ubuntu/mjs
 
-            echo "[2] 최신 Spring Boot 이미지 pull"
+            echo "[2] Git 최신 코드 pull"
+            git pull origin main
+
+            echo "[3] DockerHub에서 최신 이미지 pull"
             docker pull mjsearch/mjs-backend:latest
 
-            echo "[3] 기존 컨테이너들 정리"
+            echo "[4] 기존 컨테이너 중지 및 제거"
             docker-compose down || true
 
-            echo "[4] 새 컨테이너들 실행"
+            echo "[5] 새 컨테이너 실행"
             docker-compose up -d
 
-            echo "[5] 상태 확인"
+            echo "[6] 상태 확인"
             docker ps
