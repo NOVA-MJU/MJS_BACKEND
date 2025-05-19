@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Repository
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
@@ -40,9 +40,9 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
 
     // 중복 여부 확인용: 날짜, 카테고리, 링크가 모두 같은지, 근데 링크는 중복 못알아 먹더라
-    boolean existsByDateAndCategoryAndLink(LocalDate date, String category, String link);
+    boolean existsByDateAndCategoryAndLink(LocalDateTime date, String category, String link);
 
     // 중복 여부 확인용: 제목, 카테고리, 날짜 모두 같은지
-    boolean existsByDateAndCategoryAndTitle(LocalDate date, String category, String title);
+    boolean existsByDateAndCategoryAndTitle(LocalDateTime date, String category, String title);
 
 }
