@@ -4,12 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nova.mjs.community.entity.CommunityBoard;
-import nova.mjs.community.entity.enumList.CommunityCategory;
 
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 게시글 생성 요청 DTO
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -31,4 +32,3 @@ public class CommunityBoardRequest {
     /** 이미지 URL 리스트 */
     private List<String> contentImages;
 }
-

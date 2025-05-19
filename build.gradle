@@ -2,6 +2,11 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.1'
 	id 'io.spring.dependency-management' version '1.1.4'
+	id 'org.asciidoctor.jvm.convert' version '3.3.2'
+}
+
+ext {
+	snippetsDir = file("build/generated-snippets")
 }
 
 group = 'nova'
@@ -15,10 +20,13 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+
+	asciidoctorExt // ✅ 추가됨: REST Docs 문서 변환 시 필요한 의존성 구성
 }
 
 repositories {
 	mavenCentral()
+	maven { url 'https://jitpack.io' }
 }
 
 sourceSets {
@@ -40,12 +48,16 @@ jar {
 }
 
 dependencies {
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'org.postgresql:postgresql'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
-	runtimeOnly 'com.mysql:mysql-connector-j'
 
 	//AWS S3
 	implementation 'software.amazon.awssdk:s3:2.20.136'
@@ -63,20 +75,14 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	implementation 'commons-codec:commons-codec:1.15'
-	//jsoup 의존성 추가
+
+	// jsoup
 	implementation 'org.jsoup:jsoup:1.16.1'
 
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'org.postgresql:postgresql'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-	//webclient
+	// webclient
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-	//Json parse
+	// JSON 파싱
 	implementation 'org.json:json:20210307'
 
 	//FixtureMonkey core
@@ -90,15 +96,66 @@ dependencies {
 
 
 
-	//Email 인증
+	// 이메일 인증
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' // (이메일 템플릿 사용 시)
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+	// REST Docs 기본
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+	asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+
+	// Auto REST Docs 확장
+	testImplementation 'capital.scalable:spring-auto-restdocs-core:2.0.11'
+
+	// 테스트 프레임워크
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 test {
 	useJUnitPlatform()
+	outputs.dir snippetsDir
+}
+
+//asciidoctor {
+//	dependsOn test
+//	configurations 'asciidoctorExt'
+//	inputs.dir snippetsDir
+//
+//	sourceDir = snippetsDir
+//	outputDir = file("build/docs/asciidoc")
+//	baseDirFollowsSourceFile()
+//}
+
+asciidoctor {
+	dependsOn test
+	configurations 'asciidoctorExt'
+	inputs.dir snippetsDir
+
+	sourceDir = file("src/docs/asciidoc")
+	outputDir = file("build/docs/asciidoc")
+
+	attributes(
+			'snippets': snippetsDir
+	)
+
+	baseDirFollowsSourceFile()
+}
+
+
+tasks.register('copyApiDocument', Copy) {
+	dependsOn asciidoctor
+//	doFirst {
+//		delete file("src/main/resources/static/docs")
+//	}
+	from asciidoctor.outputDir
+	into file("src/main/resources/static/docs")
+}
+
+build {
+	dependsOn copyApiDocument
 }

@@ -1,0 +1,13 @@
+= NOVA API 문서
+:toc: left
+:toclevels: 3
+:sectnums:
+:snippets: {snippets}
+
+== 게시판 API
+
+=== 게시글 생성
+
+요청이 성공적으로 수행되었을 때 반환하는 예시입니다.
+
+operation::community-board-controller-test/게시글_생성_성공[snippets='http-request,http-response,request-fields']
