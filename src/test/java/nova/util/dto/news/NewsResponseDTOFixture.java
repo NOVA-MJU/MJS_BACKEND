@@ -1,4 +1,4 @@
-package nova.util.dto;
+package nova.util.dto.news;
 
 import nova.mjs.news.DTO.NewsResponseDTO;
 import nova.util.fixtureMonkey.FixtureMonkeyFactory;
