@@ -20,7 +20,7 @@ public class Notice {
     @Column(name = "notice_id")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String title;       // 공지 제목
 
     @Column(nullable = false)
@@ -29,7 +29,7 @@ public class Notice {
     @Column(nullable = false)
     private String category;    // 공지 카테고리
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     private String link;        // 공지 링크
 
     public static Notice createNotice(String title, LocalDateTime date, String type, String link) {

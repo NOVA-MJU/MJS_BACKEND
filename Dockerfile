@@ -1,7 +1,11 @@
-FROM docker.elastic.co/elasticsearch/elasticsearch:8.11.1
-
-# nori 분석기 설치
-RUN elasticsearch-plugin install --batch analysis-nori
-
-# 데이터 권한 문제 방지
-RUN chmod -R 777 /usr/share/elasticsearch/data
+# 1단계: 빌드
+FROM gradle:8.8-jdk17 AS build
+WORKDIR /app
+COPY --chown=gradle:gradle . .
+RUN gradle clean build -x test --no-daemon
+# 2단계: 실행
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY --from=build /app/build/libs/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
