@@ -41,18 +41,18 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            echo "[1] Docker 최신 이미지 pull"
+            echo "[1] 최신 spring 이미지 pull"
             docker pull mjsearch/mjs-backend:latest
-
-            echo "[2] GitHub에서 최신 docker-compose 파일 다운로드"
-            curl -fLo docker-compose.yml https://raw.githubusercontent.com/NOVA-MJU/MJS_BACKEND/main/docker-compose.yml
-
-            echo "[3] 기존 컨테이너 중지 및 제거"
-            docker-compose -f docker-compose.yml down || true
-  
-  
-            echo "[4] 새 컨테이너 실행"
-            docker-compose -f docker-compose.yml up -d
-
-            echo "[5] 상태 확인"
+            
+            echo "[2] 기존 spring 컨테이너 중지 및 제거"
+            docker rm -f mjs-backend || true
+            
+            echo "[3] spring 컨테이너 재실행"
+            docker run -d \
+              --name mjs-backend \
+              --add-host=host.docker.internal:host-gateway \
+              -p 8080:8080 \
+              mjsearch/mjs-backend:latest
+            
+            echo "[4] 상태 확인"
             docker ps
