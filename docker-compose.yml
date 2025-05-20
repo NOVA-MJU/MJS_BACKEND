@@ -1,13 +1,6 @@
 version: '3.8'
 
 services:
-  app:
-    image: mjsearch/mjs-backend:latest
-    container_name: mjs-backend-container
-    ports:
-      - "80:8080"
-    depends_on:
-      - elasticsearch
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
