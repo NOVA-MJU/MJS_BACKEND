@@ -78,7 +78,11 @@ dependencies {
 	//Json parse
 	implementation 'org.json:json:20210307'
 
-	//Email 인증
+	//elastic search
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+	implementation 'co.elastic.clients:elasticsearch-java:8.10.4'
+
+    //Email 인증
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' // (이메일 템플릿 사용 시)
 

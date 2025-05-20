@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nova.mjs.news.entity.News;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -15,7 +16,7 @@ import java.util.List;
 public class NewsResponseDTO {
 
     private String title;
-    private String date;
+    private LocalDateTime date;
     private String reporter;
     private String imageUrl;
     private String summary;

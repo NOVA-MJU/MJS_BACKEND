@@ -7,6 +7,7 @@ import nova.mjs.community.comment.entity.Comment;
 import nova.mjs.community.entity.enumList.CommunityCategory;
 import nova.mjs.community.likes.entity.CommunityLike;
 import nova.mjs.member.Member;
+import nova.mjs.util.ElasticSearch.EntityListner.CommunityEntityListener;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.time.LocalDateTime;
@@ -21,13 +22,14 @@ import static nova.mjs.community.util.ContentPreviewUtil.makePreview;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(CommunityEntityListener.class)
 @Table(name = "community_board")
 public class CommunityBoard extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "community_board_id")
-    private long id;
+    private Long id;
 
     @Column(nullable = false, unique = true, updatable = false)
     private UUID uuid;

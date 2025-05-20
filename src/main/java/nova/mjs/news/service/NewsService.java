@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +97,7 @@ public class NewsService {
                         String summary = article.select(".list-summary").text().trim(); //헤더 요약
 
                         // 날짜 & 기자 정보 추출
-                        String date = "날짜 정보 없음";
+                        LocalDateTime date = null;
                         String reporter = "기자 정보 없음";
                         Elements byline = article.select(".list-dated");
 
@@ -103,14 +105,17 @@ public class NewsService {
                         String[] dateInfo = byline.text().split("\\|");
 
                         if (dateInfo.length > 0) {
-                            date = dateInfo[dateInfo.length - 1].trim();
-                        }
-                        if (dateInfo.length > 1) {
-                            reporter = dateInfo[1].trim();
+                            String rawDate = dateInfo[dateInfo.length - 1].trim(); // 예: "2025.05.05 00:32"
+                            try {
+                                date = LocalDateTime.parse(rawDate, DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
+                            } catch (Exception e) {
+                                log.warn("날짜 파싱 실패: '{}'", rawDate);
+                                continue;
+                            }
                         }
 
                         // 크롤링 중단 전, 수집된 기사 저장
-                        if (!(date.startsWith("2025") || date.startsWith("2024"))) {
+                        if (date == null || !(date.getYear() == 2025 || date.getYear() == 2024)) {
                             if (!newsList.isEmpty()) {  // 이전까지 크롤링한 데이터 저장
                                 log.info("2023년 이하 기사 발견! 저장 후 크롤링 종료: {}개 기사 저장", newsList.size());
                                 newsRepository.saveAll(newsList);
@@ -119,6 +124,8 @@ public class NewsService {
                             stop = true;
                             break;
                         }
+
+
 
                         News news = News.createNews(newsIndex, title, date, reporter, imageUrl, summary, link, cat);
                         newsList.add(news);
