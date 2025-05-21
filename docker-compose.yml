@@ -8,16 +8,24 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m # 메모리 사용 512로 국한
     ports:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
+    ulimits: # 스왑메모리 사용 못하게 방지
+      memlock:
+        soft: -1
+        hard: -1
+    cap_add:
+      - IPC_LOCK
     command: >
       bash -c "
         if [ ! -d /usr/share/elasticsearch/plugins/analysis-nori ]; then
           elasticsearch-plugin install --batch analysis-nori;
         fi &&
-        /bin/tini -- /usr/local/bin/docker-entrypoint.sh
+        /usr/local/bin/docker-entrypoint.sh
       "
 
   kibana:
@@ -29,6 +37,12 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
 
 volumes:
   esdata:
