@@ -165,12 +165,10 @@ public class NoticeCrawlingService {
     private LocalDateTime normalizeDate(String rawDate) {
         if (rawDate == null || rawDate.isBlank()) return null;
 
-        // 공백 제거 및 포맷 맞춤
         String cleaned = rawDate.trim().replaceAll("\\s+", "").replaceAll("\\.\\s*", "-");
 
-        // 예: "2025.04.08" → "2025-04-08"
         try {
-            return LocalDateTime.parse(cleaned);
+            return LocalDate.parse(cleaned).atStartOfDay(); // LocalDate → LocalDateTime 변환
         } catch (Exception e) {
             log.warn("[MJS] 날짜 파싱 실패: {}", cleaned);
             return null;

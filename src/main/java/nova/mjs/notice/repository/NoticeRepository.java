@@ -32,8 +32,8 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
     """)
     Page<NoticeResponseDto> findNoticesByCategoryAndDateRange(
             @Param("category") String category,
-            @Param("start") LocalDate start,
-            @Param("end") LocalDate end,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
             Pageable pageable
     );
 

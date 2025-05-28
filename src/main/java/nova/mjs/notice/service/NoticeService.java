@@ -1,6 +1,8 @@
 package nova.mjs.notice.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import lombok.RequiredArgsConstructor;
 import nova.mjs.notice.dto.NoticeResponseDto;
 import nova.mjs.notice.exception.NoticeNotFoundExcetion;
@@ -11,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static java.time.LocalTime.MIN;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +34,8 @@ public class NoticeService {
         Page<NoticeResponseDto> notices;
 
         if (year != null) {
-            LocalDate startDate = LocalDate.of(year, 1, 1);
-            LocalDate endDate = LocalDate.of(year, 12, 31);
+            LocalDateTime startDate = LocalDateTime.of(year, 1, 1, 0, 0);
+            LocalDateTime endDate = LocalDateTime.of(year, 12, 31, 23, 59, 59);
             notices = noticeRepository.findNoticesByCategoryAndDateRange(category, startDate, endDate, pageable);
         } else {
             notices = noticeRepository.findNoticesByCategory(category, pageable);
