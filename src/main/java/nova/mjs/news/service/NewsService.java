@@ -106,10 +106,8 @@ public class NewsService {
 
                         if (dateInfo.length > 0) {
                             String rawDate = dateInfo[dateInfo.length - 1].trim(); // 예: "2025.05.05 00:32"
-                            try {
-                                date = LocalDateTime.parse(rawDate, DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
-                            } catch (Exception e) {
-                                log.warn("날짜 파싱 실패: '{}'", rawDate);
+                            date = parseDate(rawDate);
+                            if (date == null){
                                 continue;
                             }
                         }
@@ -149,6 +147,28 @@ public class NewsService {
 
         return responseList; // 각 카테고리별로 저장된 뉴스 목록 반환
     }
+
+    private LocalDateTime parseDate(String rawDate){
+        List<String> patterns = List.of(
+                "yyyy.MM.dd HH:mm",
+                "yyyy-MM-dd HH:mm",
+                "yyyy.MM.dd",
+                "yyyy-MM-dd"
+        );
+        for (String pattern : patterns) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                if (pattern.contains("HH:mm")){
+                    return LocalDateTime.parse(rawDate, formatter);
+                } else {
+                    return LocalDateTime.parse(rawDate + "00:00", DateTimeFormatter.ofPattern(pattern + " HH:mm"));
+                }
+            } catch (Exception ignored){}
+        }
+        log.warn("지원하지 않는 날짜 형식 : {}", rawDate);
+        return null;
+    }
+
 
     private Long extractNewsIndex(String url){
         Pattern pattern = Pattern.compile("idxno=(\\d+)");
