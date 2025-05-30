@@ -104,12 +104,14 @@ public class NewsService {
                         //dateInfo에서 날짜와 기자 정보 추출
                         String[] dateInfo = byline.text().split("\\|");
 
-                        if (dateInfo.length > 0) {
-                            String rawDate = dateInfo[dateInfo.length - 1].trim(); // 예: "2025.05.05 00:32"
+                        if (dateInfo.length >= 3) {
+                            reporter = dateInfo[1].trim(); // "이윤진 수습기자"
+                            String rawDate = dateInfo[2].trim(); // "2025-05-19 14:18"
                             date = parseDate(rawDate);
-                            if (date == null){
-                                continue;
-                            }
+                        } else if (dateInfo.length >= 1) {
+                            // 최소한 날짜는 있는 경우
+                            String rawDate = dateInfo[dateInfo.length - 1].trim();
+                            date = parseDate(rawDate);
                         }
 
                         // 크롤링 중단 전, 수집된 기사 저장
