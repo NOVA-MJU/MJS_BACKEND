@@ -1,0 +1,130 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MJU 통합 검색 API",
+    "version": "v1.0.0",
+    "description": "Elasticsearch를 활용한 통합 검색 기능 및 데이터 동기화 API입니다."
+  },
+  "servers": [
+    {
+      "url": "https://mjsearch.co.kr/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Search",
+      "description": "Elasticsearch 연동을 통한 통합 검색 및 데이터 인덱싱 기능"
+    }
+  ],
+
+  "paths": {
+    "/search/sync": {
+      "post": {
+        "tags": ["Search"],
+        "summary": "Elasticsearch 초기 데이터 동기화",
+        "description": "DB의 데이터를 Elasticsearch에 일괄 인덱싱합니다. 주로 초기 세팅 또는 관리자 동기화 시 사용됩니다.",
+        "responses": {
+          "200": {
+            "description": "인덱싱 완료 메시지 반환",
+            "content": {
+              "text/plain": {
+                "example": "Elasticsearch 인덱싱 완료!"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/detail": {
+      "get": {
+        "tags": ["Search"],
+        "summary": "통합 키워드 검색",
+        "description": "공지사항, 명대신문, 커뮤니티 게시글에 대한 통합 검색을 수행하고, 결과에 하이라이팅을 포함하여 반환합니다.",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "검색 키워드 (필수)"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["notice", "news", "community"]
+            },
+            "description": "검색 대상 타입 (예: notice, news, community)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0 },
+            "description": "페이지 번호 (0부터 시작)"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 },
+            "description": "페이지당 결과 수"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "검색 결과 목록 반환 (하이라이팅 포함)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SearchResult"
+                  }
+                },
+                "examples": {
+                  "searchResult": {
+                    "summary": "하이라이트 포함 검색 예시",
+                    "value": [
+                      {
+                        "id": "12",
+                        "highlightedTitle": "<em>장학</em>금 안내",
+                        "highlightedContent": "2025년 <em>장학</em>금 신청 방법...",
+                        "date": "2025-05-19T00:00:31.925",
+                        "link": "https://example.com",
+                        "category": "등록금",
+                        "type": "Notice"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SearchResult": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "highlightedTitle": { "type": "string", "description": "검색 키워드가 강조된 제목" },
+          "highlightedContent": { "type": "string", "description": "검색 키워드가 강조된 내용 일부" },
+          "date": { "type": "string", "format": "date-time" },
+          "link": { "type": "string", "format": "uri" },
+          "category": { "type": "string", "description": "문서 카테고리 (예: 등록금, 학사 등)" },
+          "type": {
+            "type": "string",
+            "enum": ["Notice", "News", "Community"],
+            "description": "검색 대상의 타입"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,802 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MJS Community API",
+    "version": "v1.0.0",
+    "description": "게시글, 댓글, 대댓글, 좋아요 기능을 지원하는 커뮤니티 API 명세서입니다."
+  },
+  "servers": [
+    {
+      "url": "https://mjsearch.co.kr/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Board",
+      "description": "게시글 CRUD 및 목록/상세 조회 기능"
+    },
+    {
+      "name": "Comment",
+      "description": "댓글 CRUD 및 대댓글 작성, 조회, 삭제 기능"
+    },
+    {
+      "name": "Like",
+      "description": "게시글과 댓글에 대한 좋아요(찜) 기능"
+    }
+  ],
+  "paths": {
+    "/boards": {
+      "get": {
+        "tags": ["Board"],
+        "summary": "게시글 목록 조회 (페이징)",
+        "description": "페이지 번호(`page`)와 페이지 크기(`size`)를 지정하여 게시글 목록을 반환합니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 },
+            "description": "조회할 페이지 번호 (0부터 시작)"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 },
+            "description": "한 페이지당 게시글 수"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공적으로 게시글 목록을 반환합니다.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_BoardPage" },
+                "examples": {
+                  "example": {
+                    "summary": "게시글 목록 예시",
+                    "value": {
+                      "status": "SUCCESS",
+                      "data": {
+                        "content": [
+                          {
+                            "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                            "title": "게시글 제목",
+                            "previewContent": "미리보기 내용...",
+                            "contentImages": ["https://.../img1.jpg"],
+                            "viewCount": 123,
+                            "published": true,
+                            "publishedAt": "2025-02-11T03:23:16.761Z",
+                            "createdAt": "2025-02-11T03:23:16.761Z",
+                            "updatedAt": "2025-04-08T23:10:02.205038",
+                            "likeCount": 0,
+                            "commentCount": 0,
+                            "author": "MJS",
+                            "liked": false
+                          }
+                        ],
+                        "totalPages": 5,
+                        "totalElements": 50,
+                        "size": 10,
+                        "number": 0,
+                        "first": true,
+                        "last": false,
+                        "numberOfElements": 1,
+                        "empty": false,
+                        "sort": {"empty": false,"sorted": true,"unsorted": false},
+                        "pageable": {"offset":0,"pageNumber":0,"pageSize":10,"paged":true,"unpaged":false,"sort":{"empty":false,"sorted":true,"unsorted":false}}
+                      },
+                      "timestamp": "2025-02-11T03:23:16.761Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Board"],
+        "summary": "게시글 생성",
+        "description": "제목, 본문, 공개 여부(`published`), 이미지 URL 목록(`contentImages`)을 포함하여 게시글을 작성합니다. 이미지 URL은 미리 업로드된 CloudFront URL이어야 합니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BoardCreateRequest" },
+              "examples": {
+                "example": {
+                  "summary": "게시글 작성 예시",
+                  "value": {
+                    "title": "자전거 타고 괌 가는 방법6",
+                    "content": "내용 본문 전체",
+                    "published": true,
+                    "contentImages": ["https://.../temp/img1.jpg", "https://.../temp/img2.jpg"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "게시글 생성 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_BoardDetail" },
+                "examples": {
+                  "example": {
+                    "summary": "생성된 게시글 정보",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "uuid": "831619ee-7588-4a5a-82b4-148d3aeed319",
+                        "title": "자전거 타고 괌 가는 방법6",
+                        "content": "본문 전체 내용",
+                        "contentImages": ["https://.../image.jpg"],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-03-09T01:16:45.9195322",
+                        "createdAt": "2025-03-09T01:16:45.954082",
+                        "updatedAt": "2025-03-09T01:16:45.954082",
+                        "author": "마루명치"
+                      },
+                      "timestamp": "2025-03-09T01:16:46.0782892"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{boardUUID}": {
+      "get": {
+        "tags": ["Board"],
+        "summary": "게시글 상세 조회",
+        "description": "UUID에 해당하는 게시글의 상세 정보를 반환합니다.",
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "조회할 게시글의 UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "게시글 상세 정보 반환",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_BoardDetail" },
+                "examples": {
+                  "example": {
+                    "summary": "게시글 상세 예시",
+                    "value": {
+                      "status": "SUCCESS",
+                      "data": {
+                        "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                        "title": "상세 게시글 제목",
+                        "content": "상세 본문 전체",
+                        "contentImages": [],
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-04-09T14:22:39.238019",
+                        "createdAt": "2025-04-09T14:22:39.250994",
+                        "updatedAt": "2025-04-09T14:30:54.365812",
+                        "likeCount": 1,
+                        "commentCount": 1,
+                        "author": "MJS",
+                        "liked": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Board"],
+        "summary": "게시글 수정",
+        "description": "제목, 본문, 공개여부, 이미지 목록을 수정합니다. 임시 이미지 URL(prefix로 temp 확인 가능)도 포함할 수 있습니다.",
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "수정할 게시글의 UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BoardUpdateRequest" },
+              "examples": {
+                "example": {
+                  "summary": "게시글 수정 예시",
+                  "value": {
+                    "title": "수정된 제목",
+                    "content": "수정된 본문",
+                    "published": false,
+                    "contentImages": ["https://.../board/image1.jpg"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "게시글 수정 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_BoardDetail" },
+                "examples": {
+                  "example": {
+                    "summary": "수정된 게시글 정보",
+                    "value": {
+                      "status": "SUCCESS",
+                      "data": {
+                        "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                        "title": "수정된 게시글 제목",
+                        "content": "수정된 본문",
+                        "contentImages": [],
+                        "viewCount": 0,
+                        "published": true,
+                        "likeCount": 1,
+                        "commentCount": 1,
+                        "author": "MJS",
+                        "liked": false,
+                        "createdAt": "2025-04-09T14:22:39.250994",
+                        "updatedAt": "2025-04-09T14:30:54.365812"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Board"],
+        "summary": "게시글 삭제",
+        "description": "UUID에 해당하는 게시글을 삭제합니다.",
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "삭제할 게시글의 UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "성공적으로 삭제되었습니다.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/boards/{boardUUID}/comments": {
+      "get": {
+        "tags": ["Comment"],
+        "summary": "게시글 댓글 및 대댓글 조회",
+        "description": "특정 게시글의 댓글과 그에 달린 대댓글까지 포함해 리스트 형태로 반환합니다. 로그인 되어 있을 경우 `liked` 여부도 함께 반환됩니다.",
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "댓글을 조회할 게시글의 UUID"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": { "type": "string" },
+            "description": "Bearer 토큰 (로그인한 회원만 liked 상태 체크 가능)",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "댓글 목록(및 대댓글 포함) 반환",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_CommentList" },
+                "examples": {
+                  "example": {
+                    "summary": "댓글 + 대댓글 예시",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": [
+                        {
+                          "commentUUID": "574a7712-a67e-4fcf-8051-8c59f282a656",
+                          "content": "댓글야미",
+                          "nickname": "마루명치",
+                          "likeCount": 0,
+                          "createdAt": "2025-03-24T15:51:38.982294",
+                          "liked": false,
+                          "replies": [
+                            {
+                              "commentUUID": "8bd15a28-19c5-4abe-99b7-6dfdd1ba5045",
+                              "content": "리댓2",
+                              "nickname": "마루명치",
+                              "likeCount": 0,
+                              "createdAt": "2025-03-24T18:29:47.003938",
+                              "liked": false,
+                              "replies": []
+                            }
+                          ]
+                        }
+                      ],
+                      "timestamp": "2025-03-25T13:05:57.062963"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Comment"],
+        "summary": "댓글 생성",
+        "description": "게시글에 새 댓글을 작성합니다. 로그인된 사용자만 작성 가능하며, 작성 이력과 `liked`, `likeCount`는 초기값입니다.",
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "댓글을 달 게시글의 UUID"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": { "type": "string" },
+            "description": "Bearer 토큰",
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CommentCreateRequest" },
+              "examples": {
+                "example": {
+                  "summary": "댓글 작성 예시",
+                  "value": { "content": "아 배불러" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "댓글 생성 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_CommentDetail" },
+                "examples": {
+                  "example": {
+                    "summary": "생성된 댓글 정보",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "commentUUID": "36816cd6-e6a6-4b7d-928a-f628977f79a7",
+                        "content": "냐옹",
+                        "nickname": "마루명치",
+                        "likeCount": 0,
+                        "createdAt": "2025-03-24T18:36:34.159536",
+                        "replies": null,
+                        "liked": false
+                      },
+                      "timestamp": "2025-03-24T18:36:34.216156"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{boardUUID}/comments/{parentCommentUUID}/reply": {
+      "post": {
+        "tags": ["Comment"],
+        "summary": "대댓글 생성",
+        "description": "특정 댓글에 대댓글을 작성합니다. 로그인된 사용자만 작성 가능하며, 생성된 대댓글은 해당 부모 댓글의 `replies` 목록에 포함됩니다.",
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "게시글 UUID"
+          },
+          {
+            "name": "parentCommentUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "대댓글을 달 부모 댓글의 UUID"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "Bearer 토큰"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CommentCreateRequest" },
+              "examples": {
+                "example": {
+                  "summary": "대댓글 작성 예시",
+                  "value": { "content": "리댓3" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "대댓글 생성 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_CommentDetail" },
+                "examples": {
+                  "example": {
+                    "summary": "생성된 대댓글 정보",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "commentUUID": "36816cd6-e6a6-4b7d-928a-f628977f79a7",
+                        "content": "리댓3",
+                        "nickname": "마루명치",
+                        "likeCount": 0,
+                        "createdAt": "2025-03-24T18:36:34.159536",
+                        "replies": null,
+                        "liked": false
+                      },
+                      "timestamp": "2025-03-24T18:36:34.216156"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{boardUUID}/comments/{commentUUID}": {
+      "delete": {
+        "tags": ["Comment"],
+        "summary": "댓글 삭제",
+        "description": "로그인된 사용자가 자신의 댓글 또는 대댓글을 삭제합니다. 삭제 시 해당 UUID 댓글이 제거됩니다.",
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "게시글 UUID"
+          },
+          {
+            "name": "commentUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "삭제할 댓글 또는 대댓글의 UUID"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "Bearer 토큰"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "댓글 삭제 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccessMessage" },
+                "examples": {
+                  "example": {
+                    "summary": "삭제 응답 예시",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": "댓글이 삭제되었습니다.",
+                      "timestamp": "2025-03-24T19:07:52.035193"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{boardUUID}/like": {
+      "post": {
+        "tags": ["Like"],
+        "summary": "게시글 좋아요 토글",
+        "description": "게시글에 좋아요를 추가하거나, 이미 좋아요가 되어 있으면 취소합니다.",
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "좋아요를 토글할 게시글의 UUID"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "Bearer 토큰"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "좋아요 추가 또는 취소 상태를 응답합니다.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccessMessage" },
+                "examples": {
+                  "added": {
+                    "summary": "좋아요 추가",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": "좋아요가 추가되었습니다.",
+                      "timestamp": "2025-03-11T14:33:26.665473"
+                    }
+                  },
+                  "removed": {
+                    "summary": "좋아요 취소",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": "좋아요가 취소되었습니다.",
+                      "timestamp": "2025-03-11T14:26:20.378895"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{boardUUID}/comments/{commentUUID}/like": {
+      "post": {
+        "tags": ["Like"],
+        "summary": "댓글 좋아요 토글",
+        "description": "댓글 또는 대댓글에 좋아요를 추가하거나 취소합니다.",
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "좋아요 대상이 포함된 게시글의 UUID"
+          },
+          {
+            "name": "commentUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "좋아요를 토글할 댓글의 UUID"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "Bearer 토큰"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "댓글 좋아요 추가 또는 취소 응답",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccessMessage" },
+                "examples": {
+                  "added": {
+                    "summary": "좋아요 추가",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": "좋아요가 추가되었습니다.",
+                      "timestamp": "2025-03-11T14:33:26.665473"
+                    }
+                  },
+                  "removed": {
+                    "summary": "좋아요 취소",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": "좋아요가 취소되었습니다.",
+                      "timestamp": "2025-03-11T14:26:20.378895"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiSuccessMessage": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "API 요청 성공" },
+          "data": { "type": "string", "example": "좋아요가 추가되었습니다." },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ApiSuccess_BoardPage": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/BoardPage" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "BoardPage": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BoardSummary" }
+          },
+          "totalPages": { "type": "integer" },
+          "totalElements": { "type": "integer" },
+          "size": { "type": "integer" },
+          "number": { "type": "integer" },
+          "first": { "type": "boolean" },
+          "last": { "type": "boolean" },
+          "numberOfElements": { "type": "integer" },
+          "empty": { "type": "boolean" },
+          "sort": {
+            "type": "object",
+            "properties": {
+              "empty": { "type": "boolean" },
+              "sorted": { "type": "boolean" },
+              "unsorted": { "type": "boolean" }
+            }
+          },
+          "pageable": {
+            "type": "object",
+            "properties": {
+              "offset": { "type": "integer" },
+              "pageNumber": { "type": "integer" },
+              "pageSize": { "type": "integer" },
+              "paged": { "type": "boolean" },
+              "unpaged": { "type": "boolean" },
+              "sort": {
+                "type": "object",
+                "properties": {
+                  "empty": { "type": "boolean" },
+                  "sorted": { "type": "boolean" },
+                  "unsorted": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "BoardSummary": {
+        "type": "object",
+        "properties": {
+          "uuid": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "previewContent": { "type": "string" },
+          "contentImages": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "viewCount": { "type": "integer" },
+          "published": { "type": "boolean" },
+          "publishedAt": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "likeCount": { "type": "integer" },
+          "commentCount": { "type": "integer" },
+          "author": { "type": "string" },
+          "liked": { "type": "boolean" }
+        }
+      },
+      "ApiSuccess_BoardDetail": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/BoardSummary" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "BoardCreateRequest": {
+        "type": "object",
+        "required": ["title", "content", "published"],
+        "properties": {
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "published": { "type": "boolean" },
+          "contentImages": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          }
+        }
+      },
+      "BoardUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "published": { "type": "boolean" },
+          "contentImages": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          }
+        }
+      },
+      "ApiSuccess_CommentList": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Comment" }
+          },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "commentUUID": { "type": "string", "format": "uuid" },
+          "content": { "type": "string" },
+          "nickname": { "type": "string" },
+          "likeCount": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "liked": { "type": "boolean" },
+          "replies": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Comment" }
+          }
+        }
+      },
+      "CommentCreateRequest": {
+        "type": "object",
+        "required": ["content"],
+        "properties": {
+          "content": { "type": "string" }
+        }
+      },
+      "ApiSuccess_CommentDetail": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/Comment" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

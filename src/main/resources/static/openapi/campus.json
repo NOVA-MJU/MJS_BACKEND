@@ -1,0 +1,402 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MJU Campus API",
+    "version": "v1.0.0",
+    "description": "명지대학교 식단, 공지사항, 명대신문 기사 정보를 제공하는 크롤링 기반 Campus API 명세서입니다."
+  },
+  "servers": [
+    {
+      "url": "https://mjsearch.co.kr/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Menu",
+      "description": "학교 식단 정보 제공 및 크롤링 기능"
+    },
+    {
+      "name": "Notice",
+      "description": "명지대학교 공지사항 목록 조회 기능"
+    },
+    {
+      "name": "News",
+      "description": "명대신문 기사 조회 및 크롤링/삭제 기능"
+    }
+  ],
+  "paths": {
+    "/menus/crawling": {
+      "post": {
+        "tags": ["Menu"],
+        "summary": "식단 크롤링 실행",
+        "description": "식단 정보를 웹 크롤링하여 저장합니다. 프론트엔드에서 별도 처리 필요 없이 호출만으로 최신 식단을 가져옵니다.",
+        "responses": {
+          "200": {
+            "description": "크롤링된 식단 데이터 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MenuItem"
+                      }
+                    },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                },
+                "examples": {
+                  "menuExample": {
+                    "summary": "이번주 식단 예시",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": [
+                        {
+                          "date": "02.10 ( 월 )",
+                          "menuCategory": "LUNCH",
+                          "meals": [
+                            "사골떡국",
+                            "쌀밥",
+                            "생선가스&칠리소스",
+                            "두부양념조림",
+                            "해초샐러드",
+                            "깍두기",
+                            "따뜻한 유자차"
+                          ]
+                        }
+                      ],
+                      "timestamp": "2025-02-12T14:59:54.3362998"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/menus": {
+      "get": {
+        "tags": ["Menu"],
+        "summary": "주간 식단 조회",
+        "description": "DB에 저장된 이번 주 식단 정보를 조회합니다. 크롤링이 최신이 아니면 `/menus/crawling` 호출 필요합니다.",
+        "responses": {
+          "200": {
+            "description": "주간 식단 데이터 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/MenuItem" }
+                    },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                },
+                "examples": {
+                  "weeklyMenu": {
+                    "summary": "한 주 식단 예시",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": [
+                        {
+                          "date": "02.10 ( 월 )",
+                          "menuCategory": "BREAKFAST",
+                          "meals": ["등록된 식단 내용이 없습니다."]
+                        },
+                        {
+                          "date": "02.10 ( 월 )",
+                          "menuCategory": "LUNCH",
+                          "meals": ["사골떡국", "쌀밥", "생선가스&칠리소스"]
+                        }
+                      ],
+                      "timestamp": "2025-02-12T14:59:54.3362998"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notices": {
+      "get": {
+        "tags": ["Notice"],
+        "summary": "공지사항 목록 조회",
+        "description": "카테고리, 연도, 페이지네이션 및 정렬을 지원하는 명지대학교 공지사항 목록 조회 API입니다.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["general","academic","scholarship","career","activity","rule"]
+            },
+            "required": true,
+            "description": "공지사항 카테고리"
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": { "type": "integer", "default": 2025 },
+            "description": "조회할 연도 (기본: 현재연도)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 },
+            "description": "페이지 번호 (0부터 시작)"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": { "type": "integer", "default": 15 },
+            "description": "페이지당 항목 수"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["asc","desc"], "default": "desc" },
+            "description": "날짜 정렬 방향"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "공지사항 페이지 데이터 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticePage"
+                },
+                "examples": {
+                  "noticeExample": {
+                    "summary": "학칙개정 공지사항 예시",
+                    "value": {
+                      "content": [
+                        {
+                          "title": "[재맞고]2025년 예비 취준생 안내",
+                          "date": "2025.04.08",
+                          "category": "career",
+                          "link": "https://.../artclView.do"
+                        }
+                      ],
+                      "pageable": {
+                        "pageNumber": 0,
+                        "pageSize": 15,
+                        "sort": {"empty":false,"sorted":true,"unsorted":false},
+                        "offset": 0,"paged":true,"unpaged":false
+                      },
+                      "last": false,
+                      "totalElements": 670,
+                      "totalPages": 45,
+                      "first": true,
+                      "numberOfElements": 1,
+                      "empty": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/news": {
+      "get": {
+        "tags": ["News"],
+        "summary": "명대신문 기사 조회",
+        "description": "명대신문의 '보도' 또는 '사회' 카테고리 기사 목록 조회 API입니다.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["REPORT","SOCIETY"]
+            },
+            "required": true,
+            "description": "조회할 기사 카테고리"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "기사 목록 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/NewsItem" }
+                },
+                "examples": {
+                  "reportExample": {
+                    "summary": "보도 기사 예시",
+                    "value": [
+                      {
+                        "title": "인문캠 새로 총학…",
+                        "date": "2024-11-25 17:10",
+                        "reporter": "장윤후 수습기자",
+                        "imageUrl": "http://news.mju.ac.kr/...jpg",
+                        "summary": "종강까지 약3주...",
+                        "link": "https://news.mju.ac.kr/...idxno=13038",
+                        "category": "REPORT"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["News"],
+        "summary": "명대신문 크롤링 실행",
+        "description": "특정 카테고리 또는 전체 카테고리에 대해 명대신문 기사를 크롤링하여 저장합니다.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["REPORT","SOCIETY"],
+              "nullable": true
+            },
+            "required": false,
+            "description": "크롤링할 기사 카테고리 (미지정 시 전체 크롤링)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "크롤링 작업 완료 응답",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "object" }
+                },
+                "examples": {
+                  "emptyRes": {
+                    "summary": "비어있는 리스트",
+                    "value": []
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["News"],
+        "summary": "명대신문 기사 삭제",
+        "description": "특정 카테고리 또는 전체 카테고리의 기사를 삭제합니다.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["REPORT","SOCIETY"],
+              "nullable": true
+            },
+            "required": false,
+            "description": "삭제할 기사 카테고리 (미지정 시 전체 삭제)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "삭제 작업 완료 응답",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "object" }
+                },
+                "examples": {
+                  "emptyRes": {
+                    "summary": "비어있는 리스트",
+                    "value": []
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MenuItem": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "example": "02.10 ( 월 )" },
+          "menuCategory": { "type": "string", "enum": ["BREAKFAST","LUNCH","DINNER"] },
+          "meals": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "NoticePage": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "date": { "type": "string" },
+                "category": { "type": "string" },
+                "link": { "type": "string", "format": "uri" }
+              }
+            }
+          },
+          "pageable": {
+            "type": "object",
+            "properties": {
+              "pageNumber": { "type": "integer" },
+              "pageSize": { "type": "integer" },
+              "sort": {
+                "type": "object",
+                "properties": {
+                  "empty": { "type": "boolean" },
+                  "sorted": { "type": "boolean" },
+                  "unsorted": { "type": "boolean" }
+                }
+              },
+              "offset": { "type": "integer" },
+              "paged": { "type": "boolean" },
+              "unpaged": { "type": "boolean" }
+            }
+          },
+          "last": { "type": "boolean" },
+          "totalElements": { "type": "integer" },
+          "totalPages": { "type": "integer" },
+          "first": { "type": "boolean" },
+          "numberOfElements": { "type": "integer" },
+          "empty": { "type": "boolean" }
+        }
+      },
+      "NewsItem": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "date": { "type": "string" },
+          "reporter": { "type": "string" },
+          "imageUrl": { "type": "string", "format": "uri" },
+          "summary": { "type": "string" },
+          "link": { "type": "string", "format": "uri" },
+          "category": { "type": "string", "enum": ["REPORT","SOCIETY"] }
+        }
+      }
+    }
+  }
+}

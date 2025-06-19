@@ -1,0 +1,91 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MJU Infra API",
+    "version": "v1.0.0",
+    "description": "인프라 기능(날씨 등)을 위한 API 명세서입니다. OpenWeatherMap 및 대기질 API를 기반으로 실시간 정보를 제공합니다."
+  },
+  "servers": [
+    {
+      "url": "https://mjsearch.co.kr/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Weather",
+      "description": "OpenWeatherMap을 활용한 날씨 및 대기질 정보 제공 API"
+    }
+  ],
+  "paths": {
+    "/weather": {
+      "get": {
+        "tags": ["Weather"],
+        "summary": "날씨 및 미세먼지 정보 조회",
+        "description": "OpenWeatherMap을 기반으로 현재 위치(서울시 남가좌동)의 날씨, 체감온도, 미세먼지(PM10, PM2.5) 정보를 제공합니다.",
+        "responses": {
+          "200": {
+            "description": "현재 날씨 및 공기질 정보 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherResponse"
+                },
+                "examples": {
+                  "weatherExample": {
+                    "summary": "서울시 남가좌동 예시",
+                    "value": {
+                      "id": 3,
+                      "location": "서울시 남가좌동",
+                      "temperature": 2.91,
+                      "feelsLike": -1.83,
+                      "humidity": 25,
+                      "weatherMain": "Clear",
+                      "weatherDescription": "맑음",
+                      "weatherIcon": "https://openweathermap.org/img/wn/01d@2x.png",
+                      "minTemperature": -3.41,
+                      "maxTemperature": 2.91,
+                      "pm10": 7.87,
+                      "pm2_5": 5.6,
+                      "pm10Category": "좋음",
+                      "pm2_5Category": "좋음",
+                      "timestamp": "2025-02-18T15:01:27.740362"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "WeatherResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 3 },
+          "location": { "type": "string", "example": "서울시 남가좌동" },
+          "temperature": { "type": "number", "format": "float", "example": 2.91 },
+          "feelsLike": { "type": "number", "format": "float", "example": -1.83 },
+          "humidity": { "type": "integer", "example": 25 },
+          "weatherMain": { "type": "string", "example": "Clear" },
+          "weatherDescription": { "type": "string", "example": "맑음" },
+          "weatherIcon": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://openweathermap.org/img/wn/01d@2x.png"
+          },
+          "minTemperature": { "type": "number", "format": "float", "example": -3.41 },
+          "maxTemperature": { "type": "number", "format": "float", "example": 2.91 },
+          "pm10": { "type": "number", "format": "float", "example": 7.87 },
+          "pm2_5": { "type": "number", "format": "float", "example": 5.6 },
+          "pm10Category": { "type": "string", "example": "좋음" },
+          "pm2_5Category": { "type": "string", "example": "좋음" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "description": "OpenWeatherMap과 공공데이터 API로부터 수집된 날씨 및 미세먼지 데이터"
+      }
+    }
+  }
+}
