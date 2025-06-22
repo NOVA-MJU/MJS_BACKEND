@@ -5,6 +5,7 @@ import lombok.Data;
 import nova.mjs.community.entity.CommunityBoard;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,6 +65,10 @@ public class CommunityBoardResponse {
         private boolean isLiked;
 
         public static DetailDTO fromEntity(CommunityBoard entity, int likeCount, int commentCount, boolean isLiked) {
+            LocalDateTime seoulPublishedAt = entity.getPublishedAt() != null
+                    ? entity.getPublishedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()
+                    : null;
+
             return DetailDTO.builder()
                     .uuid(entity.getUuid())
                     .title(entity.getTitle())
@@ -71,7 +76,7 @@ public class CommunityBoardResponse {
                     .contentImages(entity.getContentImages())
                     .viewCount(entity.getViewCount())
                     .published(entity.getPublished())
-                    .publishedAt(entity.getPublishedAt())
+                    .publishedAt(seoulPublishedAt)
                     .createdAt(entity.getCreatedAt())
                     .updatedAt(entity.getUpdatedAt())
                     .likeCount(likeCount)
@@ -80,5 +85,6 @@ public class CommunityBoardResponse {
                     .isLiked(isLiked)
                     .build();
         }
+
     }
 }
