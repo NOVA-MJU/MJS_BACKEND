@@ -24,7 +24,7 @@ repositories {
 sourceSets {
 	main {
 		resources {
-			srcDir 'MJS-BACK-SECURITY'
+			srcDirs = ['src/main/resources', 'MJS-BACK-SECURITY']
 			include 'application.yml'
 		}
 	}
