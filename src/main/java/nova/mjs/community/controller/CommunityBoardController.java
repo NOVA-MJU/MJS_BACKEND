@@ -3,7 +3,8 @@ package nova.mjs.community.controller;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.community.DTO.CommunityBoardRequest;
 import nova.mjs.community.DTO.CommunityBoardResponse;
-import nova.mjs.community.service.CommunityBoardService;
+import nova.mjs.community.service.CommunityBoardCommandService;
+import nova.mjs.community.service.CommunityBoardQueryService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.s3.S3Service;
 import nova.mjs.util.security.UserPrincipal;
@@ -21,7 +22,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CommunityBoardController {
 
-    private final CommunityBoardService communityBoardService;
+    private final CommunityBoardQueryService communityBoardQueryService;
+    private final CommunityBoardCommandService communityBoardCommandService;
     private final S3Service s3Service;
 
     // 1. GET 페이지네이션
@@ -35,7 +37,7 @@ public class CommunityBoardController {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<CommunityBoardResponse.SummaryDTO> boards = communityBoardService.getBoards(pageable, email);
+        Page<CommunityBoardResponse.SummaryDTO> boards = communityBoardQueryService.getBoards(pageable, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(boards));
@@ -50,7 +52,7 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
       
-        CommunityBoardResponse.DetailDTO board = communityBoardService.getBoardDetail(uuid, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardQueryService.getBoardDetail(uuid, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board));
@@ -63,7 +65,7 @@ public class CommunityBoardController {
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardService.createBoard(request, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardCommandService.createBoard(request, email);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board)); // HTTP 201 Created
@@ -78,7 +80,7 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board =communityBoardService.updateBoard(uuid, request, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardCommandService.updateBoard(uuid, request, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board)); // HTTP 200 OK
@@ -93,7 +95,7 @@ public class CommunityBoardController {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
         // 서비스에 게시글 UUID와 사용자 email을 넘김
-        communityBoardService.deleteBoard(uuid, email);
+        communityBoardCommandService.deleteBoard(uuid, email);
 
         return ResponseEntity.noContent().build(); // HTTP 204 No Content
     }

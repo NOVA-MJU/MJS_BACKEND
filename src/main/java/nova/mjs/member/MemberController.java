@@ -2,6 +2,8 @@ package nova.mjs.member;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.member.service.MemberCommandService;
+import nova.mjs.member.service.MemberQueryService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.AuthDTO;
 import nova.mjs.util.security.UserPrincipal;
@@ -22,7 +24,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MemberController {
 
-    private final MemberService memberService;
+    private final MemberQueryService memberQueryService;
+    private final MemberCommandService memberCommandService;
 
     // 1. GET 페이지네이션
     @GetMapping
@@ -31,7 +34,7 @@ public class MemberController {
             @RequestParam(defaultValue = "10") int size // 기본 페이지 크기
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<MemberDTO> boards = memberService.getAllMember(pageable);
+        Page<MemberDTO> boards = memberQueryService.getAllMember(pageable);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(boards));
@@ -42,14 +45,14 @@ public class MemberController {
     @GetMapping("info")
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<MemberDTO>> getMember(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        MemberDTO member = memberService.getMemberByEmailId(userPrincipal.getUsername());
+        MemberDTO member = memberQueryService.getMemberByEmailId(userPrincipal.getUsername());
         return ResponseEntity.ok(ApiResponse.success(member));
     }
 
     // 회원 정보 생성 (회원 가입)
     @PostMapping
     public ResponseEntity<ApiResponse<?>> registerMember(@RequestBody MemberDTO.MemberRequestDTO requestDTO) {
-        AuthDTO.LoginResponseDTO newMember = memberService.registerMember(requestDTO);
+        AuthDTO.LoginResponseDTO newMember = memberCommandService.registerMember(requestDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(newMember));
@@ -60,7 +63,7 @@ public class MemberController {
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<MemberDTO>> updateMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                                @RequestBody MemberDTO requestDTO) {
-        Member updatedMember = memberService.updateMember(userPrincipal.getUsername(), requestDTO);
+        Member updatedMember = memberCommandService.updateMember(userPrincipal.getUsername(), requestDTO);
         return ResponseEntity.ok(ApiResponse.success(MemberDTO.fromEntity(updatedMember)));
     }
 
@@ -69,7 +72,7 @@ public class MemberController {
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<Void>> updatePassword(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                             @RequestBody MemberDTO.PasswordRequestDTO request) {
-        memberService.updatePassword(userPrincipal.getUsername(), request);
+        memberCommandService.updatePassword(userPrincipal.getUsername(), request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -78,7 +81,7 @@ public class MemberController {
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<Void>> deleteMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                           @RequestBody MemberDTO.PasswordRequestDTO password) {
-        memberService.deleteMember(userPrincipal.getUsername(), password);
+        memberCommandService.deleteMember(userPrincipal.getUsername(), password);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
