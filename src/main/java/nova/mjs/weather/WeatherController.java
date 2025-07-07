@@ -1,6 +1,7 @@
 package nova.mjs.weather;
 
 import lombok.RequiredArgsConstructor;
+import nova.mjs.weather.service.WeatherQueryService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -10,10 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class WeatherController {
 
-    private final WeatherService weatherService;
+    private final WeatherQueryService weatherQueryService;
 
     @GetMapping
     public Weather getLatestWeather() {
-        return weatherService.getStoredWeather();
+        return weatherQueryService.getStoredWeather();
     }
 }
