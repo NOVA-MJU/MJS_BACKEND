@@ -2,7 +2,7 @@ HELP.md
 caches/
 /out
 /build
-
+/gen
 daemon/
 .idea/
 idea/
