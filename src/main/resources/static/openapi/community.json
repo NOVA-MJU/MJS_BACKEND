@@ -409,6 +409,80 @@
         }
       }
     },
+    "/boards/images": {
+      "post": {
+        "tags": ["Board"],
+        "summary": "임시 이미지 업로드",
+        "description": "게시글 작성 중 임시로 이미지를 S3에 업로드하고 이미지 URL을 반환합니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "업로드할 이미지 파일"
+                  },
+                  "tempFolderUuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "임시 폴더 UUID"
+                  }
+                },
+                "required": ["file", "tempFolderUuid"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공적으로 이미지 URL을 반환합니다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_String"
+                },
+                "examples": {
+                  "example": {
+                    "summary": "이미지 업로드 성공 예시",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": "https://cdn.example.com/board/temp/이미지.jpg",
+                      "timestamp": "2025-07-07T12:00:00"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Board"],
+        "summary": "임시 이미지 삭제",
+        "description": "게시글 작성 취소 시 임시로 업로드한 이미지들을 삭제합니다.",
+        "parameters": [
+          {
+            "name": "tempFolderUuid",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "임시 폴더 UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "성공적으로 삭제되었습니다. 응답 본문은 없습니다."
+          }
+        }
+      }
+    },
     "/boards/{boardUUID}/comments/{parentCommentUUID}/reply": {
       "post": {
         "tags": ["Comment"],
@@ -795,6 +869,24 @@
           "status": { "type": "string" },
           "data": { "$ref": "#/components/schemas/Comment" },
           "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ApiResponse_String": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "API 요청 성공"
+          },
+          "data": {
+            "type": "string",
+            "example": "https://cdn.example.com/board/temp/이미지.jpg"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-07T12:00:00"
+          }
         }
       }
     }
