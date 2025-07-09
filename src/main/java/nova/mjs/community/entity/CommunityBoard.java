@@ -74,6 +74,7 @@ public class CommunityBoard extends BaseEntity {
     @Column
     private LocalDateTime publishedAt;  // 공개 게시 시간
 
+    @Builder.Default
     @OneToMany(mappedBy = "communityBoard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommunityLike> communityLike = new ArrayList<>();
 

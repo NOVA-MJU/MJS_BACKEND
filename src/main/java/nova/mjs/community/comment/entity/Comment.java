@@ -45,9 +45,11 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "parent_id")  // 부모 댓글 ID 저장
     private Comment parent;
 
+    @Builder.Default
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> replies = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommentLike> commentLike = new ArrayList<>();
 
