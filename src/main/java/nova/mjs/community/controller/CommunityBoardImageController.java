@@ -5,7 +5,6 @@ import nova.mjs.community.service.CommunityBoardService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.s3.S3Service;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

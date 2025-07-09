@@ -1,6 +1,5 @@
 package nova.mjs.notice.service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
@@ -13,8 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import static java.time.LocalTime.MIN;
 
 @Service
 @RequiredArgsConstructor

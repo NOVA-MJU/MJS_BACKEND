@@ -2,8 +2,6 @@ package nova.mjs.community.DTO;
 
 import lombok.Builder;
 import lombok.Data;
-import nova.mjs.community.entity.CommunityBoard;
-import nova.mjs.community.entity.enumList.CommunityCategory;
 
 import java.util.List;
 import java.util.UUID;

@@ -6,7 +6,7 @@ import nova.mjs.member.Member;
 import nova.mjs.member.MemberRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
-import java.util.Collections;
+
 import java.util.UUID;
 
 @Slf4j
