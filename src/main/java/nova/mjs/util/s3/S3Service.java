@@ -175,5 +175,11 @@ public class S3Service {
         return key;
     }
 
-
+    /**
+     * 학과별 로고 사진
+     */
+    public String uploadAdminLogo(MultipartFile file, UUID tempFolderUuid) throws IOException {
+        String keyPrefix = "admin/temp/" + tempFolderUuid + "/";
+        return uploadFile(file, keyPrefix);
+    }
 }
