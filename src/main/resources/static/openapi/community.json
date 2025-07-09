@@ -28,6 +28,9 @@
     "/boards": {
       "get": {
         "tags": ["Board"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "게시글 목록 조회 (페이징)",
         "description": "페이지 번호(`page`)와 페이지 크기(`size`)를 지정하여 게시글 목록을 반환합니다.",
         "parameters": [
@@ -95,6 +98,9 @@
       },
       "post": {
         "tags": ["Board"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "게시글 생성",
         "description": "제목, 본문, 공개 여부(`published`), 이미지 URL 목록(`contentImages`)을 포함하여 게시글을 작성합니다. 이미지 URL은 미리 업로드된 CloudFront URL이어야 합니다.",
         "requestBody": {
@@ -152,6 +158,9 @@
     "/boards/{boardUUID}": {
       "get": {
         "tags": ["Board"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "게시글 상세 조회",
         "description": "UUID에 해당하는 게시글의 상세 정보를 반환합니다.",
         "parameters": [
@@ -199,6 +208,9 @@
       },
       "patch": {
         "tags": ["Board"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "게시글 수정",
         "description": "제목, 본문, 공개여부, 이미지 목록을 수정합니다. 임시 이미지 URL(prefix로 temp 확인 가능)도 포함할 수 있습니다.",
         "parameters": [
@@ -264,6 +276,9 @@
       },
       "delete": {
         "tags": ["Board"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "게시글 삭제",
         "description": "UUID에 해당하는 게시글을 삭제합니다.",
         "parameters": [
@@ -286,6 +301,9 @@
     "/boards/{boardUUID}/comments": {
       "get": {
         "tags": ["Comment"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "게시글 댓글 및 대댓글 조회",
         "description": "특정 게시글의 댓글과 그에 달린 대댓글까지 포함해 리스트 형태로 반환합니다. 로그인 되어 있을 경우 `liked` 여부도 함께 반환됩니다.",
         "parameters": [
@@ -295,13 +313,6 @@
             "schema": { "type": "string" },
             "required": true,
             "description": "댓글을 조회할 게시글의 UUID"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "schema": { "type": "string" },
-            "description": "Bearer 토큰 (로그인한 회원만 liked 상태 체크 가능)",
-            "required": false
           }
         ],
         "responses": {
@@ -347,6 +358,9 @@
       },
       "post": {
         "tags": ["Comment"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "댓글 생성",
         "description": "게시글에 새 댓글을 작성합니다. 로그인된 사용자만 작성 가능하며, 작성 이력과 `liked`, `likeCount`는 초기값입니다.",
         "parameters": [
@@ -356,13 +370,6 @@
             "schema": { "type": "string" },
             "required": true,
             "description": "댓글을 달 게시글의 UUID"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "schema": { "type": "string" },
-            "description": "Bearer 토큰",
-            "required": true
           }
         ],
         "requestBody": {
@@ -412,6 +419,9 @@
     "/boards/images": {
       "post": {
         "tags": ["Board"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "임시 이미지 업로드",
         "description": "게시글 작성 중 임시로 이미지를 S3에 업로드하고 이미지 URL을 반환합니다.",
         "requestBody": {
@@ -462,6 +472,9 @@
       },
       "delete": {
         "tags": ["Board"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "임시 이미지 삭제",
         "description": "게시글 작성 취소 시 임시로 업로드한 이미지들을 삭제합니다.",
         "parameters": [
@@ -486,6 +499,9 @@
     "/boards/{boardUUID}/comments/{parentCommentUUID}/reply": {
       "post": {
         "tags": ["Comment"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "대댓글 생성",
         "description": "특정 댓글에 대댓글을 작성합니다. 로그인된 사용자만 작성 가능하며, 생성된 대댓글은 해당 부모 댓글의 `replies` 목록에 포함됩니다.",
         "parameters": [
@@ -502,13 +518,6 @@
             "schema": { "type": "string" },
             "required": true,
             "description": "대댓글을 달 부모 댓글의 UUID"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "schema": { "type": "string" },
-            "required": true,
-            "description": "Bearer 토큰"
           }
         ],
         "requestBody": {
@@ -558,6 +567,9 @@
     "/boards/{boardUUID}/comments/{commentUUID}": {
       "delete": {
         "tags": ["Comment"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "댓글 삭제",
         "description": "로그인된 사용자가 자신의 댓글 또는 대댓글을 삭제합니다. 삭제 시 해당 UUID 댓글이 제거됩니다.",
         "parameters": [
@@ -574,13 +586,6 @@
             "schema": { "type": "string" },
             "required": true,
             "description": "삭제할 댓글 또는 대댓글의 UUID"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "schema": { "type": "string" },
-            "required": true,
-            "description": "Bearer 토큰"
           }
         ],
         "responses": {
@@ -608,6 +613,9 @@
     "/boards/{boardUUID}/like": {
       "post": {
         "tags": ["Like"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "게시글 좋아요 토글",
         "description": "게시글에 좋아요를 추가하거나, 이미 좋아요가 되어 있으면 취소합니다.",
         "parameters": [
@@ -617,13 +625,6 @@
             "schema": { "type": "string" },
             "required": true,
             "description": "좋아요를 토글할 게시글의 UUID"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "schema": { "type": "string" },
-            "required": true,
-            "description": "Bearer 토큰"
           }
         ],
         "responses": {
@@ -659,6 +660,9 @@
     "/boards/{boardUUID}/comments/{commentUUID}/like": {
       "post": {
         "tags": ["Like"],
+        "security": [
+          { "Authorization": [] }
+        ],
         "summary": "댓글 좋아요 토글",
         "description": "댓글 또는 대댓글에 좋아요를 추가하거나 취소합니다.",
         "parameters": [
@@ -675,13 +679,6 @@
             "schema": { "type": "string" },
             "required": true,
             "description": "좋아요를 토글할 댓글의 UUID"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "schema": { "type": "string" },
-            "required": true,
-            "description": "Bearer 토큰"
           }
         ],
         "responses": {
