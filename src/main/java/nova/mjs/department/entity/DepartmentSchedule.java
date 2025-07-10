@@ -20,7 +20,7 @@ public class DepartmentSchedule extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private UUID uuid = UUID.randomUUID();
+    private UUID departmentScheduleUuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
@@ -29,8 +29,10 @@ public class DepartmentSchedule extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String title;
 
+    @Column(nullable = false)
     private LocalDateTime startDate;
 
+    @Column(nullable = false)
     private LocalDateTime endDate;
 
     @Column

@@ -2,6 +2,7 @@ package nova.mjs.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.department.DTO.DepartmentInfoDTO;
 import nova.mjs.department.entity.enumList.College;
 import nova.mjs.util.entity.BaseEntity;
 
@@ -23,7 +24,7 @@ public class Department extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private UUID uuid;
+    private UUID departmentUuid;
 
     @Column(nullable = false)
     private String departmentName;
