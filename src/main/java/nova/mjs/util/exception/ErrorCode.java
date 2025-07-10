@@ -65,7 +65,11 @@ public enum ErrorCode {
     NO_DATA_FOUND(HttpStatus.NOT_FOUND, "NO_DATA_FOUND", "[MJS] 저장된 날씨 데이터가 없습니다."),
 
     // 어드민 에러
-    ADMIN_ID_MISMATCH(HttpStatus.BAD_REQUEST, "ADMIN_ID_MISMATCH", "[MJS] 사전 등록된 Admin ID와 일치하지 않습니다.");
+    ADMIN_ID_MISMATCH(HttpStatus.BAD_REQUEST, "ADMIN_ID_MISMATCH", "[MJS] 사전 등록된 Admin ID와 일치하지 않습니다."),
+
+    //학과별 서비스 관련 에러
+    DEPARTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_NOT_FOUND", "[MJS] 존재하지 않는 학과입니다.");
+
 
     private final HttpStatus status;
     private final String error;

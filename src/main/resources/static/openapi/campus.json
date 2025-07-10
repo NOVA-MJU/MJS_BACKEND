@@ -219,10 +219,30 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["REPORT","SOCIETY"]
+              "enum": ["REPORT", "SOCIETY"]
             },
             "required": true,
             "description": "조회할 기사 카테고리"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "required": false,
+            "description": "페이지 번호 (0부터 시작)"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "required": false,
+            "description": "페이지당 기사 수"
           }
         ],
         "responses": {
@@ -231,24 +251,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/NewsItem" }
-                },
-                "examples": {
-                  "reportExample": {
-                    "summary": "보도 기사 예시",
-                    "value": [
-                      {
-                        "title": "인문캠 새로 총학…",
-                        "date": "2024-11-25 17:10",
-                        "reporter": "장윤후 수습기자",
-                        "imageUrl": "http://news.mju.ac.kr/...jpg",
-                        "summary": "종강까지 약3주...",
-                        "link": "https://news.mju.ac.kr/...idxno=13038",
-                        "category": "REPORT"
-                      }
-                    ]
-                  }
+                  "$ref": "#/components/schemas/ApiResponseOfPageOfNewsItem"
                 }
               }
             }
@@ -394,7 +397,42 @@
           "imageUrl": { "type": "string", "format": "uri" },
           "summary": { "type": "string" },
           "link": { "type": "string", "format": "uri" },
-          "category": { "type": "string", "enum": ["REPORT","SOCIETY"] }
+          "category": { "type": "string", "enum": ["REPORT", "SOCIETY"] }
+        }
+      },
+      "PageOfNewsItem": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/NewsItem" }
+          },
+          "pageable": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "totalElements": { "type": "integer" },
+          "totalPages": { "type": "integer" },
+          "number": {
+            "type": "integer",
+            "description": "현재 페이지 번호"
+          },
+          "size": {
+            "type": "integer",
+            "description": "페이지당 요소 수"
+          },
+          "first": { "type": "boolean" },
+          "last": { "type": "boolean" },
+          "numberOfElements": { "type": "integer" },
+          "empty": { "type": "boolean" }
+        }
+      },
+      "ApiResponseOfPageOfNewsItem": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "data": { "$ref": "#/components/schemas/PageOfNewsItem" },
+          "message": { "type": "string" }
         }
       }
     }
