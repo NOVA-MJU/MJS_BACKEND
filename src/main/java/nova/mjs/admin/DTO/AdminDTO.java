@@ -53,16 +53,4 @@ public class AdminDTO {
         private String homepageUrl;
         private String introduction;
     }
-
-    /**
-     * 비밀번호 변경 요청 DTO (내부 클래스)
-     */
-    @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class PasswordRequestDTO {
-        private String password;
-        private String newPassword;
-    }
 }
