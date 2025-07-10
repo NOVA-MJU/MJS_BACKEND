@@ -1,10 +1,10 @@
-package nova.mjs.admin.DTO;
+package nova.mjs.admin.account.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nova.mjs.admin.entity.Admin;
+import nova.mjs.admin.account.entity.Admin;
 
 @Data
 @Builder
@@ -52,5 +52,17 @@ public class AdminDTO {
         private String instagramUrl;
         private String homepageUrl;
         private String introduction;
+    }
+
+    /**
+     * 비밀번호 변경 요청 DTO (내부 클래스)
+     */
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PasswordRequestDTO {
+        private String password;
+        private String newPassword;
     }
 }

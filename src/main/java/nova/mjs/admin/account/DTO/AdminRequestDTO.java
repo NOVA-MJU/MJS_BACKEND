@@ -1,4 +1,4 @@
-package nova.mjs.admin.DTO;
+package nova.mjs.admin.account.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

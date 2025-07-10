@@ -1,6 +1,6 @@
-package nova.mjs.admin.repository;
+package nova.mjs.admin.account.repository;
 
-import nova.mjs.admin.entity.Admin;
+import nova.mjs.admin.account.entity.Admin;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

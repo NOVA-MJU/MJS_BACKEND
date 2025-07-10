@@ -1,12 +1,13 @@
-package nova.mjs.admin.service;
+package nova.mjs.admin.account.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.admin.DTO.AdminDTO;
-import nova.mjs.admin.entity.Admin;
-import nova.mjs.admin.exception.AdminIdMismatchException;
-import nova.mjs.admin.exception.InvalidRequestException;
-import nova.mjs.admin.repository.AdminRepository;
+import nova.mjs.admin.account.DTO.AdminDTO;
+import nova.mjs.admin.account.entity.Admin;
+import nova.mjs.admin.account.exception.AdminIdMismatchException;
+import nova.mjs.admin.account.exception.InvalidRequestException;
+import nova.mjs.admin.account.repository.AdminRepository;
+import nova.mjs.admin.account.exception.PasswordIsInvalidException;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.jwt.JwtUtil;
 import nova.mjs.util.s3.S3Service;
@@ -94,5 +95,39 @@ public class AdminService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public AuthDTO.LoginResponseDTO login(String adminId, String rawPassword) {
+        Admin admin = adminRepository.findByAdminId(adminId)
+                .orElseThrow(AdminIdMismatchException::new);
+
+        if (!passwordEncoder.matches(rawPassword, admin.getPassword())) {
+            throw new InvalidRequestException("비밀번호가 일치하지 않습니다.", ErrorCode.INVALID_REQUEST);
+        }
+
+        UUID uuid = admin.getUuid();
+        String role = admin.getRole().name();
+
+        String accessToken = jwtUtil.generateAccessToken(uuid, adminId, role);
+        String refreshToken = jwtUtil.generateRefreshToken(uuid, adminId);
+
+        return AuthDTO.LoginResponseDTO.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    @Transactional
+    public void deleteAdmin(String adminId, AdminDTO.PasswordRequestDTO requestPassword) {
+        Admin admin = adminRepository.findByAdminId(adminId)
+                .orElseThrow(AdminIdMismatchException::new);
+
+        if (!passwordEncoder.matches(requestPassword.getPassword(), admin.getPassword())) {
+            throw new PasswordIsInvalidException();
+        }
+
+        adminRepository.delete(admin);
+        log.info("관리자 계정 삭제 - adminId: {}", adminId);
     }
 }

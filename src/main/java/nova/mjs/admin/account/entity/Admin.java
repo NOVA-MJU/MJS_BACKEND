@@ -1,4 +1,4 @@
-package nova.mjs.admin.entity;
+package nova.mjs.admin.account.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
