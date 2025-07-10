@@ -26,13 +26,13 @@ public class DepartmentSchedule extends BaseEntity {
     @JoinColumn(name = "department_id")
     private Department department;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private String title;
 
     private LocalDateTime startDate;
 
     private LocalDateTime endDate;
 
-    @Column //length 제한할 것인지?
+    @Column
     private String content;
 }
