@@ -1,7 +1,7 @@
 package nova.mjs.community.controller;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.community.service.CommunityBoardService;
+
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.s3.S3Service;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +20,6 @@ public class CommunityBoardImageController {
     @Value("${s3.path.custom.board-temp}")
     private String boardTempPrefix;
 
-    private final CommunityBoardService communityBoardService;
     private final S3Service s3Service;
 
     // 1. 게시글 작성 시 사용할 tempUUID  발급

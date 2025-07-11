@@ -2,14 +2,14 @@ package nova.mjs.util.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.news.service.NewsService;
+import nova.mjs.news.service.NewsCommandService;
 import nova.mjs.notice.exception.NoticeCrawlingException;
 import nova.mjs.notice.service.NoticeCrawlingService;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.scheduler.exception.SchedulerCronInvalidException;
 import nova.mjs.util.scheduler.exception.SchedulerTaskFailedException;
 import nova.mjs.util.scheduler.exception.SchedulerUnknownException;
-import nova.mjs.weather.WeatherService;
+import nova.mjs.weather.service.WeatherCommandService;
 import nova.mjs.weeklyMenu.service.WeeklyMenuService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -22,8 +22,8 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class SchedulerService {
 
-    private final NewsService newsService;
-    private final WeatherService weatherService;
+    private final NewsCommandService newsCommandService;
+    private final WeatherCommandService weatherCommandService;
     private final WeeklyMenuService weeklyMenuService;
     private final NoticeCrawlingService noticeCrawlingService;
 
@@ -33,7 +33,7 @@ public class SchedulerService {
         log.info("[스케쥴러] 매시간 정각 날씨 데이터 업데이트 실행");
         CompletableFuture.runAsync(() -> {
             try {
-                weatherService.fetchAndStoreWeatherData();
+                weatherCommandService.fetchAndStoreWeatherData();
                 log.info("날씨 데이터 업데이트 완료");
             } catch (IllegalArgumentException e) {
                 log.error("잘못된 Cron 표현식 오류 : {}", e.getMessage());
@@ -54,7 +54,7 @@ public class SchedulerService {
         log.info("[스케쥴러] 매시간 5분마다 기사 크롤링 실행");
         CompletableFuture.runAsync(() -> {
             try {
-                newsService.crawlAndSaveNews(null);
+                newsCommandService.crawlAndSaveNews(null);
                 log.info("기사 데이터 업데이트");
             } catch (IllegalArgumentException e) {
                 log.error("잘못된 Cron 표현식 오류 : {}", e.getMessage());

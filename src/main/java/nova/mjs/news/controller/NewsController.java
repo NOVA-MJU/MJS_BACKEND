@@ -2,7 +2,8 @@ package nova.mjs.news.controller;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.news.DTO.NewsResponseDTO;
-import nova.mjs.news.service.NewsService;
+import nova.mjs.news.service.NewsCommandService;
+import nova.mjs.news.service.NewsQueryService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +18,8 @@ import java.util.List;
 @RequestMapping("/api/v1/news")
 @RequiredArgsConstructor
 public class NewsController {
-    private final NewsService newsService;
+    private final NewsQueryService newsQueryService;
+    private final NewsCommandService newsCommandService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NewsResponseDTO>>> getNewsByCategory(
@@ -26,7 +28,7 @@ public class NewsController {
             @RequestParam(defaultValue = "10") int size  // 기본 페이지 크기 (10개)
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<NewsResponseDTO> newsPage = newsService.getNewsByCategory(category, pageable);
+        Page<NewsResponseDTO> newsPage = newsQueryService.getNewsByCategory(category, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -37,7 +39,7 @@ public class NewsController {
     public ResponseEntity<ApiResponse<List<NewsResponseDTO>>> crawlAndSaveNews(
             @RequestParam(required = false) String category) {
 
-        List<NewsResponseDTO> savedNews = newsService.crawlAndSaveNews(category);
+        List<NewsResponseDTO> savedNews = newsCommandService.crawlAndSaveNews(category);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -46,6 +48,6 @@ public class NewsController {
 
     @DeleteMapping("/delete")
     public void deleteAllNews(@RequestParam(required = false) String category) {
-        newsService.deleteAllNews(category);
+        newsCommandService.deleteAllNews(category);
     }
 }
