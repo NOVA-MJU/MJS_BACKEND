@@ -3,11 +3,11 @@ package nova.mjs.config;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.community.comment.repository.CommentRepository;
-import nova.mjs.community.entity.CommunityBoard;
-import nova.mjs.community.repository.CommunityBoardRepository;
-import nova.mjs.member.Member;
-import nova.mjs.member.MemberRepository;
+import nova.mjs.domain.community.comment.repository.CommentRepository;
+import nova.mjs.domain.community.entity.CommunityBoard;
+import nova.mjs.domain.community.repository.CommunityBoardRepository;
+import nova.mjs.domain.member.entity.Member;
+import nova.mjs.domain.member.repository.MemberRepository;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -47,7 +47,7 @@ public class DataInitializer {
             board = CommunityBoard.create(
                     "1 게시글",
                     "테스트 용이다잉",
-                    nova.mjs.community.entity.enumList.CommunityCategory.FREE,
+                    nova.mjs.domain.community.entity.enumList.CommunityCategory.FREE,
                     true,
                     null,
 
