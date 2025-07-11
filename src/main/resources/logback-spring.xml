@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true">
+
+    <!-- 1. 공통 패턴 정의 -->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{TRACE_ID}] %logger{36} - %msg%n"/>
+
+    <!-- 2. 동기 콘솔 Appender (요청-응답 핵심 로그) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 3. 비동기 Appender (부가 로그를 비동기 처리) -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="CONSOLE"/>
+        <!-- 큐 크기, 필요시 조정 -->
+        <queueSize>5000</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+    </appender>
+
+    <!-- 4. 루트 로거: INFO 레벨부터 동기 CONSOLE, DEBUG 이상은 ASYNC로도 출력 -->
+    <root level="INFO">
+        <!-- 핵심 INFO 이상 로그 -->
+        <appender-ref ref="CONSOLE"/>
+        <!-- 추가(디버그, AOP 등) 로그 -->
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </root>
+
+    <!-- 5. 패키지별/클래스별 로거 설정 예시 -->
+    <!-- AOP 실행시간 로깅은 DEBUG로만 ASYNC 처리 -->
+    <logger name="nova.mjs.config.aop.ExecutionTimeLoggerAspect" level="DEBUG" additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </logger>
+
+    <!-- MdcFilter가 남기는 INFO 로그는 ASYNC 처리 -->
+    <logger name="nova.mjs.config.logging.MdcFilter" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </logger>
+
+    <!-- Hibernate SQL/바인딩 로그는 개발 시에만 보려면 DEBUG, 운영은 WARN 이상 -->
+    <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN"/>
+
+</configuration>
