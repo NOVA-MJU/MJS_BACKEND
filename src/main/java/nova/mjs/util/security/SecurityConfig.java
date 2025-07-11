@@ -4,6 +4,7 @@ package nova.mjs.util.security;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.config.logging.MdcFilter;
 import nova.mjs.util.jwt.AccessTokenBlacklistRepository;
 import nova.mjs.util.jwt.JwtUtil;
 import nova.mjs.util.jwt.TokenRepository;
@@ -39,6 +40,7 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
+    private final MdcFilter mdcFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity,
@@ -69,6 +71,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/logout").authenticated()
                         .requestMatchers("/**").permitAll() //이걸 로그인으로 해놔서 config가 가로채감(주의)
                         .anyRequest().authenticated()) //나머지 요청은 인증 필요
+                .addFilterBefore(mdcFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAt(formLoginJwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(form -> form
                         .loginProcessingUrl("/api/v1/auth/login") //로그인 url 지정
@@ -77,7 +80,7 @@ public class SecurityConfig {
                 .addFilterAfter(new JwtAuthenticationFilter(jwtUtil, customUserDetailsService, accessTokenBlacklistRepository),
                         UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(new LogoutFilter(jwtUtil, tokenRepository, accessTokenBlacklistRepository),
-                        UsernamePasswordAuthenticationFilter.class)
+                        JwtAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             log.error("접근 거부 - 403 Forbidden! 요청 URL: {}", request.getRequestURI());
@@ -93,7 +96,7 @@ public class SecurityConfig {
        CorsConfiguration configuration = new CorsConfiguration();
        // 모든 출처 허용
        configuration.addAllowedOriginPattern("*");
-       configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+       configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
        configuration.setAllowedHeaders(Arrays.asList("*"));
        configuration.setAllowCredentials(true);
        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
