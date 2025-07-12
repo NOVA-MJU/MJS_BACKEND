@@ -1,8 +1,6 @@
 package nova.mjs.member.entity.enumList;
 
-import nova.mjs.member.Member;
-
-public enum Department {
+public enum DepartmentName {
 
     HUMANITIES_COLLEGE,              // 인문대 <단과대>
     CHINESE_LITERATURE,              // 중어중문학과
@@ -50,12 +48,4 @@ public enum Department {
 
     OTHER;
 
-
-    public static Department fromString(String value) {
-        try {
-            return Department.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("Invalid Department value: " + value);
-        }
-    }
 }
