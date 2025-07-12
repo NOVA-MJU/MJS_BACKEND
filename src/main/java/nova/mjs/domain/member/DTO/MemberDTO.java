@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.member.entity.Member;
+import nova.mjs.domain.member.entity.enumList.College;
+import nova.mjs.domain.member.entity.enumList.DepartmentName;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,7 +22,8 @@ public class MemberDTO {
     private String email;
     private String gender;
     private String nickname;
-    private String department;
+    private DepartmentName departmentName;
+    private College college;
     private Integer studentNumber;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -36,14 +39,14 @@ public class MemberDTO {
                 .email(member.getEmail())
                 .gender(String.valueOf(member.getGender()))
                 .nickname(member.getNickname())
-                .department(member.getDepartment())
+                .departmentName(member.getDepartmentName())
+                .college(member.getCollege())
                 .studentNumber(member.getStudentNumber())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
                 .role(member.getRole())
                 .build();
     }
-
     /**
      * 회원가입 요청을 위한 DTO (내부 클래스)
      */
@@ -57,7 +60,8 @@ public class MemberDTO {
         private String email;
         private String gender;
         private String nickname;
-        private String department;
+        private DepartmentName departmentName;
+        private College college;
         private Integer studentNumber;
     }
 

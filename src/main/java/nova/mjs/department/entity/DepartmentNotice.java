@@ -33,12 +33,4 @@ public class DepartmentNotice extends BaseEntity {
     @Column
     private String content;
 
-    @ElementCollection
-    @CollectionTable(
-            name = "department_notice_images",
-            joinColumns = @JoinColumn(name = "department_notice_id")
-    )
-    @Column(name = "content_image_urls", columnDefinition = "TEXT")
-    @Builder.Default
-    private List<String> contentImages = new ArrayList<>();
 }
