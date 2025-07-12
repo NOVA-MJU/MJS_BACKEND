@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.util.entity.BaseEntity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -30,10 +30,13 @@ public class DepartmentSchedule extends BaseEntity {
     private String title;
 
     @Column(nullable = false)
-    private LocalDateTime startDate;
+    private String colorCode;
 
     @Column(nullable = false)
-    private LocalDateTime endDate;
+    private LocalDate startDate;
+
+    @Column(nullable = false)
+    private LocalDate endDate;
 
     @Column
     private String content;

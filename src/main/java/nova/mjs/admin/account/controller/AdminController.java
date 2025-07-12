@@ -1,5 +1,6 @@
 package nova.mjs.admin.account.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.admin.account.DTO.LoginRequestDTO;
@@ -23,10 +24,10 @@ import java.io.IOException;
 public class AdminController {
     private final AdminService adminService;
 
-    // 사진 adminID 등록
+    // 사전 adminID 등록
     @PostMapping("/pre-register")
-    public ResponseEntity<ApiResponse<?>> preRegisterAdminId(@RequestParam String adminId) {
-        adminService.preRegisterAdminId(adminId);
+    public ResponseEntity<ApiResponse<?>> preRegisterAdminId(@RequestBody AdminDTO.AdminIdRequestDTO request) {
+        adminService.preRegisterAdminId(request.getAdminId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("사전 등록 완료"));
     }
@@ -35,7 +36,7 @@ public class AdminController {
     @PutMapping(value = "/{adminId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<?>> updateAdminInfo(
             @PathVariable String adminId,
-            @RequestPart("data") AdminDTO.AdminRequestDTO dto,
+            @Valid @RequestPart("data") AdminDTO.AdminRequestDTO dto,
             @RequestPart(value = "file", required = false) MultipartFile file) throws IOException {
 
         adminService.updateAdminInfoWithImage(adminId, dto, file);
@@ -43,7 +44,7 @@ public class AdminController {
     }
 
     // 비밀번호 저장
-    @PutMapping("/{adminId}/password")
+    @PatchMapping("/{adminId}/password")
     public ResponseEntity<ApiResponse<?>> updatePassword(
             @PathVariable String adminId,
             @RequestBody AdminDTO.PasswordRequestDTO request) {
@@ -63,11 +64,10 @@ public class AdminController {
 
     // Admin 탈퇴
     @DeleteMapping("/delete")
-    @PreAuthorize("isAuthenticated() and (#userPrincipal.username == principal.username or hasRole('ADMIN'))")
+    @PreAuthorize("isAuthenticated() and  hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteAdmin(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                          @RequestBody AdminDTO.PasswordRequestDTO password) {
         adminService.deleteAdmin(userPrincipal.getUsername(), password);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
-
 }

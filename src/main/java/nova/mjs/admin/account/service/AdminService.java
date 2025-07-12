@@ -6,74 +6,84 @@ import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.admin.account.entity.Admin;
 import nova.mjs.admin.account.exception.AdminIdMismatchException;
 import nova.mjs.admin.account.exception.InvalidRequestException;
-import nova.mjs.admin.account.repository.AdminRepository;
 import nova.mjs.admin.account.exception.PasswordIsInvalidException;
+import nova.mjs.admin.account.repository.AdminRepository;
+import nova.mjs.department.entity.enumList.College;
+import nova.mjs.department.entity.Department;
+import nova.mjs.department.repository.DepartmentRepository;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.jwt.JwtUtil;
 import nova.mjs.util.s3.S3Service;
 import nova.mjs.util.security.AuthDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.UUID;
-
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class AdminService {
     private final AdminRepository adminRepository;
+    private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final S3Service s3Service;
 
+    @Value("${s3.path.custom.admin-logo}")
+    private String adminLogo;
 
     @Transactional
     public void preRegisterAdminId(String adminId) {
+        Department department = Department.builder()
+                .departmentUuid(UUID.randomUUID())
+                .departmentName("")
+                .studentCouncilName("")
+                .studentCouncilLogo("")
+                .instagramUrl("")
+                .homepageUrl("")
+                .slogan("")
+                .description("")
+                .college(College.OTHER)
+                .build();
+
+        departmentRepository.save(department);
+
         Admin admin = Admin.builder()
                 .adminId(adminId)
                 .uuid(UUID.randomUUID())
-                .password("") // 비밀번호는 따로 설정
-                .studentUnionName("")
-                .department("")
-                .logoImageUrl("")
+                .password("")
                 .role(Admin.Role.ADMIN)
+                .department(department)
                 .build();
+
         adminRepository.save(admin);
     }
-
 
     @Transactional
     public void updateAdminInfoWithImage(String adminId, AdminDTO.AdminRequestDTO dto, MultipartFile file) throws IOException {
         Admin admin = adminRepository.findByAdminId(adminId)
                 .orElseThrow(AdminIdMismatchException::new);
 
-        if (!StringUtils.hasText(dto.getDepartment())) {
-            throw new InvalidRequestException("학과명은 비워둘 수 없습니다.", ErrorCode.INVALID_REQUEST);
-        }
-        if (!StringUtils.hasText(dto.getStudentUnionName())) {
-            throw new InvalidRequestException("학생회 이름은 비워둘 수 없습니다.", ErrorCode.INVALID_REQUEST);
-        }
+        Department department = admin.getDepartment();
 
-        // 이미지가 있을 경우 S3 업로드 → CloudFront URL 생성
-        if (!StringUtils.hasText(file.getOriginalFilename())) {
-            throw new InvalidRequestException("로고 이미지는 필수입니다.", ErrorCode.INVALID_REQUEST);
-        }
         log.info("[어드민 로고 이미지 업데이트 감지] adminId = {}", adminId);
-        String keyPrefix = "admin/logo/" + admin.getUuid() + "/";
+        String keyPrefix = adminLogo + admin.getUuid() + "/";
         String logoImageUrl = s3Service.uploadFile(file, keyPrefix);
 
-        admin.updateInfo(
-                dto.getDepartment(),
-                dto.getStudentUnionName(),
+        department.updateInfo(
+                dto.getDepartmentName(),
+                dto.getStudentCouncilName(),
                 dto.getHomepageUrl(),
                 dto.getInstagramUrl(),
                 dto.getIntroduction(),
-                logoImageUrl
+                logoImageUrl,
+                dto.getSlogan(),
+                dto.getCollege()
         );
     }
 
@@ -85,11 +95,8 @@ public class AdminService {
         String encodedPassword = passwordEncoder.encode(rawPassword);
         admin.updatePassword(encodedPassword);
 
-        UUID userId = admin.getUuid();
-        String role = admin.getRole().name();
-
-        String accessToken = jwtUtil.generateAccessToken(userId, adminId, role);
-        String refreshToken = jwtUtil.generateRefreshToken(userId, adminId);
+        String accessToken = jwtUtil.generateAccessToken(admin.getUuid(), adminId, admin.getRole().name());
+        String refreshToken = jwtUtil.generateRefreshToken(admin.getUuid(), adminId);
 
         return AuthDTO.LoginResponseDTO.builder()
                 .accessToken(accessToken)
@@ -106,11 +113,8 @@ public class AdminService {
             throw new InvalidRequestException("비밀번호가 일치하지 않습니다.", ErrorCode.INVALID_REQUEST);
         }
 
-        UUID uuid = admin.getUuid();
-        String role = admin.getRole().name();
-
-        String accessToken = jwtUtil.generateAccessToken(uuid, adminId, role);
-        String refreshToken = jwtUtil.generateRefreshToken(uuid, adminId);
+        String accessToken = jwtUtil.generateAccessToken(admin.getUuid(), adminId, admin.getRole().name());
+        String refreshToken = jwtUtil.generateRefreshToken(admin.getUuid(), adminId);
 
         return AuthDTO.LoginResponseDTO.builder()
                 .accessToken(accessToken)

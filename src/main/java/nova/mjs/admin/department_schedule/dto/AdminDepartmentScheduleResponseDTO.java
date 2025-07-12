@@ -2,31 +2,29 @@ package nova.mjs.admin.department_schedule.dto;
 
 import lombok.Builder;
 import lombok.Data;
-import nova.mjs.admin.department_schedule.entity.DepartmentSchedule;
+import nova.mjs.department.entity.DepartmentSchedule;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
 @Builder
-public class DepartmentScheduleResponseDTO {
-    private UUID uuid;
+public class AdminDepartmentScheduleResponseDTO {
+    private UUID departmentScheduleUuid;
     private String title;
     private String content;
     private String colorCode;
     private LocalDate startDate;
     private LocalDate endDate;
-    private String department;
 
-    public static DepartmentScheduleResponseDTO fromEntity(DepartmentSchedule schedule) {
-        return DepartmentScheduleResponseDTO.builder()
-                .uuid(schedule.getUuid())
+    public static AdminDepartmentScheduleResponseDTO fromEntity(DepartmentSchedule schedule) {
+        return AdminDepartmentScheduleResponseDTO.builder()
+                .departmentScheduleUuid(schedule.getDepartmentScheduleUuid())
                 .title(schedule.getTitle())
                 .content(schedule.getContent())
                 .colorCode(schedule.getColorCode())
                 .startDate(schedule.getStartDate())
                 .endDate(schedule.getEndDate())
-                .department(schedule.getAdmin().getDepartment())
                 .build();
     }
 }

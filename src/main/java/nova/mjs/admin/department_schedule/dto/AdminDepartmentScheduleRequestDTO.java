@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class DepartmentScheduleRequestDTO {
+public class AdminDepartmentScheduleRequestDTO {
     private String title;
     private String content;
     private String colorCode;

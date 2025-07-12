@@ -1,9 +1,9 @@
 package nova.mjs.admin.department_schedule.controller;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.admin.department_schedule.dto.DepartmentScheduleRequestDTO;
-import nova.mjs.admin.department_schedule.dto.DepartmentScheduleResponseDTO;
-import nova.mjs.admin.department_schedule.service.DepartmentScheduleService;
+import nova.mjs.admin.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
+import nova.mjs.admin.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
+import nova.mjs.admin.department_schedule.service.AdminDepartmentScheduleService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
@@ -17,31 +17,31 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/department-schedules")
 @RequiredArgsConstructor
-public class DepartmentScheduleController {
+public class AdminDepartmentScheduleController {
 
-    private final DepartmentScheduleService scheduleService;
+    private final AdminDepartmentScheduleService scheduleService;
 
-    // 학과 일정 등록
+    // 학과 일정 등록 (수정 필요)
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<DepartmentScheduleResponseDTO>> createSchedule(
+    public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> createSchedule(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @RequestBody DepartmentScheduleRequestDTO request
+            @RequestBody AdminDepartmentScheduleRequestDTO request
     ) {
-        DepartmentScheduleResponseDTO result = scheduleService.create(userPrincipal.getUsername(), request);
+        AdminDepartmentScheduleResponseDTO result = scheduleService.create(userPrincipal.getUsername(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(result));
     }
 
-    // 해당 월의 일정 조회
+    // 해당 월의 일정 조회 (수정 필요)
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<DepartmentScheduleResponseDTO>>> getSchedulesByMonth(
+    public ResponseEntity<ApiResponse<List<AdminDepartmentScheduleResponseDTO>>> getSchedulesByMonth(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam int year,
             @RequestParam int month
     ) {
-        List<DepartmentScheduleResponseDTO> schedules =
+        List<AdminDepartmentScheduleResponseDTO> schedules =
                 scheduleService.getSchedulesByMonth(userPrincipal.getUsername(), year, month);
         return ResponseEntity.ok(ApiResponse.success(schedules));
     }

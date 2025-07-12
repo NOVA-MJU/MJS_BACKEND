@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import nova.mjs.department.entity.Department;
 import nova.mjs.util.entity.BaseEntity;
 import java.util.UUID;
 
@@ -30,35 +31,19 @@ public class Admin extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String studentUnionName;
-
-    @Column(nullable = false)
-    private String department;
-
-    @Column(nullable = false)
-    private String logoImageUrl;
-    private String instagramUrl;
-    private String homepageUrl;
-    private String introduction;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Admin.Role role;
+    private Role role;
 
+    @OneToOne(cascade = CascadeType.REMOVE)
+    @JoinColumn(name = "department_id", unique = true)
+    private Department department;
 
     public enum Role {
         ADMIN
     }
 
-    public void updateInfo(String department, String studentUnionName, String homepageUrl, String instagramUrl, String introduction, String logoImageUrl) {
-        this.department = department;
-        this.studentUnionName = studentUnionName;
-        this.homepageUrl = homepageUrl;
-        this.instagramUrl = instagramUrl;
-        this.introduction = introduction;
-        this.logoImageUrl = logoImageUrl;
-    }
+
 
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;

@@ -35,8 +35,8 @@ public class DepartmentScheduleResponseDTO { //list여야 함
             return ScheduleSimpleDTO.builder()
                     .departmentScheduleUuid(schedule.getDepartmentScheduleUuid())
                     .title(schedule.getTitle())
-                    .startDateTime(schedule.getStartDate())
-                    .endDateTime(schedule.getEndDate())
+                    .startDateTime(schedule.getStartDate().atStartOfDay())
+                    .endDateTime(schedule.getEndDate().atStartOfDay())
                     .content(schedule.getContent())
                     .build();
         }

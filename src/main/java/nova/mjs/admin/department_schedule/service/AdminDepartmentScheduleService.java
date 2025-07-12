@@ -6,25 +6,27 @@ import lombok.extern.slf4j.Slf4j;
 import nova.mjs.admin.account.entity.Admin;
 import nova.mjs.admin.account.exception.AdminIdMismatchException;
 import nova.mjs.admin.account.repository.AdminRepository;
-import nova.mjs.admin.department_schedule.dto.DepartmentScheduleRequestDTO;
-import nova.mjs.admin.department_schedule.dto.DepartmentScheduleResponseDTO;
-import nova.mjs.admin.department_schedule.entity.DepartmentSchedule;
-import nova.mjs.admin.department_schedule.repository.DepartmentScheduleRepository;
+import nova.mjs.admin.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
+import nova.mjs.admin.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
+import nova.mjs.admin.department_schedule.repository.AdminDepartmentScheduleRepository;
+import nova.mjs.department.entity.Department;
+import nova.mjs.department.entity.DepartmentSchedule;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class DepartmentScheduleService {
-    private final DepartmentScheduleRepository departmentScheduleRepository;
+public class AdminDepartmentScheduleService {
+    private final AdminDepartmentScheduleRepository adminDepartmentScheduleRepository;
     private final AdminRepository adminRepository;
 
     @Transactional
-    public DepartmentScheduleResponseDTO create(String adminId, DepartmentScheduleRequestDTO request) {
+    public AdminDepartmentScheduleResponseDTO create(String adminId, AdminDepartmentScheduleRequestDTO request) {
 
         Admin admin = adminRepository.findByAdminId(adminId)
                 .orElseThrow(() -> {
@@ -38,27 +40,29 @@ public class DepartmentScheduleService {
                 .colorCode(request.getColorCode())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
-                .admin(admin)
+                .department(admin.getDepartment())
+                .departmentScheduleUuid(UUID.randomUUID())
                 .build();
 
-        DepartmentSchedule saved = departmentScheduleRepository.save(schedule);
+        DepartmentSchedule saved = adminDepartmentScheduleRepository.save(schedule);
         log.info("[학과 일정 등록 완료] id={}, title={}", saved.getId(), saved.getTitle());
 
-        return DepartmentScheduleResponseDTO.fromEntity(saved);
+        return AdminDepartmentScheduleResponseDTO.fromEntity(saved);
     }
 
-    public List<DepartmentScheduleResponseDTO> getSchedulesByMonth(String adminId, int year, int month) {
+    public List<AdminDepartmentScheduleResponseDTO> getSchedulesByMonth(String adminId, int year, int month) {
         Admin admin = adminRepository.findByAdminId(adminId)
                 .orElseThrow(AdminIdMismatchException::new);
 
+        Department department = admin.getDepartment();
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
-        List<DepartmentSchedule> schedules = departmentScheduleRepository
-                .findAllByAdminAndStartDateBetween(admin, start, end);
+        List<DepartmentSchedule> schedules = adminDepartmentScheduleRepository
+                .findAllByDepartmentAndStartDateBetween(department, start, end);
 
         return schedules.stream()
-                .map(DepartmentScheduleResponseDTO::fromEntity)
+                .map(AdminDepartmentScheduleResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 }

@@ -1,10 +1,9 @@
 package nova.mjs.admin.account.DTO;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 import nova.mjs.admin.account.entity.Admin;
+import nova.mjs.department.entity.enumList.College;
 
 @Data
 @Builder
@@ -13,49 +12,47 @@ import nova.mjs.admin.account.entity.Admin;
 public class AdminDTO {
     private String adminId;
     private String password;
-    private String studentUnionName;
-    private String department;
+    private String studentCouncilName;
+    private String departmentName;
+    private String slogan;
     private String logoImageUrl;
     private String instagramUrl;
     private String homepageUrl;
     private String introduction;
+    private College college;
     private Admin.Role role;
 
     /**
-     * Admin 엔티티를 AdminDTO 변환하는 메서드 (응답용)
+     * 초기 관리자 등록
      */
-    public static AdminDTO fromEntity(Admin admin) {
-        return AdminDTO.builder()
-                .adminId(admin.getAdminId())
-                .studentUnionName(admin.getStudentUnionName())
-                .department(admin.getDepartment())
-                .logoImageUrl(admin.getLogoImageUrl())
-                .instagramUrl(admin.getInstagramUrl())
-                .homepageUrl(admin.getHomepageUrl())
-                .introduction(admin.getIntroduction())
-                .role(admin.getRole())
-                .build();
+    @Data
+    public static class AdminIdRequestDTO{
+        private String adminId;
     }
+
     /**
-     * 회원가입 요청을 위한 DTO (내부 클래스)
+     * 사진 업로드 및 회원가입 데이터 저장 DTO
      */
     @Data
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     public static class AdminRequestDTO {
-        private String adminId;
-        private String password;
-        private String studentUnionName;
-        private String department;
-        private String logoImageUrl;
+        @NotBlank(message = "학생회 이름은 비워둘 수 없습니다.")
+        private String studentCouncilName;
+
+        @NotBlank(message = "학과명은 비워둘 수 없습니다.")
+        private String departmentName;
+
+        private String slogan;
         private String instagramUrl;
         private String homepageUrl;
         private String introduction;
+        private College college;
     }
 
     /**
-     * 비밀번호 변경 요청 DTO (내부 클래스)
+     * 비밀번호 변경 요청 DTO
      */
     @Data
     @Builder

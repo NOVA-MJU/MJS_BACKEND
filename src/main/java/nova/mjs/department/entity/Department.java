@@ -56,4 +56,15 @@ public class Department extends BaseEntity {
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DepartmentNotice> notices = new ArrayList<>();
+
+    public void updateInfo(String departmentName, String studentCouncilName, String homepageUrl, String instagramUrl, String description, String studentCouncilLogo, String slogan, College college) {
+        this.departmentName = departmentName;
+        this.studentCouncilName = studentCouncilName;
+        this.homepageUrl = homepageUrl;
+        this.instagramUrl = instagramUrl;
+        this.description = description;
+        this.studentCouncilLogo = studentCouncilLogo;
+        this.slogan = slogan;
+        this.college = college;
+    }
 }
