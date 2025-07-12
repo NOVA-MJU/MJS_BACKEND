@@ -1,185 +1,82 @@
 package nova.mjs.util.s3;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class S3Service {
-
-    private final S3Client s3Client;
-
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
-
-    @Value("${cloud.aws.cloudfront.url}")
-    private String cloudFrontUrl;
-
+/**
+ * S3ServiceImpl 인터페이스
+ *
+ * S3에 대한 공통 기능(업로드, 복사, 삭제, 조회)을 정의합니다.
+ * 다양한 도메인(회원, 커뮤니티, 이벤트 등)에서 재사용할 수 있도록 표준화된 메서드들을 제공합니다.
+ */
+public interface S3Service {
 
     /**
-    listKeys(prefix):	특정 prefix(폴더) 아래 S3 key 목록 조회
-    copyFile(oldKey, newKey):	S3 객체 복사 (임시 → 실제 위치 이동)
-    deleteFile(key):	단일 파일 삭제
-    deleteFolder(prefix):	폴더 내 전체 파일 삭제l
-    moveFolder(from, to):	폴더 전체 이동 (copy + delete)
-    extractKeyFromUrl:	이미지 URL로부터 S3 key 추출
-    */
-
-    public String uploadFile(MultipartFile file, String keyPrefix) throws IOException {
-        // 해시 기반 파일명 생성
-        String extension = getExtension(Objects.requireNonNull(file.getOriginalFilename()));
-        String fileHash = DigestUtils.sha256Hex(file.getInputStream()); // apache commons-codec 필요
-        String finalKey = keyPrefix + fileHash + extension;
-
-        log.info("[S3 업로드 요청] 파일 해시: {}, key: {}", fileHash, finalKey);
-
-        // 이미 존재하는지 확인
-        if (!doesObjectExist(finalKey)) {
-            PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(finalKey)
-                    .contentType(file.getContentType())
-                    .build();
-            s3Client.putObject(request, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-            log.info("[S3 업로드 완료] key: {}", finalKey);
-        } else {
-            log.info("[S3에 동일한 파일 존재. 업로드 생략] key: {}", finalKey);
-        }
-
-        return cloudFrontUrl + "/" + finalKey;
-    }
-
-    public boolean doesObjectExist(String key) {
-        try {
-            HeadObjectRequest headRequest = HeadObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build();
-            s3Client.headObject(headRequest);
-            return true;
-        } catch (S3Exception e) {
-            return false;
-        }
-    }
-
-
-    public String uploadCommunityBoardImage(MultipartFile file, UUID tempFolderUuid) throws IOException {
-        String keyPrefix = "boards/temp/" + tempFolderUuid + "/";
-        return uploadFile(file, keyPrefix);
-    }
-
-    private String getExtension(String fileName) {
-        int dotIndex = fileName.lastIndexOf(".");
-        return dotIndex != -1 ? fileName.substring(dotIndex) : "";
-    }
-
-    // 전체 폴더 이동
-    public void moveFolder(String fromPrefix, String toPrefix) {
-        List<String> keys = listKeys(fromPrefix);
-        for (String oldKey : keys) {
-            String newKey = oldKey.replace(fromPrefix, toPrefix);
-            copyFile(oldKey, newKey);
-            deleteFile(oldKey);
-        }
-    }
-
-
-    public List<String> listKeys(String prefix) {
-        log.info("[S3 Key 목록 조회] prefix: {}", prefix);
-        ListObjectsV2Request request = ListObjectsV2Request.builder()
-                .bucket(bucket)
-                .prefix(prefix)
-                .build();
-        ListObjectsV2Response response = s3Client.listObjectsV2(request);
-        List<String> keys = response.contents().stream()
-                .map(S3Object::key)
-                .toList();
-
-        log.info("[S3 Key 목록 조회 완료] prefix: {}, keys: {}", prefix, keys);
-
-        return keys;
-    }
-
-
-
-    public void copyFile(String oldKey, String newKey) {
-        log.info("[S3 복사 시작] from: {}, to: {}", oldKey, newKey);
-
-        CopyObjectRequest copyRequest = CopyObjectRequest.builder()
-                .sourceBucket(bucket)
-                .sourceKey(oldKey)
-                .destinationBucket(bucket)
-                .destinationKey(newKey)
-                .build();
-
-        s3Client.copyObject(copyRequest);
-
-        log.info("[S3 복사 완료] to: {}", newKey);
-    }
-
-
-    public void deleteFile(String key) {
-        log.info("[S3 삭제 요청] key: {}", key);
-
-        DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-
-        try {
-            s3Client.deleteObject(deleteRequest);
-            log.info("[S3 삭제 완료] key: {}", key);
-        } catch (S3Exception e) {
-            log.error("[S3 삭제 실패] key: {}, message: {}", key, e.awsErrorDetails().errorMessage());
-            throw e;
-        }
-    }
-
-
-    public void deleteFolder(String prefix) {
-        log.info("[S3 폴더 삭제 시작] prefix: {}", prefix);
-        List<String> keys = listKeys(prefix);
-        log.info("[S3 폴더 내 파일 수]: {}", keys.size());
-
-        for (String key : keys) {
-            deleteFile(key);
-        }
-
-        log.info("[S3 폴더 삭제 완료] prefix: {}", prefix);
-    }
-
-
-    public String extractKeyFromUrl(String imageUrl) {
-        log.info("[CloudFront URL → S3 key 변환 요청] imageUrl: {}", imageUrl);
-        if (!imageUrl.startsWith(cloudFrontUrl)) {
-            throw new IllegalArgumentException("Invalid CloudFront URL: " + imageUrl);
-        }
-        String key = imageUrl.replace(cloudFrontUrl + "/", "");
-        log.info("[변환된 S3 key]: {}", key);
-
-        return key;
-    }
-
-    /**
-     * 학과별 로고 사진
+     * S3에 파일을 업로드하고, 업로드된 파일의 CloudFront URL을 반환합니다.
+     *
+     * @param file   업로드할 파일 (MultipartFile)
+     * @param domainType 도메인 타입
+     * @param folderUuid 폴더 식별용 UUID
+     * @return 업로드된 파일의 CloudFront URL (예: https://cdn.example.com/profiles/{UUID}/abc123.png)
+     * @throws IOException 파일 읽기/업로드 중 오류 발생 시
      */
-    public String uploadAdminLogo(MultipartFile file, UUID tempFolderUuid) throws IOException {
-        String keyPrefix = "admin/temp/" + tempFolderUuid + "/";
-        return uploadFile(file, keyPrefix);
-    }
+    String uploadFile(MultipartFile file, S3DomainType domainType, UUID folderUuid) throws IOException;
+
+    /**
+     * 지정한 S3 Key의 객체 존재 여부를 확인합니다.
+     *
+     * @param key S3 객체의 Key
+     * @return 객체가 존재하면 true, 없으면 false
+     */
+    boolean doesObjectExist(String key);
+
+    /**
+     * S3에서 파일을 복사합니다.
+     *
+     * @param oldKey 원본 객체의 Key
+     * @param newKey 복사 대상 객체의 Key
+     */
+    void copyFile(String oldKey, String newKey);
+
+    /**
+     * S3에서 파일을 삭제합니다.
+     *
+     * @param key 삭제할 객체의 Key
+     */
+    void deleteFile(String key);
+
+    /**
+     * 특정 폴더(prefix) 내의 모든 파일을 삭제합니다.
+     *
+     * @param prefix 삭제할 폴더의 prefix
+     */
+    void deleteFolder(String prefix);
+
+    /**
+     * CloudFront URL로부터 S3 Key를 추출합니다.
+     *
+     * @param imageUrl CloudFront 기반의 전체 이미지 URL
+     * @return S3 Key (예: profiles/{UUID}/abc123.png)
+     */
+    String replaceCloudfrontUrlToS3Url(String imageUrl);
+
+    /**
+     * 특정 prefix 하위에 있는 모든 S3 Key 목록을 조회합니다.
+     *
+     * @param prefix 조회할 폴더 prefix
+     * @return 해당 prefix 하위의 Key 목록
+     */
+    List<String> listKeys(String prefix);
+
+    /**
+     * 특정 prefix 하위에 있는 모든 S3 Key 목록을 조회합니다.
+     *
+     * @param fromPrefix 현재 폴더 위치 + 파일명
+     * @param toPrefix 변경하고 싶은 폴더 위치 + 파일 명
+     * @return 해당 prefix 하위의 Key 목록
+     */
+    void moveFolder(String fromPrefix, String toPrefix);
 }
