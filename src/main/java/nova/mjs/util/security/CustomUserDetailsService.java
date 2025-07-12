@@ -2,11 +2,11 @@ package nova.mjs.util.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.member.Member;
-import nova.mjs.member.MemberRepository;
+import nova.mjs.domain.member.entity.Member;
+import nova.mjs.domain.member.repository.MemberRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
-import java.util.Collections;
+
 import java.util.UUID;
 
 @Slf4j
