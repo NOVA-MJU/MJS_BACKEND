@@ -1,9 +1,10 @@
-package nova.mjs.department.DTO;
+package nova.mjs.domain.department.DTO;
 
 import lombok.Builder;
 import lombok.Getter;
-import nova.mjs.department.entity.Department;
-import nova.mjs.member.entity.enumList.College;
+import nova.mjs.domain.department.entity.Department;
+import nova.mjs.domain.member.entity.enumList.College;
+import nova.mjs.domain.member.entity.enumList.DepartmentName;
 
 import java.util.UUID;
 
@@ -11,7 +12,7 @@ import java.util.UUID;
 @Builder
 public class DepartmentInfoDTO {
     private UUID departmentUuid;
-    private String departmentName;
+    private DepartmentName departmentName;
     private String studentCouncilName;
     private String studentCouncilLogo;
     private String slogan;

@@ -1,11 +1,11 @@
-package nova.mjs.department.service;
+package nova.mjs.domain.department.service;
 
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.department.DTO.DepartmentInfoDTO;
-import nova.mjs.department.entity.Department;
-import nova.mjs.department.exception.DepartmentNotFoundException;
-import nova.mjs.department.repository.DepartmentRepository;
+import nova.mjs.domain.department.DTO.DepartmentInfoDTO;
+import nova.mjs.domain.department.entity.Department;
+import nova.mjs.domain.department.exception.DepartmentNotFoundException;
+import nova.mjs.domain.department.repository.DepartmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,6 +1,6 @@
-package nova.mjs.department.repository;
+package nova.mjs.domain.department.repository;
 
-import nova.mjs.department.entity.DepartmentSchedule;
+import nova.mjs.domain.department.entity.DepartmentSchedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

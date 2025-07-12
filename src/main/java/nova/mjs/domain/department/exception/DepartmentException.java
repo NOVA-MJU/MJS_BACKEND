@@ -1,4 +1,4 @@
-package nova.mjs.department.exception;
+package nova.mjs.domain.department.exception;
 
 import nova.mjs.util.exception.BusinessBaseException;
 import nova.mjs.util.exception.ErrorCode;

@@ -1,4 +1,4 @@
-package nova.mjs.member.entity.enumList;
+package nova.mjs.domain.member.entity.enumList;
 
 public enum DepartmentName {
 
@@ -47,5 +47,17 @@ public enum DepartmentName {
     HONOR,                           //아너칼리지 <단과대> 자유전공학부
 
     OTHER;
+
+    /**
+     * 대소문자 관계없이 문자열로부터 enum 상수를 변환
+     * 예: "english_literature", "ENGLISH_LITERATURE" 모두 허용
+     */
+    public static DepartmentName fromString(String value) {
+        try {
+            return DepartmentName.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("Invalid department name: " + value);
+        }
+    }
 
 }

@@ -1,7 +1,7 @@
 package nova.mjs.admin.department_schedule.repository;
 
-import nova.mjs.department.entity.Department;
-import nova.mjs.department.entity.DepartmentSchedule;
+import nova.mjs.domain.department.entity.Department;
+import nova.mjs.domain.department.entity.DepartmentSchedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;

@@ -1,9 +1,9 @@
-package nova.mjs.department.controller;
+package nova.mjs.domain.department.controller;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.department.DTO.DepartmentScheduleResponseDTO;
-import nova.mjs.department.service.DepartmentScheduleService;
-import nova.mjs.department.service.DepartmentService;
+import nova.mjs.domain.department.DTO.DepartmentScheduleResponseDTO;
+import nova.mjs.domain.department.service.DepartmentScheduleService;
+import nova.mjs.domain.department.service.DepartmentService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

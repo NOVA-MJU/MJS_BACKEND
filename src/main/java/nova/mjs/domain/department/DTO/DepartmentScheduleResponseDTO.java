@@ -1,10 +1,9 @@
-package nova.mjs.department.DTO;
+package nova.mjs.domain.department.DTO;
 
 import lombok.Builder;
 import lombok.Getter;
-import nova.mjs.department.entity.Department;
-import nova.mjs.department.entity.DepartmentSchedule;
-import nova.mjs.department.repository.DepartmentScheduleRepository;
+import nova.mjs.domain.department.entity.Department;
+import nova.mjs.domain.department.entity.DepartmentSchedule;
 
 import java.time.LocalDateTime;
 import java.util.List;

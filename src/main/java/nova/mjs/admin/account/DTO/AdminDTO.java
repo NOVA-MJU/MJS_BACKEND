@@ -2,8 +2,7 @@ package nova.mjs.admin.account.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import nova.mjs.admin.account.entity.Admin;
-import nova.mjs.department.entity.enumList.College;
+import nova.mjs.domain.member.entity.enumList.College;
 
 @Data
 @Builder
@@ -20,7 +19,6 @@ public class AdminDTO {
     private String homepageUrl;
     private String introduction;
     private College college;
-    private Admin.Role role;
 
     /**
      * 초기 관리자 등록
