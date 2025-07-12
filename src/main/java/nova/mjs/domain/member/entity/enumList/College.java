@@ -1,4 +1,4 @@
-package nova.mjs.member.entity.enumList;
+package nova.mjs.domain.member.entity.enumList;
 
 public enum College {
     HUMANITIES, //인문대학
