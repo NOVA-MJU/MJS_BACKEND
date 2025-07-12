@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nova.mjs.member.entity.enumList.College;
+import nova.mjs.member.entity.enumList.Department;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -22,7 +24,8 @@ public class MemberDTO {
     private String email;
     private String gender;
     private String nickname;
-    private String department;
+    private Department department;
+    private College college;
     private Integer studentNumber;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -39,6 +42,7 @@ public class MemberDTO {
                 .gender(String.valueOf(member.getGender()))
                 .nickname(member.getNickname())
                 .department(member.getDepartment())
+                .college(member.getCollege())
                 .studentNumber(member.getStudentNumber())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
@@ -59,7 +63,8 @@ public class MemberDTO {
         private String email;
         private String gender;
         private String nickname;
-        private String department;
+        private Department department;
+        private College college;
         private Integer studentNumber;
     }
 

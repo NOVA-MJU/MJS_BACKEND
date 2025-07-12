@@ -2,8 +2,7 @@ package nova.mjs.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.department.DTO.DepartmentInfoDTO;
-import nova.mjs.department.entity.enumList.College;
+import nova.mjs.member.entity.enumList.College;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.util.ArrayList;

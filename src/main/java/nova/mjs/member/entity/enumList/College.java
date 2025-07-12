@@ -1,4 +1,4 @@
-package nova.mjs.department.entity.enumList;
+package nova.mjs.member.entity.enumList;
 
 public enum College {
     HUMANITIES, //인문대학
@@ -8,6 +8,5 @@ public enum College {
     AI_SOFTWARE, //인공지능-소프트웨어융합대학
     FUTURE_CONVERGENCE, //미래융합대학
     HONOR, //아너칼리지
-    BANGMOK, //방목기초교육대학
     OTHER
 }
