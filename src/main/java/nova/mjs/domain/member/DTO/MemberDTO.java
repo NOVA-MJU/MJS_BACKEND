@@ -20,6 +20,7 @@ public class MemberDTO {
     private UUID uuid;
     private String name;
     private String email;
+    private String profileImageUrl;
     private String gender;
     private String nickname;
     private DepartmentName departmentName;
@@ -54,15 +55,24 @@ public class MemberDTO {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class MemberRequestDTO {
-        private String name;
-        private String password;
-        private String email;
-        private String gender;
-        private String nickname;
-        private DepartmentName departmentName;
+    public static class MemberRegistrationRequestDTO {
+        private String name; // 실명
+        private String password; // 비밀번호
+        private String email; // 이메일 아이디
+        private String nickname; // 닉네임
+        private String gender; // 성별
+        private DepartmentName departmentName;// 소속 학과
         private College college;
         private Integer studentNumber;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StudentCouncilRegistrationRequestDTO {
+        private String email; // 이메일 아이디
+        private String contactEmail;
     }
 
     /**
