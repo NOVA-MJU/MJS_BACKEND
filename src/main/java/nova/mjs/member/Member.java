@@ -2,6 +2,8 @@ package nova.mjs.member;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.member.entity.enumList.College;
+import nova.mjs.member.entity.enumList.DepartmentName;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.util.UUID;
@@ -39,7 +41,15 @@ public class Member extends BaseEntity {
     private Gender gender;
 
     private String nickname;
-    private String department;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "department_name", nullable = false)
+    private DepartmentName departmentName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private College college;
+
     private Integer studentNumber;
 
     public enum Gender {
@@ -66,19 +76,18 @@ public class Member extends BaseEntity {
                 .password(encodePassword)
                 .gender(Gender.fromString(memberDTO.getGender())) // 대소문자 변환
                 .nickname(memberDTO.getNickname())
-                .department(memberDTO.getDepartment())
+                .departmentName(memberDTO.getDepartmentName())
+                .college(memberDTO.getCollege())
                 .studentNumber(memberDTO.getStudentNumber())
                 .role(Role.USER)
                 .build();
     }
-
-
-
     public void update(MemberDTO memberDTO) {
         this.name = getOrDefault(memberDTO.getName(), this.name);
         this.email = getOrDefault(memberDTO.getEmail(), this.email);
         this.nickname = getOrDefault(memberDTO.getNickname(), this.nickname);
-        this.department = getOrDefault(memberDTO.getDepartment(), this.department);
+        this.departmentName = getOrDefault(memberDTO.getDepartmentName(), this.departmentName);
+        this.college = getOrDefault(memberDTO.getCollege(), this.college);
         this.studentNumber = getOrDefault(memberDTO.getStudentNumber(), this.studentNumber);
         this.gender = memberDTO.getGender() != null ? Gender.fromString(memberDTO.getGender()) : this.gender;
     }

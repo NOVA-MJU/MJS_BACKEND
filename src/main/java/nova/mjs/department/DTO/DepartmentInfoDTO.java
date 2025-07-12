@@ -3,7 +3,7 @@ package nova.mjs.department.DTO;
 import lombok.Builder;
 import lombok.Getter;
 import nova.mjs.department.entity.Department;
-import nova.mjs.department.entity.enumList.College;
+import nova.mjs.member.entity.enumList.College;
 
 import java.util.UUID;
 
