@@ -76,8 +76,8 @@ public class Member extends BaseEntity {
                 .password(encodePassword)
                 .gender(Gender.fromString(memberDTO.getGender())) // 대소문자 변환
                 .nickname(memberDTO.getNickname())
-                .department(memberDTO.getDepartment())
-                .college(memberDTO.getCollege())
+                .department(Department.fromString(memberDTO.getDepartment())) // 대소문자 변환
+                .college(College.fromString(memberDTO.getCollege())) // 대소문자 변환
                 .studentNumber(memberDTO.getStudentNumber())
                 .role(Role.USER)
                 .build();

@@ -63,8 +63,8 @@ public class MemberDTO {
         private String email;
         private String gender;
         private String nickname;
-        private Department department;
-        private College college;
+        private String department;
+        private String college;
         private Integer studentNumber;
     }
 

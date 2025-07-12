@@ -8,5 +8,13 @@ public enum College {
     AI_SOFTWARE, //인공지능-소프트웨어융합대학
     FUTURE_CONVERGENCE, //미래융합대학
     HONOR, //아너칼리지
-    OTHER
+    OTHER;
+
+    public static College fromString(String value) {
+        try {
+            return College.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("Invalid College value: " + value);
+        }
+    }
 }
