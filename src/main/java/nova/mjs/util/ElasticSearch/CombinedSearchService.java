@@ -1,12 +1,12 @@
 package nova.mjs.util.ElasticSearch;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.community.entity.CommunityBoard;
-import nova.mjs.domain.community.repository.CommunityBoardRepository;
-import nova.mjs.domain.news.entity.News;
-import nova.mjs.domain.news.repository.NewsRepository;
-import nova.mjs.domain.notice.entity.Notice;
-import nova.mjs.domain.notice.repository.NoticeRepository;
+import nova.mjs.community.entity.CommunityBoard;
+import nova.mjs.community.repository.CommunityBoardRepository;
+import nova.mjs.news.entity.News;
+import nova.mjs.news.repository.NewsRepository;
+import nova.mjs.notice.entity.Notice;
+import nova.mjs.notice.repository.NoticeRepository;
 import nova.mjs.util.ElasticSearch.Document.CommunityDocument;
 import nova.mjs.util.ElasticSearch.Document.NewsDocument;
 import nova.mjs.util.ElasticSearch.Document.NoticeDocument;

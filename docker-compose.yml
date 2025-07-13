@@ -1,19 +1,20 @@
-version: '3.8'   # ← 이 줄은 최근 Compose V2에선 경고만 뜨니 삭제해도 무방
+version: '3.8'
 
 services:
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
-    # container_name: elasticsearch   ← 삭제
+    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - bootstrap.memory_lock=true
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m # 메모리 사용 512로 국한
     ports:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
-    ulimits:
+    ulimits: # 스왑메모리 사용 못하게 방지
       memlock:
         soft: -1
         hard: -1
@@ -29,7 +30,7 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
-    # container_name: kibana         ← 삭제
+    container_name: kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
@@ -39,7 +40,7 @@ services:
 
   redis:
     image: redis:7.2
-    # container_name: redis          ← 삭제
+    container_name: redis
     ports:
       - "6379:6379"
 

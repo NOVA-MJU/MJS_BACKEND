@@ -4,7 +4,7 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.notice.entity.Notice;
+import nova.mjs.notice.entity.Notice;
 import nova.mjs.util.ElasticSearch.Document.NoticeDocument;
 import nova.mjs.util.ElasticSearch.EventSynchronization.EntityIndexEvent;
 import nova.mjs.util.ElasticSearch.EventSynchronization.SearchIndexPublisher;
