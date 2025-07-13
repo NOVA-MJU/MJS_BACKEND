@@ -2,7 +2,7 @@ package nova.mjs.domain.member.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.department.entity.enumList.College;
+import nova.mjs.admin.account.entity.StudentCouncilAdmin;
 import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
@@ -33,6 +33,12 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column
+    private String profileImageUrl;
+
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
+    private StudentCouncilAdmin studentCouncilProfile; // 있는 경우만 연결됨
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -48,11 +54,7 @@ public class Member extends BaseEntity {
     @Column(name = "department_name", nullable = false)
     private DepartmentName departmentName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private College college;
-
-    private Integer studentNumber;
+    private String studentNumber;
 
     public enum Gender {
         MALE, FEMALE, OTHERS;
@@ -70,7 +72,7 @@ public class Member extends BaseEntity {
         USER, ADMIN, DEVELOPER
     }
 
-    public static Member create(MemberDTO.MemberRequestDTO memberDTO, String encodePassword) {
+    public static Member create(MemberDTO.MemberRegistrationRequestDTO memberDTO, String encodePassword) {
         return Member.builder()
                 .uuid(UUID.randomUUID()) // UUID 자동 생성
                 .name(memberDTO.getName())
@@ -78,19 +80,30 @@ public class Member extends BaseEntity {
                 .password(encodePassword)
                 .gender(Gender.fromString(memberDTO.getGender())) // 대소문자 변환
                 .nickname(memberDTO.getNickname())
+                .profileImageUrl(memberDTO.getProfileImageUrl())
                 .departmentName(memberDTO.getDepartmentName())
-                .college(memberDTO.getCollege())
                 .studentNumber(memberDTO.getStudentNumber())
                 .role(Role.USER)
                 .build();
     }
-    public void update(MemberDTO memberDTO) {
+
+    // TODO
+    public static Member createStudentCouncilInitProfile(MemberDTO.StudentCouncilRegistrationRequestDTO requestDTO) {
+        // 초기 관리자 회원가입
+
+        return Member.builder()
+                .uuid(UUID.randomUUID())
+                .email(requestDTO.getEmail())
+                .role(Role.ADMIN)
+                .build();
+    }
+
+    public void update(MemberDTO.MemberUpdateRequestDTO memberDTO) {
         this.name = getOrDefault(memberDTO.getName(), this.name);
-        this.email = getOrDefault(memberDTO.getEmail(), this.email);
         this.nickname = getOrDefault(memberDTO.getNickname(), this.nickname);
         this.departmentName = getOrDefault(memberDTO.getDepartmentName(), this.departmentName);
-        this.college = getOrDefault(memberDTO.getCollege(), this.college);
         this.studentNumber = getOrDefault(memberDTO.getStudentNumber(), this.studentNumber);
+        this.profileImageUrl = getOrDefault(memberDTO.getProfileImageUrl(), this.profileImageUrl);
         this.gender = memberDTO.getGender() != null ? Gender.fromString(memberDTO.getGender()) : this.gender;
     }
 

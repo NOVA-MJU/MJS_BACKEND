@@ -43,14 +43,14 @@ public class CommunityBoard extends BaseEntity {
 
     @Lob
     @Column(columnDefinition = "TEXT")
-    private String content; // 내용
+    private String content; // 내용 + 이미지 url 함께 구성되어있어
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member author; // 작성자
 
     @Column(columnDefinition = "TEXT")
-    private String previewContent; // 댓글 미리보기
+    private String previewContent; // 게시글 미리보기
 
 
     @ElementCollection

@@ -1,11 +1,12 @@
 package nova.mjs.domain.member.DTO;
 
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.member.entity.Member;
-import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
 
 import java.time.LocalDateTime;
@@ -20,11 +21,11 @@ public class MemberDTO {
     private UUID uuid;
     private String name;
     private String email;
+    private String profileImageUrl;
     private String gender;
     private String nickname;
     private DepartmentName departmentName;
-    private College college;
-    private Integer studentNumber;
+    private String studentNumber;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Member.Role role;
@@ -40,7 +41,6 @@ public class MemberDTO {
                 .gender(String.valueOf(member.getGender()))
                 .nickname(member.getNickname())
                 .departmentName(member.getDepartmentName())
-                .college(member.getCollege())
                 .studentNumber(member.getStudentNumber())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
@@ -54,16 +54,55 @@ public class MemberDTO {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class MemberRequestDTO {
+    public static class MemberRegistrationRequestDTO {
+        @NotBlank(message = "이름은 필수입니다.")
         private String name;
-        private String password;
+
+        @NotBlank(message = "이메일은 필수입니다.")
+        @Email(message = "올바른 이메일 형식이 아닙니다.")
         private String email;
-        private String gender;
+
+        @NotBlank(message = "비밀번호는 필수입니다.")
+        private String password;
+
+        @NotBlank(message = "닉네임은 필수입니다.")
         private String nickname;
+
+        @NotNull(message = "성별은 필수입니다.")
+        private String gender;
+
+        @NotNull(message = "학과 정보는 필수입니다.")
         private DepartmentName departmentName;
-        private College college;
-        private Integer studentNumber;
+
+        @Pattern(regexp = "\\d{8}", message = "학번은 정확히 8자리 숫자여야 합니다.")
+        @NotNull(message = "학번은 필수입니다.")
+        private String studentNumber;
+
+        private String profileImageUrl;
     }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StudentCouncilRegistrationRequestDTO {
+        private String email; // 이메일 아이디
+        private String contactEmail;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MemberUpdateRequestDTO {
+        private String name;
+        private String nickname;
+        private String gender; // "MALE", "FEMALE", "OTHERS"
+        private DepartmentName departmentName;
+        private String studentNumber;
+        private String profileImageUrl;
+    }
+
 
     /**
      * 비밀번호 변경 요청 DTO (내부 클래스)

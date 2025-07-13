@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import nova.mjs.config.aop.LogExecutionTime;
 import nova.mjs.domain.community.DTO.CommunityBoardRequest;
 import nova.mjs.domain.community.DTO.CommunityBoardResponse;
-import nova.mjs.domain.community.service.CommunityBoardService;
+import nova.mjs.domain.community.service.CommunityBoardServiceImpl;
 import nova.mjs.util.response.ApiResponse;
-import nova.mjs.util.s3.S3Service;
+import nova.mjs.util.s3.S3ServiceImpl;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,8 +27,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CommunityBoardController {
 
-    private final CommunityBoardService communityBoardService;
-    private final S3Service s3Service;
+    private final CommunityBoardServiceImpl communityBoardServiceImpl;
+    private final S3ServiceImpl s3ServiceImpl;
 
     private static final List<String> ALLOWED_SORT_FIELDS = Arrays.asList("createdAt", "title", "likeCount", "viewCount");
 
@@ -66,7 +66,7 @@ public class CommunityBoardController {
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-        Page<CommunityBoardResponse.SummaryDTO> boards = communityBoardService.getBoards(pageable, email);
+        Page<CommunityBoardResponse.SummaryDTO> boards = communityBoardServiceImpl.getBoards(pageable, email);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -84,7 +84,7 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardService.getBoardDetail(uuid, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.getBoardDetail(uuid, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board));
@@ -101,7 +101,7 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardService.createBoard(request, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.createBoard(request, email);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board));
@@ -119,7 +119,7 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardService.updateBoard(uuid, request, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.updateBoard(uuid, request, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board));
@@ -136,7 +136,7 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        communityBoardService.deleteBoard(uuid, email);
+        communityBoardServiceImpl.deleteBoard(uuid, email);
 
         return ResponseEntity.noContent().build();
     }

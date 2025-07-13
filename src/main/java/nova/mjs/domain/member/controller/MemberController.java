@@ -1,10 +1,12 @@
 package nova.mjs.domain.member.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.domain.member.entity.Member;
-import nova.mjs.domain.member.service.MemberService;
+import nova.mjs.domain.member.service.command.MemberCommandService;
+import nova.mjs.domain.member.service.query.MemberQueryService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.AuthDTO;
 import nova.mjs.util.security.UserPrincipal;
@@ -15,7 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @Slf4j
@@ -23,7 +28,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class MemberController {
 
-    private final MemberService memberService;
+    private final MemberQueryService memberQueryService;
+    private final MemberCommandService memberCommandService;
 
     // 1. GET 페이지네이션
     @GetMapping
@@ -32,7 +38,7 @@ public class MemberController {
             @RequestParam(defaultValue = "10") int size // 기본 페이지 크기
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<MemberDTO> boards = memberService.getAllMember(pageable);
+        Page<MemberDTO> boards = memberQueryService.getAllMember(pageable);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(boards));
@@ -43,44 +49,64 @@ public class MemberController {
     @GetMapping("info")
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<MemberDTO>> getMember(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        MemberDTO member = memberService.getMemberByEmailId(userPrincipal.getUsername());
+        MemberDTO member = memberQueryService.getMemberDtoByEmailId(userPrincipal.getUsername());
         return ResponseEntity.ok(ApiResponse.success(member));
     }
 
+    /** ---------------------------------------------------------------
+     * 회원가입에 필요한 로직
+     * 1. 이메일 중복 검증, 2. 이메일 인증/검증(EmailService)
+     * 3. 프로필 이미지 생성, 4. 닉네임 중복 체크, 5. 회원정보 생성
+     * ----------------------------------------------------------------- */
+
     // 회원 정보 생성 (회원 가입)
     @PostMapping
-    public ResponseEntity<ApiResponse<?>> registerMember(@RequestBody MemberDTO.MemberRequestDTO requestDTO) {
-        AuthDTO.LoginResponseDTO newMember = memberService.registerMember(requestDTO);
+    public ResponseEntity<ApiResponse<?>> registerMember(@Validated @RequestBody MemberDTO.MemberRegistrationRequestDTO requestDTO) {
+        // 사용자로부터 입력받은 file을 s3 이미지로 저장한 후 url을 update 메서드로 둘것.
+        AuthDTO.LoginResponseDTO newMember = memberCommandService.registerMember(requestDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(newMember));
     }
 
-    // 일반 정보 수정
+    /**
+     * 프로필 이미지 생성: 프로필 이미지 업로드 후 CloudFront URL 반환
+     *
+     * @param file MultipartFile
+     * @return CloudFront로 접근 가능한 이미지 URL
+     */
+    @PostMapping("/profile")
+    public ResponseEntity<ApiResponse<String>> uploadProfileImage(@RequestParam("file") MultipartFile file) {
+        log.info("프로필 이미지 업로드 요청: {}", file.getOriginalFilename());
+        String imageUrl = memberCommandService.uploadProfileImage(file);
+        return ResponseEntity.ok(ApiResponse.success(imageUrl));
+    }
+
+    // 회원 정보 수정
     @PatchMapping("/info")
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
     public ResponseEntity<ApiResponse<MemberDTO>> updateMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
-                                                               @RequestBody MemberDTO requestDTO) {
-        Member updatedMember = memberService.updateMember(userPrincipal.getUsername(), requestDTO);
+                                                               @RequestBody MemberDTO.MemberUpdateRequestDTO requestDTO) {
+        Member updatedMember = memberCommandService.updateMember(userPrincipal.getUsername(), requestDTO);
         return ResponseEntity.ok(ApiResponse.success(MemberDTO.fromEntity(updatedMember)));
     }
 
     // 비밀번호 변경
     @PatchMapping("/info/password")
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
-    public ResponseEntity<ApiResponse<Void>> updatePassword(@AuthenticationPrincipal UserPrincipal userPrincipal,
-                                                            @RequestBody MemberDTO.PasswordRequestDTO request) {
-        memberService.updatePassword(userPrincipal.getUsername(), request);
-        return ResponseEntity.ok(ApiResponse.success(null));
+    public ResponseEntity<ApiResponse<String>> updatePassword(@AuthenticationPrincipal UserPrincipal userPrincipal,
+                                                              @RequestBody MemberDTO.PasswordRequestDTO request) {
+        memberCommandService.updatePassword(userPrincipal.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.success("비밀번호 변경이 완료되었습니다."));
     }
 
     // 회원 정보 삭제
     @DeleteMapping("/info")
     @PreAuthorize("isAuthenticated() and (#userPrincipal.email == principal.username or hasRole('ADMIN'))")
-    public ResponseEntity<ApiResponse<Void>> deleteMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
+    public ResponseEntity<ApiResponse<String>> deleteMember(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                           @RequestBody MemberDTO.PasswordRequestDTO password) {
-        memberService.deleteMember(userPrincipal.getUsername(), password);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        memberCommandService.deleteMember(userPrincipal.getUsername(), password);
+        return ResponseEntity.ok(ApiResponse.success("회원 정보가 삭제되었습니다."));
     }
 
 }
