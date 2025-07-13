@@ -1,10 +1,9 @@
 package nova.mjs.domain.community.controller;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.community.service.CommunityBoardImageService;
-import nova.mjs.domain.community.service.CommunityBoardServiceImpl;
+import nova.mjs.domain.community.service.CommunityBoardService;
 import nova.mjs.util.response.ApiResponse;
-import nova.mjs.util.s3.S3ServiceImpl;
+import nova.mjs.util.s3.S3Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,9 +19,8 @@ public class CommunityBoardImageController {
     @Value("${s3.path.custom.board-temp}")
     private String boardTempPrefix;
 
-    private final CommunityBoardServiceImpl communityBoardServiceImpl;
-    private final CommunityBoardImageService communityBoardImageService;
-    private final S3ServiceImpl s3ServiceImpl;
+    private final CommunityBoardService communityBoardService;
+    private final S3Service s3Service;
 
     // 1. 게시글 작성 시 사용할 tempUUID  발급
     @GetMapping("/temp-uuid")
@@ -46,9 +44,9 @@ public class CommunityBoardImageController {
     @PostMapping("/images")
     public ResponseEntity<ApiResponse<String>> uploadImage(
             @RequestParam MultipartFile file,
-            @RequestParam UUID folderUUID) throws IOException {
+            @RequestParam UUID tempFolderUuid) throws IOException {
 
-        String imageUrl = communityBoardImageService.uploadCommunityBoardImage(file, folderUUID);
+        String imageUrl = s3Service.uploadCommunityBoardImage(file, tempFolderUuid);
 
         return ResponseEntity.ok(ApiResponse.success(imageUrl));
     }
@@ -58,7 +56,7 @@ public class CommunityBoardImageController {
     @DeleteMapping("/images")
     public ResponseEntity<Void> deleteTempImages(@RequestParam() UUID tempFolderUuid) {
         String prefix = boardTempPrefix + tempFolderUuid + "/";
-        s3ServiceImpl.deleteFolder(prefix);
+        s3Service.deleteFolder(prefix);
         return ResponseEntity.noContent().build();
     }
 }

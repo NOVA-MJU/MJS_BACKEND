@@ -2,7 +2,7 @@ package nova.mjs.domain.member.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.admin.account.entity.StudentCouncilAdmin;
+import nova.mjs.department.entity.enumList.College;
 import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
@@ -32,12 +32,6 @@ public class Member extends BaseEntity {
 
     @Column(nullable = false)
     private String name;
-
-    @Column
-    private String profileImageUrl;
-
-    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
-    private StudentCouncilAdmin studentCouncilProfile; // 있는 경우만 연결됨
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -76,7 +70,7 @@ public class Member extends BaseEntity {
         USER, ADMIN, DEVELOPER
     }
 
-    public static Member create(MemberDTO.MemberRegistrationRequestDTO memberDTO, String encodePassword) {
+    public static Member create(MemberDTO.MemberRequestDTO memberDTO, String encodePassword) {
         return Member.builder()
                 .uuid(UUID.randomUUID()) // UUID 자동 생성
                 .name(memberDTO.getName())
@@ -90,17 +84,6 @@ public class Member extends BaseEntity {
                 .role(Role.USER)
                 .build();
     }
-
-    public static Member createStudentCouncilInitProfile(MemberDTO.StudentCouncilRegistrationRequestDTO requestDTO) {
-        // 초기 관리자 회원가입
-
-        return Member.builder()
-                .uuid(UUID.randomUUID())
-                .email(requestDTO.getEmail())
-                .role(Role.ADMIN)
-                .build();
-    }
-
     public void update(MemberDTO memberDTO) {
         this.name = getOrDefault(memberDTO.getName(), this.name);
         this.email = getOrDefault(memberDTO.getEmail(), this.email);

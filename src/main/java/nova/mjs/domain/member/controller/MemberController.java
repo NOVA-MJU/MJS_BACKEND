@@ -49,9 +49,7 @@ public class MemberController {
 
     // 회원 정보 생성 (회원 가입)
     @PostMapping
-    public ResponseEntity<ApiResponse<?>> registerMember(@RequestBody MemberDTO.MemberRegistrationRequestDTO requestDTO) {
-        // 사용자로부터 입력받은 file을 s3 이미지로 저장한 후 url을 update 메서드로 둘것.
-
+    public ResponseEntity<ApiResponse<?>> registerMember(@RequestBody MemberDTO.MemberRequestDTO requestDTO) {
         AuthDTO.LoginResponseDTO newMember = memberService.registerMember(requestDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
