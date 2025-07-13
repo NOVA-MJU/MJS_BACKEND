@@ -52,11 +52,17 @@ public enum ErrorCode {
     //명대신문 관련 에러
     NEWS_NOT_FOUND(HttpStatus.NOT_FOUND, "NEWS_NOT_FOUND", "[MJS] 요청한 기사 내용을 찾을 수 없습니다."),
 
+    // S3 이미지 증록 에러
+    S3_IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_IMAGE_UPLOAD_FAILED", "[MJS] S3 이미지 업로드에서 에러가 발생하였습니다."),
+    
+    
     // 회원 에러(M)
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND,"MEMBER_NOT_FOUND" ,"[MJS] 회원 정보를 찾을 수 없습니다." ),
     PASSWORD_IS_INVALID(HttpStatus.BAD_REQUEST, "PASSWORD_IS_INVALID", "[MJS] 비밀번호가 잘못되었습니다" ),
     SAME_PASSWORD_NOT_ALLOWED(HttpStatus.BAD_REQUEST,"SAME_PASSWORD_NOT_ALLOWED" , "[MJS] 이전과 동일한 비밀번호로는 변경할 수 없습니다."),
     DUPLICATE_EMAIL_EXCEPTION(HttpStatus.BAD_REQUEST,"DUPLICATE_EMAIL_EXCEPTION", "[MJS] 이미 존재하는 이메일입니다." ),
+    DUPLICATE_STUDENT_NUMBER_EXCEPTION(HttpStatus.BAD_REQUEST,"DUPLICATE_STUDENT_NUMBER_EXCEPTION", "[MJS] 이미 존재하는 학번입니다." ),
+    INVALID_STUDENT_NUMBER_EXCEPTION(HttpStatus.BAD_REQUEST,"INVALID_STUDENT_NUMBER_EXCEPTION", "[MJS] 요청하신 학번이 8자리 숫자로 이루어져있지 않습니다." ),
     DUPLICATE_NICKNAME_EXCEPTION(HttpStatus.BAD_REQUEST,"DUPLICATE_NICKNAME_EXCEPTION", "[MJS] 이미 존재하는 닉네임입니다." ),
 
     // 날씨 에러

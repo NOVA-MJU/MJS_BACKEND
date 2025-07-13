@@ -18,9 +18,14 @@ import org.springframework.data.domain.Pageable;
 
 public interface CommunityBoardService {
 
+    // 게시판 페이지네이션 조회
     Page<CommunityBoardResponse.SummaryDTO> getBoards(Pageable pageable, String email);
+    // 게시판 상세 조회
     CommunityBoardResponse.DetailDTO getBoardDetail(UUID uuid, String email);
+    // 게시판 생성
     CommunityBoardResponse.DetailDTO createBoard(CommunityBoardRequest request, String emailId);
+    // 게시판 업데이트
     CommunityBoardResponse.DetailDTO updateBoard(UUID uuid, CommunityBoardRequest request, String email);
+    // 게시판 삭제
     void deleteBoard(UUID uuid, String email);
 }

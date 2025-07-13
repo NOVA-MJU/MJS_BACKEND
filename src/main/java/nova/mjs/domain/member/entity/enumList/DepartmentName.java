@@ -40,6 +40,8 @@ public enum DepartmentName {
     AI_SOFTWARE,                     //인소대 <단과대>
     CONVERGENT_SOFTWARE_STUDIES,     // 융합소프트웨어학부
     DIGITAL_CONTENT_DESIGN_STUDIES,  // 디지털콘텐츠디자인학과
+    DATA_SCIENCE,                    // 데이터사이언스학과
+    APPLICATION_SOFTWARE,            // 응용소프트웨어학과
 
 
     FUTURE_CONVERGENCE,              //미융대 <단과대>

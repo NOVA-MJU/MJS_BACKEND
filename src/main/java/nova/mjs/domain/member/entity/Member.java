@@ -54,11 +54,7 @@ public class Member extends BaseEntity {
     @Column(name = "department_name", nullable = false)
     private DepartmentName departmentName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private College college;
-
-    private Integer studentNumber;
+    private String studentNumber;
 
     public enum Gender {
         MALE, FEMALE, OTHERS;
@@ -84,13 +80,14 @@ public class Member extends BaseEntity {
                 .password(encodePassword)
                 .gender(Gender.fromString(memberDTO.getGender())) // 대소문자 변환
                 .nickname(memberDTO.getNickname())
+                .profileImageUrl(memberDTO.getProfileImageUrl())
                 .departmentName(memberDTO.getDepartmentName())
-                .college(memberDTO.getCollege())
                 .studentNumber(memberDTO.getStudentNumber())
                 .role(Role.USER)
                 .build();
     }
 
+    // TODO
     public static Member createStudentCouncilInitProfile(MemberDTO.StudentCouncilRegistrationRequestDTO requestDTO) {
         // 초기 관리자 회원가입
 
@@ -101,13 +98,12 @@ public class Member extends BaseEntity {
                 .build();
     }
 
-    public void update(MemberDTO memberDTO) {
+    public void update(MemberDTO.MemberUpdateRequestDTO memberDTO) {
         this.name = getOrDefault(memberDTO.getName(), this.name);
-        this.email = getOrDefault(memberDTO.getEmail(), this.email);
         this.nickname = getOrDefault(memberDTO.getNickname(), this.nickname);
         this.departmentName = getOrDefault(memberDTO.getDepartmentName(), this.departmentName);
-        this.college = getOrDefault(memberDTO.getCollege(), this.college);
         this.studentNumber = getOrDefault(memberDTO.getStudentNumber(), this.studentNumber);
+        this.profileImageUrl = getOrDefault(memberDTO.getProfileImageUrl(), this.profileImageUrl);
         this.gender = memberDTO.getGender() != null ? Gender.fromString(memberDTO.getGender()) : this.gender;
     }
 
