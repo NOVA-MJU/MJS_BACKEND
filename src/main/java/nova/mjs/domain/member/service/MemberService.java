@@ -53,7 +53,7 @@ public class MemberService {
 
     // 회원 가입
     @Transactional
-    public AuthDTO.LoginResponseDTO registerMember(MemberDTO.MemberRegistrationRequestDTO requestDTO) {
+    public AuthDTO.LoginResponseDTO registerMember(MemberDTO.MemberRequestDTO requestDTO) {
         validateEmail(requestDTO.getEmail());
 
         if (requestDTO.getNickname() == null) {

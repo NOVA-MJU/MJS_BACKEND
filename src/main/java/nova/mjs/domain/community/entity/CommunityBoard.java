@@ -50,7 +50,7 @@ public class CommunityBoard extends BaseEntity {
     private Member author; // 작성자
 
     @Column(columnDefinition = "TEXT")
-    private String previewContent; // 게시글 미리보기
+    private String previewContent; // 댓글 미리보기
 
 
     @ElementCollection

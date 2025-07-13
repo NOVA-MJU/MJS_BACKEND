@@ -21,7 +21,7 @@ import io.jsonwebtoken.security.SignatureException;
 @Slf4j
 public class JwtUtil {
     private final Key secretKey;
-    private final long accessTokenExpiration = 60 * 1000L * 30 * 48 * 3000;
+    private final long accessTokenExpiration = 60 * 1000L * 30;
     private final long refreshTokenExpiration;
 
     public JwtUtil(
