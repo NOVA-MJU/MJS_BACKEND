@@ -9,10 +9,10 @@ import lombok.Getter;
 @Getter
 public enum S3DomainType {
 
-    COMMUNITY_TEMP("boards/temp/"), // 삭제 에정
-    COMMUNITY_POST("boards/"),
-    PROFILE("member/profiles/"),
-    DEPARTMENT_LOGO("departments/logos/"),
+    COMMUNITY_TEMP("static/images/boards/temp/"), // 삭제 에정
+    COMMUNITY_POST("static/images/boards/"),
+    PROFILE("static/images/member/profiles/"),
+    DEPARTMENT_LOGO("static/images/departments/logos/"),
     EVENT("events/");
 
     private final String prefix;
