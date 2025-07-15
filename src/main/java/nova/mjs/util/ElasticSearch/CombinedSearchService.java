@@ -3,6 +3,8 @@ package nova.mjs.util.ElasticSearch;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.community.entity.CommunityBoard;
 import nova.mjs.domain.community.repository.CommunityBoardRepository;
+import nova.mjs.domain.department.repository.DepartmentNoticeRepository;
+import nova.mjs.domain.department.repository.DepartmentScheduleRepository;
 import nova.mjs.domain.news.entity.News;
 import nova.mjs.domain.news.repository.NewsRepository;
 import nova.mjs.domain.notice.entity.Notice;
@@ -11,10 +13,7 @@ import nova.mjs.util.ElasticSearch.Document.CommunityDocument;
 import nova.mjs.util.ElasticSearch.Document.NewsDocument;
 import nova.mjs.util.ElasticSearch.Document.NoticeDocument;
 import nova.mjs.util.ElasticSearch.Document.SearchDocument;
-import nova.mjs.util.ElasticSearch.Repository.CommunitySearchRepository;
-import nova.mjs.util.ElasticSearch.Repository.NewsSearchRepository;
-import nova.mjs.util.ElasticSearch.Repository.NoticeSearchRepository;
-import nova.mjs.util.ElasticSearch.Repository.SearchRepository;
+import nova.mjs.util.ElasticSearch.Repository.*;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Service;
 
@@ -28,10 +27,16 @@ public class CombinedSearchService {
     private final NoticeRepository noticeRepository;
     private final NewsRepository newsRepository;
     private final CommunityBoardRepository communityBoardRepository;
+    private final DepartmentScheduleRepository departmentScheduleRepository;
+    private final DepartmentNoticeRepository departmentNoticeRepository;
+//    private final BroadcastRepository broadcastRepository;
 
     private final NoticeSearchRepository noticeSearchRepository;
     private final NewsSearchRepository newsSearchRepository;
     private final CommunitySearchRepository communitySearchRepository;
+    private final DepartmentScheduleSearchRepository departmentScheduleSearchRepository;
+    private final DepartmentNoticeSearchRepository departmentNoticeSearchRepository;
+    private final BroadcastSearchRepository broadcastSearchRepository;
 
     private final SearchRepository searchRepository;
 
