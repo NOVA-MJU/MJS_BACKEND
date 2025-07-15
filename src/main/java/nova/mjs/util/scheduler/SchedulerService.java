@@ -2,6 +2,7 @@ package nova.mjs.util.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.domain.broadcast.service.BroadcastService;
 import nova.mjs.domain.news.service.NewsService;
 import nova.mjs.domain.notice.exception.NoticeCrawlingException;
 import nova.mjs.domain.notice.service.NoticeCrawlingService;
@@ -26,6 +27,7 @@ public class SchedulerService {
     private final WeatherService weatherService;
     private final WeeklyMenuService weeklyMenuService;
     private final NoticeCrawlingService noticeCrawlingService;
+    private final BroadcastService broadcastService;
 
     //날씨 데이터 스케줄링 (매 정각 실행)
     @Scheduled(cron = "0 0 * * * *")
@@ -48,7 +50,7 @@ public class SchedulerService {
         });
     }
 
-    //뉴스 크롤링 스케줄링 (매주 월요일 정각마다 실행)
+    // 명대신문 크롤링 스케줄링 (매주 월요일 정각마다 실행)
     @Scheduled(cron = "0 0 * * 1 *")
     public void scheduledCrawlNews() {
         log.info("[스케쥴러] 매시간 5분마다 기사 크롤링 실행");
@@ -62,6 +64,27 @@ public class SchedulerService {
             } catch (Exception e) {
                 log.error("기사 크롤링 오류 발생 : {}", e.getMessage());
                 throw new SchedulerTaskFailedException("기사 크롤링 실패", ErrorCode.SCHEDULER_TASK_FAILED);
+            } catch (Throwable t) {
+                log.error("알 수 없는 스케줄러 오류 발생 : {}", t.getMessage(), t);
+                throw new SchedulerUnknownException("알 수 없는 스케줄러 오류 발생", ErrorCode.SCHEDULER_UNKNOWN_ERROR);
+            }
+        });
+    }
+
+    // 명대 뉴스 데이터 스케쥴링 (매주 화, 목, 토 오전 1시에 실행)
+    @Scheduled(cron = "0 0 1 * * TUE,THU,SAT")
+    public void scheduledCrawlBroadcastData() {
+        log.info("[스케쥴러] 매주 화요일 정각마다 명대 뉴스 업데이트 실행");
+        CompletableFuture.runAsync(() -> {
+            try {
+                broadcastService.syncAllByChannelId();
+                log.info("명대 뉴스 업데이트 실행");
+            } catch (IllegalArgumentException e) {
+                log.error("잘못된 Cron 표현식 오류 : {}", e.getMessage());
+                throw new SchedulerCronInvalidException("잘못된 Cron 표현식", ErrorCode.SCHEDULER_CRON_INVALID);
+            } catch (Exception e) {
+                log.error("명대 뉴스 크롤링 중 오류 발생 : {}", e.getMessage());
+                throw new SchedulerTaskFailedException("명대 뉴스 데이터 업데이트 실패", ErrorCode.SCHEDULER_TASK_FAILED);
             } catch (Throwable t) {
                 log.error("알 수 없는 스케줄러 오류 발생 : {}", t.getMessage(), t);
                 throw new SchedulerUnknownException("알 수 없는 스케줄러 오류 발생", ErrorCode.SCHEDULER_UNKNOWN_ERROR);
