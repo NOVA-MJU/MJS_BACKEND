@@ -14,4 +14,12 @@ public class WebClientConfig {
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
+
+    @Bean(name = "youtubeApiClient")
+    public WebClient youtubeApiClient(WebClient.Builder builder) {
+        return builder
+                .baseUrl("https://www.googleapis.com/youtube/v3")
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+    }
 }
