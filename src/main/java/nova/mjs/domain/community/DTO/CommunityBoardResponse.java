@@ -5,19 +5,20 @@ import lombok.Data;
 import nova.mjs.domain.community.entity.CommunityBoard;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.List;
 import java.util.UUID;
 
+/**
+ * 커뮤니티 게시글 응답 DTO
+ */
 public class CommunityBoardResponse {
 
+    /* ========================== 요약 DTO ========================== */
     @Data
     @Builder
     public static class SummaryDTO {
         private UUID uuid;
         private String title;
         private String previewContent;
-        private List<String> contentImages;
         private int viewCount;
         private Boolean published;
         private LocalDateTime publishedAt;
@@ -28,32 +29,32 @@ public class CommunityBoardResponse {
         private String author;
         private boolean isLiked;
 
-        public static SummaryDTO fromEntityPreview(CommunityBoard entity, int likeCount, int commentCount, boolean isLiked) {
+        public static SummaryDTO fromEntityPreview(CommunityBoard e,
+                                                   int likeCnt, int cmtCnt, boolean liked) {
             return SummaryDTO.builder()
-                    .uuid(entity.getUuid())
-                    .title(entity.getTitle())
-                    .previewContent(entity.getPreviewContent())
-                    .contentImages(entity.getContentImages())
-                    .viewCount(entity.getViewCount())
-                    .published(entity.getPublished())
-                    .publishedAt(entity.getPublishedAt())
-                    .createdAt(entity.getCreatedAt())
-                    .updatedAt(entity.getUpdatedAt())
-                    .likeCount(likeCount)
-                    .commentCount(commentCount)
-                    .author(entity.getAuthor() != null ? entity.getAuthor().getNickname() : "Unknown")
-                    .isLiked(isLiked)
+                    .uuid(e.getUuid())
+                    .title(e.getTitle())
+                    .previewContent(e.getPreviewContent())
+                    .viewCount(e.getViewCount())
+                    .published(e.getPublished())
+                    .publishedAt(e.getPublishedAt())   // 그대로 반환
+                    .createdAt(e.getCreatedAt())
+                    .updatedAt(e.getUpdatedAt())
+                    .likeCount(likeCnt)
+                    .commentCount(cmtCnt)
+                    .author(e.getAuthor() != null ? e.getAuthor().getNickname() : "Unknown")
+                    .isLiked(liked)
                     .build();
         }
     }
 
+    /* ========================== 상세 DTO ========================== */
     @Data
     @Builder
     public static class DetailDTO {
         private UUID uuid;
         private String title;
         private String content;
-        private List<String> contentImages;
         private int viewCount;
         private Boolean published;
         private LocalDateTime publishedAt;
@@ -64,27 +65,22 @@ public class CommunityBoardResponse {
         private String author;
         private boolean isLiked;
 
-        public static DetailDTO fromEntity(CommunityBoard entity, int likeCount, int commentCount, boolean isLiked) {
-            LocalDateTime seoulPublishedAt = entity.getPublishedAt() != null
-                    ? entity.getPublishedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()
-                    : null;
-
+        public static DetailDTO fromEntity(CommunityBoard e,
+                                           int likeCnt, int cmtCnt, boolean liked) {
             return DetailDTO.builder()
-                    .uuid(entity.getUuid())
-                    .title(entity.getTitle())
-                    .content(entity.getContent())
-                    .contentImages(entity.getContentImages())
-                    .viewCount(entity.getViewCount())
-                    .published(entity.getPublished())
-                    .publishedAt(seoulPublishedAt)
-                    .createdAt(entity.getCreatedAt())
-                    .updatedAt(entity.getUpdatedAt())
-                    .likeCount(likeCount)
-                    .commentCount(commentCount)
-                    .author(entity.getAuthor() != null ? entity.getAuthor().getNickname() : "Unknown")
-                    .isLiked(isLiked)
+                    .uuid(e.getUuid())
+                    .title(e.getTitle())
+                    .content(e.getContent())
+                    .viewCount(e.getViewCount())
+                    .published(e.getPublished())
+                    .publishedAt(e.getPublishedAt())   // atZone 제거, 그대로 사용
+                    .createdAt(e.getCreatedAt())
+                    .updatedAt(e.getUpdatedAt())
+                    .likeCount(likeCnt)
+                    .commentCount(cmtCnt)
+                    .author(e.getAuthor() != null ? e.getAuthor().getNickname() : "Unknown")
+                    .isLiked(liked)
                     .build();
         }
-
     }
 }
