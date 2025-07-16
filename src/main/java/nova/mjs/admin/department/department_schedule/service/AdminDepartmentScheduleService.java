@@ -1,4 +1,4 @@
-package nova.mjs.admin.department_schedule.service;
+package nova.mjs.admin.department.department_schedule.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -6,9 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import nova.mjs.admin.account.entity.StudentCouncilAdmin;
 import nova.mjs.admin.account.exception.AdminIdMismatchException;
 import nova.mjs.admin.account.repository.AdminRepository;
-import nova.mjs.admin.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
-import nova.mjs.admin.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
-import nova.mjs.admin.department_schedule.repository.AdminDepartmentScheduleRepository;
+import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
+import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
+import nova.mjs.admin.department.department_schedule.repository.AdminDepartmentScheduleRepository;
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.entity.DepartmentSchedule;
 import org.springframework.stereotype.Service;
