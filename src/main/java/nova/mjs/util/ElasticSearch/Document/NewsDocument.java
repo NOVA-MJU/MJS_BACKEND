@@ -36,8 +36,6 @@ public class NewsDocument implements SearchDocument {
 
     private String category;
 
-    private String type;
-
     @Override
     public String getType() {
         return "News";
@@ -58,8 +56,6 @@ public class NewsDocument implements SearchDocument {
                 .date(news.getDate().atZone(ZoneId.systemDefault()).toInstant())
                 .link(news.getLink())
                 .category(news.getCategory().name())
-                .type("news")
                 .build();
     }
-
 }

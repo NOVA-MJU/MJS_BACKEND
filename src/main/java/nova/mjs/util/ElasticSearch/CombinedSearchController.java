@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -14,6 +15,7 @@ import java.util.List;
 public class CombinedSearchController {
     private final CombinedSearchService combinedSearchService;
 
+    // 동기화
     @PostMapping("/sync")
     public ResponseEntity<ApiResponse<String>> syncElasticsearch() {
         combinedSearchService.syncAll();
@@ -22,6 +24,7 @@ public class CombinedSearchController {
                 .body(ApiResponse.success("Success Indexing"));
     }
 
+    // type별로 검색
     @GetMapping("/detail")
     public ResponseEntity<ApiResponse<List<SearchResponseDTO>>> search(
             @RequestParam String keyword,
@@ -33,5 +36,14 @@ public class CombinedSearchController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(results));
+    }
+
+    // 통합검색 페이지에서 상위 5개만 보여줌
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<Map<String, List<SearchResponseDTO>>>> searchOverview(
+            @RequestParam String keyword) {
+
+        Map<String, List<SearchResponseDTO>> result = combinedSearchService.searchTop5EachType(keyword);
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

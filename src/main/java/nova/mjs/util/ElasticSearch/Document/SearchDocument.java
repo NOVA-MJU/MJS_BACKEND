@@ -1,5 +1,7 @@
 package nova.mjs.util.ElasticSearch.Document;
 
+import org.springframework.data.elasticsearch.annotations.CompletionField;
+
 import java.time.LocalDateTime;
 
 public interface SearchDocument {

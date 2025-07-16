@@ -2,10 +2,8 @@ package nova.mjs.util.ElasticSearch.Repository;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.util.ElasticSearch.Document.CommunityDocument;
-import nova.mjs.util.ElasticSearch.Document.NewsDocument;
-import nova.mjs.util.ElasticSearch.Document.NoticeDocument;
-import nova.mjs.util.ElasticSearch.Document.SearchDocument;
+import nova.mjs.util.ElasticSearch.Document.*;
+import nova.mjs.util.ElasticSearch.SearchType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -25,7 +23,7 @@ public class SearchRepositoryImpl implements SearchRepository {
     private final ElasticsearchTemplate elasticsearchTemplate;
 
     @Override
-    public SearchHits<? extends SearchDocument> search(String keyword, String type, int page, int size) {
+    public SearchHits<? extends SearchDocument> search(String keyword, SearchType type, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
         List<HighlightField> highlightFields = List.of(
@@ -41,32 +39,29 @@ public class SearchRepositoryImpl implements SearchRepository {
         );
 
         NativeQuery query = NativeQuery.builder()
-                .withQuery(q -> q.bool(b -> {
-                    BoolQuery.Builder boolBuilder = b
-                            .should(s -> s.match(m -> m.field("title").query(keyword)))
-                            .should(s -> s.match(m -> m.field("content").query(keyword)))
-                            .minimumShouldMatch("1");
-
-                    if (!type.isBlank()) {
-                        boolBuilder.filter(f -> f.term(t -> t.field("type").value(type)));
-                    }
-
-                    return boolBuilder;
-                }))
+                .withQuery(q -> q.bool(b -> b
+                        .should(s -> s.match(m -> m.field("title").query(keyword)))
+                        .should(s -> s.match(m -> m.field("content").query(keyword)))
+                        .minimumShouldMatch("1")
+                        .filter(f -> f.term(t -> t.field("type").value(type.name().toLowerCase())))
+                ))
                 .withHighlightQuery(highlightQuery)
                 .withPageable(pageable)
                 .build();
 
-        // 검색 후, 결과를 반환
+
+    // 검색 후, 결과를 반환
         return elasticsearchTemplate.search(query, targetClass);
     }
 
-    private Class<? extends SearchDocument> resolveTargetClass(String type) {
-        return switch (type.toLowerCase()) {
-            case "notice" -> NoticeDocument.class;
-            case "news" -> NewsDocument.class;
-            case "community" -> CommunityDocument.class;
-            default -> throw new IllegalArgumentException("Unknown type: " + type);
+    private Class<? extends SearchDocument> resolveTargetClass(SearchType type) {
+        return switch (type) {
+            case NOTICE -> NoticeDocument.class;
+            case DEPARTMENT_NOTICE -> DepartmentNoticeDocument.class;
+            case DEPARTMENT_SCHEDULE -> DepartmentScheduleDocument.class;
+            case COMMUNITY -> CommunityDocument.class;
+            case NEWS -> NewsDocument.class;
+            case BROADCAST -> BroadcastDocument.class;
         };
     }
 }

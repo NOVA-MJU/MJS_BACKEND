@@ -36,8 +36,6 @@ public class NoticeDocument implements SearchDocument{
 
     private String category;
 
-    private String type;
-
     @Override
     public String getType() {
         return "Notice";
@@ -58,7 +56,6 @@ public class NoticeDocument implements SearchDocument{
                 .date(notice.getDate().atZone(ZoneId.systemDefault()).toInstant())
                 .link(notice.getLink())
                 .category(notice.getCategory())
-                .type("notice")
                 .build();
     }
 

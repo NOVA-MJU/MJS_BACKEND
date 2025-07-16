@@ -29,8 +29,6 @@ public class DepartmentScheduleDocument implements SearchDocument{
 
     private String content;
 
-    private String type;
-
     private String department;
 
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
@@ -52,7 +50,6 @@ public class DepartmentScheduleDocument implements SearchDocument{
                 .id(schedule.getDepartmentScheduleUuid().toString())
                 .title(schedule.getTitle())
                 .content(schedule.getContent())
-                .type("DepartmentSchedule")
                 .department(schedule.getDepartment().getDepartmentName().getLabel())
                 .date(schedule.getStartDate().atStartOfDay(ZoneId.systemDefault()).toInstant())
                 .build();

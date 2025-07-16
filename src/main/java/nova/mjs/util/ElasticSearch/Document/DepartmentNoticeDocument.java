@@ -29,8 +29,6 @@ public class DepartmentNoticeDocument implements SearchDocument{
 
     private String content;
 
-    private String type;
-
     private String department;
 
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
@@ -48,14 +46,13 @@ public class DepartmentNoticeDocument implements SearchDocument{
                 : null;
     }
 
-    public static DepartmentNoticeDocument from(DepartmentNotice notice) {
+    public static DepartmentNoticeDocument from(DepartmentNotice departmentNotice) {
         return DepartmentNoticeDocument.builder()
-                .id(notice.getUuid().toString())
-                .title(notice.getTitle())
-                .content(notice.getContent())
-                .type("DepartmentNotice")
-                .department(notice.getDepartment().getDepartmentName().getLabel())
-                .date(notice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
+                .id(departmentNotice.getDepartmentNoticeUuid().toString())
+                .title(departmentNotice.getTitle())
+                .content(departmentNotice.getContent())
+                .department(departmentNotice.getDepartment().getDepartmentName().getLabel())
+                .date(departmentNotice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
                 .build();
     }
 }

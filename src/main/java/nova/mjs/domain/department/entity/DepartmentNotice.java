@@ -2,7 +2,7 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.util.ElasticSearch.EntityListner.DepartmentEntityListener;
+import nova.mjs.util.ElasticSearch.EntityListner.DepartmentNoticeEntityListener;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.util.UUID;
@@ -12,7 +12,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(DepartmentEntityListener.class)
+@EntityListeners(DepartmentNoticeEntityListener.class)
 @Table(name = "department_notice")
 public class DepartmentNotice extends BaseEntity {
 

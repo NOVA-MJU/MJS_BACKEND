@@ -33,8 +33,6 @@ public class CommunityDocument implements SearchDocument {
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
     private Instant date;
 
-    private String type;
-
     private String link;
 
     @Override
@@ -55,7 +53,6 @@ public class CommunityDocument implements SearchDocument {
                 .title(board.getTitle())
                 .content(board.getContent())
                 .date(board.getPublishedAt().atZone(ZoneId.systemDefault()).toInstant())
-                .type("community")
                 .build();
     }
 }
