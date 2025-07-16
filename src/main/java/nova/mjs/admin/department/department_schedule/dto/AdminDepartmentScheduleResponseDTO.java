@@ -1,4 +1,4 @@
-package nova.mjs.admin.department_schedule.dto;
+package nova.mjs.admin.department.department_schedule.dto;
 
 import lombok.Builder;
 import lombok.Data;
