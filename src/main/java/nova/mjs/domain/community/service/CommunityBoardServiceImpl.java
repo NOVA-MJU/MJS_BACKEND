@@ -13,7 +13,9 @@ import nova.mjs.domain.community.repository.CommunityBoardRepository;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.repository.MemberRepository;
 import nova.mjs.domain.member.exception.MemberNotFoundException;
+import nova.mjs.domain.member.service.query.MemberQueryService;
 import nova.mjs.util.s3.S3DomainType;
+import nova.mjs.util.s3.S3Service;
 import nova.mjs.util.s3.S3ServiceImpl;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,11 +46,11 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
     private final CommunityBoardRepository communityBoardRepository;
     private final CommunityLikeRepository communityLikeRepository;
     private final MemberRepository memberRepository;
+    private final MemberQueryService memberQueryService;
     private final CommentRepository commentRepository;
-    private final S3ServiceImpl s3ServiceImpl;
+    private final S3Service s3Service;
 
     // S3 업로드 시 사용할 경로 prefix
-    private final String boardTempPrefix = S3DomainType.COMMUNITY_TEMP.getPrefix();
     private final String boardPostPrefix = S3DomainType.COMMUNITY_POST.getPrefix();
 
 
@@ -132,59 +134,27 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
     // 3. POST 게시글 작성
 
 /* flow
-    프론트에서 이미지 선택
-    백엔드 /upload-image로 업로드 요청
-    백엔드는 S3에 posts/temp/{uuid}/{filename}으로 업로드
-    백엔드는 업로드 성공 후, CloudFront URL을 만들어 응답함 → 예: https://d2zppxfma88m3u.cloudfront.net/posts/temp/uuid/filename.jpg
-    게시글 작성 시 contentImages에 위 URL들을 포함하여 전달
-    게시글 등록 성공 시 posts/temp → posts/{게시글UUID}/로 이동 (S3 내부에서 copy + delete)
+    프론트에서 /upload-image로 업로드 요청(백엔드는 S3에 static/images/posts/{uuid}/{filename}으로 업로드)
+    백엔드에서는 업로드된 파일 url과 글과 함께 모두 content로 요청 후 글은 content로 관리 = imageurl 관리 따로 안함.
 */
-
     @Transactional
-    public CommunityBoardResponse.DetailDTO createBoard(CommunityBoardRequest request, String emailId) {
+    public CommunityBoardResponse.DetailDTO createBoard(CommunityBoardRequest request, UUID boardUuid, String emailId) {
         log.info("[게시글 작성 요청] 사용자 이메일: {}", emailId);
     
         // 작성자 조회
-        Member author = memberRepository.findByEmail(emailId)
-                .orElseThrow(() -> {
-                    log.warn("[작성자 조회 실패] 이메일: {}", emailId);
-                    return new MemberNotFoundException();
-                });
+        Member author = memberQueryService.getMemberByEmail(emailId);
 
         // 게시글 생성
         CommunityBoard board = CommunityBoard.create(
+                boardUuid,
                 request.getTitle(),
                 request.getContent(),
                 CommunityCategory.FREE,
                 request.getPublished(),
-                request.getContentImages(),
                 author
         );
         communityBoardRepository.save(board);
         log.info("[게시글 저장 완료] UUID: {}", board.getUuid());
-
-        // 이미지 이동 처리 (temp → post)
-        log.info("[이미지 이동 시작] 총 이미지 수: {}", request.getContentImages().size());
-
-        List<String> tempImages = request.getContentImages().stream()
-                .filter(url -> s3ServiceImpl.replaceCloudfrontUrlToS3Url(url).startsWith(boardTempPrefix))
-                .toList();
-
-        log.info("[temp 이미지 추출] 이동 대상 수: {}", tempImages.size());
-
-        for (String tempImageUrl : tempImages) {
-            String tempKey = s3ServiceImpl.replaceCloudfrontUrlToS3Url(tempImageUrl); // board/temp/{uuid}/파일명
-            String fileName = tempKey.substring(tempKey.lastIndexOf('/') + 1);
-            String realKey = boardPostPrefix + board.getUuid() + "/" + fileName;
-
-            log.info("[이미지 복사] from: {}, to: {}", tempKey, realKey);
-            s3ServiceImpl.copyFile(tempKey, realKey);
-
-//            log.info("[임시 이미지 삭제] key: {}", tempKey);
-//            s3Service.deleteFile(tempKey);
-        }
-
-        log.info("[이미지 이동 완료] 게시글 UUID: {}", board.getUuid());
 
         int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
         int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
@@ -197,61 +167,25 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
 
 
     @Transactional
-    public CommunityBoardResponse.DetailDTO updateBoard(UUID uuid, CommunityBoardRequest request, String email) {
+    public CommunityBoardResponse.DetailDTO updateBoard(UUID boardUuid, CommunityBoardRequest request, String emailId) {
 
         // 1. 게시글 존재 여부 확인
-        CommunityBoard board = getExistingBoard(uuid);
+        CommunityBoard board = getExistingBoard(boardUuid);
 
         // 2. 사용자 존재 및 권한 확인
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(MemberNotFoundException::new);
+        Member member = memberQueryService.getMemberByEmail(emailId);
+
         if (!board.getAuthor().equals(member)) {
             throw new IllegalArgumentException("작성자만 수정할 수 있습니다.");
         }
 
-        // 3. 기존 vs 새로운 이미지 리스트 비교
-        List<String> oldImages = board.getContentImages();
-        List<String> newImages = request.getContentImages();
-
-        // 3-1. 삭제 대상 이미지 제거
-        List<String> toDelete = oldImages.stream()
-                .filter(old -> !newImages.contains(old))
-                .toList();
-        toDelete.forEach(imageUrl -> {
-            String key = s3ServiceImpl.replaceCloudfrontUrlToS3Url(imageUrl);
-            s3ServiceImpl.deleteFile(key);
-        });
-
-        // 3-2. 새로 추가된 이미지 중 temp 경로에 있는 것만 복사 후 삭제
-        List<String> addedTempImages = newImages.stream()
-                .filter(newImg -> !oldImages.contains(newImg))
-                .filter(newImg -> s3ServiceImpl.replaceCloudfrontUrlToS3Url(newImg).startsWith(boardTempPrefix))
-                .toList();
-
-        for (String tempImageUrl : addedTempImages) {
-            String tempKey = s3ServiceImpl.replaceCloudfrontUrlToS3Url(tempImageUrl); // board/temp/{tempUuid}/filename
-            String filename = tempKey.substring(tempKey.lastIndexOf('/') + 1);
-            String realKey = boardPostPrefix + uuid + "/" + filename;
-
-            s3ServiceImpl.copyFile(tempKey, realKey);
-            s3ServiceImpl.deleteFile(tempKey);
-        }
-
         // 4. 게시글 업데이트
-        board.update(
-                request.getTitle(),
-                request.getContent(),
-                request.getPublished(),
-                request.getContentImages()
-        );
+        board.update(request.getTitle(), request.getContent(), request.getPublished());
 
         // 5. 응답 생성
         int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
         int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
-        boolean isLiked = communityLikeRepository
-                .findByMemberAndCommunityBoard(member, board)
-                .isPresent();
-
+        boolean isLiked = communityLikeRepository.findByMemberAndCommunityBoard(member, board).isPresent();
 
         // 엔티티를 DTO로 변환하여 반환
         return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount, isLiked);
@@ -259,34 +193,23 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
 
     // 게시글 삭제
     @Transactional
-    public void deleteBoard(UUID uuid, String email) {
+    public void deleteBoard(UUID uuid, String emailId) {
         // 1) 게시글 조회
         CommunityBoard board = getExistingBoard(uuid);
 
         // 2) 비로그인 or email == null → 에러
-        if (email == null) {
-            throw new IllegalArgumentException("로그인한 사용자만 삭제할 수 있습니다.");
-        }
+        Member member = memberQueryService.getMemberByEmail(emailId);
 
-        // 3) Member 조회
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
-        // 4) 게시글 작성자가 현재 사용자와 같은지 체크
-        //    (추가로 관리자(ADMIN)면 통과시킬 수도 있음)
-        if (!board.getAuthor().getEmail().equals(email)) {
-            // 본인이 아님
-            throw new MemberNotFoundException();
-        }
+        if (!board.getAuthor().equals(member)) {throw new IllegalArgumentException("작성자만 삭제할 수 있습니다.");}
 
         // 5) 삭제
         // 게시글 삭제 로직에 추가
         communityBoardRepository.delete(board);
         // s3에서도 삭제하기
         String postFolder = boardPostPrefix + board.getUuid() + "/";
-        s3ServiceImpl.deleteFolder(postFolder);
+        s3Service.deleteFolder(postFolder);
 
-        log.debug("게시글 삭제 성공. ID = {}, 작성자: {}", uuid, email);
+        log.debug("게시글 삭제 성공. ID = {}, 작성자: {}", uuid, emailId);
     }
 
 

@@ -76,15 +76,15 @@ public class CommunityBoardController {
     /**
      * 2. 게시글 상세 조회
      */
-    @GetMapping("/{uuid}")
+    @GetMapping("/{boardUuid}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<CommunityBoardResponse.DetailDTO>> getBoardDetail(
-            @PathVariable UUID uuid,
+            @PathVariable UUID boardUuid,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.getBoardDetail(uuid, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.getBoardDetail(boardUuid, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board));
@@ -93,15 +93,16 @@ public class CommunityBoardController {
     /**
      * 3. 게시글 작성
      */
-    @PostMapping
+    @PostMapping("/{boardUuid}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<CommunityBoardResponse.DetailDTO>> createBoard(
-            @RequestBody CommunityBoardRequest request,
-            @AuthenticationPrincipal UserPrincipal userPrincipal
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable UUID boardUuid,
+            @RequestBody CommunityBoardRequest request
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.createBoard(request, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.createBoard(request, boardUuid, email);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board));
@@ -110,16 +111,16 @@ public class CommunityBoardController {
     /**
      * 4. 게시글 수정
      */
-    @PatchMapping("/{uuid}")
+    @PatchMapping("/{boardUuid}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<CommunityBoardResponse.DetailDTO>> updateBoard(
-            @PathVariable UUID uuid,
+            @PathVariable UUID boardUuid,
             @RequestBody CommunityBoardRequest request,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.updateBoard(uuid, request, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.updateBoard(boardUuid, request, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board));
@@ -128,16 +129,14 @@ public class CommunityBoardController {
     /**
      * 5. 게시글 삭제
      */
-    @DeleteMapping("/{uuid}")
+    @DeleteMapping("/{boardUuid}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteBoard(
-            @PathVariable UUID uuid,
+            @PathVariable UUID boardUuid,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
-
-        communityBoardServiceImpl.deleteBoard(uuid, email);
-
+        communityBoardServiceImpl.deleteBoard(boardUuid, email);
         return ResponseEntity.noContent().build();
     }
 }

@@ -43,7 +43,7 @@ public class CommunityBoard extends BaseEntity {
 
     @Lob
     @Column(columnDefinition = "TEXT")
-    private String content; // 내용 + 이미지 url 함께 구성되어있어
+    private String content; // 내용 + 이미지 url 함께 구성되어있음
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
@@ -51,16 +51,6 @@ public class CommunityBoard extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String previewContent; // 게시글 미리보기
-
-
-    @ElementCollection
-    @CollectionTable(
-            name = "community_board_images", // 테이블 이름
-            joinColumns = @JoinColumn(name = "community_board_id") // 외래 키
-    )
-    @Column(name = "content_image_url") // 컬럼 이름
-    @Builder.Default
-    private List<String> contentImages = new ArrayList<>(); // 기본 초기화
 
     @Column(nullable = false)
     private int viewCount; // 조회 수
@@ -78,11 +68,15 @@ public class CommunityBoard extends BaseEntity {
     @OneToMany(mappedBy = "communityBoard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommunityLike> communityLike = new ArrayList<>();
 
+    // 댓글
+    @OneToMany(mappedBy = "communityBoard", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    private List<Comment> comment;
+
 
     // === 생성 메서드 ===
-    public static CommunityBoard create(String title, String content, CommunityCategory category, Boolean published, List<String> contentImages, Member member) {
+    public static CommunityBoard create(UUID boardUuid, String title, String content, CommunityCategory category, Boolean published, Member member) {
         CommunityBoard board = CommunityBoard.builder()
-                .uuid(UUID.randomUUID())
+                .uuid(boardUuid)
                 .title(title)
                 .content(content)
                 .category(category)
@@ -93,22 +87,15 @@ public class CommunityBoard extends BaseEntity {
                 .publishedAt(published != null && published ? LocalDateTime.now() : null)
                 .author(member)
                 .build();
-
-        board.contentImages.addAll(contentImages != null ? contentImages : new ArrayList<>()); // null일 경우 빈 리스트 추가
         return board;
     }
 
-
-
     // === 업데이트 메서드 ===
-    public void update(String title, String content, Boolean published, List<String> contentImages) {
+    public void update(String title, String content, Boolean published) {
         if (title != null) this.title = title;
         if (content != null) this.content = content;
         if (published != null) {
             updatePublishedState(published);
-        }
-        if (contentImages != null) {
-            updateContentImages(contentImages);
         }
     }
 
@@ -122,16 +109,6 @@ public class CommunityBoard extends BaseEntity {
         this.published = isPublished;
     }
 
-    // 이미지 리스트 업데이트 메서드
-    private void updateContentImages(List<String> newContentImages) {
-        this.contentImages.clear();
-        this.contentImages.addAll(newContentImages);
-    }
-
-    // 댓글
-    @OneToMany(mappedBy = "communityBoard", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
-    private List<Comment> comment;
-
     // 게시물 좋아요
     public void increaseLikeCount() {
         this.likeCount++;
@@ -141,5 +118,9 @@ public class CommunityBoard extends BaseEntity {
         if (this.likeCount > 0) {
             this.likeCount--;
         }
+    }
+
+    private <T> T getOrDefault(T newValue, T currentValue) {
+        return newValue != null ? newValue : currentValue;
     }
 }

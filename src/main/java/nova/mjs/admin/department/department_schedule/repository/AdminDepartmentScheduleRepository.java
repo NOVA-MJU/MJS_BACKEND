@@ -1,4 +1,4 @@
-package nova.mjs.admin.department_schedule.repository;
+package nova.mjs.admin.department.department_schedule.repository;
 
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.entity.DepartmentSchedule;

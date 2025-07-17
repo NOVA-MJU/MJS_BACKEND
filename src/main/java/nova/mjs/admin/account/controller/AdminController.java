@@ -2,17 +2,10 @@
 //
 //import jakarta.validation.Valid;
 //import lombok.RequiredArgsConstructor;
-//import nova.mjs.admin.account.DTO.AdminDTO;
-//import nova.mjs.admin.account.DTO.LoginRequestDTO;
-//import nova.mjs.admin.account.service.AdminService;
-//import nova.mjs.util.response.ApiResponse;
-//import nova.mjs.util.security.AuthDTO;
-//import nova.mjs.util.security.UserPrincipal;
+//import nova.mjs.admin.account.DTO.AdminDTO;//import nova.mjs.util.response.ApiResponse;
 //import org.springframework.http.HttpStatus;
 //import org.springframework.http.MediaType;
 //import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
-//import org.springframework.security.core.annotation.AuthenticationPrincipal;
 //import org.springframework.web.bind.annotation.*;
 //import org.springframework.web.multipart.MultipartFile;
 //
@@ -24,7 +17,7 @@
 //public class AdminController {
 //    private final AdminService adminService;
 //
-//    // 사전 adminID 등록
+//    // TODO 사전 adminID 등록 == operator 기능
 //    @PostMapping("/pre-register")
 //    public ResponseEntity<ApiResponse<?>> preRegisterAdminId(@RequestBody AdminDTO.AdminIdRequestDTO request) {
 //        adminService.preRegisterAdminId(request.getAdminId());
@@ -53,21 +46,4 @@
 //        return ResponseEntity.ok(ApiResponse.success("비밀번호가 성공적으로 저장되었습니다."));
 //    }
 //
-//    // StudentCouncilAdmin Login
-//    @PostMapping("/login")
-//    public ResponseEntity<ApiResponse<AuthDTO.LoginResponseDTO>> login(@RequestBody LoginRequestDTO request) {
-//        AuthDTO.LoginResponseDTO response = adminService.   login(request.getAdminId(), request.getPassword());
-//        return ResponseEntity
-//                .status(HttpStatus.CREATED)
-//                .body(ApiResponse.success(response));
-//    }
-//
-//    // StudentCouncilAdmin 탈퇴
-//    @DeleteMapping("/delete")
-//    @PreAuthorize("isAuthenticated() and  hasRole('ADMIN')")
-//    public ResponseEntity<ApiResponse<Void>> deleteAdmin(@AuthenticationPrincipal UserPrincipal userPrincipal,
-//                                                         @RequestBody AdminDTO.PasswordRequestDTO password) {
-//        adminService.deleteAdmin(userPrincipal.getUsername(), password);
-//        return ResponseEntity.ok(ApiResponse.success(null));
-//    }
 //}

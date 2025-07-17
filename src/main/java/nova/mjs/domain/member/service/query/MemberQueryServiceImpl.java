@@ -2,7 +2,6 @@ package nova.mjs.domain.member.service.query;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.admin.account.exception.InvalidRequestException;
 import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.exception.*;

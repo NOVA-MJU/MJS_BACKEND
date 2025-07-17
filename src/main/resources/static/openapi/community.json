@@ -25,6 +25,49 @@
     }
   ],
   "paths": {
+    "/boards/temp-uuid": {
+      "get": {
+        "tags": ["Board"],
+        "summary": "게시글 작성용 UUID 발급",
+        "description": "게시글 작성 시 S3 이미지 업로드용 폴더 식별자로 사용할 임시 UUID를 발급합니다.",
+        "responses": {
+          "200": {
+            "description": "임시 UUID 발급 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": ["status", "data", "timestamp"]
+                },
+                "examples": {
+                  "example": {
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": "3b3cbf03-e0bb-4d1d-b947-a4ab16ec79c5",
+                      "timestamp": "2025-07-14T17:34:16.8590463"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/boards": {
       "get": {
         "tags": ["Board"],
@@ -95,64 +138,6 @@
             }
           }
         }
-      },
-      "post": {
-        "tags": ["Board"],
-        "security": [
-          { "Authorization": [] }
-        ],
-        "summary": "게시글 생성",
-        "description": "제목, 본문, 공개 여부(`published`), 이미지 URL 목록(`contentImages`)을 포함하여 게시글을 작성합니다. 이미지 URL은 미리 업로드된 CloudFront URL이어야 합니다.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/BoardCreateRequest" },
-              "examples": {
-                "example": {
-                  "summary": "게시글 작성 예시",
-                  "value": {
-                    "title": "자전거 타고 괌 가는 방법6",
-                    "content": "내용 본문 전체",
-                    "published": true,
-                    "contentImages": ["https://.../temp/img1.jpg", "https://.../temp/img2.jpg"]
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "게시글 생성 성공",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiSuccess_BoardDetail" },
-                "examples": {
-                  "example": {
-                    "summary": "생성된 게시글 정보",
-                    "value": {
-                      "status": "API 요청 성공",
-                      "data": {
-                        "uuid": "831619ee-7588-4a5a-82b4-148d3aeed319",
-                        "title": "자전거 타고 괌 가는 방법6",
-                        "content": "본문 전체 내용",
-                        "contentImages": ["https://.../image.jpg"],
-                        "viewCount": 0,
-                        "published": true,
-                        "publishedAt": "2025-03-09T01:16:45.9195322",
-                        "createdAt": "2025-03-09T01:16:45.954082",
-                        "updatedAt": "2025-03-09T01:16:45.954082",
-                        "author": "마루명치"
-                      },
-                      "timestamp": "2025-03-09T01:16:46.0782892"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/boards/{boardUUID}": {
@@ -187,7 +172,6 @@
                         "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                         "title": "상세 게시글 제목",
                         "content": "상세 본문 전체",
-                        "contentImages": [],
                         "viewCount": 0,
                         "published": true,
                         "publishedAt": "2025-04-09T14:22:39.238019",
@@ -198,6 +182,71 @@
                         "author": "MJS",
                         "liked": false
                       }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Board"],
+        "security": [
+          { "Authorization": [] }
+        ],
+        "parameters": [
+          {
+            "name": "boardUUID",
+            "in": "path",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "조회할 게시글의 UUID"
+          }
+        ],
+        "summary": "게시글 생성",
+        "description": "제목, 본문, 공개 여부(`published`)을 포함하여 게시글을 작성합니다. 이미지 URL은 미리 업로드된 CloudFront URL이어야 합니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BoardCreateRequest" },
+              "examples": {
+                "example": {
+                  "summary": "게시글 작성 예시",
+                  "value": {
+                    "title": "자전거 타고 괌 가는 방법6",
+                    "content": "내용 본문 전체",
+                    "published": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "게시글 생성 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_BoardDetail" },
+                "examples": {
+                  "example": {
+                    "summary": "생성된 게시글 정보",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "uuid": "831619ee-7588-4a5a-82b4-148d3aeed319",
+                        "title": "자전거 타고 괌 가는 방법6",
+                        "content": "본문 전체 내용",
+                        "viewCount": 0,
+                        "published": true,
+                        "publishedAt": "2025-03-09T01:16:45.9195322",
+                        "createdAt": "2025-03-09T01:16:45.954082",
+                        "updatedAt": "2025-03-09T01:16:45.954082",
+                        "author": "마루명치"
+                      },
+                      "timestamp": "2025-03-09T01:16:46.0782892"
                     }
                   }
                 }
@@ -233,8 +282,7 @@
                   "value": {
                     "title": "수정된 제목",
                     "content": "수정된 본문",
-                    "published": false,
-                    "contentImages": ["https://.../board/image1.jpg"]
+                    "published": false
                   }
                 }
               }
@@ -256,7 +304,6 @@
                         "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                         "title": "수정된 게시글 제목",
                         "content": "수정된 본문",
-                        "contentImages": [],
                         "viewCount": 0,
                         "published": true,
                         "likeCount": 1,
@@ -422,8 +469,8 @@
         "security": [
           { "Authorization": [] }
         ],
-        "summary": "임시 이미지 업로드",
-        "description": "게시글 작성 중 임시로 이미지를 S3에 업로드하고 이미지 URL을 반환합니다.",
+        "summary": "게시글 이미지 업로드",
+        "description": "게시글 작성 중 이미지를 S3에 업로드하고 사용가능한 이미지 URL을 반환합니다. 게시물 content에 이미지를 넣기 위해서 이 api 요청이 선행되어야합니다.",
         "requestBody": {
           "required": true,
           "content": {
@@ -436,13 +483,13 @@
                     "format": "binary",
                     "description": "업로드할 이미지 파일"
                   },
-                  "tempFolderUuid": {
+                  "boardUuid": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "임시 폴더 UUID"
+                    "description": "게시글 폴더 UUID"
                   }
                 },
-                "required": ["file", "tempFolderUuid"]
+                "required": ["file", "boardUuid"]
               }
             }
           }
@@ -460,38 +507,13 @@
                     "summary": "이미지 업로드 성공 예시",
                     "value": {
                       "status": "API 요청 성공",
-                      "data": "https://cdn.example.com/board/temp/이미지.jpg",
+                      "data": "https://cdn.example.com/board/이미지.jpg",
                       "timestamp": "2025-07-07T12:00:00"
                     }
                   }
                 }
               }
             }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Board"],
-        "security": [
-          { "Authorization": [] }
-        ],
-        "summary": "임시 이미지 삭제",
-        "description": "게시글 작성 취소 시 임시로 업로드한 이미지들을 삭제합니다.",
-        "parameters": [
-          {
-            "name": "tempFolderUuid",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "임시 폴더 UUID"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "성공적으로 삭제되었습니다. 응답 본문은 없습니다."
           }
         }
       }
@@ -713,6 +735,13 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
       "ApiSuccessMessage": {
         "type": "object",
@@ -779,10 +808,6 @@
           "uuid": { "type": "string", "format": "uuid" },
           "title": { "type": "string" },
           "previewContent": { "type": "string" },
-          "contentImages": {
-            "type": "array",
-            "items": { "type": "string", "format": "uri" }
-          },
           "viewCount": { "type": "integer" },
           "published": { "type": "boolean" },
           "publishedAt": { "type": "string", "format": "date-time" },
@@ -808,11 +833,7 @@
         "properties": {
           "title": { "type": "string" },
           "content": { "type": "string" },
-          "published": { "type": "boolean" },
-          "contentImages": {
-            "type": "array",
-            "items": { "type": "string", "format": "uri" }
-          }
+          "published": { "type": "boolean" }
         }
       },
       "BoardUpdateRequest": {
@@ -820,11 +841,7 @@
         "properties": {
           "title": { "type": "string" },
           "content": { "type": "string" },
-          "published": { "type": "boolean" },
-          "contentImages": {
-            "type": "array",
-            "items": { "type": "string", "format": "uri" }
-          }
+          "published": { "type": "boolean" }
         }
       },
       "ApiSuccess_CommentList": {

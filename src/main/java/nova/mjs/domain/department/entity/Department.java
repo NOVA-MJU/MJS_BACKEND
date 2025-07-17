@@ -2,6 +2,7 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
 import nova.mjs.util.entity.BaseEntity;
@@ -22,6 +23,10 @@ public class Department extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "department_id")
     private Long id;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_member_id", unique = true, nullable = true) // nullable 허용
+    private Member admin; // 관리자로 연결된 회원
 
     @Column(nullable = false, unique = true)
     private UUID departmentUuid;
@@ -68,5 +73,10 @@ public class Department extends BaseEntity {
         this.studentCouncilLogo = studentCouncilLogo;
         this.slogan = slogan;
         this.college = college;
+    }
+
+    // 어드민 변경
+    public void assignAdmin(Member newAdmin) {
+        this.admin = newAdmin;
     }
 }
