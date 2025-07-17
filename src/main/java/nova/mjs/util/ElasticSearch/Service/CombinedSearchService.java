@@ -1,17 +1,16 @@
-package nova.mjs.util.ElasticSearch;
+package nova.mjs.util.ElasticSearch.Service;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.broadcast.repository.BroadcastRepository;
-import nova.mjs.domain.community.entity.CommunityBoard;
 import nova.mjs.domain.community.repository.CommunityBoardRepository;
 import nova.mjs.domain.department.repository.DepartmentNoticeRepository;
 import nova.mjs.domain.department.repository.DepartmentScheduleRepository;
-import nova.mjs.domain.news.entity.News;
 import nova.mjs.domain.news.repository.NewsRepository;
-import nova.mjs.domain.notice.entity.Notice;
 import nova.mjs.domain.notice.repository.NoticeRepository;
 import nova.mjs.util.ElasticSearch.Document.*;
 import nova.mjs.util.ElasticSearch.Repository.*;
+import nova.mjs.util.ElasticSearch.SearchResponseDTO;
+import nova.mjs.util.ElasticSearch.SearchType;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Service;
 
@@ -136,7 +135,9 @@ public class CombinedSearchService {
                 searchHit.getContent().getDate(),
                 searchHit.getContent().getLink(),
                 searchHit.getContent().getCategory(),
-                searchHit.getContent().getType()
+                searchHit.getContent().getType(),
+                searchHit.getContent().getImageUrl(),
+                searchHit.getScore()
         );
     }
 
@@ -144,12 +145,12 @@ public class CombinedSearchService {
         Map<String, List<SearchResponseDTO>> result = new LinkedHashMap<>();
 
         // 순서 : 공지사항 > 학사 일정(미정) > 학과 공지 > 학과 스케줄 > 자유게시판 > 명대신문 > 방송
-        result.put("notice", unifiedSearch(keyword, "notice", 0, 5));
-        result.put("departmentSchedule", unifiedSearch(keyword, "departmentSchedule", 0, 5));
-        result.put("departmentNotice", unifiedSearch(keyword, "departmentNotice", 0, 5));
-        result.put("community", unifiedSearch(keyword, "community", 0, 5));
-        result.put("news", unifiedSearch(keyword, "news", 0, 5));
-        result.put("broadcast", unifiedSearch(keyword, "broadcast", 0, 5));
+        result.put("notice", unifiedSearch(keyword, "NOTICE", 0, 5));
+        result.put("departmentSchedule", unifiedSearch(keyword, "DEPARTMENT_SCHEDULE", 0, 5));
+        result.put("departmentNotice", unifiedSearch(keyword, "DEPARTMENT_NOTICE", 0, 5));
+        result.put("community", unifiedSearch(keyword, "COMMUNITY", 0, 5));
+        result.put("news", unifiedSearch(keyword, "NEWS", 0, 5));
+        result.put("broadcast", unifiedSearch(keyword, "BROADCAST", 0, 5));
 
         return result;
     }

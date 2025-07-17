@@ -1,6 +1,8 @@
-package nova.mjs.util.ElasticSearch;
+package nova.mjs.util.ElasticSearch.Controller;
 
 import lombok.RequiredArgsConstructor;
+import nova.mjs.util.ElasticSearch.Service.CombinedSearchService;
+import nova.mjs.util.ElasticSearch.SearchResponseDTO;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
