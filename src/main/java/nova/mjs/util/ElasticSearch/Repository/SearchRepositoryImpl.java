@@ -1,6 +1,8 @@
 package nova.mjs.util.ElasticSearch.Repository;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScore;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScoreMode;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.util.ElasticSearch.Document.*;
 import nova.mjs.util.ElasticSearch.SearchType;
@@ -38,17 +40,40 @@ public class SearchRepositoryImpl implements SearchRepository {
                 new Highlight(highlightFields), targetClass
         );
 
+        /**
+         * Spring Data Elasticsearch DSL
+         */
+
         NativeQuery query = NativeQuery.builder()
-                .withQuery(q -> q.bool(b -> b
-                        .should(s -> s.match(m -> m.field("title").query(keyword)))
-                        .should(s -> s.match(m -> m.field("content").query(keyword)))
-                        .minimumShouldMatch("1")
-                        .filter(f -> f.term(t -> t.field("type").value(type.name().toLowerCase())))
-                ))
+                .withQuery(q -> q
+                        .functionScore(fs -> fs
+                                .query(inner -> inner
+                                        .bool(b -> b
+                                                .should(s -> s.match(m -> m.field("title").query(keyword)))
+                                                .should(s -> s.match(m -> m.field("content").query(keyword)))
+                                        )
+                                )
+                                .functions(List.of(
+                                        FunctionScore.of(f -> f
+                                                .filter(q1 -> q1.matchPhrase(mp -> mp.field("title").query(keyword)))
+                                                .weight(5.0)
+                                        ),
+                                        FunctionScore.of(f -> f
+                                                .filter(q2 -> q2.match(mp -> mp.field("title").query(keyword)))
+                                                .weight(3.0)
+                                        ),
+                                        FunctionScore.of(f -> f
+                                                .filter(q3 -> q3.matchPhrase(mp -> mp.field("content").query(keyword)))
+                                                .weight(2.0)
+                                        )
+                                ))
+                                .scoreMode(FunctionScoreMode.Sum) // 가중치들을 모두 더함 (title+content 다 걸리면 스코어 높아짐)
+                                .boostMode(FunctionBoostMode.Sum) // 기존 스코어와 가중치를 더해서 최종 점수 계산
+                        )
+                )
                 .withHighlightQuery(highlightQuery)
                 .withPageable(pageable)
                 .build();
-
 
     // 검색 후, 결과를 반환
         return elasticsearchTemplate.search(query, targetClass);
