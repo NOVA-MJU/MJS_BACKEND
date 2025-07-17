@@ -17,4 +17,5 @@ public interface DepartmentNoticeRepository extends JpaRepository<DepartmentNoti
     // ▶ 상세 토글용 단일 공지 조회
     Optional<DepartmentNotice> findByDepartment_DepartmentUuidAndDepartmentNoticeUuid(
             UUID departmentUuid, UUID noticeUuid);
+
 }
