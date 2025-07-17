@@ -18,14 +18,14 @@ public class DepartmentSummaryDTO {
     private String slogan;
     private College college;
 
-    public static DepartmentSummaryDTO of(Department d) {
+    public static DepartmentSummaryDTO fromEntity(Department department) {
         return DepartmentSummaryDTO.builder()
-                .departmentUuid(d.getDepartmentUuid())
-                .departmentName(d.getDepartmentName())
-                .studentCouncilName(d.getStudentCouncilName())
-                .studentCouncilLogo(d.getStudentCouncilLogo())
-                .slogan(d.getSlogan())
-                .college(d.getCollege())
+                .departmentUuid(department.getDepartmentUuid())
+                .departmentName(department.getDepartmentName())
+                .studentCouncilName(department.getAdmin().getName())
+                .studentCouncilLogo(department.getAdmin().getProfileImageUrl())
+                .slogan(department.getSlogan())
+                .college(department.getCollege())
                 .build();
     }
 }

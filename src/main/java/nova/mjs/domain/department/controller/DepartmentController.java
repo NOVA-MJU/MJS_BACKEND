@@ -29,8 +29,7 @@ public class DepartmentController {
     public ResponseEntity<ApiResponse<DepartmentScheduleResponseDTO>> getSchedules(
             @PathVariable UUID departmentUuid
     ){
-        DepartmentScheduleResponseDTO scheduleResponse = departmentScheduleService.getScheduleBydepartmentUuid(departmentUuid);
-
+        DepartmentScheduleResponseDTO scheduleResponse = departmentScheduleService.getScheduleByDepartmentUuid(departmentUuid);
         return ResponseEntity.ok(ApiResponse.success(scheduleResponse));
     }
 

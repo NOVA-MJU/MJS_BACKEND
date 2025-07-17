@@ -17,4 +17,8 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> success(T data) {
         return new ApiResponse<>("API 요청 성공", data, LocalDateTime.now());
     }
+
+    public static <T> ApiResponse<T> success() {
+        return new ApiResponse<>("API 요청 성공", null, LocalDateTime.now());
+    }
 }

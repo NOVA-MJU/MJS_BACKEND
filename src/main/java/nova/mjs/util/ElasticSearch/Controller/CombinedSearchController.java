@@ -3,6 +3,7 @@ package nova.mjs.util.ElasticSearch.Controller;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.util.ElasticSearch.Service.CombinedSearchService;
 import nova.mjs.util.ElasticSearch.SearchResponseDTO;
+import nova.mjs.domain.realtimeKeyword.RealtimeKeywordService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/search")
 public class CombinedSearchController {
     private final CombinedSearchService combinedSearchService;
+    private final RealtimeKeywordService realtimeKeywordService;
 
     // 동기화
     @PostMapping("/sync")
@@ -35,6 +37,9 @@ public class CombinedSearchController {
             @RequestParam(defaultValue = "10") int size) {
 
         List<SearchResponseDTO> results = combinedSearchService.unifiedSearch(keyword, type, page, size);
+
+        realtimeKeywordService.recordSearch(keyword);
+
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(results));

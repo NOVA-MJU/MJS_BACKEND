@@ -2,9 +2,8 @@ package nova.mjs.domain.member.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.domain.department.entity.Department;
+import nova.mjs.admin.registration.DTO.AdminDTO;
 import nova.mjs.domain.member.DTO.MemberDTO;
-import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
 import nova.mjs.util.entity.BaseEntity;
 
@@ -21,7 +20,7 @@ public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private UUID uuid;
@@ -34,7 +33,7 @@ public class Member extends BaseEntity {
     private String name;
 
     @Column
-    private String profileImageUrl;
+    private String profileImageUrl; // 프로필 / StudentCouncil: 학생회 로고
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -66,7 +65,7 @@ public class Member extends BaseEntity {
     }
 
     public enum Role {
-        USER, ADMIN, DEVELOPER
+        USER, ADMIN, OPERATOR
     }
 
     public static Member create(MemberDTO.MemberRegistrationRequestDTO memberDTO, String encodePassword) {
@@ -84,17 +83,6 @@ public class Member extends BaseEntity {
                 .build();
     }
 
-    // TODO
-    public static Member createStudentCouncilInitProfile(MemberDTO.StudentCouncilRegistrationRequestDTO requestDTO) {
-        // 초기 관리자 회원가입
-
-        return Member.builder()
-                .uuid(UUID.randomUUID())
-                .email(requestDTO.getEmail())
-                .role(Role.ADMIN)
-                .build();
-    }
-
     public void update(MemberDTO.MemberUpdateRequestDTO memberDTO) {
         this.name = getOrDefault(memberDTO.getName(), this.name);
         this.nickname = getOrDefault(memberDTO.getNickname(), this.nickname);
@@ -104,8 +92,35 @@ public class Member extends BaseEntity {
         this.gender = memberDTO.getGender() != null ? Gender.fromString(memberDTO.getGender()) : this.gender;
     }
 
+
+    // ============ 어드민 계정 =============== //
+
+
+    // 초기 어드민 계정을 생성할 경우, UUID, 이메일, 임시 비밀버호, 역할, 성별은 제공한다.
+    public static Member createAdminInit(AdminDTO.StudentCouncilInitRegistrationRequestDTO memberDTO, String encodePassword) {
+        return Member.builder()
+                .uuid(UUID.randomUUID()) // UUID 자동 생성
+                .email(memberDTO.getEmail())
+                .password(encodePassword)
+                .role(Role.ADMIN)
+                .gender(Gender.OTHERS)
+                .studentNumber("NONE")
+                .build();
+    }
+
+    // 계정을 받은 경우 회원가입, 혹은 업데이트 두가지 경우 모두 사용가능하다
+    // 1. 계정이름(= 학생회 명, 닉네임은 계정 이름과 동일하다. 2. 변경할 비밀번호, 3. 소속 학과, 4. 학생회 프로필 로고
+    // 5. 슬로건 , 인스타그램, 공식홈페이지, Description  => Department 에서 받음
+    public void updateAdmin(AdminDTO.StudentCouncilUpdateDTO memberDTO) {
+        this.name = getOrDefault(memberDTO.getName(), this.name); // 학생회 명
+        this.nickname = name;
+        this.departmentName = getOrDefault(memberDTO.getDepartmentName(), this.departmentName); // 소속학과
+        this.profileImageUrl = getOrDefault(memberDTO.getProfileImageUrl(), this.profileImageUrl); // 학생회 프로필 로고
+    }
+
+
     public void updatePassword(String encodedNewPassword) {
-        this.password = encodedNewPassword;
+        this.password = getOrDefault((encodedNewPassword), this.password);
     }
 
     private <T> T getOrDefault(T newValue, T currentValue) {

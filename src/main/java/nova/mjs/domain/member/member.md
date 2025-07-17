@@ -32,10 +32,6 @@
 > • **Query / Command 분리**로 가독성·재사용성 확보
 > • 외부 모듈은 `MemberQueryService`만 의존 → 중복 코드 최소화
 
-> **왜 이렇게?**
-> • **Query / Command 분리**로 가독성·재사용성 확보
-> • 외부 모듈은 `MemberQueryService`만 의존 → 중복 코드 최소화
-
 ---
 
 ## 🔁 다른 모듈에서 회원 조회하기

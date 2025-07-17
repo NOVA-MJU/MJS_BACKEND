@@ -32,14 +32,14 @@ public class DepartmentService {
     // — 전체 학과 목록
     public List<DepartmentSummaryDTO> getAllDepartments() {
         return departmentRepository.findAll().stream()
-                .map(DepartmentSummaryDTO::of)
+                .map(DepartmentSummaryDTO::fromEntity)
                 .toList();
     }
 
     // — 단과대별 학과 목록
     public List<DepartmentSummaryDTO> getDepartmentsByCollege(College college) {
         return departmentRepository.findByCollege(college).stream()
-                .map(DepartmentSummaryDTO::of)
+                .map(DepartmentSummaryDTO::fromEntity)
                 .toList();
     }
 }
