@@ -12,11 +12,13 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-@RequiredArgsConstructor
 public class RealtimeKeywordService {
 
-    @Qualifier("keywordRedisTemplate")
     private final RedisTemplate<String, String> redisTemplate;
+
+    public RealtimeKeywordService(@Qualifier("keywordRedisTemplate") RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     private static final String ZSET_KEY = "realtime_keywords";
     private static final String LIST_KEY_PREFIX = "search:history";
