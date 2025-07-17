@@ -1,13 +1,13 @@
 package nova.mjs.util.ElasticSearch.Document;
 
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nova.mjs.domain.news.entity.News;
+import nova.mjs.domain.department.entity.DepartmentNotice;
 import nova.mjs.util.ElasticSearch.SearchType;
 import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
@@ -15,12 +15,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
-@Document(indexName = "news_index")
+@Document(indexName = "department_notice_index")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class NewsDocument implements SearchDocument {
+public class DepartmentNoticeDocument implements SearchDocument{
+
     @Id
     private String id;
 
@@ -28,14 +29,10 @@ public class NewsDocument implements SearchDocument {
 
     private String content;
 
+    private String department;
+
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
     private Instant date;
-
-    private String link;
-
-    private String category;
-
-    private String imageUrl;
 
     @CompletionField
     private List<String> suggest;
@@ -44,7 +41,7 @@ public class NewsDocument implements SearchDocument {
 
     @Override
     public String getType() {
-        return SearchType.NEWS.name();
+        return SearchType.DEPARTMENT_NOTICE.name();
     }
 
     @Override
@@ -54,22 +51,15 @@ public class NewsDocument implements SearchDocument {
                 : null;
     }
 
-    @Override
-    public String getImageUrl() {
-        return this.imageUrl;
-    }
-
-    public static NewsDocument from(News news) {
-        return NewsDocument.builder()
-                .id(news.getId().toString())
-                .title(news.getTitle())
-                .content(news.getSummary())
-                .date(news.getDate().atZone(ZoneId.systemDefault()).toInstant())
-                .link(news.getLink())
-                .imageUrl(news.getImageUrl())
-                .category(news.getCategory().name())
-                .suggest(KomoranTokenizerUtil.generateSuggestions(news.getTitle()))
-                .type(SearchType.NEWS.name())
+    public static DepartmentNoticeDocument from(DepartmentNotice departmentNotice) {
+        return DepartmentNoticeDocument.builder()
+                .id(departmentNotice.getDepartmentNoticeUuid().toString())
+                .title(departmentNotice.getTitle())
+                .content(departmentNotice.getContent())
+                .department(departmentNotice.getDepartment().getDepartmentName().getLabel())
+                .date(departmentNotice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
+                .suggest(KomoranTokenizerUtil.generateSuggestions(departmentNotice.getTitle()))
+                .type(SearchType.DEPARTMENT_NOTICE.name())
                 .build();
     }
 }

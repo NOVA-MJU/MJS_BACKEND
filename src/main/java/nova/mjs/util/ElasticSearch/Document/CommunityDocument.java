@@ -5,15 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.community.entity.CommunityBoard;
+import nova.mjs.util.ElasticSearch.SearchType;
+import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 /**
  * Elasticsearch 색인을 위한 커뮤니티 문서 객체
@@ -42,9 +42,12 @@ public class CommunityDocument implements SearchDocument {
 
     private String link;
 
+    @CompletionField
+    private List<String> suggest;
+
     @Override
     public String getType() {
-        return "Community";
+        return SearchType.COMMUNITY.name();
     }
 
     /**
@@ -70,7 +73,8 @@ public class CommunityDocument implements SearchDocument {
                 .date(board.getPublishedAt() != null
                         ? board.getPublishedAt().atZone(ZoneId.systemDefault()).toInstant()
                         : null)
-                .type("community")
+                .suggest(KomoranTokenizerUtil.generateSuggestions(board.getTitle()))
+                .type(SearchType.COMMUNITY.name())
                 .build();
     }
 }

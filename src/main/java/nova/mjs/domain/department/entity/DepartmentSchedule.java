@@ -2,6 +2,7 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.util.ElasticSearch.EntityListner.DepartmentScheduleEntityListener;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.time.LocalDate;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(DepartmentScheduleEntityListener.class)
 @Table(name = "department_schedules")
 public class DepartmentSchedule extends BaseEntity {
 

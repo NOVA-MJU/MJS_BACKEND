@@ -2,18 +2,17 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.util.ElasticSearch.EntityListner.DepartmentNoticeEntityListener;
 import nova.mjs.util.entity.BaseEntity;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
-
-import static nova.mjs.domain.community.util.ContentPreviewUtil.makePreview;
 
 @Entity
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(DepartmentNoticeEntityListener.class)
 @Table(name = "department_notice")
 public class DepartmentNotice extends BaseEntity {
 
@@ -36,7 +35,6 @@ public class DepartmentNotice extends BaseEntity {
     private String title;
 
     // 5) content
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String content;
 

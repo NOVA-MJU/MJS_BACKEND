@@ -1,13 +1,13 @@
 package nova.mjs.util.ElasticSearch.Document;
 
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nova.mjs.domain.news.entity.News;
+import nova.mjs.domain.broadcast.entity.Broadcast;
 import nova.mjs.util.ElasticSearch.SearchType;
 import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
@@ -15,27 +15,26 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
-@Document(indexName = "news_index")
+@Document(indexName = "broadcast_index")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class NewsDocument implements SearchDocument {
+public class BroadcastDocument implements SearchDocument{
+
     @Id
     private String id;
 
     private String title;
 
-    private String content;
+    private String content; //content를 playlist(재생목록)으로 사용
 
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
     private Instant date;
 
-    private String link;
-
-    private String category;
-
     private String imageUrl;
+
+    private String link;
 
     @CompletionField
     private List<String> suggest;
@@ -44,7 +43,7 @@ public class NewsDocument implements SearchDocument {
 
     @Override
     public String getType() {
-        return SearchType.NEWS.name();
+        return SearchType.BROADCAST.name();
     }
 
     @Override
@@ -59,17 +58,17 @@ public class NewsDocument implements SearchDocument {
         return this.imageUrl;
     }
 
-    public static NewsDocument from(News news) {
-        return NewsDocument.builder()
-                .id(news.getId().toString())
-                .title(news.getTitle())
-                .content(news.getSummary())
-                .date(news.getDate().atZone(ZoneId.systemDefault()).toInstant())
-                .link(news.getLink())
-                .imageUrl(news.getImageUrl())
-                .category(news.getCategory().name())
-                .suggest(KomoranTokenizerUtil.generateSuggestions(news.getTitle()))
-                .type(SearchType.NEWS.name())
+
+    public static BroadcastDocument from(Broadcast broadcast) {
+        return BroadcastDocument.builder()
+                .id(String.valueOf(broadcast.getId()))
+                .title(broadcast.getTitle())
+                .content(broadcast.getPlaylistTitle()) // playlistTitle을 content로 사용
+                .imageUrl(broadcast.getThumbnailUrl())
+                .date(broadcast.getPublishedAt().atZone(ZoneId.systemDefault()).toInstant())
+                .link(broadcast.getUrl())
+                .suggest(KomoranTokenizerUtil.generateSuggestions(broadcast.getTitle()))
+                .type(SearchType.BROADCAST.name())
                 .build();
     }
 }
