@@ -56,15 +56,19 @@ public class SearchRepositoryImpl implements SearchRepository {
                                 .functions(List.of(
                                         FunctionScore.of(f -> f
                                                 .filter(q1 -> q1.matchPhrase(mp -> mp.field("title").query(keyword)))
-                                                .weight(5.0)
+                                                .weight(10.0)
                                         ),
                                         FunctionScore.of(f -> f
-                                                .filter(q2 -> q2.match(mp -> mp.field("title").query(keyword)))
-                                                .weight(3.0)
+                                                .filter(q2 -> q2.matchPhrase(mp -> mp.field("content").query(keyword)))
+                                                .weight(8.0)
                                         ),
                                         FunctionScore.of(f -> f
-                                                .filter(q3 -> q3.matchPhrase(mp -> mp.field("content").query(keyword)))
+                                                .filter(q3 -> q3.match(m -> m.field("title").query(keyword)))
                                                 .weight(2.0)
+                                        ),
+                                        FunctionScore.of(f -> f
+                                                .filter(q4 -> q4.match(m -> m.field("content").query(keyword)))
+                                                .weight(1.0)
                                         )
                                 ))
                                 .scoreMode(FunctionScoreMode.Sum) // 가중치들을 모두 더함 (title+content 다 걸리면 스코어 높아짐)
