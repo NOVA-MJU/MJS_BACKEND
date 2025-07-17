@@ -2,7 +2,7 @@ package nova.mjs.domain.member.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.admin.account.entity.StudentCouncilAdmin;
+import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
@@ -35,9 +35,6 @@ public class Member extends BaseEntity {
 
     @Column
     private String profileImageUrl;
-
-    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL)
-    private StudentCouncilAdmin studentCouncilProfile; // 있는 경우만 연결됨
 
     @Column(nullable = false, unique = true)
     private String email;

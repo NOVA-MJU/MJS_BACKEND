@@ -22,6 +22,10 @@
     {
       "name": "News",
       "description": "명대신문 기사 조회 및 크롤링/삭제 기능"
+    },
+    {
+      "name": "MJU_Calendar",
+      "description": "명지대학교 학사일정 조회 기능"
     }
   ],
   "paths": {
@@ -208,7 +212,128 @@
         }
       }
     },
-    "/news": {
+  "/calendar": {
+    "get": {
+      "tags": ["MJU_Calendar"],
+      "summary": "학사일정 목록 조회 (페이지네이션 + 연도 필터 + 정렬)",
+      "description": "명지대학교의 학사일정 데이터를 페이지 단위로 조회합니다.\n\n\n- 기본적으로 `startDate` 기준 오름차순 정렬됩니다.\n\n- `year` 값을 넘기면 해당 연도의 일정만 필터링합니다.\n\n- `sortBy` 필드는 `startDate`, `endDate`, `year` 등이 가능합니다.\n\n- 클라이언트에서는 페이지를 1부터 시작해도 되며, 내부적으로는 0부터 계산됩니다.",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "description": "페이지 번호 (기본값: 0)\n\n0부터 시작하며 클라이언트에서는 1부터 보내고 내부에서 -1 처리 가능",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 0
+          }
+        },
+        {
+          "name": "size",
+          "in": "query",
+          "description": "페이지당 항목 수 (기본값: 10)",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 10
+          }
+        },
+        {
+          "name": "sortBy",
+          "in": "query",
+          "description": "정렬 기준 필드 (예: startDate, endDate, year 등)",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "default": "startDate"
+          }
+        },
+        {
+          "name": "sortDir",
+          "in": "query",
+          "description": "정렬 방향 (asc 또는 desc)",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "default": "asc"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "description": "특정 연도 필터링 (예: 2025)",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "학사일정 데이터 페이지 형식으로 반환",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiResponse"
+              },
+              "examples": {
+                "calendarPageExample": {
+                  "summary": "학사일정 페이징 응답 예시",
+                  "value": {
+                    "status": "API 요청 성공",
+                    "data": {
+                      "content": [
+                        {
+                          "year": 2020,
+                          "startDate": "2020-01-01",
+                          "endDate": "2020-01-01",
+                          "description": "신정"
+                        },
+                        {
+                          "year": 2020,
+                          "startDate": "2020-01-06",
+                          "endDate": "2020-01-10",
+                          "description": "[대학원] 과정변경 원서접수기간"
+                        }
+                      ],
+                      "pageable": {
+                        "pageNumber": 0,
+                        "pageSize": 10,
+                        "offset": 0,
+                        "paged": true,
+                        "unpaged": false,
+                        "sort": {
+                          "sorted": true,
+                          "unsorted": false,
+                          "empty": false
+                        }
+                      },
+                      "totalElements": 470,
+                      "totalPages": 47,
+                      "size": 10,
+                      "number": 0,
+                      "first": true,
+                      "last": false,
+                      "numberOfElements": 10,
+                      "empty": false,
+                      "sort": {
+                        "sorted": true,
+                        "unsorted": false,
+                        "empty": false
+                      }
+                    },
+                    "timestamp": "2025-07-16T23:54:19.6712228"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "/news": {
       "get": {
         "tags": ["News"],
         "summary": "명대신문 기사 조회",
@@ -433,6 +558,41 @@
           "success": { "type": "boolean" },
           "data": { "$ref": "#/components/schemas/PageOfNewsItem" },
           "message": { "type": "string" }
+        }
+      },
+      "MjuCalendarDTO": {
+        "type": "object",
+        "properties": {
+          "year": { "type": "integer", "example": 2025 },
+          "startDate": { "type": "string", "format": "date", "example": "2025-02-10" },
+          "endDate": { "type": "string", "format": "date", "example": "2025-02-14" },
+          "description": { "type": "string", "example": "[학부] 수강신청 기간" }
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "API 요청 성공" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MjuCalendarDTO"
+                }
+              },
+              "pageable": { "type": "object" },
+              "totalPages": { "type": "integer" },
+              "totalElements": { "type": "integer" },
+              "size": { "type": "integer" },
+              "number": { "type": "integer" }
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       }
     }
