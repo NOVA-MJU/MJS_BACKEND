@@ -6,8 +6,8 @@ public enum SearchType {
     DEPARTMENT_SCHEDULE,
     COMMUNITY,
     NEWS,
-    BROADCAST;
-//    ACADEMIC;
+    BROADCAST,
+    MJU_CALENDAR;
 //    ALL;
 
     public static SearchType from(String value) {

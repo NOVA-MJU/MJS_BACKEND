@@ -16,6 +16,7 @@ public class SearchIndexEventListener {
     private final CommunitySearchRepository communitySearchRepository;
     private final DepartmentScheduleSearchRepository departmentScheduleSearchRepository;
     private final DepartmentNoticeSearchRepository departmentNoticeSearchRepository;
+    private final MjuCalendarSearchRepository mjuCalendarRepository;
 
 
 
@@ -35,6 +36,8 @@ public class SearchIndexEventListener {
                         departmentScheduleSearchRepository.save(schedule);
                     } else if (doc instanceof DepartmentNoticeDocument deptNotice) {
                         departmentNoticeSearchRepository.save(deptNotice);
+                    } else if (doc instanceof MjuCalendarDocument mjuCalendar) {
+                        mjuCalendarRepository.save(mjuCalendar);
                     }
                     log.info("[Elasticsearch] [{}] 문서 {} 처리 성공 (ID: {})",
                             doc.getType(), event.getAction(), doc.getId());
@@ -51,6 +54,8 @@ public class SearchIndexEventListener {
                         departmentScheduleSearchRepository.deleteById(schedule.getId());
                     } else if (doc instanceof DepartmentNoticeDocument deptNotice) {
                         departmentNoticeSearchRepository.deleteById(deptNotice.getId());
+                    } else if (doc instanceof MjuCalendarDocument mjuCalendar) {
+                        mjuCalendarRepository.deleteById(mjuCalendar.getId());
                     }
 
                     log.info("[Elasticsearch] [{}] 문서 삭제 성공 (ID: {})", doc.getType(), doc.getId());

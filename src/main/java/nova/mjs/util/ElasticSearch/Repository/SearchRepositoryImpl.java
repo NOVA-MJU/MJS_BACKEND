@@ -82,6 +82,7 @@ public class SearchRepositoryImpl implements SearchRepository {
     private Class<? extends SearchDocument> resolveTargetClass(SearchType type) {
         return switch (type) {
             case NOTICE -> NoticeDocument.class;
+            case MJU_CALENDAR -> MjuCalendarDocument.class;
             case DEPARTMENT_NOTICE -> DepartmentNoticeDocument.class;
             case DEPARTMENT_SCHEDULE -> DepartmentScheduleDocument.class;
             case COMMUNITY -> CommunityDocument.class;

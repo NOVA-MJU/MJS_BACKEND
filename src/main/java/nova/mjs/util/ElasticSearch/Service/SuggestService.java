@@ -50,7 +50,8 @@ public class SuggestService {
                         DepartmentNoticeDocument.class,
                         CommunityDocument.class,
                         NewsDocument.class,
-                        BroadcastDocument.class
+                        BroadcastDocument.class,
+                        MjuCalendarDocument.class
                 ).map(docClass -> elasticsearchTemplate.search(query, docClass)) // SearchHits<T>
                 .map(SearchHits::getSuggest)
                 .filter(Objects::nonNull)

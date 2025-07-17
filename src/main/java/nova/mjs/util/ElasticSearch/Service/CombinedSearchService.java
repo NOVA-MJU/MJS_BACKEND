@@ -2,6 +2,7 @@ package nova.mjs.util.ElasticSearch.Service;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.broadcast.repository.BroadcastRepository;
+import nova.mjs.domain.calendar.repository.MjuCalendarRepository;
 import nova.mjs.domain.community.repository.CommunityBoardRepository;
 import nova.mjs.domain.department.repository.DepartmentNoticeRepository;
 import nova.mjs.domain.department.repository.DepartmentScheduleRepository;
@@ -29,6 +30,8 @@ public class CombinedSearchService {
     private final DepartmentScheduleRepository departmentScheduleRepository;
     private final DepartmentNoticeRepository departmentNoticeRepository;
     private final BroadcastRepository broadcastRepository;
+    private final MjuCalendarRepository mjuCalendarRepository;
+
 
     private final NoticeSearchRepository noticeSearchRepository;
     private final NewsSearchRepository newsSearchRepository;
@@ -36,6 +39,8 @@ public class CombinedSearchService {
     private final DepartmentScheduleSearchRepository departmentScheduleSearchRepository;
     private final DepartmentNoticeSearchRepository departmentNoticeSearchRepository;
     private final BroadcastSearchRepository broadcastSearchRepository;
+    private final MjuCalendarSearchRepository mjuCalendarSearchRepository;
+
 
     private final SearchRepository searchRepository;
 
@@ -49,6 +54,7 @@ public class CombinedSearchService {
         syncDepartmentSchedules();
         syncDepartmentNotices();
         syncBroadcasts();
+        syncMjuCalendars();
     }
 
     private void syncNotices() {
@@ -93,16 +99,23 @@ public class CombinedSearchService {
         broadcastSearchRepository.saveAll(docs);
     }
 
+    private void syncMjuCalendars() {
+        List<MjuCalendarDocument> docs = mjuCalendarRepository.findAll().stream()
+                .map(MjuCalendarDocument::from)
+                .toList();
+        mjuCalendarSearchRepository.saveAll(docs);
+    }
+
     /**
      * @param keyword 검색어
      * @param type 필터 (
-     *              notice              공지사항
-     *              news                명대신문
-     *              community           자유게시판
-     *              departmentNotice    학과별 공지
-     *              departmentSchedule  학과별 스케줄
-     *              Broadcast           명대뉴스(명대방송국)
-     *              미정                 학사일정
+     *                 NOTICE               공지사항
+     *                 DEPARTMENT_NOTICE    학과별 공지
+     *                 DEPARTMENT_SCHEDULE  학과별 스케줄
+     *                 COMMUNITY            자유게시판
+     *                 NEWS                 명대신문
+     *                 BROADCAST            명대뉴스(명대방송국)
+     *                 MJU_CALENDER         학사일정
      *              )
      * @param page 페이지 번호
      * @param size 페이지 크기
@@ -146,6 +159,7 @@ public class CombinedSearchService {
 
         // 순서 : 공지사항 > 학사 일정(미정) > 학과 공지 > 학과 스케줄 > 자유게시판 > 명대신문 > 방송
         result.put("notice", unifiedSearch(keyword, "NOTICE", 0, 5));
+        result.put("mjuCalendar", unifiedSearch(keyword, "MJU_CALENDAR", 0, 5));
         result.put("departmentSchedule", unifiedSearch(keyword, "DEPARTMENT_SCHEDULE", 0, 5));
         result.put("departmentNotice", unifiedSearch(keyword, "DEPARTMENT_NOTICE", 0, 5));
         result.put("community", unifiedSearch(keyword, "COMMUNITY", 0, 5));

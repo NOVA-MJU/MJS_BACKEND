@@ -20,7 +20,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class NewsDocument implements SearchDocument {
     @Id
     private String id;

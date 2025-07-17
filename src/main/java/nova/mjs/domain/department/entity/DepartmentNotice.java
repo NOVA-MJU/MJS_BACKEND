@@ -35,7 +35,6 @@ public class DepartmentNotice extends BaseEntity {
     private String title;
 
     // 5) content
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String content;
 

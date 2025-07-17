@@ -3,6 +3,8 @@ package nova.mjs.domain.calendar.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.domain.calendar.dto.MjuCalendarDTO;
+import nova.mjs.util.ElasticSearch.EntityListner.CommunityEntityListener;
+import nova.mjs.util.ElasticSearch.EntityListner.MjuCalendarEntityListener;
 
 import java.time.LocalDate;
 
@@ -12,11 +14,12 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@EntityListeners(MjuCalendarEntityListener.class)
 public class MjuCalendar {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     private int year;
 
