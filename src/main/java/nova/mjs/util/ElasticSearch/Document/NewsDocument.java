@@ -5,15 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.news.entity.News;
+import nova.mjs.util.ElasticSearch.SearchType;
+import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Document(indexName = "news_index")
 @Data
@@ -36,9 +36,16 @@ public class NewsDocument implements SearchDocument {
 
     private String category;
 
+    private String imageUrl;
+
+    @CompletionField
+    private List<String> suggest;
+
+    private String type;
+
     @Override
     public String getType() {
-        return "News";
+        return SearchType.NEWS.name();
     }
 
     @Override
@@ -48,6 +55,11 @@ public class NewsDocument implements SearchDocument {
                 : null;
     }
 
+    @Override
+    public String getImageUrl() {
+        return this.imageUrl;
+    }
+
     public static NewsDocument from(News news) {
         return NewsDocument.builder()
                 .id(news.getId().toString())
@@ -55,7 +67,10 @@ public class NewsDocument implements SearchDocument {
                 .content(news.getSummary())
                 .date(news.getDate().atZone(ZoneId.systemDefault()).toInstant())
                 .link(news.getLink())
+                .imageUrl(news.getImageUrl())
                 .category(news.getCategory().name())
+                .suggest(KomoranTokenizerUtil.generateSuggestions(news.getTitle()))
+                .type(SearchType.NEWS.name())
                 .build();
     }
 }

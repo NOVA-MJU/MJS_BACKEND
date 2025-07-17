@@ -6,14 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.department.entity.DepartmentNotice;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
+import nova.mjs.util.ElasticSearch.SearchType;
+import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Document(indexName = "department_notice_index")
 @Data
@@ -34,9 +34,14 @@ public class DepartmentNoticeDocument implements SearchDocument{
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
     private Instant date;
 
+    @CompletionField
+    private List<String> suggest;
+
+    private String type;
+
     @Override
     public String getType() {
-        return "DepartmentNotice";
+        return SearchType.DEPARTMENT_NOTICE.name();
     }
 
     @Override
@@ -53,6 +58,8 @@ public class DepartmentNoticeDocument implements SearchDocument{
                 .content(departmentNotice.getContent())
                 .department(departmentNotice.getDepartment().getDepartmentName().getLabel())
                 .date(departmentNotice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
+                .suggest(KomoranTokenizerUtil.generateSuggestions(departmentNotice.getTitle()))
+                .type(SearchType.DEPARTMENT_NOTICE.name())
                 .build();
     }
 }

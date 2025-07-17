@@ -6,14 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.department.entity.DepartmentSchedule;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
+import nova.mjs.util.ElasticSearch.SearchType;
+import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Document(indexName = "department_schedule_index")
 @Data
@@ -34,9 +34,14 @@ public class DepartmentScheduleDocument implements SearchDocument{
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
     private Instant date;
 
+    @CompletionField
+    private List<String> suggest;
+
+    private String type;
+
     @Override
     public String getType() {
-        return "DepartmentSchedule";
+        return SearchType.DEPARTMENT_SCHEDULE.name();
     }
 
     @Override
@@ -52,6 +57,8 @@ public class DepartmentScheduleDocument implements SearchDocument{
                 .content(schedule.getContent())
                 .department(schedule.getDepartment().getDepartmentName().getLabel())
                 .date(schedule.getStartDate().atStartOfDay(ZoneId.systemDefault()).toInstant())
+                .suggest(KomoranTokenizerUtil.generateSuggestions(schedule.getTitle()))
+                .type(SearchType.DEPARTMENT_SCHEDULE.name())
                 .build();
     }
 }
