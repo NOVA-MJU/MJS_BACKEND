@@ -21,4 +21,7 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     @Query("SELECT d.admin.email FROM Department d WHERE d.departmentUuid = :departmentUuid")
     Optional<String> findAdminEmailByDepartmentUuid(@Param("departmentUuid") UUID departmentUuid);
 
+    @Query("SELECT d FROM Department d WHERE d.admin.email = :email")
+    Optional<Department> findByAdminEmail(@Param("email") String email);
+
 }

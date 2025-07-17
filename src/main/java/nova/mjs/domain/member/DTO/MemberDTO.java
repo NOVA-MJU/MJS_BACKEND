@@ -1,6 +1,5 @@
 package nova.mjs.domain.member.DTO;
 
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -81,14 +80,7 @@ public class MemberDTO {
         private String profileImageUrl;
     }
 
-    @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class StudentCouncilRegistrationRequestDTO {
-        private String email; // 이메일 아이디
-        private String contactEmail;
-    }
+
 
     @Data
     @Builder

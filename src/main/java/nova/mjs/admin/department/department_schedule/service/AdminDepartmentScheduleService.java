@@ -3,7 +3,7 @@
 //import jakarta.transaction.Transactional;
 //import lombok.RequiredArgsConstructor;
 //import lombok.extern.slf4j.Slf4j;
-//import nova.mjs.admin.account.exception.AdminIdMismatchException;
+//import nova.mjs.admin.registration.exception.AdminIdMismatchException;
 //import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
 //import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
 //import nova.mjs.admin.department.department_schedule.repository.AdminDepartmentScheduleRepository;
@@ -49,7 +49,7 @@
 //    }
 //
 //    public List<AdminDepartmentScheduleResponseDTO> getSchedulesByMonth(String adminId, int year, int month) {
-//        StudentCouncilAdmin studentCouncilAdmin = adminRepository.findByContactEmail(adminId)
+//        DepartmentSchedule studentCouncilAdmin = adminRepository.findByContactEmail(adminId)
 //                .orElseThrow(AdminIdMismatchException::new);
 //
 //        Department department = studentCouncilAdmin.getDepartment();

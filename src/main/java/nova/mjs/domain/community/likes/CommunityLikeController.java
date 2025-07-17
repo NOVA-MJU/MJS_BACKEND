@@ -23,7 +23,6 @@ public class CommunityLikeController {
     private final MemberRepository memberRepository;
 
     // 좋아요 추가 및 삭제 (토글 방식)
-//    @PreAuthorize(isAuthrization() && userOr')
     @PreAuthorize("isAuthenticated() and ((#userPrincipal.email.equals(principal.username)) or hasRole('ADMIN'))")
 
     @PostMapping("/{boardUUID}/like")

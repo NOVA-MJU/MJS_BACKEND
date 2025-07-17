@@ -2,6 +2,7 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.admin.registration.DTO.AdminDTO;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
@@ -36,22 +37,19 @@ public class Department extends BaseEntity {
     private DepartmentName departmentName;
 
     @Column
-    private String studentCouncilName; // 학생회 명
+    private String slogan;
 
     @Column
-    private String studentCouncilLogo;
+    private String description;
+
+    @Column
+    private String studentCouncilContactEmail; // 학생회 명
 
     @Column
     private String instagramUrl;
 
     @Column
     private String homepageUrl;
-
-    @Column
-    private String slogan;
-
-    @Column
-    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -64,19 +62,30 @@ public class Department extends BaseEntity {
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DepartmentNotice> notices = new ArrayList<>();
 
-    public void updateInfo(DepartmentName departmentName, String studentCouncilName, String homepageUrl, String instagramUrl, String description, String studentCouncilLogo, String slogan, College college) {
-        this.departmentName = departmentName;
-        this.studentCouncilName = studentCouncilName;
-        this.homepageUrl = homepageUrl;
-        this.instagramUrl = instagramUrl;
-        this.description = description;
-        this.studentCouncilLogo = studentCouncilLogo;
-        this.slogan = slogan;
-        this.college = college;
+
+    public static Department createWithAdmin(AdminDTO.StudentCouncilInitRegistrationRequestDTO dto, Member admin) {
+        return Department.builder()
+            .departmentUuid(UUID.randomUUID())
+            .studentCouncilContactEmail(dto.getContactEmail())
+            .admin(admin)
+            .build();
+    }
+
+    public void updateInfo(AdminDTO.StudentCouncilUpdateDTO request) {
+        this.departmentName = getOrDefault(request.getDepartmentName(), this.departmentName);
+        this.homepageUrl = getOrDefault(request.getHomepageUrl(), this.homepageUrl);
+        this.instagramUrl = getOrDefault(request.getInstagramUrl(), this.instagramUrl);
+        this.description = getOrDefault(request.getDescription(), this.description);
+        this.slogan = getOrDefault(request.getSlogan(), this.slogan);
+        this.college = getOrDefault(request.getCollege(), this.college);
     }
 
     // 어드민 변경
     public void assignAdmin(Member newAdmin) {
         this.admin = newAdmin;
+    }
+
+    private <T> T getOrDefault(T newValue, T currentValue) {
+        return newValue != null ? newValue : currentValue;
     }
 }

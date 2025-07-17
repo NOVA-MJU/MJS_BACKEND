@@ -1,4 +1,4 @@
-package nova.mjs.admin.account.exception;
+package nova.mjs.admin.registration.exception;
 
 import nova.mjs.util.exception.ErrorCode;
 

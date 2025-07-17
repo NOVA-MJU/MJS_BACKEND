@@ -21,7 +21,7 @@ public class DepartmentScheduleService {
     private final DepartmentScheduleRepository departmentScheduleRepository;
     private final DepartmentRepository departmentRepository;
 
-    public DepartmentScheduleResponseDTO getScheduleBydepartmentUuid(UUID departmentUuid){
+    public DepartmentScheduleResponseDTO getScheduleByDepartmentUuid(UUID departmentUuid){
         Department department = departmentRepository.findByDepartmentUuid(departmentUuid)
                 .orElseThrow(DepartmentNotFoundException::new);
 
