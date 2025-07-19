@@ -30,7 +30,7 @@ public class AdminDepartmentScheduleService {
 
     //학과 일정 생성
     @Transactional
-    public AdminDepartmentScheduleResponseDTO createSchedule(String adminEmail, AdminDepartmentScheduleRequestDTO adminDepartmentScheduleRequestDTO) {
+    public AdminDepartmentScheduleResponseDTO createSchedule(String adminEmail, UUID scheduleUuid, AdminDepartmentScheduleRequestDTO adminDepartmentScheduleRequestDTO) {
         //이메일을 받는 게 맞을까?
 
         Member admin = memberRepository.findByEmail(adminEmail)
@@ -52,7 +52,7 @@ public class AdminDepartmentScheduleService {
                 });
 
         DepartmentSchedule schedule = DepartmentSchedule.builder()
-                .departmentScheduleUuid(UUID.randomUUID())
+                .departmentScheduleUuid(scheduleUuid)
                 .title(adminDepartmentScheduleRequestDTO.getTitle())
                 .content(adminDepartmentScheduleRequestDTO.getContent())
                 .colorCode(adminDepartmentScheduleRequestDTO.getColorCode())

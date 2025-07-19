@@ -21,13 +21,14 @@ public class AdminDepartmentScheduleController {
     private final AdminDepartmentScheduleService scheduleService;
 
     //일정 생성
-    @PostMapping
+    @PostMapping("/{scheduleUuid}")
     @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> createSchedule(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable UUID scheduleUuid,
             @RequestBody AdminDepartmentScheduleRequestDTO requestDTO){
 
-        AdminDepartmentScheduleResponseDTO responseDTO = scheduleService.createSchedule(userPrincipal.getEmail(), requestDTO);
+        AdminDepartmentScheduleResponseDTO responseDTO = scheduleService.createSchedule(userPrincipal.getEmail(), scheduleUuid, requestDTO);
         return ResponseEntity
                 .ok(ApiResponse.success(responseDTO));
     }
