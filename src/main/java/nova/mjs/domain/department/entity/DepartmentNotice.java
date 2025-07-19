@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.util.ElasticSearch.EntityListner.DepartmentNoticeEntityListener;
 import nova.mjs.util.entity.BaseEntity;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
@@ -35,6 +37,8 @@ public class DepartmentNotice extends BaseEntity {
     private String title;
 
     // 5) content
+    @Lob
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(columnDefinition = "TEXT")
     private String content;
 

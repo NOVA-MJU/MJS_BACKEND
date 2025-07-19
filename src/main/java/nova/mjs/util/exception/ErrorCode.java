@@ -74,7 +74,8 @@ public enum ErrorCode {
     ADMIN_ID_MISMATCH(HttpStatus.BAD_REQUEST, "ADMIN_ID_MISMATCH", "[MJS] 사전 등록된 관리자 ID와 일치하지 않습니다."),
 
     //학과별 서비스 관련 에러
-    DEPARTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_NOT_FOUND", "[MJS] 존재하지 않는 학과입니다.");
+    DEPARTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_NOT_FOUND", "[MJS] 존재하지 않는 학과입니다."),
+    DEPARTMENT_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_SCHEDULE_NOT_FOUND", "[MJS] 존재하지 않는 학과 일정입니다.");
 
 
     private final HttpStatus status;
