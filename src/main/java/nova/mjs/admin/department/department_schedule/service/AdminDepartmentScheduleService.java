@@ -15,6 +15,8 @@ import nova.mjs.domain.department.repository.DepartmentRepository;
 import nova.mjs.domain.department.repository.DepartmentScheduleRepository;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.repository.MemberRepository;
+import nova.mjs.util.s3.S3DomainType;
+import nova.mjs.util.s3.S3ServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -27,6 +29,9 @@ public class AdminDepartmentScheduleService {
     private final MemberRepository memberRepository;
     private final DepartmentRepository departmentRepository;
     private final DepartmentScheduleRepository departmentScheduleRepository;
+
+    private final String scheduleImagePrefix = S3DomainType.DEPARTMENT_SCHEDULE.getPrefix();
+    private final S3ServiceImpl s3ServiceImpl;
 
     //학과 일정 생성
     @Transactional
@@ -137,6 +142,11 @@ public class AdminDepartmentScheduleService {
                     department.getDepartmentName(), schedule.getDepartment().getDepartmentName());
             throw new AdminIdMismatchException();
         }
+
+        String scheduleFolder = scheduleImagePrefix + scheduleUuid + "/";
+        s3ServiceImpl.deleteFolder(scheduleFolder);
+        log.info("[S3 이미지 삭제 완료 {} :", scheduleFolder);
+
 
         //일정 삭제
         departmentScheduleRepository.delete(schedule);
