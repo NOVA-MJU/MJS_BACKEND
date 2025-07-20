@@ -1,6 +1,7 @@
 package nova.mjs.admin.department.department_schedule.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
 import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
 import nova.mjs.admin.department.department_schedule.service.AdminDepartmentScheduleService;
@@ -12,7 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/admin/department-schedules")
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class AdminDepartmentScheduleController {
 
     //일정 생성
     @PostMapping("/{scheduleUuid}")
-    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> createSchedule(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable UUID scheduleUuid,
@@ -35,7 +36,7 @@ public class AdminDepartmentScheduleController {
 
     // 일정 수정
     @PatchMapping("/{scheduleUuid}")
-    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> updateSchedule(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable UUID scheduleUuid,
@@ -48,7 +49,7 @@ public class AdminDepartmentScheduleController {
 
     // 일정 삭제
     @DeleteMapping("/{scheduleUuid}")
-    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<String>> deleteSchedule(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable UUID scheduleUuid){
