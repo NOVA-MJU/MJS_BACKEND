@@ -2,12 +2,17 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeRequestDTO;
+import nova.mjs.domain.community.util.ContentPreviewUtil;
 import nova.mjs.util.entity.BaseEntity;
+import nova.mjs.util.s3.S3DomainType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static nova.mjs.domain.community.util.ContentPreviewUtil.makePreview;
+import static org.springframework.util.StringUtils.hasText;
 
 @Entity
 @Getter
@@ -22,9 +27,9 @@ public class DepartmentNotice extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 2) department_notice_uuid
+    // 2) department_notice_uuidc
     @Column(nullable = false, unique = true)
-    private UUID departmentNoticeUuid;
+    private UUID uuid;
 
     // 3) FK
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,8 +42,10 @@ public class DepartmentNotice extends BaseEntity {
 
     // 5) content
     @Lob
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(columnDefinition = "TEXT")
     private String content;
+
 
     // 6) preview_content
     @Column(name = "preview_content", columnDefinition = "TEXT")
@@ -47,5 +54,32 @@ public class DepartmentNotice extends BaseEntity {
     // 7) thumbnail_url
     @Column
     private String thumbnailUrl;
+
+
+    /* =================== 생성 =================== */
+    public static DepartmentNotice create(AdminDepartmentNoticeRequestDTO request, Department department) {
+        return DepartmentNotice.builder()
+                .uuid(UUID.randomUUID())
+                .title(request.getTitle())
+                .content(request.getContent())
+                .previewContent(ContentPreviewUtil.makePreview(request.getContent()))
+                .thumbnailUrl(hasText(request.getThumbnailUrl())
+                                ? request.getThumbnailUrl()
+                                : S3DomainType.DEFAULT_THUMBNAIL_URL.getPrefix())
+                .department(department)
+                .build();
+    }
+
+    /* =================== 수정 =================== */
+    public void update(AdminDepartmentNoticeRequestDTO requestDTO) {
+        this.title = getOrDefault(requestDTO.getTitle(), this.title);
+        this.content = getOrDefault(requestDTO.getContent(), this.content);
+        this.previewContent = ContentPreviewUtil.makePreview(getOrDefault(requestDTO.getContent(), this.content)); // content 변경 기준
+        this.thumbnailUrl = getOrDefault(requestDTO.getThumbnailUrl(), this.thumbnailUrl);
+    }
+
+    private <T> T getOrDefault(T newValue, T currentValue) {
+        return newValue != null ? newValue : currentValue;
+    }
 
 }
