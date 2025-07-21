@@ -2,7 +2,7 @@ package nova.mjs.admin.department.notice.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.admin.registration.service.AdminQueryService;
+import nova.mjs.admin.account.service.AdminQueryService;
 import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeRequestDTO;
 import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeResponseDTO;
 import nova.mjs.domain.department.entity.Department;

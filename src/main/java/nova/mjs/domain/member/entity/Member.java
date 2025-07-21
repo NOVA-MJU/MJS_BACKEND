@@ -2,7 +2,7 @@ package nova.mjs.domain.member.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.admin.registration.DTO.AdminDTO;
+import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
 import nova.mjs.util.entity.BaseEntity;
@@ -99,9 +99,11 @@ public class Member extends BaseEntity {
     // 초기 어드민 계정을 생성할 경우, UUID, 이메일, 임시 비밀버호, 역할, 성별은 제공한다.
     public static Member createAdminInit(AdminDTO.StudentCouncilInitRegistrationRequestDTO memberDTO, String encodePassword) {
         return Member.builder()
-                .uuid(UUID.randomUUID()) // UUID 자동 생성
+                .uuid(UUID.randomUUID()) // UUID 자동 생성\
                 .email(memberDTO.getEmail())
                 .password(encodePassword)
+                .name(memberDTO.getName())
+                .departmentName(memberDTO.getDepartmentName())
                 .role(Role.ADMIN)
                 .gender(Gender.OTHERS)
                 .studentNumber("NONE")

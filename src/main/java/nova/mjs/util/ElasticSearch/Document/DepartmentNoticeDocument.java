@@ -53,7 +53,7 @@ public class DepartmentNoticeDocument implements SearchDocument{
 
     public static DepartmentNoticeDocument from(DepartmentNotice departmentNotice) {
         return DepartmentNoticeDocument.builder()
-                .id(departmentNotice.getDepartmentNoticeUuid().toString())
+                .id(departmentNotice.getUuid().toString())
                 .title(departmentNotice.getTitle())
                 .content(departmentNotice.getContent())
                 .department(departmentNotice.getDepartment().getDepartmentName().getLabel())

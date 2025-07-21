@@ -9,6 +9,7 @@ import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,7 @@ public class AdminDepartmentNoticeController {
     private final AdminDepartmentNoticeService service;
 
     @GetMapping("/{noticeUuid}")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminDepartmentNoticeResponseDTO>> getDetail(
             @PathVariable UUID departmentUuid,
             @PathVariable UUID noticeUuid,
@@ -34,6 +36,7 @@ public class AdminDepartmentNoticeController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminDepartmentNoticeResponseDTO>> create(
             @PathVariable UUID departmentUuid,
             @AuthenticationPrincipal UserPrincipal userPrincipal,
@@ -45,6 +48,7 @@ public class AdminDepartmentNoticeController {
     }
 
     @PatchMapping("/{noticeUuid}")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminDepartmentNoticeResponseDTO>> update(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable UUID departmentUuid,
@@ -57,7 +61,7 @@ public class AdminDepartmentNoticeController {
     }
 
     @DeleteMapping("/{noticeUuid}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<String>> delete(
             @PathVariable UUID departmentUuid,
             @PathVariable UUID noticeUuid,

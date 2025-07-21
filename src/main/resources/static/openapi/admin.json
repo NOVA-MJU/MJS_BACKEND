@@ -21,17 +21,24 @@
     }
   ],
   "paths": {
-    "/admin/register": {
+    "/admin/account/register": {
       "post": {
         "tags": ["Admin"],
+        "security": [ { "Authorization": [] } ],
         "summary": "초기 관리자 계정 등록",
-        "description": "OPERATOR가 시스템에 최초로 학생회 관리자(ADMIN) 계정을 등록합니다. 해당 계정은 특정 학과와 연결되며, 관리자 권한이 부여됩니다.",
+        "description": "**OPERATOR 전용 API**로, 시스템에 최초 학생회 관리자(ADMIN) 계정을 등록합니다.\n\n\n- 최초 등록된 관리자는 `ADMIN` 권한과 함께 학과 정보를 가지며, 해당 학과의 대표 학생회 계정으로 설정됩니다.\n\n\n- 요청 시, 이메일과 이름, 학과 정보는 필수이며 기본 비밀번호는 서버에서 자동 설정됩니다.\n\n\n- `contactEmail`은 학생회 공식 연락 이메일로 등록되며, 학과 엔티티의 `studentCouncilContactEmail`로 저장됩니다.\n\n\n❗ 이 API는 **운영자(OPERATOR)** 권한을 가진 사용자만 호출할 수 있습니다.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/StudentCouncilInitRegistrationRequestDTO"
+              },
+              "example": {
+                "email": "mjsearch@mju.ac.kr",
+                "name": "데이터사이언스 학생회",
+                "contactEmail": "mjsearch2025@gmail.com",
+                "departmentName": "DATA_SCIENCE"
               }
             }
           }
@@ -43,6 +50,41 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseString"
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": "초기 관리자가 성공적으로 등록되었습니다.",
+                  "timestamp": "2025-07-21T19:55:00.000Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "유효성 검증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 400,
+                  "error": "VALIDATION_FAILED",
+                  "message": "email : 올바른 이메일 형식이 아닙니다., contactEmail : 컨텍 이메일은 필수입니다."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "접근 권한 없음 (OPERATOR 아님)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 403,
+                  "error": "ACCESS_DENIED",
+                  "message": "[MJS] 토큰이 유효하지 않거나 사용자에게 해당 접근 권한이 없습니다."
                 }
               }
             }
@@ -50,9 +92,10 @@
         }
       }
     },
-    "/admin/update": {
+    "/admin/account/update": {
       "patch": {
         "tags": ["Admin"],
+        "security": [ { "Authorization": [] } ],
         "summary": "관리자 정보 수정",
         "description": "학생회 관리자 계정과 해당 학과 정보를 동시에 수정합니다. 이름, 학과명, 슬로건, 인스타그램, 공식 홈페이지 URL 등 다양한 속성을 갱신할 수 있습니다.",
         "requestBody": {
@@ -61,6 +104,19 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/StudentCouncilUpdateDTO"
+              },
+              "example": {
+                "email": "mjsearch@mju.ac.kr",
+                "name": "데이터사이언스 학생회",
+                "contactEmail": "mjsearch2025@gmail.com",
+                "departmentName": "DATA_SCIENCE",
+                "password": "newSecurePw1!",
+                "college": "AI_SOFTWARE",
+                "profileImageUrl": "https://cdn.mjsearch.org/profiles/admin.jpeg",
+                "slogan": "함께, 바꾸다!",
+                "description": "명지대학교 학생들을 위한 대표 조직입니다.",
+                "instagramUrl": "https://instagram.com/mju_student_council",
+                "homepageUrl": "https://student.mju.ac.kr"
               }
             }
           }
@@ -71,7 +127,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponseStudentCouncilResponseDTO"
+                  "$ref": "#/components/schemas/StudentCouncilResponseDTO"
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "adminEmail": "mjsearch@mju.ac.kr",
+                    "name": "데이터사이언스 학생회",
+                    "studentCouncilEmail": "mjsearch2025@gmail.com",
+                    "college": "AI_SOFTWARE",
+                    "departmentName": "DATA_SCIENCE",
+                    "profileImageUrl": "https://cdn.mjsearch.org/profiles/admin.jpeg",
+                    "slogan": "함께, 바꾸다!",
+                    "description": "명지대학교 학생들을 위한 대표 조직입니다.",
+                    "instagramUrl": "https://instagram.com/mju_student_council",
+                    "homepageUrl": "https://student.mju.ac.kr"
+                  },
+                  "timestamp": "2025-07-21T19:51:57.6547447"
                 }
               }
             }
@@ -79,9 +151,10 @@
         }
       }
     },
-    "/admin/validate": {
+    "/admin/account/validate": {
       "get": {
         "tags": ["Admin"],
+        "security": [ { "Authorization": [] } ],
         "summary": "초기 관리자 계정 여부 확인",
         "description": "이메일을 기준으로 해당 사용자가 시스템에 등록된 초기 관리자(ADMIN)인지 확인합니다. 등록된 경우 true, 없거나 일반 사용자인 경우 false를 반환합니다.",
         "parameters": [
@@ -113,6 +186,7 @@
     "/admin/departments/{departmentUuid}/notices": {
       "post": {
         "tags": ["DEPARTMENT_NOTICE"],
+        "security": [ { "Authorization": [] } ],
         "summary": "학과 공지 등록",
         "description": "해당 학과의 학생회 관리자가 새로운 공지사항을 등록합니다. 등록된 공지사항은 학과 학생들에게 노출됩니다.",
         "requestBody": {
@@ -147,6 +221,7 @@
     "/admin/departments/{departmentUuid}/notices/{noticeUuid}": {
       "get": {
         "tags": ["DEPARTMENT_NOTICE"],
+        "security": [ { "Authorization": [] } ],
         "summary": "공지 단건 조회",
         "description": "특정 학과 공지사항의 상세 내용을 조회합니다. 관리 권한이 있는 학생회 어드민만 접근할 수 있습니다.",
         "responses": {
@@ -164,6 +239,7 @@
       },
       "patch": {
         "tags": ["DEPARTMENT_NOTICE"],
+        "security": [ { "Authorization": [] } ],
         "summary": "공지 수정",
         "description": "학생회 관리자가 기존 공지사항의 제목, 본문, 썸네일 등을 수정합니다. 비어 있는 필드는 기존 값을 유지합니다.",
         "requestBody": {
@@ -196,6 +272,7 @@
       },
       "delete": {
         "tags": ["DEPARTMENT_NOTICE"],
+        "security": [ { "Authorization": [] } ],
         "summary": "공지 삭제",
         "description": "학생회 관리자가 특정 공지사항을 삭제합니다. 삭제 시 관련된 S3 리소스도 정리됩니다.",
         "responses": {
@@ -220,45 +297,54 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
       "StudentCouncilInitRegistrationRequestDTO": {
         "type": "object",
-        "required": ["email", "password"],
+        "required": ["email", "name", "contactEmail", "departmentName"],
         "properties": {
-          "email": { "type": "string", "format": "email", "example": "admin@mju.ac.kr" },
-          "contactEmail": { "type": "string", "format": "email", "example": "contact@mjustudent.org" },
-          "password": { "type": "string", "example": "hellomjs1!" }
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "contactEmail": { "type": "string", "format": "email" },
+          "departmentName": { "type": "string" }
         }
       },
       "StudentCouncilUpdateDTO": {
         "type": "object",
         "required": ["email", "name", "password", "departmentName", "college"],
         "properties": {
-          "email": { "type": "string", "format": "email", "example": "admin@mju.ac.kr" },
-          "name": { "type": "string", "example": "MJU 학생회" },
-          "password": { "type": "string", "example": "newSecurePw1!" },
-          "college": { "type": "string", "example": "AI_SOFTWARE" },
-          "departmentName": { "type": "string", "example": "DATA_SCIENCE" },
-          "profileImageUrl": { "type": "string", "example": "https://cdn.mjsearch.org/profiles/admin.jpeg" },
-          "slogan": { "type": "string", "example": "함께, 바꾸다!" },
-          "description": { "type": "string", "example": "명지대학교 학생들을 위한 대표 조직입니다." },
-          "instagramUrl": { "type": "string", "example": "https://instagram.com/mju_student_council" },
-          "homepageUrl": { "type": "string", "example": "https://student.mju.ac.kr" }
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "password": { "type": "string" },
+          "college": { "type": "string" },
+          "departmentName": { "type": "string" },
+          "profileImageUrl": { "type": "string" },
+          "slogan": { "type": "string" },
+          "description": { "type": "string" },
+          "instagramUrl": { "type": "string" },
+          "homepageUrl": { "type": "string" },
+          "contactEmail": { "type": "string" }
         }
       },
       "StudentCouncilResponseDTO": {
         "type": "object",
         "properties": {
-          "adminEmail": { "type": "string", "example": "admin@mju.ac.kr" },
-          "name": { "type": "string", "example": "명지대학교 학생회" },
-          "studentCouncilEmail": { "type": "string", "example": "contact@mjustudent.org" },
-          "college": { "type": "string", "example": "AI_SOFTWARE" },
-          "departmentName": { "type": "string", "example": "DATA_SCIENCE" },
-          "profileImageUrl": { "type": "string", "example": "https://cdn.mjsearch.org/profiles/logo.png" },
-          "slogan": { "type": "string", "example": "우리의 미래를 위해!" },
-          "description": { "type": "string", "example": "학생들과 함께 성장하는 학생회입니다." },
-          "instagramUrl": { "type": "string", "example": "https://instagram.com/mju_student" },
-          "homepageUrl": { "type": "string", "example": "https://student.mju.ac.kr" }
+          "adminEmail": { "type": "string" },
+          "name": { "type": "string" },
+          "studentCouncilEmail": { "type": "string" },
+          "college": { "type": "string" },
+          "departmentName": { "type": "string" },
+          "profileImageUrl": { "type": "string" },
+          "slogan": { "type": "string" },
+          "description": { "type": "string" },
+          "instagramUrl": { "type": "string" },
+          "homepageUrl": { "type": "string" }
         }
       },
       "ApiResponseString": {
@@ -334,6 +420,33 @@
             "example": "2025-07-20T15:00:00"
           }
         }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "example": 400,
+            "description": "HTTP 상태 코드"
+          },
+          "error": {
+            "type": "string",
+            "example": "VALIDATION_FAILED",
+            "description": "에러 식별용 키워드"
+          },
+          "message": {
+            "type": "string",
+            "example": "email : 올바른 이메일 형식이 아닙니다., contactEmail : 컨텍 이메일은 필수입니다.",
+            "description": "에러 상세 메시지"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-21T19:55:00.000Z",
+            "description": "에러 발생 시간 (ISO 8601 형식)"
+          }
+        },
+        "required": ["status", "error", "message", "timestamp"]
       }
     }
   }

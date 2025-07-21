@@ -2,7 +2,7 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
+import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleRequestDTO;
 import nova.mjs.util.ElasticSearch.EntityListner.DepartmentScheduleEntityListener;
 import nova.mjs.util.entity.BaseEntity;
 
