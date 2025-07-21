@@ -13,12 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class AdminQueryServiceImpl implements AdminQueryService {
 
-    private static DepartmentRepository departmentRepository;
+    private final DepartmentRepository departmentRepository;
 
     // 관리자인지 확인하기
     // 1. 로그인한 회원 Email과 Deparment에 등록된 관리자와 동일한지 검증 메서드
