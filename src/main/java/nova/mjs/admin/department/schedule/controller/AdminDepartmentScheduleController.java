@@ -1,10 +1,10 @@
-package nova.mjs.admin.department.department_schedule.controller;
+package nova.mjs.admin.department.schedule.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
-import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
-import nova.mjs.admin.department.department_schedule.service.AdminDepartmentScheduleService;
+import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleRequestDTO;
+import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleResponseDTO;
+import nova.mjs.admin.department.schedule.service.AdminDepartmentScheduleService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;

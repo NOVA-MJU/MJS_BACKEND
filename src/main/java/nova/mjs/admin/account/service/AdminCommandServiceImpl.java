@@ -1,11 +1,10 @@
-package nova.mjs.admin.registration.service;
+package nova.mjs.admin.account.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import nova.mjs.admin.registration.DTO.AdminDTO;
+import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.repository.DepartmentRepository;
-import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.exception.MemberNotFoundException;
 import nova.mjs.domain.member.repository.MemberRepository;
@@ -14,8 +13,6 @@ import nova.mjs.util.response.ApiResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor

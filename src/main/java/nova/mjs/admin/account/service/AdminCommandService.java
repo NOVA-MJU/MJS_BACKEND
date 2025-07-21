@@ -1,6 +1,6 @@
-package nova.mjs.admin.registration.service;
+package nova.mjs.admin.account.service;
 
-import nova.mjs.admin.registration.DTO.AdminDTO;
+import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.util.response.ApiResponse;
 
 public interface AdminCommandService {

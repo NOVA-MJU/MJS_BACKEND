@@ -1,4 +1,4 @@
-package nova.mjs.admin.department.department_schedule.exception;
+package nova.mjs.admin.department.schedule.exception;
 
 import nova.mjs.util.exception.ErrorCode;
 

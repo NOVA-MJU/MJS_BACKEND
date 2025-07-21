@@ -1,13 +1,13 @@
-package nova.mjs.admin.department.department_schedule.service;
+package nova.mjs.admin.department.schedule.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.admin.department.department_schedule.exception.DepartmentScheduleNotFoundException;
-import nova.mjs.admin.registration.exception.AdminIdMismatchException;
-import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
-import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
-import nova.mjs.admin.department.department_schedule.repository.AdminDepartmentScheduleRepository;
+import nova.mjs.admin.department.schedule.exception.DepartmentScheduleNotFoundException;
+import nova.mjs.admin.account.exception.AdminIdMismatchException;
+import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleRequestDTO;
+import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleResponseDTO;
+import nova.mjs.admin.department.schedule.repository.AdminDepartmentScheduleRepository;
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.entity.DepartmentSchedule;
 import nova.mjs.domain.department.exception.DepartmentNotFoundException;

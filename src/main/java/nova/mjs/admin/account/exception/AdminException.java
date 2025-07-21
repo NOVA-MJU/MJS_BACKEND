@@ -1,4 +1,4 @@
-package nova.mjs.admin.registration.exception;
+package nova.mjs.admin.account.exception;
 
 import nova.mjs.util.exception.BusinessBaseException;
 import nova.mjs.util.exception.ErrorCode;

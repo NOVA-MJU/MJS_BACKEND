@@ -1,7 +1,7 @@
-package nova.mjs.admin.department.department_schedule.controller;
+package nova.mjs.admin.department.schedule.controller;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.admin.department.department_schedule.service.AdminDepartmentScheduleImageService;
+import nova.mjs.admin.department.schedule.service.AdminDepartmentScheduleImageService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -1,10 +1,9 @@
-package nova.mjs.admin.registration.service;
+package nova.mjs.admin.account.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.repository.DepartmentRepository;
-import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.exception.MemberNotFoundException;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.stereotype.Service;

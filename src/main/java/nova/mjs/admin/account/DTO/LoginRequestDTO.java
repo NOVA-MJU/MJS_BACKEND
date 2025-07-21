@@ -1,4 +1,4 @@
-package nova.mjs.admin.registration.DTO;
+package nova.mjs.admin.account.DTO;
 
 import lombok.Builder;
 import lombok.Getter;

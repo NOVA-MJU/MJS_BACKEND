@@ -1,11 +1,10 @@
-package nova.mjs.admin.registration.DTO;
+package nova.mjs.admin.account.DTO;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import nova.mjs.domain.department.entity.Department;
-import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
@@ -22,7 +21,16 @@ public class AdminDTO {
         @NotBlank(message = "이메일은 필수입니다.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
         private String email; // 이메일 아이디
+
+        @NotBlank(message = "이름은 필수입니다.")
+        private String name;
+
+        @NotBlank(message = "컨텍 이메일은 필수입니다.")
         private String contactEmail;
+
+        @NotNull(message = "담당 학과를 입력해주세요")
+        private DepartmentName departmentName;
+
         @Builder.Default
         private String password = "hellomjs1!";
     }
@@ -33,21 +41,19 @@ public class AdminDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class StudentCouncilUpdateDTO {
-        @NotBlank(message = "이메일은 필수입니다.")
+        @NotBlank(message = "이메일은 검증은 필수입니다.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
         private String email; // 이메일 아이디
 
-        @NotBlank(message = "이름은 필수입니다.")
         private String name;
 
         @NotBlank(message = "비밀번호는 필수입니다.")
         private String password;
 
-        @NotNull(message = "학과 정보는 필수입니다.")
-        private DepartmentName departmentName;
-
         @NotNull(message = "학과 대학는 필수입니다.")
         private College college;
+
+        private DepartmentName departmentName;
 
         private String profileImageUrl;
 
@@ -59,7 +65,6 @@ public class AdminDTO {
 
         private String homepageUrl;
     }
-
 
     @Data
     @Builder

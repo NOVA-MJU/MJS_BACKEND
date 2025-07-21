@@ -1,4 +1,4 @@
-package nova.mjs.admin.department.department_schedule.service;
+package nova.mjs.admin.department.schedule.service;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.util.s3.S3DomainType;

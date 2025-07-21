@@ -1,4 +1,4 @@
-package nova.mjs.admin.registration.service;
+package nova.mjs.admin.account.service;
 
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.util.security.UserPrincipal;
