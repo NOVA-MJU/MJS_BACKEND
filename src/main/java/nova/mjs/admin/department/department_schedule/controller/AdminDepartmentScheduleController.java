@@ -1,53 +1,61 @@
-//package nova.mjs.admin.department.department_schedule.controller;
-//
-//import lombok.RequiredArgsConstructor;
-//import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
-//import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
-//import nova.mjs.admin.department.department_schedule.service.AdminDepartmentScheduleService;
-//import nova.mjs.util.response.ApiResponse;
-//import nova.mjs.util.security.UserPrincipal;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.security.access.prepost.PreAuthorize;
-//import org.springframework.security.core.annotation.AuthenticationPrincipal;
-//import org.springframework.web.bind.annotation.*;
-//
-//import java.util.List;
-//
-//@RestController
-//@RequestMapping("/api/v1/admin/department-schedules")
-//@RequiredArgsConstructor
-//public class AdminDepartmentScheduleController {
-//
-//    private final AdminDepartmentScheduleService scheduleService;
-//
-//    // 학과 일정 등록 (수정 필요)
-//    @PostMapping
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> createSchedule(
-//            @AuthenticationPrincipal UserPrincipal userPrincipal,
-//            @RequestBody AdminDepartmentScheduleRequestDTO request
-//    ) {
-//        AdminDepartmentScheduleResponseDTO result = scheduleService.create(userPrincipal.getUsername(), request);
-//        return ResponseEntity.status(HttpStatus.CREATED)
-//                .body(ApiResponse.success(result));
-//    }
-//
-//    // 해당 월의 일정 조회 (수정 필요)
-//    @GetMapping
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<ApiResponse<List<AdminDepartmentScheduleResponseDTO>>> getSchedulesByMonth(
-//            @AuthenticationPrincipal UserPrincipal userPrincipal,
-//            @RequestParam int year,
-//            @RequestParam int month
-//    ) {
-//        List<AdminDepartmentScheduleResponseDTO> schedules =
-//                scheduleService.getSchedulesByMonth(userPrincipal.getUsername(), year, month);
-//        return ResponseEntity.ok(ApiResponse.success(schedules));
-//    }
-//
-//    // 일정 수정
-//
-//
-//    // 일정 삭제
-//}
+package nova.mjs.admin.department.department_schedule.controller;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleRequestDTO;
+import nova.mjs.admin.department.department_schedule.dto.AdminDepartmentScheduleResponseDTO;
+import nova.mjs.admin.department.department_schedule.service.AdminDepartmentScheduleService;
+import nova.mjs.util.response.ApiResponse;
+import nova.mjs.util.security.UserPrincipal;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/admin/department-schedules")
+@RequiredArgsConstructor
+public class AdminDepartmentScheduleController {
+
+    private final AdminDepartmentScheduleService scheduleService;
+
+    //일정 생성
+    @PostMapping("/{scheduleUuid}")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
+    public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> createSchedule(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable UUID scheduleUuid,
+            @RequestBody AdminDepartmentScheduleRequestDTO requestDTO){
+
+        AdminDepartmentScheduleResponseDTO responseDTO = scheduleService.createSchedule(userPrincipal.getEmail(), scheduleUuid, requestDTO);
+        return ResponseEntity
+                .ok(ApiResponse.success(responseDTO));
+    }
+
+    // 일정 수정
+    @PatchMapping("/{scheduleUuid}")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
+    public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> updateSchedule(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable UUID scheduleUuid,
+            @RequestBody AdminDepartmentScheduleRequestDTO requestDTO){
+
+        AdminDepartmentScheduleResponseDTO updatedResultDTO = scheduleService.updateSchedule(userPrincipal.getEmail(), scheduleUuid, requestDTO);
+        return ResponseEntity
+                .ok(ApiResponse.success(updatedResultDTO));
+    }
+
+    // 일정 삭제
+    @DeleteMapping("/{scheduleUuid}")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
+    public ResponseEntity<ApiResponse<String>> deleteSchedule(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable UUID scheduleUuid){
+
+        scheduleService.deleteSchedule(userPrincipal.getEmail(), scheduleUuid);
+        return ResponseEntity
+                .ok(ApiResponse.success("학과 일정이 삭제되었습니다."));
+    }
+}

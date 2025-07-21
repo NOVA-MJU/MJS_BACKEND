@@ -14,6 +14,7 @@ public enum S3DomainType {
     COMMUNITY_POST("static/images/boards/"),
     PROFILE("static/images/member/profiles/"),
     DEPARTMENT_LOGO("static/images/departments/logos/"),
+    DEPARTMENT_SCHEDULE("static/images/departments/schedules/"),
     DEPARTMENT_NOTICE("static/image/departments/notice"),
     EVENT("events/");
 

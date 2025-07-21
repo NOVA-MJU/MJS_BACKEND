@@ -17,4 +17,6 @@ public class SearchResponseDTO {
     private String link;
     private String category;
     private String type;
+    private String imageUrl;
+    private float score;
 }

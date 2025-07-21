@@ -1,11 +1,11 @@
 package nova.mjs.util.ElasticSearch.Repository;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScore;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScoreMode;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.util.ElasticSearch.Document.CommunityDocument;
-import nova.mjs.util.ElasticSearch.Document.NewsDocument;
-import nova.mjs.util.ElasticSearch.Document.NoticeDocument;
-import nova.mjs.util.ElasticSearch.Document.SearchDocument;
+import nova.mjs.util.ElasticSearch.Document.*;
+import nova.mjs.util.ElasticSearch.SearchType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -25,7 +25,7 @@ public class SearchRepositoryImpl implements SearchRepository {
     private final ElasticsearchTemplate elasticsearchTemplate;
 
     @Override
-    public SearchHits<? extends SearchDocument> search(String keyword, String type, int page, int size) {
+    public SearchHits<? extends SearchDocument> search(String keyword, SearchType type, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
         List<HighlightField> highlightFields = List.of(
@@ -40,33 +40,58 @@ public class SearchRepositoryImpl implements SearchRepository {
                 new Highlight(highlightFields), targetClass
         );
 
+        /**
+         * Spring Data Elasticsearch DSL
+         */
+
         NativeQuery query = NativeQuery.builder()
-                .withQuery(q -> q.bool(b -> {
-                    BoolQuery.Builder boolBuilder = b
-                            .should(s -> s.match(m -> m.field("title").query(keyword)))
-                            .should(s -> s.match(m -> m.field("content").query(keyword)))
-                            .minimumShouldMatch("1");
-
-                    if (!type.isBlank()) {
-                        boolBuilder.filter(f -> f.term(t -> t.field("type").value(type)));
-                    }
-
-                    return boolBuilder;
-                }))
+                .withQuery(q -> q
+                        .functionScore(fs -> fs
+                                .query(inner -> inner
+                                        .bool(b -> b
+                                                .should(s -> s.match(m -> m.field("title").query(keyword)))
+                                                .should(s -> s.match(m -> m.field("content").query(keyword)))
+                                        )
+                                )
+                                .functions(List.of(
+                                        FunctionScore.of(f -> f
+                                                .filter(q1 -> q1.matchPhrase(mp -> mp.field("title").query(keyword)))
+                                                .weight(10.0)
+                                        ),
+                                        FunctionScore.of(f -> f
+                                                .filter(q2 -> q2.matchPhrase(mp -> mp.field("content").query(keyword)))
+                                                .weight(8.0)
+                                        ),
+                                        FunctionScore.of(f -> f
+                                                .filter(q3 -> q3.match(m -> m.field("title").query(keyword)))
+                                                .weight(2.0)
+                                        ),
+                                        FunctionScore.of(f -> f
+                                                .filter(q4 -> q4.match(m -> m.field("content").query(keyword)))
+                                                .weight(1.0)
+                                        )
+                                ))
+                                .scoreMode(FunctionScoreMode.Sum) // 가중치들을 모두 더함 (title+content 다 걸리면 스코어 높아짐)
+                                .boostMode(FunctionBoostMode.Sum) // 기존 스코어와 가중치를 더해서 최종 점수 계산
+                        )
+                )
                 .withHighlightQuery(highlightQuery)
                 .withPageable(pageable)
                 .build();
 
-        // 검색 후, 결과를 반환
+    // 검색 후, 결과를 반환
         return elasticsearchTemplate.search(query, targetClass);
     }
 
-    private Class<? extends SearchDocument> resolveTargetClass(String type) {
-        return switch (type.toLowerCase()) {
-            case "notice" -> NoticeDocument.class;
-            case "news" -> NewsDocument.class;
-            case "community" -> CommunityDocument.class;
-            default -> throw new IllegalArgumentException("Unknown type: " + type);
+    private Class<? extends SearchDocument> resolveTargetClass(SearchType type) {
+        return switch (type) {
+            case NOTICE -> NoticeDocument.class;
+            case MJU_CALENDAR -> MjuCalendarDocument.class;
+            case DEPARTMENT_NOTICE -> DepartmentNoticeDocument.class;
+            case DEPARTMENT_SCHEDULE -> DepartmentScheduleDocument.class;
+            case COMMUNITY -> CommunityDocument.class;
+            case NEWS -> NewsDocument.class;
+            case BROADCAST -> BroadcastDocument.class;
         };
     }
 }

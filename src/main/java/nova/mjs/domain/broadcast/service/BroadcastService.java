@@ -1,7 +1,7 @@
 package nova.mjs.domain.broadcast.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nova.mjs.domain.broadcast.DTO.BroadcastResponseDTO;
 import nova.mjs.domain.broadcast.entity.Broadcast;
 import nova.mjs.domain.broadcast.repository.BroadcastRepository;

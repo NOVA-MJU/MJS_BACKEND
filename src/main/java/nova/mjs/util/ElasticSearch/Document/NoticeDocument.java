@@ -5,15 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.notice.entity.Notice;
+import nova.mjs.util.ElasticSearch.SearchType;
+import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Document(indexName = "notice_index")
 @Data
@@ -36,11 +36,14 @@ public class NoticeDocument implements SearchDocument{
 
     private String category;
 
+    @CompletionField
+    private List<String> suggest;
+
     private String type;
 
     @Override
     public String getType() {
-        return "Notice";
+        return SearchType.NOTICE.name();
     }
 
     @Override
@@ -58,8 +61,8 @@ public class NoticeDocument implements SearchDocument{
                 .date(notice.getDate().atZone(ZoneId.systemDefault()).toInstant())
                 .link(notice.getLink())
                 .category(notice.getCategory())
-                .type("notice")
+                .suggest(KomoranTokenizerUtil.generateSuggestions(notice.getTitle()))
+                .type(SearchType.NOTICE.name())
                 .build();
     }
-
 }

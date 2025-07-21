@@ -76,7 +76,8 @@ public enum ErrorCode {
 
     //학과별 서비스 관련 에러
     DEPARTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_NOT_FOUND", "[MJS] 존재하지 않는 학과입니다."),
-    DEPARTMENT_ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_ADMIN_NOT_FOUND", "[MJS] 해당 관리자 계정을 찾을 수 없습니다.");
+    DEPARTMENT_ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_ADMIN_NOT_FOUND", "[MJS] 해당 관리자 계정을 찾을 수 없습니다."),
+    DEPARTMENT_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_SCHEDULE_NOT_FOUND", "[MJS] 존재하지 않는 학과 일정입니다.");
 
 
     private final HttpStatus status;

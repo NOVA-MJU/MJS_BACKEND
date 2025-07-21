@@ -2,6 +2,7 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.util.ElasticSearch.EntityListner.DepartmentNoticeEntityListener;
 import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeRequestDTO;
 import nova.mjs.domain.community.util.ContentPreviewUtil;
 import nova.mjs.util.entity.BaseEntity;
@@ -19,6 +20,7 @@ import static org.springframework.util.StringUtils.hasText;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(DepartmentNoticeEntityListener.class)
 @Table(name = "department_notice")
 public class DepartmentNotice extends BaseEntity {
 
@@ -45,7 +47,6 @@ public class DepartmentNotice extends BaseEntity {
     @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(columnDefinition = "TEXT")
     private String content;
-
 
     // 6) preview_content
     @Column(name = "preview_content", columnDefinition = "TEXT")

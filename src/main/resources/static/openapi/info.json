@@ -3,7 +3,7 @@
   "info": {
     "title": "MJU 통합 검색 API",
     "version": "v1.0.0",
-    "description": "Elasticsearch를 활용한 통합 검색 기능 및 데이터 동기화 API입니다."
+    "description": "Elasticsearch를 활용한 통합 검색, 연관 검색어 추천, 데이터 동기화 API입니다."
   },
   "servers": [
     {
@@ -14,9 +14,12 @@
     {
       "name": "Search",
       "description": "Elasticsearch 연동을 통한 통합 검색 및 데이터 인덱싱 기능"
+    },
+    {
+      "name": "Suggest",
+      "description": "검색어 자동완성(연관어) 추천 기능"
     }
   ],
-
   "paths": {
     "/search/sync": {
       "post": {
@@ -27,8 +30,12 @@
           "200": {
             "description": "인덱싱 완료 메시지 반환",
             "content": {
-              "text/plain": {
-                "example": "Elasticsearch 인덱싱 완료!"
+              "application/json": {
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": "Success Indexing",
+                  "timestamp": "2025-07-18T02:47:14.860864"
+                }
               }
             }
           }
@@ -39,7 +46,7 @@
       "get": {
         "tags": ["Search"],
         "summary": "통합 키워드 검색",
-        "description": "공지사항, 명대신문, 커뮤니티 게시글에 대한 통합 검색을 수행하고, 결과에 하이라이팅을 포함하여 반환합니다.",
+        "description": "공지사항, 명대신문, 커뮤니티 등 여러 카테고리에서 통합 검색을 수행하고, 결과에 하이라이팅을 포함하여 반환합니다.",
         "parameters": [
           {
             "name": "keyword",
@@ -54,9 +61,9 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["notice", "news", "community"]
+              "enum": ["NOTICE", "NEWS", "COMMUNITY", "DEPARTMENT_NOTICE", "DEPARTMENT_SCHEDULE", "BROADCAST", "MJU_CALENDAR"]
             },
-            "description": "검색 대상 타입 (예: notice, news, community)"
+            "description": "검색 대상 타입"
           },
           {
             "name": "page",
@@ -75,30 +82,105 @@
         ],
         "responses": {
           "200": {
-            "description": "검색 결과 목록 반환 (하이라이팅 포함)",
+            "description": "검색 결과 반환",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SearchResult"
-                  }
-                },
-                "examples": {
-                  "searchResult": {
-                    "summary": "하이라이트 포함 검색 예시",
-                    "value": [
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": [
+                    {
+                      "id": "308",
+                      "highlightedTitle": "인권서포터즈 <em>혜윰</em>, 인권 캠페인 펼쳐",
+                      "highlightedContent": "지난 14일, 인문캠 인권서포터즈 <em>혜윰</em>이 캠페인을 진행했다.",
+                      "date": "2025-05-19T01:39:00",
+                      "link": "https://news.mju.ac.kr/news/articleView.html?idxno=13317",
+                      "category": "REPORT",
+                      "type": "NEWS",
+                      "imageUrl": "",
+                      "score": 33.6482
+                    }
+                  ],
+                  "timestamp": "2025-07-18T02:47:34.580216"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/overview": {
+      "get": {
+        "tags": ["Search"],
+        "summary": "통합 검색 요약 (탭별 상위 5개)",
+        "description": "공지사항, 학사일정, 학과공지, 커뮤니티 등 각 항목에 대해 상위 5개의 검색 결과만 반환합니다.",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "검색 키워드 (필수)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "탭별 검색 결과 요약 반환",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "notice": [],
+                    "mjuCalendar": [],
+                    "departmentSchedule": [],
+                    "departmentNotice": [],
+                    "community": [],
+                    "news": [
                       {
-                        "id": "12",
-                        "highlightedTitle": "<em>장학</em>금 안내",
-                        "highlightedContent": "2025년 <em>장학</em>금 신청 방법...",
-                        "date": "2025-05-19T00:00:31.925",
-                        "link": "https://example.com",
-                        "category": "등록금",
-                        "type": "Notice"
+                        "id": "382",
+                        "highlightedTitle": "내년 인문캠 총학 <em>비대위</em>… 후보 불출마로 선거 무산",
+                        "highlightedContent": "...총동아리연합회 비상대책위원회...",
+                        "date": "2024-11-11T01:51:00",
+                        "link": "https://news.mju.ac.kr/news/articleView.html?idxno=12941",
+                        "category": "REPORT",
+                        "type": "NEWS",
+                        "imageUrl": "http://news.mju.ac.kr/news/thumbnail//202411/12941_13881_1514_v150.jpg",
+                        "score": 16.830822
                       }
-                    ]
-                  }
+                    ],
+                    "broadcast": []
+                  },
+                  "timestamp": "2025-07-18T02:48:21.850034"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/suggest": {
+      "get": {
+        "tags": ["Suggest"],
+        "summary": "자동완성 검색어 추천",
+        "description": "입력한 키워드에 기반해 유사하거나 관련된 추천 검색어를 리스트 형태로 제공합니다.",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "검색어 추천을 위한 키워드"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "추천 검색어 목록",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": ["장학금", "장학 안내", "장학생 신청"],
+                  "timestamp": "2025-07-18T02:49:12.123456"
                 }
               }
             }
@@ -113,16 +195,14 @@
         "type": "object",
         "properties": {
           "id": { "type": "string" },
-          "highlightedTitle": { "type": "string", "description": "검색 키워드가 강조된 제목" },
-          "highlightedContent": { "type": "string", "description": "검색 키워드가 강조된 내용 일부" },
+          "highlightedTitle": { "type": "string" },
+          "highlightedContent": { "type": "string" },
           "date": { "type": "string", "format": "date-time" },
           "link": { "type": "string", "format": "uri" },
-          "category": { "type": "string", "description": "문서 카테고리 (예: 등록금, 학사 등)" },
-          "type": {
-            "type": "string",
-            "enum": ["Notice", "News", "Community"],
-            "description": "검색 대상의 타입"
-          }
+          "category": { "type": "string" },
+          "type": { "type": "string" },
+          "imageUrl": { "type": "string" },
+          "score": { "type": "number", "format": "float" }
         }
       }
     }
