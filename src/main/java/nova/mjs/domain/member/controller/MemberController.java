@@ -109,5 +109,28 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.success("회원 정보가 삭제되었습니다."));
     }
 
+    // 이메일 중복 검증
+    @GetMapping("/validation/email")
+    public ResponseEntity<ApiResponse<String>> validateEmail(@RequestParam String email) {
+        memberQueryService.validateEmailDomain(email);
+        memberQueryService.validateEmailDuplication(email);
+        return ResponseEntity.ok(ApiResponse.success("사용 가능한 이메일입니다."));
+    }
+
+    // 닉네임 중복 검증
+    @GetMapping("/validation/nickname")
+    public ResponseEntity<ApiResponse<String>> validateNickname(@RequestParam String nickname) {
+        memberQueryService.validateNicknameDuplication(nickname);
+        return ResponseEntity.ok(ApiResponse.success("사용 가능한 닉네임입니다."));
+    }
+
+    // 학번 중복 검증
+    @GetMapping("/validation/student-number")
+    public ResponseEntity<ApiResponse<String>> validateStudentNumber(@RequestParam String studentNumber) {
+        memberQueryService.validateStudentNumberDuplication(studentNumber);
+        return ResponseEntity.ok(ApiResponse.success("사용 가능한 학번입니다."));
+    }
+
+
 }
 
