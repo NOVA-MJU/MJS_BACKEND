@@ -1,8 +1,8 @@
-package nova.mjs.domain.department.service;
+package nova.mjs.domain.department.service.schedule;
 
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.department.DTO.DepartmentScheduleResponseDTO;
+import nova.mjs.domain.department.dto.DepartmentScheduleResponseDTO;
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.entity.DepartmentSchedule;
 import nova.mjs.domain.department.exception.DepartmentNotFoundException;

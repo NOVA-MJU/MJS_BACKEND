@@ -1,9 +1,9 @@
-package nova.mjs.domain.department.service;
+package nova.mjs.domain.department.service.info;
 
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.department.DTO.DepartmentInfoDTO;
-import nova.mjs.domain.department.DTO.DepartmentSummaryDTO;
+import nova.mjs.domain.department.dto.DepartmentInfoDTO;
+import nova.mjs.domain.department.dto.DepartmentSummaryDTO;
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.exception.DepartmentNotFoundException;
 import nova.mjs.domain.department.repository.DepartmentRepository;
@@ -17,7 +17,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class DepartmentService {
+public class DepartmentInfoService {
 
     private final DepartmentRepository departmentRepository;
 
@@ -26,7 +26,7 @@ public class DepartmentService {
         Department department = departmentRepository.findByDepartmentUuid(departmentUuid)
                 .orElseThrow(DepartmentNotFoundException::new);
 
-        return DepartmentInfoDTO.fromDepartmentEntity(department);
+        return DepartmentInfoDTO.fromEntity(department);
     }
 
     // — 전체 학과 목록

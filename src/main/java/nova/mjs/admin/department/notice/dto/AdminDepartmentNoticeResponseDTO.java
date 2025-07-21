@@ -1,10 +1,9 @@
-package nova.mjs.admin.department.department_notice.dto;
+package nova.mjs.admin.department.notice.dto;
 
 import lombok.Builder;
 import lombok.Data;
 import nova.mjs.domain.department.entity.DepartmentNotice;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -16,12 +15,12 @@ public class AdminDepartmentNoticeResponseDTO {
     private String content;
     private LocalDateTime createAt;
 
-    public static AdminDepartmentNoticeResponseDTO fromEntity(DepartmentNotice n){
+    public static AdminDepartmentNoticeResponseDTO fromEntity(DepartmentNotice departmentNotice){
         return AdminDepartmentNoticeResponseDTO.builder()
-                .uuid(n.getDepartmentNoticeUuid())
-                .title(n.getTitle())
-                .content(n.getContent())
-                .createAt(n.getCreatedAt())
+                .uuid(departmentNotice.getUuid())
+                .title(departmentNotice.getTitle())
+                .content(departmentNotice.getContent())
+                .createAt(departmentNotice.getCreatedAt())
                 .build();
     }
 }

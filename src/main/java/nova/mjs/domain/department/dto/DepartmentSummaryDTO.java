@@ -1,4 +1,4 @@
-package nova.mjs.domain.department.DTO;
+package nova.mjs.domain.department.dto;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package nova.mjs.domain.department.DTO;
+package nova.mjs.domain.department.dto;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -21,7 +21,7 @@ public class DepartmentInfoDTO {
     private String homepageUrl;
     private College college;
 
-    public static DepartmentInfoDTO fromDepartmentEntity(Department department) {
+    public static DepartmentInfoDTO fromEntity(Department department) {
         return DepartmentInfoDTO.builder()
                 .departmentUuid(department.getDepartmentUuid())
                 .departmentName(department.getDepartmentName())

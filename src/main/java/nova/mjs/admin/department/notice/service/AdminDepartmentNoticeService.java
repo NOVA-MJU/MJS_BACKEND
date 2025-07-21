@@ -1,8 +1,7 @@
-package nova.mjs.admin.department.department_notice.service;
+package nova.mjs.admin.department.notice.service;
 
-import nova.mjs.admin.department.department_notice.dto.AdminDepartmentNoticeRequestDTO;
-import nova.mjs.admin.department.department_notice.dto.AdminDepartmentNoticeResponseDTO;
-import nova.mjs.domain.member.entity.enumList.DepartmentName;
+import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeRequestDTO;
+import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeResponseDTO;
 import nova.mjs.util.security.UserPrincipal;
 
 import java.util.UUID;
@@ -19,7 +18,8 @@ public interface AdminDepartmentNoticeService {
     // 공지사항 생성
     AdminDepartmentNoticeResponseDTO createNotice(AdminDepartmentNoticeRequestDTO request, UUID departmentUuid, UserPrincipal userPrincipal);
     // 공지사항 업데이트
-    AdminDepartmentNoticeResponseDTO updateNotice(UUID departmentNoticeUuid, AdminDepartmentNoticeRequestDTO request, UUID departmnentUuid, UserPrincipal userPrincipal);
+    AdminDepartmentNoticeResponseDTO updateNotice(UserPrincipal userPrincipal, UUID departmentUuid,
+                                                  UUID noticeUuid, AdminDepartmentNoticeRequestDTO request);
     // 공지사항 삭제
     void deleteNotice(UUID departmentNoticeUuid, UUID departmentUuid, UserPrincipal userPrincipal);
 }

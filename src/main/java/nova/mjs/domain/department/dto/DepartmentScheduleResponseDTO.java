@@ -1,4 +1,4 @@
-package nova.mjs.domain.department.DTO;
+package nova.mjs.domain.department.dto;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +17,7 @@ public class DepartmentScheduleResponseDTO { //list여야 함
 
     public static DepartmentScheduleResponseDTO fromScheduleList(Department department, List<DepartmentSchedule> scheduleEntities) {
         return DepartmentScheduleResponseDTO.builder()
-                .departmentInfo(DepartmentInfoDTO.fromDepartmentEntity(department))
+                .departmentInfo(DepartmentInfoDTO.fromEntity(department))
                 .schedules(ScheduleSimpleDTO.fromList(scheduleEntities))
                 .build();
     }
