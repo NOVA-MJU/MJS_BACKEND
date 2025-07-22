@@ -3,7 +3,7 @@
   "info": {
     "title": "MJU Campus API",
     "version": "v1.0.0",
-    "description": "명지대학교 식단, 공지사항, 명대신문 기사 정보를 제공하는 크롤링 기반 Campus API 명세서입니다."
+    "description": "명지대학교 식단, 공지사항, 명대신문 기사, 학사일정, 명지방송국 유튜브 정보를 제공하는 크롤링 기반 Campus API 명세서입니다."
   },
   "servers": [
     {
@@ -26,6 +26,10 @@
     {
       "name": "MJU_Calendar",
       "description": "명지대학교 학사일정 조회 기능"
+    },
+    {
+      "name": "Broadcast",
+      "description": "명지대학교 방송국 영상 크롤링 및 목록 조회 기능"
     }
   ],
   "paths": {
@@ -457,9 +461,128 @@
           }
         }
       }
+    },
+    "/broadcast": {
+      "get": {
+        "tags": ["Broadcast"],
+        "summary": "방송 영상 목록 조회",
+        "description": "명지대학교 방송국의 전체 영상 목록을 조회합니다. 페이지네이션 및 최신순 정렬을 지원합니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 },
+            "description": "페이지 번호 (0부터 시작)"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": { "type": "integer", "default": 9 },
+            "description": "페이지당 항목 수"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "방송 영상 목록 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "content": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/BroadcastItem" }
+                        },
+                        "pageable": { "type": "object" },
+                        "totalElements": { "type": "integer" },
+                        "totalPages": { "type": "integer" },
+                        "number": { "type": "integer" },
+                        "size": { "type": "integer" },
+                        "first": { "type": "boolean" },
+                        "last": { "type": "boolean" },
+                        "numberOfElements": { "type": "integer" },
+                        "empty": { "type": "boolean" }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                },
+                "examples": {
+                  "broadcastList": {
+                    "summary": "방송 영상 목록 예시",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "content": [
+                          {
+                            "title": "[오디오 콘텐츠] 슬기로운 서울생활 8화",
+                            "url": "https://www.youtube.com/watch?v=3_60kdx3xKg",
+                            "thumbnailUrl": "https://i.ytimg.com/vi/3_60kdx3xKg/hqdefault.jpg",
+                            "playlistTitle": "슬기로운 서울생활",
+                            "publishedAt": "2025-07-07T06:25:40"
+                          }
+                        ]
+                      },
+                      "timestamp": "2025-07-21T20:48:58.1067"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/broadcast/sync": {
+      "post": {
+        "tags": ["Broadcast"],
+        "summary": "방송 영상 동기화",
+        "description": "명지대학교 방송국 유튜브 채널에서 전체 영상을 크롤링하여 저장합니다.",
+        "responses": {
+          "200": {
+            "description": "동기화 완료 메시지 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "data": { "type": "string", "example": "명지대학교 방송국 전체 영상 동기화 완료" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                },
+                "examples": {
+                  "syncResult": {
+                    "summary": "동기화 결과 예시",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": "명지대학교 방송국 전체 영상 동기화 완료",
+                      "timestamp": "2025-07-21T20:48:58.1067"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
+    "securitySchemes": {
+      "Authorization": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
       "MenuItem": {
         "type": "object",
@@ -592,6 +715,34 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "BroadcastItem": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "[수다학개론] EP.04 지하철 타는 법?"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://www.youtube.com/watch?v=X1-p8BONK1s"
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://i.ytimg.com/vi/X1-p8BONK1s/hqdefault.jpg"
+          },
+          "playlistTitle": {
+            "type": "string",
+            "example": "슬기로운 서울생활"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-07T06:25:40"
           }
         }
       }

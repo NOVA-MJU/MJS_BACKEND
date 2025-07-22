@@ -2,7 +2,7 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.admin.registration.DTO.AdminDTO;
+import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
@@ -26,14 +26,13 @@ public class Department extends BaseEntity {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_member_id", unique = true, nullable = true) // nullable 허용
+    @JoinColumn(name = "admin_member_id") // nullable 허용
     private Member admin; // 관리자로 연결된 회원
 
     @Column(nullable = false, unique = true)
     private UUID departmentUuid;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private DepartmentName departmentName;
 
     @Column
@@ -52,12 +51,12 @@ public class Department extends BaseEntity {
     private String homepageUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private College college;
 
     @Builder.Default
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DepartmentSchedule> schedules = new ArrayList<>();
+
     @Builder.Default
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DepartmentNotice> notices = new ArrayList<>();

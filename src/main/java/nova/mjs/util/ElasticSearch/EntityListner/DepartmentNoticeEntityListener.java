@@ -28,7 +28,7 @@ public class DepartmentNoticeEntityListener {
     @PostRemove
     public void afterNoticeDelete(DepartmentNotice notice) {
         publisher.publish(DepartmentNoticeDocument.builder()
-                .id(notice.getDepartmentNoticeUuid().toString())
+                .id(notice.getUuid().toString())
                 .build(), EntityIndexEvent.IndexAction.DELETE);
     }
 }

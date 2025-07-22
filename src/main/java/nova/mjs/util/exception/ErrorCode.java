@@ -42,6 +42,7 @@ public enum ErrorCode {
 
     // 공지사항 에러 관련 추가 코드
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTICE_NOT_FOUND", "[MJS] 해당 조건의 공지사항을 찾을 수 없습니다."),
+    DEPARTMENT_NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_NOTICE_NOT_FOUND", "[MJS] 해당 조건의 학과 공지사항을 찾을 수 없습니다."),
 
     // 자유 게시판 관련 에러(C)
     COMMUNITY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMUNITY_NOT_FOUND", "[MJS] 요청한 게시판을 찾을 수 없습니다."),
@@ -74,7 +75,9 @@ public enum ErrorCode {
     ADMIN_ID_MISMATCH(HttpStatus.BAD_REQUEST, "ADMIN_ID_MISMATCH", "[MJS] 사전 등록된 관리자 ID와 일치하지 않습니다."),
 
     //학과별 서비스 관련 에러
-    DEPARTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_NOT_FOUND", "[MJS] 존재하지 않는 학과입니다.");
+    DEPARTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_NOT_FOUND", "[MJS] 존재하지 않는 학과입니다."),
+    DEPARTMENT_ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_ADMIN_NOT_FOUND", "[MJS] 해당 관리자 계정을 찾을 수 없습니다."),
+    DEPARTMENT_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_SCHEDULE_NOT_FOUND", "[MJS] 존재하지 않는 학과 일정입니다.");
 
 
     private final HttpStatus status;

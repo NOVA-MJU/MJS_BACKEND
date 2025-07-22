@@ -11,10 +11,12 @@ import java.util.UUID;
 
 public interface DepartmentNoticeRepository extends JpaRepository<DepartmentNotice, Long> {
     List<DepartmentNotice> findByDepartment_DepartmentUuid(UUID departmentUuid);
-
     Page<DepartmentNotice> findByDepartment_DepartmentUuid(UUID departmentUuid, Pageable pageable);
 
-    // ▶ 상세 토글용 단일 공지 조회
-    Optional<DepartmentNotice> findByDepartment_DepartmentUuidAndDepartmentNoticeUuid(
-            UUID departmentUuid, UUID noticeUuid);
+    /** 단일 UUID 기준 조회 (고유 식별자) */
+    Optional<DepartmentNotice> findByUuid(UUID uuid);
+
+    /** 학과 UUID와 공지 UUID 기준 조회 */
+    Optional<DepartmentNotice> findByDepartment_DepartmentUuidAndUuid(UUID departmentUuid, UUID noticeUuid);
+
 }
