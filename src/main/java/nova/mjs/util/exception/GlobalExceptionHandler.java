@@ -3,6 +3,7 @@ package nova.mjs.util.exception;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.util.jwt.exception.JwtException;
+import org.hibernate.PropertyValueException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -111,6 +112,20 @@ public class GlobalExceptionHandler {
         log.error("DataAccessException", e);
         return createErrorResponseEntity(HttpStatus.SERVICE_UNAVAILABLE, "DataAccessException", e.getMessage());
     }
+
+    // DTO 에서 NotNull message 띙우기
+    @ExceptionHandler(PropertyValueException.class)
+    public ResponseEntity<ErrorResponse> handlePropertyValueException(PropertyValueException ex) {
+        log.error("PropertyValueException: {}", ex.getMessage());
+
+        String property = ex.getPropertyName();
+        String entity = ex.getEntityName();
+
+        String message = String.format("[%s]의 [%s] 필드는 null일 수 없습니다.", entity, property);
+
+        return createErrorResponseEntity(HttpStatus.BAD_REQUEST, "NULL_PROPERTY", message);
+    }
+
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handleException(Exception ex) {
         log.error("Exception: {}", ex.getMessage());

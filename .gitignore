@@ -48,3 +48,4 @@ bin/
 ### VS Code ###
 .vscode/
 /bin/
+/logs/application.log

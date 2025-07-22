@@ -2,6 +2,7 @@ package nova.mjs.domain.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
@@ -25,27 +26,14 @@ public class Department extends BaseEntity {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_member_id", unique = true, nullable = true) // nullable 허용
+    @JoinColumn(name = "admin_member_id") // nullable 허용
     private Member admin; // 관리자로 연결된 회원
 
     @Column(nullable = false, unique = true)
     private UUID departmentUuid;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private DepartmentName departmentName;
-
-    @Column
-    private String studentCouncilName; // 학생회 명
-
-    @Column
-    private String studentCouncilLogo;
-
-    @Column
-    private String instagramUrl;
-
-    @Column
-    private String homepageUrl;
 
     @Column
     private String slogan;
@@ -53,30 +41,50 @@ public class Department extends BaseEntity {
     @Column
     private String description;
 
+    @Column
+    private String studentCouncilContactEmail; // 학생회 명
+
+    @Column
+    private String instagramUrl;
+
+    @Column
+    private String homepageUrl;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private College college;
 
     @Builder.Default
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DepartmentSchedule> schedules = new ArrayList<>();
+
     @Builder.Default
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DepartmentNotice> notices = new ArrayList<>();
 
-    public void updateInfo(DepartmentName departmentName, String studentCouncilName, String homepageUrl, String instagramUrl, String description, String studentCouncilLogo, String slogan, College college) {
-        this.departmentName = departmentName;
-        this.studentCouncilName = studentCouncilName;
-        this.homepageUrl = homepageUrl;
-        this.instagramUrl = instagramUrl;
-        this.description = description;
-        this.studentCouncilLogo = studentCouncilLogo;
-        this.slogan = slogan;
-        this.college = college;
+
+    public static Department createWithAdmin(AdminDTO.StudentCouncilInitRegistrationRequestDTO dto, Member admin) {
+        return Department.builder()
+            .departmentUuid(UUID.randomUUID())
+            .studentCouncilContactEmail(dto.getContactEmail())
+            .admin(admin)
+            .build();
+    }
+
+    public void updateInfo(AdminDTO.StudentCouncilUpdateDTO request) {
+        this.departmentName = getOrDefault(request.getDepartmentName(), this.departmentName);
+        this.homepageUrl = getOrDefault(request.getHomepageUrl(), this.homepageUrl);
+        this.instagramUrl = getOrDefault(request.getInstagramUrl(), this.instagramUrl);
+        this.description = getOrDefault(request.getDescription(), this.description);
+        this.slogan = getOrDefault(request.getSlogan(), this.slogan);
+        this.college = getOrDefault(request.getCollege(), this.college);
     }
 
     // 어드민 변경
     public void assignAdmin(Member newAdmin) {
         this.admin = newAdmin;
+    }
+
+    private <T> T getOrDefault(T newValue, T currentValue) {
+        return newValue != null ? newValue : currentValue;
     }
 }

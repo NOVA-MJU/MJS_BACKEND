@@ -2,13 +2,8 @@ package nova.mjs.util.ElasticSearch.EventSynchronization;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.util.ElasticSearch.Document.CommunityDocument;
-import nova.mjs.util.ElasticSearch.Document.NewsDocument;
-import nova.mjs.util.ElasticSearch.Document.NoticeDocument;
-import nova.mjs.util.ElasticSearch.Document.SearchDocument;
-import nova.mjs.util.ElasticSearch.Repository.CommunitySearchRepository;
-import nova.mjs.util.ElasticSearch.Repository.NewsSearchRepository;
-import nova.mjs.util.ElasticSearch.Repository.NoticeSearchRepository;
+import nova.mjs.util.ElasticSearch.Document.*;
+import nova.mjs.util.ElasticSearch.Repository.*;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +14,9 @@ public class SearchIndexEventListener {
     private final NoticeSearchRepository noticeSearchRepository;
     private final NewsSearchRepository newsSearchRepository;
     private final CommunitySearchRepository communitySearchRepository;
+    private final DepartmentScheduleSearchRepository departmentScheduleSearchRepository;
+    private final DepartmentNoticeSearchRepository departmentNoticeSearchRepository;
+    private final MjuCalendarSearchRepository mjuCalendarRepository;
 
 
 
@@ -34,6 +32,12 @@ public class SearchIndexEventListener {
                         newsSearchRepository.save(news);
                     } else if (doc instanceof CommunityDocument comm) {
                         communitySearchRepository.save(comm);
+                    } else if (doc instanceof DepartmentScheduleDocument schedule) {
+                        departmentScheduleSearchRepository.save(schedule);
+                    } else if (doc instanceof DepartmentNoticeDocument deptNotice) {
+                        departmentNoticeSearchRepository.save(deptNotice);
+                    } else if (doc instanceof MjuCalendarDocument mjuCalendar) {
+                        mjuCalendarRepository.save(mjuCalendar);
                     }
                     log.info("[Elasticsearch] [{}] 문서 {} 처리 성공 (ID: {})",
                             doc.getType(), event.getAction(), doc.getId());
@@ -46,7 +50,14 @@ public class SearchIndexEventListener {
                         newsSearchRepository.deleteById(news.getId());
                     } else if (doc instanceof CommunityDocument comm) {
                         communitySearchRepository.deleteById(comm.getId());
+                    } else if (doc instanceof DepartmentScheduleDocument schedule) {
+                        departmentScheduleSearchRepository.deleteById(schedule.getId());
+                    } else if (doc instanceof DepartmentNoticeDocument deptNotice) {
+                        departmentNoticeSearchRepository.deleteById(deptNotice.getId());
+                    } else if (doc instanceof MjuCalendarDocument mjuCalendar) {
+                        mjuCalendarRepository.deleteById(mjuCalendar.getId());
                     }
+
                     log.info("[Elasticsearch] [{}] 문서 삭제 성공 (ID: {})", doc.getType(), doc.getId());
                 }
             }

@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.notice.dto.NoticeResponseDto;
-import nova.mjs.domain.notice.exception.NoticeNotFoundExcetion;
+import nova.mjs.domain.notice.exception.NoticeNotFoundException;
 import nova.mjs.domain.notice.repository.NoticeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +22,7 @@ public class NoticeService {
 
     public Page<NoticeResponseDto> getNotices(String category, Integer year, int page, int size, String sort) {
         if (category == null || category.isEmpty()) {
-            throw new NoticeNotFoundExcetion();
+            throw new NoticeNotFoundException();
         }
 
         Sort.Direction direction = sort.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
@@ -39,7 +39,7 @@ public class NoticeService {
         }
 
         if (notices.isEmpty()) {
-            throw new NoticeNotFoundExcetion();
+            throw new NoticeNotFoundException();
         }
 
         return notices;

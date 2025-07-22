@@ -1,137 +1,90 @@
-//package nova.mjs.admin.account.service;
-//
-//import lombok.RequiredArgsConstructor;
-//import lombok.extern.log4j.Log4j2;
-//import nova.mjs.admin.account.DTO.AdminDTO;
-//import nova.mjs.admin.account.entity.StudentCouncilAdmin;
-//import nova.mjs.admin.account.exception.AdminIdMismatchException;
-//import nova.mjs.admin.account.exception.InvalidRequestException;
-//import nova.mjs.admin.account.exception.PasswordIsInvalidException;
-//import nova.mjs.admin.account.repository.AdminRepository;
-//import nova.mjs.domain.department.entity.enumList.College;
-//import nova.mjs.domain.department.entity.Department;
-//import nova.mjs.domain.department.repository.DepartmentRepository;
-//import nova.mjs.util.exception.ErrorCode;
-//import nova.mjs.util.jwt.JwtUtil;
-//import nova.mjs.util.s3.S3ServiceImpl;
-//import nova.mjs.util.security.AuthDTO;
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.security.crypto.password.PasswordEncoder;
-//import org.springframework.stereotype.Service;
-//import org.springframework.transaction.annotation.Transactional;
-//import org.springframework.web.multipart.MultipartFile;
-//
-//import java.io.IOException;
-//import java.util.UUID;
-//
-//@Service
-//@RequiredArgsConstructor
-//@Log4j2
-//public class AdminService {
-//    private final AdminRepository adminRepository;
-//    private final DepartmentRepository departmentRepository;
-//    private final PasswordEncoder passwordEncoder;
-//    private final JwtUtil jwtUtil;
-//    private final S3ServiceImpl s3Service;
-//
-//    @Value("${s3.path.custom.admin-logo}")
-//    private String adminLogo;
-//
-//    @Transactional
-//    public void preRegisterAdminId(String adminId) {
-//        Department department = Department.builder()
-//                .departmentUuid(UUID.randomUUID())
-//                .departmentName("")
-//                .studentCouncilName("")
-//                .studentCouncilLogo("")
-//                .instagramUrl("")
-//                .homepageUrl("")
-//                .slogan("")
-//                .description("")
-//                .college(College.OTHER)
-//                .build();
-//
-//        departmentRepository.save(department);
-//
-//        StudentCouncilAdmin admin = StudentCouncilAdmin.builder()
-//                .adminId(adminId)
-//                .uuid(UUID.randomUUID())
-//                .password("")
-//                .role(StudentCouncilAdmin.Role.ADMIN)
-//                .department(department)
-//                .build();
-//
-//        adminRepository.save(admin);
-//    }
-//
-//    @Transactional
-//    public void updateAdminInfoWithImage(String adminId, AdminDTO.AdminRequestDTO dto, MultipartFile file) throws IOException {
-//        StudentCouncilAdmin admin = adminRepository.findByAdminId(adminId)
-//                .orElseThrow(AdminIdMismatchException::new);
-//
-//        Department department = admin.getDepartment();
-//
-//        log.info("[어드민 로고 이미지 업데이트 감지] adminId = {}", adminId);
-//        String keyPrefix = adminLogo + admin.getUuid() + "/";
-//        String logoImageUrl = s3Service.uploadFile(file, keyPrefix);
-//
-//        department.updateInfo(
-//                dto.getDepartmentName(),
-//                dto.getStudentCouncilName(),
-//                dto.getHomepageUrl(),
-//                dto.getInstagramUrl(),
-//                dto.getIntroduction(),
-//                logoImageUrl,
-//                dto.getSlogan(),
-//                dto.getCollege()
-//        );
-//    }
-//
-//    @Transactional
-//    public AuthDTO.LoginResponseDTO updatePassword(String adminId, String rawPassword) {
-//        StudentCouncilAdmin admin = adminRepository.findByAdminId(adminId)
-//                .orElseThrow(AdminIdMismatchException::new);
-//
-//        String encodedPassword = passwordEncoder.encode(rawPassword);
-//        admin.updatePassword(encodedPassword);
-//
-//        String accessToken = jwtUtil.generateAccessToken(admin.getUuid(), adminId, admin.getRole().name());
-//        String refreshToken = jwtUtil.generateRefreshToken(admin.getUuid(), adminId);
-//
-//        return AuthDTO.LoginResponseDTO.builder()
-//                .accessToken(accessToken)
-//                .refreshToken(refreshToken)
-//                .build();
-//    }
-//
-//    @Transactional(readOnly = true)
-//    public AuthDTO.LoginResponseDTO login(String adminId, String rawPassword) {
-//        StudentCouncilAdmin admin = adminRepository.findByAdminId(adminId)
-//                .orElseThrow(AdminIdMismatchException::new);
-//
-//        if (!passwordEncoder.matches(rawPassword, admin.getPassword())) {
-//            throw new InvalidRequestException("비밀번호가 일치하지 않습니다.", ErrorCode.INVALID_REQUEST);
-//        }
-//
-//        String accessToken = jwtUtil.generateAccessToken(admin.getUuid(), adminId, admin.getRole().name());
-//        String refreshToken = jwtUtil.generateRefreshToken(admin.getUuid(), adminId);
-//
-//        return AuthDTO.LoginResponseDTO.builder()
-//                .accessToken(accessToken)
-//                .refreshToken(refreshToken)
-//                .build();
-//    }
-//
-//    @Transactional
-//    public void deleteAdmin(String adminId, AdminDTO.PasswordRequestDTO requestPassword) {
-//        StudentCouncilAdmin admin = adminRepository.findByAdminId(adminId)
-//                .orElseThrow(AdminIdMismatchException::new);
-//
-//        if (!passwordEncoder.matches(requestPassword.getPassword(), admin.getPassword())) {
-//            throw new PasswordIsInvalidException();
-//        }
-//
-//        adminRepository.delete(admin);
-//        log.info("관리자 계정 삭제 - adminId: {}", adminId);
-//    }
-//}
+package nova.mjs.admin.account.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import nova.mjs.admin.account.DTO.AdminDTO;
+import nova.mjs.domain.department.entity.Department;
+import nova.mjs.domain.department.repository.DepartmentRepository;
+import nova.mjs.domain.member.entity.Member;
+import nova.mjs.domain.member.exception.MemberNotFoundException;
+import nova.mjs.domain.member.repository.MemberRepository;
+import nova.mjs.domain.member.service.query.MemberQueryService;
+import nova.mjs.util.response.ApiResponse;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Log4j2
+@Transactional(readOnly = true)
+public class AdminCommandServiceImpl implements AdminCommandService {
+    private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final MemberQueryService memberQueryService;
+    private final AdminQueryService adminQueryService;
+    private final MemberRepository memberRepository;
+
+
+
+    /**
+     * 회원 가입 로직
+     */
+    // 1. OPERATOR(시스템 관리자)가 초기 어드민 객체 생성.
+    @Transactional
+    public ApiResponse<String> registerInitAdmin(AdminDTO.StudentCouncilInitRegistrationRequestDTO request) {
+        // 회원이 입력한 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+
+        // 이메일 중복 확인
+        memberQueryService.validateEmailDuplication(request.getEmail());
+
+        // 회원객체 생성
+        Member newMember = Member.createAdminInit(request, encodedPassword);
+        Department department = Department.createWithAdmin(request, newMember);
+        memberRepository.save(newMember);
+        departmentRepository.save(department);
+
+
+        // 응답 DTO 반환
+        return ApiResponse.success("초기 어드민 계정이 성공적으로 등록되었습니다.");
+    }
+
+    /**
+     * 학생회(ADMIN) 계정 + 학과 정보를 동시에 수정
+     *
+     * @param request 수정 요청 DTO
+     * @return 수정 완료된 Member 엔티티
+     */
+    @Transactional
+    public AdminDTO.StudentCouncilResponseDTO updateAdmin(AdminDTO.StudentCouncilUpdateDTO request) {
+        // 1. 관리자 계정 조회
+        Member member = memberQueryService.getMemberByEmail(request.getEmail()); // 이메일은 불변값이라 기준으로 삼음
+
+        // 3. 회원(Member) 정보 업데이트
+        member.updateAdmin(request);
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            String encodedPassword = passwordEncoder.encode(request.getPassword());
+            member.updatePassword(encodedPassword);
+        }
+
+        Department department = adminQueryService.getDepartmentByAdminEmail(member.getEmail());
+        department.updateInfo(request);
+
+        return AdminDTO.StudentCouncilResponseDTO.fromEntity(member, department);
+    }
+
+
+
+    public Boolean validationInitAdminID(String emailId) {
+        try {
+            Member member = memberQueryService.getMemberByEmail(emailId);
+            return true;
+        } catch (MemberNotFoundException e) {
+            return false; // 회원이 없으면 검증 실패
+        }
+    }
+
+
+}
