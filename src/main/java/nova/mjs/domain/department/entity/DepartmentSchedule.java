@@ -44,11 +44,29 @@ public class DepartmentSchedule extends BaseEntity {
     @Column
     private String content;
 
-    public void updateFromRequest(AdminDepartmentScheduleRequestDTO request){
-        if (request.getTitle() != null) this.title = request.getTitle();
-        if (request.getContent() != null) this.content = request.getContent();
-        if (request.getColorCode() != null) this.colorCode = request.getColorCode();
-        if (request.getStartDate() != null) this.startDate = request.getStartDate();
-        if (request.getEndDate() != null) this.endDate = request.getEndDate();
+    public static DepartmentSchedule create(UUID uuid, AdminDepartmentScheduleRequestDTO dto, Department department) {
+        return DepartmentSchedule.builder()
+                .departmentScheduleUuid(uuid)
+                .title(dto.getTitle())
+                .content(dto.getContent())
+                .colorCode(dto.getColorCode())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
+                .department(department)
+                .build();
     }
+
+    public void update(AdminDepartmentScheduleRequestDTO request) {
+        this.title = getOrDefault(request.getTitle(), this.title);
+        this.content = getOrDefault(request.getContent(), this.content);
+        this.colorCode = getOrDefault(request.getColorCode(), this.colorCode);
+        this.startDate = getOrDefault(request.getStartDate(), this.startDate);
+        this.endDate = getOrDefault(request.getEndDate(), this.endDate);
+    }
+
+    // 내부 유틸 메서드
+    private <T> T getOrDefault(T newValue, T currentValue) {
+        return newValue != null ? newValue : currentValue;
+    }
+
 }

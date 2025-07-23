@@ -11,19 +11,19 @@ import java.util.UUID;
 
 @Getter
 @Builder
-public class DepartmentScheduleResponseDTO { //list여야 함
-    private DepartmentInfoDTO departmentInfo;
+public class DepartmentScheduleResponseDTO {
+
     private List<ScheduleSimpleDTO> schedules;
 
-    public static DepartmentScheduleResponseDTO fromScheduleList(Department department, List<DepartmentSchedule> scheduleEntities) {
+    public static DepartmentScheduleResponseDTO fromScheduleList(List<DepartmentSchedule> scheduleEntities) {
         return DepartmentScheduleResponseDTO.builder()
-                .departmentInfo(DepartmentInfoDTO.fromEntity(department))
                 .schedules(ScheduleSimpleDTO.fromList(scheduleEntities))
                 .build();
     }
+
     @Getter
     @Builder
-    public static class ScheduleSimpleDTO{
+    public static class ScheduleSimpleDTO {
         private UUID departmentScheduleUuid;
         private String title;
         private LocalDateTime startDateTime;

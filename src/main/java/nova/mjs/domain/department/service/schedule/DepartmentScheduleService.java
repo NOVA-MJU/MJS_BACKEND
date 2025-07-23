@@ -19,14 +19,10 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class DepartmentScheduleService {
     private final DepartmentScheduleRepository departmentScheduleRepository;
-    private final DepartmentRepository departmentRepository;
 
     public DepartmentScheduleResponseDTO getScheduleByDepartmentUuid(UUID departmentUuid){
-        Department department = departmentRepository.findByDepartmentUuid(departmentUuid)
-                .orElseThrow(DepartmentNotFoundException::new);
-
         List<DepartmentSchedule> schedules = departmentScheduleRepository.findByDepartment_DepartmentUuid(departmentUuid);
 
-        return DepartmentScheduleResponseDTO.fromScheduleList(department, schedules);
+        return DepartmentScheduleResponseDTO.fromScheduleList(schedules);
     }
 }

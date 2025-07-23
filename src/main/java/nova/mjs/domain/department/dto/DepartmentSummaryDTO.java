@@ -22,8 +22,8 @@ public class DepartmentSummaryDTO {
         return DepartmentSummaryDTO.builder()
                 .departmentUuid(department.getDepartmentUuid())
                 .departmentName(department.getDepartmentName())
-                .studentCouncilName(department.getAdmin().getName())
-                .studentCouncilLogo(department.getAdmin().getProfileImageUrl())
+                .studentCouncilName(department.getAdmin() != null ? department.getAdmin().getName() : null)
+                .studentCouncilLogo(department.getAdmin() != null ? department.getAdmin().getProfileImageUrl() : null)
                 .slogan(department.getSlogan())
                 .college(department.getCollege())
                 .build();
