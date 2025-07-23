@@ -12,11 +12,10 @@ public enum S3DomainType {
     DEFAULT_THUMBNAIL_URL("https://mjsearch.org/static/images/member/profiles/a5fe8971-c436-4794-96d7-8dd29583d16a/0ac4e3ad18749a7029ea8876644c1a2b5bafc07aa31dc5d56a9d7dde8df07a6a.jpeg"),
     COMMUNITY_TEMP("static/images/boards/temp/"), // 삭제 에정
     COMMUNITY_POST("static/images/boards/"),
-    PROFILE("static/images/member/profiles/"),
+    PROFILE_IMAGE("static/images/member/profiles/"),
     DEPARTMENT_LOGO("static/images/departments/logos/"),
     DEPARTMENT_SCHEDULE("static/images/departments/schedules/"),
-    DEPARTMENT_NOTICE("static/image/departments/notice"),
-    EVENT("events/");
+    DEPARTMENT_NOTICE("static/image/departments/notice");
 
     private final String prefix;
 

@@ -3,20 +3,18 @@ package nova.mjs.admin.department.schedule.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.admin.department.schedule.exception.DepartmentScheduleNotFoundException;
-import nova.mjs.admin.account.exception.AdminIdMismatchException;
+import nova.mjs.admin.account.exception.AdminIdMismatchWithDepartmentException;
 import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleRequestDTO;
 import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleResponseDTO;
-import nova.mjs.admin.department.schedule.repository.AdminDepartmentScheduleRepository;
+import nova.mjs.admin.department.schedule.exception.DepartmentScheduleNotFoundException;
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.entity.DepartmentSchedule;
 import nova.mjs.domain.department.exception.DepartmentNotFoundException;
 import nova.mjs.domain.department.repository.DepartmentRepository;
 import nova.mjs.domain.department.repository.DepartmentScheduleRepository;
-import nova.mjs.domain.member.entity.Member;
-import nova.mjs.domain.member.repository.MemberRepository;
 import nova.mjs.util.s3.S3DomainType;
 import nova.mjs.util.s3.S3ServiceImpl;
+import nova.mjs.util.security.UserPrincipal;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -25,132 +23,81 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class AdminDepartmentScheduleService {
-    private final AdminDepartmentScheduleRepository adminDepartmentScheduleRepository;
-    private final MemberRepository memberRepository;
-    private final DepartmentRepository departmentRepository;
-    private final DepartmentScheduleRepository departmentScheduleRepository;
 
-    private final String scheduleImagePrefix = S3DomainType.DEPARTMENT_SCHEDULE.getPrefix();
+    private final DepartmentRepository departmentRepository;
+    private final DepartmentScheduleRepository scheduleRepository;
     private final S3ServiceImpl s3ServiceImpl;
 
-    //학과 일정 생성
+    private final String scheduleImagePrefix = S3DomainType.DEPARTMENT_SCHEDULE.getPrefix();
+
+    /**
+     * 학과 일정 생성
+     */
     @Transactional
-    public AdminDepartmentScheduleResponseDTO createSchedule(String adminEmail, UUID scheduleUuid, AdminDepartmentScheduleRequestDTO adminDepartmentScheduleRequestDTO) {
-        //이메일을 받는 게 맞을까?
-
-        Member admin = memberRepository.findByEmail(adminEmail)
-                .orElseThrow(() -> {
-                    log.warn("[일정 생성 실패] 존재하지 않는 admin 이메일 : {}", adminEmail);
-                    return new AdminIdMismatchException();
-                });
-
-        //admin 확인
-        if (admin.getRole() != Member.Role.ADMIN){
-            log.warn("[일정 등록 실패] 권한 없음 : {}", adminEmail);
-            throw new AdminIdMismatchException();
-        }
-
-        Department department = departmentRepository.findByAdminEmail(admin.getEmail())
-                .orElseThrow(() -> {
-                    log.warn("[일정 등록 실패] 해당 관리자에 연결된 학과 없음 : {}", adminEmail);
-                    return new DepartmentNotFoundException();
-                });
-
-        DepartmentSchedule schedule = DepartmentSchedule.builder()
-                .departmentScheduleUuid(scheduleUuid)
-                .title(adminDepartmentScheduleRequestDTO.getTitle())
-                .content(adminDepartmentScheduleRequestDTO.getContent())
-                .colorCode(adminDepartmentScheduleRequestDTO.getColorCode())
-                .startDate(adminDepartmentScheduleRequestDTO.getStartDate())
-                .endDate(adminDepartmentScheduleRequestDTO.getEndDate())
-                .department(department)
-                .build();
-
-        DepartmentSchedule saved = adminDepartmentScheduleRepository.save(schedule);
-
-        return AdminDepartmentScheduleResponseDTO.fromEntity(saved);
+    public AdminDepartmentScheduleResponseDTO createSchedule(UserPrincipal userPrincipal, UUID departmentUuid, UUID scheduleUuid, AdminDepartmentScheduleRequestDTO dto) {
+        Department department = getVerifiedDepartment(userPrincipal, departmentUuid);
+        DepartmentSchedule schedule = DepartmentSchedule.create(scheduleUuid, dto, department);
+        return AdminDepartmentScheduleResponseDTO.fromEntity(scheduleRepository.save(schedule));
     }
 
-    //학과 일정 수정
+    /**
+     * 학과 일정 수정
+     */
     @Transactional
-    public AdminDepartmentScheduleResponseDTO updateSchedule(String adminEmail, UUID scheduleUuid, AdminDepartmentScheduleRequestDTO adminDepartmentScheduleRequestDTO) {
+    public AdminDepartmentScheduleResponseDTO updateSchedule(UserPrincipal userPrincipal, UUID departmentUuid, UUID scheduleUuid, AdminDepartmentScheduleRequestDTO dto) {
+        Department department = getVerifiedDepartment(userPrincipal, departmentUuid);
+        DepartmentSchedule schedule = getVerifiedSchedule(scheduleUuid);
 
-        // 어드민 회원 조회 및 권한 검증
-        Member admin = memberRepository.findByEmail(adminEmail)
-                .orElseThrow(AdminIdMismatchException::new);
-
-        if (admin.getRole() != Member.Role.ADMIN) {
-            log.warn("[일정 수정 실패] 권한 없음: {}", adminEmail);
-            throw new AdminIdMismatchException();
+        if (!schedule.getDepartment().equals(department)) {
+            log.warn("[일정 수정 실패] 학과 불일치. 요청자 학과 : {}, 일정 학과 : {}", department.getDepartmentName(), schedule.getDepartment().getDepartmentName());
+            throw new AdminIdMismatchWithDepartmentException();
         }
 
-        // 학과 정보 조회
-        Department department = departmentRepository.findByAdminEmail(adminEmail)
-                .orElseThrow(DepartmentNotFoundException::new);
-
-        //일정 조회
-        DepartmentSchedule schedule = departmentScheduleRepository.findByDepartmentScheduleUuid(scheduleUuid)
-                .orElseThrow(DepartmentScheduleNotFoundException::new);
-
-        //학과 불일치 예외
-        if (!schedule.getDepartment().equals(department)){
-            log.warn("[일정 수정 실패] 학과 불일치. 요청자 학과 : {}, 일정학과 : {}",
-                    department.getDepartmentName(), schedule.getDepartment().getDepartmentName());
-            throw new AdminIdMismatchException();
-        }
-
-        //학과 일정 수정
-        schedule.updateFromRequest(adminDepartmentScheduleRequestDTO);
+        schedule.update(dto);
         log.info("[학과 일정 수정 완료] uuid : {}, title : {}", scheduleUuid, schedule.getTitle());
-
         return AdminDepartmentScheduleResponseDTO.fromEntity(schedule);
     }
 
-    //학과 일정 삭제
+    /**
+     * 학과 일정 삭제
+     */
     @Transactional
-    public void deleteSchedule(String adminEmail, UUID scheduleUuid) {
-        //admin 조회
-        Member admin = memberRepository.findByEmail(adminEmail)
-                .orElseThrow(() -> {
-                    log.warn("[일정 삭제 실패] 존재하지 않는 이메일: {}", adminEmail);
-                    return new AdminIdMismatchException();
-                });
+    public void deleteSchedule(UserPrincipal userPrincipal, UUID departmentUuid, UUID scheduleUuid) {
+        Department department = getVerifiedDepartment(userPrincipal, departmentUuid);
+        DepartmentSchedule schedule = getVerifiedSchedule(scheduleUuid);
 
-        //admin 권한 확인
-        if (admin.getRole() != Member.Role.ADMIN) {
-            log.warn("[일정 삭제 실패] 권한 없음: {}", adminEmail);
-            throw new AdminIdMismatchException();
-        }
-
-        //admin 관리 학과 조회
-        Department department = departmentRepository.findByAdminEmail(adminEmail)
-                .orElseThrow(() -> {
-                    log.warn("[일정 삭제 실패] 학과 정보 없음: {}", adminEmail);
-                    return new DepartmentNotFoundException();
-                });
-
-        // 삭제할 일정 조회
-        DepartmentSchedule schedule = departmentScheduleRepository.findByDepartmentScheduleUuid(scheduleUuid)
-                .orElseThrow(() -> {
-                    log.warn("[일정 삭제 실패] 존재하지 않는 일정: uuid={}", scheduleUuid);
-                    return new DepartmentScheduleNotFoundException();
-                });
-
-        //학과 일치 여부 검증
-        if (!schedule.getDepartment().equals(department)){
-            log.warn("[일정 삭제 실패] 학과 불일치. 요청자 학과 : {}, 일정 학과 : {}",
-                    department.getDepartmentName(), schedule.getDepartment().getDepartmentName());
-            throw new AdminIdMismatchException();
+        if (!schedule.getDepartment().equals(department)) {
+            log.warn("[일정 삭제 실패] 학과 불일치. 요청자 학과 : {}, 일정 학과 : {}", department.getDepartmentName(), schedule.getDepartment().getDepartmentName());
+            throw new AdminIdMismatchWithDepartmentException();
         }
 
         String scheduleFolder = scheduleImagePrefix + scheduleUuid + "/";
         s3ServiceImpl.deleteFolder(scheduleFolder);
-        log.info("[S3 이미지 삭제 완료 {} :", scheduleFolder);
+        log.info("[S3 이미지 삭제 완료] 경로 : {}", scheduleFolder);
 
-
-        //일정 삭제
-        departmentScheduleRepository.delete(schedule);
+        scheduleRepository.delete(schedule);
         log.info("[일정 삭제 완료] uuid : {}", scheduleUuid);
     }
 
+    /**
+     * 현재 유저가 관리자인 학과 정보 검증 및 반환
+     */
+    private Department getVerifiedDepartment(UserPrincipal userPrincipal, UUID departmentUuid) {
+        Department department = departmentRepository.findByDepartmentUuid(departmentUuid)
+                .orElseThrow(DepartmentNotFoundException::new);
+
+        if (!department.getAdmin().getUuid().equals(userPrincipal.getUuid())) {
+            log.warn("[권한 오류] 해당 학과의 관리자가 아님. 요청자 email: {}, 학과 UUID: {}", userPrincipal.getUsername(), departmentUuid);
+            throw new AdminIdMismatchWithDepartmentException();
+        }
+        return department;
+    }
+
+    /**
+     * 일정 UUID로 존재 여부 확인 및 반환
+     */
+    private DepartmentSchedule getVerifiedSchedule(UUID scheduleUuid) {
+        return scheduleRepository.findByDepartmentScheduleUuid(scheduleUuid)
+                .orElseThrow(DepartmentScheduleNotFoundException::new);
+    }
 }

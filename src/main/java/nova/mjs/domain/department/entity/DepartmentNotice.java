@@ -12,7 +12,6 @@ import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
-import static nova.mjs.domain.community.util.ContentPreviewUtil.makePreview;
 import static org.springframework.util.StringUtils.hasText;
 
 @Entity
@@ -58,9 +57,9 @@ public class DepartmentNotice extends BaseEntity {
 
 
     /* =================== 생성 =================== */
-    public static DepartmentNotice create(AdminDepartmentNoticeRequestDTO request, Department department) {
+    public static DepartmentNotice create(UUID noticeUuid, AdminDepartmentNoticeRequestDTO request, Department department) {
         return DepartmentNotice.builder()
-                .uuid(UUID.randomUUID())
+                .uuid(noticeUuid)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .previewContent(ContentPreviewUtil.makePreview(request.getContent()))

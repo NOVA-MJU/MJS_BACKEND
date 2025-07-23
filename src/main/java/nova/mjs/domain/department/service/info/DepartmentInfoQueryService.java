@@ -17,7 +17,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class DepartmentInfoService {
+public class DepartmentInfoQueryService {
 
     private final DepartmentRepository departmentRepository;
 

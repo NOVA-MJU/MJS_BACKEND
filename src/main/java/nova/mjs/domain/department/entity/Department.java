@@ -26,7 +26,7 @@ public class Department extends BaseEntity {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_member_id") // nullable 허용
+    @JoinColumn(name = "admin_member_id")
     private Member admin; // 관리자로 연결된 회원
 
     @Column(nullable = false, unique = true)
@@ -42,7 +42,7 @@ public class Department extends BaseEntity {
     private String description;
 
     @Column
-    private String studentCouncilContactEmail; // 학생회 명
+    private String studentCouncilContactEmail; // 학생회 연락 계정
 
     @Column
     private String instagramUrl;

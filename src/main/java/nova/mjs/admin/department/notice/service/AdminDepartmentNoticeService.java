@@ -16,7 +16,7 @@ public interface AdminDepartmentNoticeService {
     // 공지사항 상세 조회
     AdminDepartmentNoticeResponseDTO getAdminDepartmentNoticeDetail(UUID departmentNoticeUuid, UUID departmentUuid, UserPrincipal userPrincipal);
     // 공지사항 생성
-    AdminDepartmentNoticeResponseDTO createNotice(AdminDepartmentNoticeRequestDTO request, UUID departmentUuid, UserPrincipal userPrincipal);
+    AdminDepartmentNoticeResponseDTO createNotice(UserPrincipal userPrincipal, UUID departmentUuid, UUID noticeUuid, AdminDepartmentNoticeRequestDTO request);
     // 공지사항 업데이트
     AdminDepartmentNoticeResponseDTO updateNotice(UserPrincipal userPrincipal, UUID departmentUuid,
                                                   UUID noticeUuid, AdminDepartmentNoticeRequestDTO request);

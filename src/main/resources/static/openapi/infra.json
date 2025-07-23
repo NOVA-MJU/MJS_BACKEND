@@ -14,6 +14,10 @@
     {
       "name": "Weather",
       "description": "OpenWeatherMap을 활용한 날씨 및 대기질 정보 제공 API"
+    },
+    {
+      "name": "S3 Image",
+      "description": "S3 이미지 업로드 및 임시 UUID 발급 관련 엔드포인트"
     }
   ],
   "paths": {
@@ -57,6 +61,103 @@
           }
         }
       }
+    },
+    "/s3/temp-uuid": {
+      "get": {
+        "tags": ["S3 Image"],
+        "summary": "임시 UUID 발급",
+        "description": "새 게시글 작성 시 **프론트엔드에서 임시로 사용할 UUID**를 발급합니다. 이 UUID는 실제 게시글이 저장되기 전까지 업로드된 이미지와 게시글을 매핑하는 데 사용됩니다.",
+        "operationId": "generateTempUuid",
+        "responses": {
+          "200": {
+            "description": "발급 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseString" },
+                "examples": {
+                  "success": {
+                    "summary": "정상 응답",
+                    "value": {
+                      "success": true,
+                      "data": "4be35d77-4767-4e2d-837a-a2e7f9e9a802"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/s3/upload": {
+      "post": {
+        "tags": ["S3 Image"],
+        "summary": "범용 S3 파일 업로드",
+        "description": "모든 도메인(게시글 이미지, 프로필 이미지 등)에 대해 **단일 엔드포인트**로 S3 업로드를 처리합니다. <br/>\n• **file** : 업로드할 파일 (Multipart) <br/>\n• **domain** : 업로드 대상 영역을 나타내는 Enum 값 <br/>\n• **uuid** : 연관 엔티티의 UUID (또는 위에서 발급받은 임시 UUID)",
+        "operationId": "uploadFile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "업로드할 이미지 · 문서 · 동영상 파일"
+                  },
+                  "domain": {
+                    "$ref": "#/components/schemas/S3DomainType"
+                  },
+                  "uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "연관 엔티티의 UUID(임시 또는 실제)",
+                    "example": "4be35d77-4767-4e2d-837a-a2e7f9e9a802"
+                  }
+                },
+                "required": ["file", "domain", "uuid"]
+              },
+              "examples": {
+                "communityImage": {
+                  "summary": "자유게시판 이미지 업로드 예시",
+                  "value": {
+                    "file": "(binary)",
+                    "domain": "COMMUNITY_POST",
+                    "uuid": "4be35d77-4767-4e2d-837a-a2e7f9e9a802"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "업로드 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseString" },
+                "examples": {
+                  "success": {
+                    "summary": "정상 응답",
+                    "value": {
+                      "success": true,
+                      "data": "https://cdn.mjsearch.org/community/4be35d77-4767-4e2d-837a-a2e7f9e9a802/20250723/thumbnail.jpg"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "파라미터 오류 또는 파일 검증 실패"
+          },
+          "500": {
+            "description": "서버 내부 오류"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -92,6 +193,35 @@
           "timestamp": { "type": "string", "format": "date-time" }
         },
         "description": "OpenWeatherMap과 공공데이터 API로부터 수집된 날씨 및 미세먼지 데이터"
+      },
+      "ApiResponseString": {
+        "type": "object",
+        "description": "공통 응답 Wrapper",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "요청 성공 여부",
+            "example": true
+          },
+          "data": {
+            "type": "string",
+            "description": "실제 응답 데이터(문자열)",
+            "example": "https://cdn.mjsearch.org/…"
+          }
+        },
+        "required": ["success", "data"]
+      },
+      "S3DomainType": {
+        "type": "string",
+        "description": "업로드 대상 도메인을 나타내는 Enum 값",
+        "enum": [
+          "COMMUNITY_POST",
+          "PROFILE_IMAGE",
+          "DEPARTMENT_LOGO",
+          "DEPARTMENT_SCHEDULE",
+          "DEPARTMENT_NOTICE"
+        ],
+        "example": "COMMUNITY_POST"
       }
     }
   }
