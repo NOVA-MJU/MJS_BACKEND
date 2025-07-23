@@ -44,6 +44,7 @@ public class MemberDTO {
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
                 .role(member.getRole())
+                .profileImageUrl(member.getProfileImageUrl())
                 .build();
     }
     /**
