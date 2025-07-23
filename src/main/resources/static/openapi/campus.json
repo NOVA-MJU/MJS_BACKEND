@@ -12,6 +12,10 @@
   ],
   "tags": [
     {
+      "name": "Department",
+      "description": "학과별 정보 조회 기능"
+    },
+    {
       "name": "Menu",
       "description": "학교 식단 정보 제공 및 크롤링 기능"
     },
@@ -33,6 +37,78 @@
     }
   ],
   "paths": {
+
+    "/department/info": {
+      "get": {
+        "tags": ["Department"],
+        "summary": "학과 목록 조회 (전체 또는 단과대별)",
+        "description": "**학과 리스트 조회 API**입니다.\n\n- `College`(단과대학)를 파라미터로 전달하지 않으면 전체 학과 리스트를 반환합니다.\n- 특정 단과대 소속 학과들만 조회하고 싶다면, 쿼리 파라미터 `college`를 설정해 호출하세요.\n\n❗ 클라이언트는 `studentCouncilName`, `studentCouncilLogo`가 `null`인 경우 해당 학과에 아직 학생회가 등록되지 않았음을 나타내야 합니다.",
+        "parameters": [
+          {
+            "name": "college",
+            "in": "query",
+            "required": false,
+            "description": "필터링하고자 하는 단과대학 이름. 예: AI_SOFTWARE, BUSINESS 등",
+            "schema": {
+              "type": "string",
+              "enum": ["HUMANITIES", "BUSINESS", "SOCIAL_SCIENCE", "ENGINEERING", "EDUCATION"]
+            },
+            "example": "AI_SOFTWARE"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "학과 리스트 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DepartmentSummaryDTO"
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-07-21T20:25:00.000Z"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": [
+                    {
+                      "departmentUuid": "e76888d1-65ad-43ee-9d4e-1e234c77f7e1",
+                      "departmentName": "DATA_SCIENCE",
+                      "studentCouncilName": "데이터사이언스 학생회",
+                      "studentCouncilLogo": "https://cdn.mjsearch.org/profiles/data-science.png",
+                      "slogan": "함께, 바꾸다!",
+                      "college": "AI_SOFTWARE"
+                    },
+                    {
+                      "departmentUuid": "a2338dba-2ecf-4aa2-9eab-083f3d61e25e",
+                      "departmentName": "COMPUTER_ENGINEERING",
+                      "studentCouncilName": null,
+                      "studentCouncilLogo": null,
+                      "slogan": null,
+                      "college": "AI_SOFTWARE"
+                    }
+                  ],
+                  "timestamp": "2025-07-21T20:25:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/menus/crawling": {
       "post": {
         "tags": ["Menu"],
@@ -584,6 +660,40 @@
       }
     },
     "schemas": {
+      "DepartmentSummaryDTO": {
+        "type": "object",
+        "properties": {
+          "departmentUuid": {
+            "type": "string",
+            "format": "uuid",
+            "example": "e76888d1-65ad-43ee-9d4e-1e234c77f7e1"
+          },
+          "departmentName": {
+            "type": "string",
+            "example": "DATA_SCIENCE"
+          },
+          "studentCouncilName": {
+            "type": "string",
+            "nullable": true,
+            "example": "데이터사이언스 학생회"
+          },
+          "studentCouncilLogo": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://cdn.mjsearch.org/profiles/data-science.png"
+          },
+          "slogan": {
+            "type": "string",
+            "nullable": true,
+            "example": "함께, 바꾸다!"
+          },
+          "college": {
+            "type": "string",
+            "example": "AI_SOFTWARE"
+          }
+        }
+      },
+
       "MenuItem": {
         "type": "object",
         "properties": {
