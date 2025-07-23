@@ -29,6 +29,14 @@ public class UserPrincipal implements UserDetails {
         this.role = role;
     }
 
+    public UserPrincipal(UUID uuid, String email, String role) {
+        this.email = email;
+        this.role = role;
+        this.uuid = uuid;
+        this.password = null;
+        this.fullName = null;
+    }
+
     public UserPrincipal(String email, String role) {
         this.email = email;
         this.role = role;
