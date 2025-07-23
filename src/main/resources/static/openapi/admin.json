@@ -18,6 +18,10 @@
     {
       "name": "DEPARTMENT_NOTICE",
       "description": "학과 공지사항(Department Notice)에 대한 관리자 기능 API입니다. 공지 등록, 수정, 조회, 삭제 등의 기능을 제공합니다."
+    },
+    {
+      "name": "DEPARTMENT_SCHEDULE",
+      "description": "학과 일정(Department Schedule)에 대한 관리자 기능 API입니다. 일정 등록, 수정, 삭제 등의 기능을 제공합니다."
     }
   ],
   "paths": {
@@ -183,55 +187,79 @@
         }
       }
     },
-    "/admin/departments/{departmentUuid}/notices": {
+    "/api/v1/admin/departments/{departmentUuid}/notices/{noticeUuid}": {
+      "get": {
+        "tags": ["DEPARTMENT_NOTICE"],
+        "security": [{ "Authorization": [] }],
+        "summary": "학과 공지 상세 조회",
+        "description": "해당 학과의 공지사항을 상세 조회합니다. 관리자 또는 운영자만 접근 가능합니다.",
+        "parameters": [
+          {
+            "name": "departmentUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "공지사항이 속한 학과의 UUID"
+          },
+          {
+            "name": "noticeUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "조회할 공지사항 UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "공지 상세 정보 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeResponseDTO" }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": ["DEPARTMENT_NOTICE"],
-        "security": [ { "Authorization": [] } ],
+        "security": [{ "Authorization": [] }],
         "summary": "학과 공지 등록",
-        "description": "해당 학과의 학생회 관리자가 새로운 공지사항을 등록합니다. 등록된 공지사항은 학과 학생들에게 노출됩니다.",
+        "description": "해당 학과에 공지사항을 등록합니다. 관리자 또는 운영자만 접근 가능합니다.",
+        "parameters": [
+          {
+            "name": "departmentUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "공지사항이 등록될 학과 UUID"
+          },
+          {
+            "name": "noticeUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "등록할 공지사항 UUID"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdminDepartmentNoticeRequestDTO"
-              },
+              "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeRequestDTO" },
               "example": {
-                "title": "2025학년도 2학기 개강 안내",
-                "content": "안녕하세요. 2학기 개강일은 8월 28일입니다. 수강신청 내역 확인 부탁드립니다.",
-                "thumbnailUrl": "https://cdn.mjsearch.org/notice/thumbnail_20250828.png"
+                "title": "중간고사 일정 공지",
+                "content": "중간고사는 10월 17일부터 시작됩니다.",
+                "thumbnailUrl": "https://cdn.mju.ac.kr/notice/midterm-thumb.jpg"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "공지 등록 성공",
+            "description": "공지사항 등록 성공",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminDepartmentNoticeResponseDTO"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/admin/departments/{departmentUuid}/notices/{noticeUuid}": {
-      "get": {
-        "tags": ["DEPARTMENT_NOTICE"],
-        "security": [ { "Authorization": [] } ],
-        "summary": "공지 단건 조회",
-        "description": "특정 학과 공지사항의 상세 내용을 조회합니다. 관리 권한이 있는 학생회 어드민만 접근할 수 있습니다.",
-        "responses": {
-          "200": {
-            "description": "공지 조회 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminDepartmentNoticeResponseDTO"
-                }
+                "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeResponseDTO" }
               }
             }
           }
@@ -239,32 +267,44 @@
       },
       "patch": {
         "tags": ["DEPARTMENT_NOTICE"],
-        "security": [ { "Authorization": [] } ],
-        "summary": "공지 수정",
-        "description": "학생회 관리자가 기존 공지사항의 제목, 본문, 썸네일 등을 수정합니다. 비어 있는 필드는 기존 값을 유지합니다.",
+        "security": [{ "Authorization": [] }],
+        "summary": "학과 공지 수정",
+        "description": "등록된 공지사항의 제목, 내용, 썸네일을 수정합니다.",
+        "parameters": [
+          {
+            "name": "departmentUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "공지사항이 속한 학과 UUID"
+          },
+          {
+            "name": "noticeUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "수정할 공지사항 UUID"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdminDepartmentNoticeRequestDTO"
-              },
+              "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeRequestDTO" },
               "example": {
-                "title": "2학기 개강일 안내 (수정)",
-                "content": "개강일은 8월 28일이며, 첫 수업은 온라인으로 진행됩니다.",
-                "thumbnailUrl": "https://cdn.mjsearch.org/notice/updated_thumbnail.png"
+                "title": "중간고사 일정 변경 안내",
+                "content": "중간고사가 10월 19일로 연기되었습니다.",
+                "thumbnailUrl": "https://cdn.mju.ac.kr/notice/updated-thumb.jpg"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "공지 수정 성공",
+            "description": "공지사항 수정 성공",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminDepartmentNoticeResponseDTO"
-                }
+                "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeResponseDTO" }
               }
             }
           }
@@ -272,22 +312,174 @@
       },
       "delete": {
         "tags": ["DEPARTMENT_NOTICE"],
-        "security": [ { "Authorization": [] } ],
-        "summary": "공지 삭제",
-        "description": "학생회 관리자가 특정 공지사항을 삭제합니다. 삭제 시 관련된 S3 리소스도 정리됩니다.",
+        "security": [{ "Authorization": [] }],
+        "summary": "학과 공지 삭제",
+        "description": "공지사항을 삭제합니다. 삭제된 공지사항은 사용자에게 노출되지 않습니다.",
+        "parameters": [
+          {
+            "name": "departmentUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "공지사항이 속한 학과 UUID"
+          },
+          {
+            "name": "noticeUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "삭제할 공지사항 UUID"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "삭제 성공",
+            "description": "삭제 완료 메시지",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": "삭제가 성공적으로 완료되었습니다.",
+                  "timestamp": "2025-07-22T15:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/department/{departmentUuid}/schedules/{scheduleUuid}": {
+      "post": {
+        "tags": ["DEPARTMENT_SCHEDULE"],
+        "security": [{ "Authorization": [] }],
+        "summary": "학과 일정 생성",
+        "description": "학생회 관리자 또는 운영자가 특정 학과의 일정을 등록합니다.",
+        "parameters": [
+          {
+            "name": "departmentUuid",
+            "in": "path",
+            "required": true,
+            "description": "일정이 속한 학과 UUID",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "scheduleUuid",
+            "in": "path",
+            "required": true,
+            "description": "생성할 일정 UUID",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminDepartmentScheduleRequestDTO"
+              },
+              "example": {
+                "title": "2025년 개강일",
+                "content": "2025년도 2학기 개강 일정입니다.",
+                "colorCode": "#66CCFF",
+                "startDate": "2025-08-26",
+                "endDate": "2025-08-26"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "학과 일정 생성 성공",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "string",
-                      "example": "삭제가 성공적으로 완료되었습니다."
-                    }
-                  }
+                  "$ref": "#/components/schemas/AdminDepartmentScheduleResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["DEPARTMENT_SCHEDULE"],
+        "security": [{ "Authorization": [] }],
+        "summary": "학과 일정 수정",
+        "description": "관리자 또는 운영자가 학과 일정을 수정합니다.",
+        "parameters": [
+          {
+            "name": "departmentUuid",
+            "in": "path",
+            "required": true,
+            "description": "학과 UUID",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "scheduleUuid",
+            "in": "path",
+            "required": true,
+            "description": "수정할 일정 UUID",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminDepartmentScheduleRequestDTO"
+              },
+              "example": {
+                "title": "개강일 일정 변경",
+                "content": "개강일이 8월 28일로 변경되었습니다.",
+                "colorCode": "#FFAA33",
+                "startDate": "2025-08-28",
+                "endDate": "2025-08-28"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "학과 일정 수정 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDepartmentScheduleResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["DEPARTMENT_SCHEDULE"],
+        "security": [{ "Authorization": [] }],
+        "summary": "학과 일정 삭제",
+        "description": "관리자 또는 운영자가 특정 학과 일정을 삭제합니다.",
+        "parameters": [
+          {
+            "name": "departmentUuid",
+            "in": "path",
+            "required": true,
+            "description": "학과 UUID",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "scheduleUuid",
+            "in": "path",
+            "required": true,
+            "description": "삭제할 일정 UUID",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "일정 삭제 성공",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": "학과 일정이 삭제되었습니다.",
+                  "timestamp": "2025-07-22T13:00:00.000Z"
                 }
               }
             }
@@ -373,52 +565,75 @@
       },
       "AdminDepartmentNoticeRequestDTO": {
         "type": "object",
-        "description": "관리자가 공지사항을 등록하거나 수정할 때 사용하는 요청 DTO",
         "properties": {
           "title": {
             "type": "string",
-            "description": "공지사항 제목 (필수)",
-            "example": "2025학년도 2학기 개강 안내"
+            "description": "공지사항 제목",
+            "example": "중간고사 일정 공지"
           },
           "content": {
             "type": "string",
-            "description": "공지사항 본문 내용 (HTML 가능)",
-            "example": "안녕하세요. 2학기 개강일은 8월 28일입니다. 수강신청 내역 확인 부탁드립니다."
+            "description": "공지사항 내용",
+            "example": "중간고사는 10월 17일부터 시작됩니다."
           },
           "thumbnailUrl": {
             "type": "string",
-            "description": "공지사항 썸네일 이미지의 S3 URL (선택)",
-            "example": "https://cdn.mjsearch.org/notice/thumbnail_20250828.png"
+            "description": "공지사항 썸네일 이미지 URL",
+            "example": "https://cdn.mju.ac.kr/notice/midterm-thumb.jpg"
           }
         },
         "required": ["title"]
       },
       "AdminDepartmentNoticeResponseDTO": {
         "type": "object",
-        "description": "공지 단건 또는 등록/수정 후 반환되는 응답 DTO",
         "properties": {
           "uuid": {
             "type": "string",
             "format": "uuid",
-            "description": "공지사항 고유 식별자",
-            "example": "d3cbb3a4-37a3-11ee-be56-0242ac120002"
+            "description": "공지사항 UUID"
           },
           "title": {
             "type": "string",
-            "description": "공지 제목",
-            "example": "2025학년도 2학기 개강 안내"
+            "description": "공지사항 제목"
           },
           "content": {
             "type": "string",
-            "description": "공지 본문",
-            "example": "2학기 개강일은 8월 28일이며, 수강신청 후 첫 수업은 온라인으로 진행됩니다."
+            "description": "공지사항 본문"
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "description": "공지사항 썸네일 이미지 URL"
           },
           "createAt": {
             "type": "string",
             "format": "date-time",
-            "description": "공지 작성 일시 (ISO 8601 포맷)",
-            "example": "2025-07-20T15:00:00"
+            "description": "공지 등록 일시"
           }
+        }
+      },
+      "AdminDepartmentScheduleRequestDTO": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "example": "개강일" },
+          "content": { "type": "string", "example": "2025년도 2학기 개강일입니다." },
+          "colorCode": { "type": "string", "example": "#66CCFF" },
+          "startDate": { "type": "string", "format": "date", "example": "2025-08-26" },
+          "endDate": { "type": "string", "format": "date", "example": "2025-08-26" }
+        },
+        "required": ["title", "colorCode", "startDate"]
+      },
+      "AdminDepartmentScheduleResponseDTO": {
+        "type": "object",
+        "properties": {
+          "departmentScheduleUuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "colorCode": { "type": "string" },
+          "startDate": { "type": "string", "format": "date" },
+          "endDate": { "type": "string", "format": "date" }
         }
       },
       "ErrorResponse": {
