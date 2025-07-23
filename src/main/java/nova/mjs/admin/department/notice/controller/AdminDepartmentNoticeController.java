@@ -35,14 +35,15 @@ public class AdminDepartmentNoticeController {
         );
     }
 
-    @PostMapping
+    @PostMapping("/{noticeUuid}")
     @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminDepartmentNoticeResponseDTO>> create(
-            @PathVariable UUID departmentUuid,
             @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable UUID departmentUuid,
+            @PathVariable UUID noticeUuid,
             @RequestBody @Valid AdminDepartmentNoticeRequestDTO requestDto
     ) {
-        AdminDepartmentNoticeResponseDTO created = service.createNotice(requestDto, departmentUuid, userPrincipal);
+        AdminDepartmentNoticeResponseDTO created = service.createNotice(userPrincipal, departmentUuid, noticeUuid, requestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(created));
     }

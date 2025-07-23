@@ -8,6 +8,7 @@ import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeResponseDTO;
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.entity.DepartmentNotice;
 import nova.mjs.domain.department.exception.DepartmentAdminNotFoundException;
+import nova.mjs.domain.department.exception.DepartmentNoticeNotFoundException;
 import nova.mjs.domain.department.repository.DepartmentNoticeRepository;
 import nova.mjs.domain.department.repository.DepartmentRepository;
 import nova.mjs.util.s3.S3DomainType;
@@ -48,9 +49,8 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
     @Override
     @Transactional
     public AdminDepartmentNoticeResponseDTO createNotice(
-            AdminDepartmentNoticeRequestDTO request,
-            UUID departmentUuid,
-            UserPrincipal userPrincipal
+            UserPrincipal userPrincipal, UUID departmentUuid, UUID noticeUuid,
+            AdminDepartmentNoticeRequestDTO request
     ) {
         Department department = departmentRepository.findByDepartmentUuid(departmentUuid)
                 .orElseThrow(DepartmentNotFoundException::new);
@@ -58,7 +58,7 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
             throw new DepartmentAdminNotFoundException();
         }
 
-        DepartmentNotice notice = DepartmentNotice.create(request,department);
+        DepartmentNotice notice = DepartmentNotice.create(noticeUuid, request,department);
 
         departmentNoticeRepository.save(notice);
         log.info("[학과 공지 생성] dept={}, noticeUuid={}", departmentUuid, notice.getUuid());
@@ -118,7 +118,7 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
         // 3) 공지 조회 (학과 + UUID)
         return departmentNoticeRepository
                 .findByDepartment_DepartmentUuidAndUuid(departmentUuid, noticeUuid)
-                .orElseThrow(DepartmentNotFoundException::new);
+                .orElseThrow(DepartmentNoticeNotFoundException::new);
     }
 
 }
