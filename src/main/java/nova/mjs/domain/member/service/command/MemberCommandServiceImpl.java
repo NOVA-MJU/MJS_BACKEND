@@ -43,7 +43,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     public String uploadProfileImage(MultipartFile file) {
         try {
             UUID folderUuid = UUID.randomUUID(); // 사용자 UUID 등으로 대체 가능
-            return s3Service.uploadFile(file, S3DomainType.PROFILE, folderUuid);
+            return s3Service.uploadFile(file, S3DomainType.PROFILE_IMAGE, folderUuid);
         } catch (IOException e) {
             log.error("[프로필 이미지 업로드 실패]", e);
             throw new RequestException(ErrorCode.S3_IMAGE_UPLOAD_FAILED);
@@ -88,7 +88,6 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     }
 
     // 회원 정보 수정
-    @Transactional
     @Override
     public Member updateMember(String emailId, MemberDTO.MemberUpdateRequestDTO requestDTO) {
         Member member = memberQueryService.getMemberByEmail(emailId);

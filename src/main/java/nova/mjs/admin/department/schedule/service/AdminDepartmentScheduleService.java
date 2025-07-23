@@ -7,7 +7,6 @@ import nova.mjs.admin.department.schedule.exception.DepartmentScheduleNotFoundEx
 import nova.mjs.admin.account.exception.AdminIdMismatchException;
 import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleRequestDTO;
 import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleResponseDTO;
-import nova.mjs.admin.department.schedule.repository.AdminDepartmentScheduleRepository;
 import nova.mjs.domain.department.entity.Department;
 import nova.mjs.domain.department.entity.DepartmentSchedule;
 import nova.mjs.domain.department.exception.DepartmentNotFoundException;
@@ -25,7 +24,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class AdminDepartmentScheduleService {
-    private final AdminDepartmentScheduleRepository adminDepartmentScheduleRepository;
     private final MemberRepository memberRepository;
     private final DepartmentRepository departmentRepository;
     private final DepartmentScheduleRepository departmentScheduleRepository;
@@ -66,7 +64,7 @@ public class AdminDepartmentScheduleService {
                 .department(department)
                 .build();
 
-        DepartmentSchedule saved = adminDepartmentScheduleRepository.save(schedule);
+        DepartmentSchedule saved = departmentScheduleRepository.save(schedule);
 
         return AdminDepartmentScheduleResponseDTO.fromEntity(saved);
     }

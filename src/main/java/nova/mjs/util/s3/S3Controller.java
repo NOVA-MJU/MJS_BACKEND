@@ -16,6 +16,12 @@ public class S3Controller {
 
     private final S3ServiceImpl s3Service;
 
+    // 1. 게시글 작성 시 사용할 tempUUID  발급
+    @GetMapping("/temp-uuid")
+    public ResponseEntity<ApiResponse<String>> generateTempUuid() {
+        return ResponseEntity.ok(ApiResponse.success(UUID.randomUUID().toString()));
+    }
+
     /**
      * 범용 S3 업로드 엔드포인트
      *
