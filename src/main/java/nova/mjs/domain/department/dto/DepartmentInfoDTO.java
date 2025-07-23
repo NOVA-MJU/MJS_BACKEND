@@ -15,6 +15,7 @@ public class DepartmentInfoDTO {
     private DepartmentName departmentName;
     private String studentCouncilName;
     private String studentCouncilLogo;
+    private String studentCouncilContactEmail;
     private String slogan;
     private String description;
     private String instagramUrl;

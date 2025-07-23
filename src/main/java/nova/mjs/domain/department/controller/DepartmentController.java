@@ -1,10 +1,11 @@
 package nova.mjs.domain.department.controller;
 
 import lombok.RequiredArgsConstructor;
+import nova.mjs.domain.department.dto.DepartmentInfoDTO;
 import nova.mjs.domain.department.dto.DepartmentNoticesDTO;
 import nova.mjs.domain.department.dto.DepartmentScheduleResponseDTO;
 import nova.mjs.domain.department.dto.DepartmentSummaryDTO;
-import nova.mjs.domain.department.service.info.DepartmentInfoService;
+import nova.mjs.domain.department.service.info.DepartmentInfoQueryService;
 import nova.mjs.domain.department.service.notice.DepartmentNoticeQueryService;
 import nova.mjs.domain.department.service.schedule.DepartmentScheduleService;
 import nova.mjs.domain.member.entity.enumList.College;
@@ -23,7 +24,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/departments")
 public class DepartmentController {
 
-    private final DepartmentInfoService departmentInfoService;
+    private final DepartmentInfoQueryService departmentInfoQueryService;
     private final DepartmentScheduleService departmentScheduleService;
     private final DepartmentNoticeQueryService departmentNoticeQueryService;
 
@@ -34,17 +35,24 @@ public class DepartmentController {
 
 
     // 학과 목록(전체 or 단과대별)
-    @GetMapping
+    @GetMapping("info")
     public ResponseEntity<ApiResponse<List<DepartmentSummaryDTO>>> list(
             @RequestParam(required = false) College college) {
 
         List<DepartmentSummaryDTO> list = (college == null)
-                ? departmentInfoService.getAllDepartments()
-                : departmentInfoService.getDepartmentsByCollege(college);
+                ? departmentInfoQueryService.getAllDepartments()
+                : departmentInfoQueryService.getDepartmentsByCollege(college);
 
         return ResponseEntity.ok(ApiResponse.success(list));
     }
 
+    // 학과 별 상세 정보
+    @GetMapping("info/{departmentUuid}")
+    public ResponseEntity<ApiResponse<DepartmentInfoDTO>> list(
+            @PathVariable UUID departmentUuid) {
+        DepartmentInfoDTO departmentInfoDTO = departmentInfoQueryService.getDepartmentInfo(departmentUuid);
+        return ResponseEntity.ok(ApiResponse.success(departmentInfoDTO));
+    }
 
     /** ------------------------------------------------------------------
      * 학과일정
