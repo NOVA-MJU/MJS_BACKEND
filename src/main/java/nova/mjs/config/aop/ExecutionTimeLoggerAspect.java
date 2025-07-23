@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ExecutionTimeLoggerAspect {
 
-    @Around("execution(* nova.mjs.domain..service..*(..)) && !@annotation(nova.mjs.config.aop.LogExecutionTime)")
+    @Around("(execution(* nova.mjs.domain..service..*(..)) || execution(* nova.mjs.admin..service..*(..))) && !@annotation(nova.mjs.config.aop.LogExecutionTime)")
     public Object logExecutionTimeByPackage(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
         try {
