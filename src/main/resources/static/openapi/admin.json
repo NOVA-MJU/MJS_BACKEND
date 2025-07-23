@@ -187,7 +187,7 @@
         }
       }
     },
-    "/api/v1/admin/departments/{departmentUuid}/notices/{noticeUuid}": {
+    "/admin/departments/{departmentUuid}/notices/{noticeUuid}": {
       "get": {
         "tags": ["DEPARTMENT_NOTICE"],
         "security": [{ "Authorization": [] }],
@@ -347,7 +347,7 @@
         }
       }
     },
-    "/api/v1/admin/department/{departmentUuid}/schedules/{scheduleUuid}": {
+    "/admin/department/{departmentUuid}/schedules/{scheduleUuid}": {
       "post": {
         "tags": ["DEPARTMENT_SCHEDULE"],
         "security": [{ "Authorization": [] }],
