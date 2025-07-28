@@ -1,3 +1,8 @@
+## 👥 Contributors
+
+[![Contributors](https://contrib.rocks/image?repo=NOVA-MJU/MJS_BACKEND)](https://github.com/NOVA-MJU/MJS_BACKEND/graphs/contributors)
+
+
 ## 🚀 핵심 기술 스택
 
 ### ⚙️ Language & Framework  
