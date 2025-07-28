@@ -1,6 +1,36 @@
 ## 👥 Contributors
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/hyunbin1">
+        <img src="https://github.com/hyunbin1.png" width="100px;" alt="hyunbin1"/>
+        <br /><sub><b>hyunbin1</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/sink0324">
+        <img src="https://github.com/sink0324.png" width="100px;" alt="sink0324"/>
+        <br /><sub><b>sink0324</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Namtaera">
+        <img src="https://github.com/Namtaera.png" width="100px;" alt="Namtaera"/>
+        <br /><sub><b>Namtaera</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/miink0">
+        <img src="https://github.com/miink0.png" width="100px;" alt="miink0"/>
+        <br /><sub><b>miink0</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
-[![Contributors](https://contrib.rocks/image?repo=NOVA-MJU/MJS_BACKEND)](https://github.com/NOVA-MJU/MJS_BACKEND/graphs/contributors)
+---
+
+
 
 
 ## 🚀 핵심 기술 스택
