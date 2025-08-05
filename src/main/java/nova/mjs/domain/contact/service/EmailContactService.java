@@ -1,4 +1,4 @@
-package nova.mjs.domain.contact;
+package nova.mjs.domain.contact.service;
 
 import nova.mjs.domain.contact.dto.EmailContactDTO;
 

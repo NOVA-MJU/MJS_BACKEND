@@ -2,7 +2,7 @@ package nova.mjs.domain.contact.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.contact.EmailContactService;
+import nova.mjs.domain.contact.service.EmailContactService;
 import nova.mjs.domain.contact.dto.EmailContactDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
