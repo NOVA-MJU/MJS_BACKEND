@@ -27,10 +27,10 @@ jobs:
             cd /home/ubuntu/MJS_BACKEND
 
             echo "[2] 실행 중인 프로세스 종료"
-            PID=\$(pgrep -f 'MJS_BACKEND-0.0.1-SNAPSHOT.jar' || true)
-            if [ -n "\$PID" ]; then
-              kill -9 \$PID
-              echo "기존 프로세스 종료됨: \$PID"
+            PID=$(pgrep -f 'MJS_BACKEND-0.0.1-SNAPSHOT.jar' || true)
+            if [ -n "$PID" ]; then
+              kill -9 "$PID"
+              echo "기존 프로세스 종료됨: $PID"
             else
               echo "기존 프로세스 없음"
             fi
@@ -44,8 +44,12 @@ jobs:
 
             echo "[5] 실행 JAR 백그라운드 실행"
             cd build/libs
-            JAR_FILE=\$(ls *.jar | head -n 1)
-            nohup java -jar \$JAR_FILE > nohup.out 2>&1 &
+            JAR_FILE=$(ls *.jar | head -n 1)
+            if [ -z "$JAR_FILE" ]; then
+              echo "❌ JAR 파일을 찾을 수 없습니다. (build/libs 비어있음)"
+              exit 1
+            fi
+            nohup java -jar "$JAR_FILE" > nohup.out 2>&1 &
 
-            echo "✅ 배포 완료: \$JAR_FILE 실행됨"
+            echo "✅ 배포 완료: $JAR_FILE 실행됨"
           EOF
