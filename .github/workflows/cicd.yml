@@ -17,68 +17,133 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: 🧪 Diagnose & Deploy via SSH
+      # 원격에서 실행할 배포 스크립트를 로컬에 생성
+      - name: 📝 Create remote deploy script (locally)
         shell: bash
         run: |
-          ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" bash -s << "EOF"
-          set -ex  # e: 오류 시 중단, x: 실행 커맨드 echo
+          cat > deploy_remote.sh <<'EOS'
+          #!/usr/bin/env bash
+          # -e: 에러 시 종료, -u: 미정의 변수 에러, -o pipefail: 파이프라인 중간 에러 감지, -x: 실행 커맨드 echo
+          set -euo pipefail
+          set -x
+
+          APP_DIR="/home/ubuntu/MJS_BACKEND"
+          APP_NAME="MJS_BACKEND"
+          DEFAULT_JAR="MJS_BACKEND-0.0.1-SNAPSHOT.jar"
+          APP_PORT="${APP_PORT:-8080}"   # 필요시 Secrets/Env로 교체
 
           echo "[whoami]"; whoami
-          echo "[pwd]"; pwd
+          echo "[hostname]"; hostname
+          echo "[date]"; date
           echo "[java -version]"; java -version || true
 
           echo "[1] 프로젝트 디렉토리 이동"
-          cd /home/ubuntu/MJS_BACKEND
-          pwd; ls -al
+          cd "$APP_DIR"
+          pwd
+          ls -al
+
+          echo "[1.1] Git 상태 출력"
+          git rev-parse --abbrev-ref HEAD || true
+          git log -1 --oneline || true
+          git status -sb || true
 
           echo "[2] 기존 프로세스 종료"
-          PID=$(pgrep -f 'MJS_BACKEND-.*\.jar' || true)
+          # JAR 이름이 바뀔 수 있으니 와일드카드 먼저 → 폴백: 고정 파일명
+          PID=$(pgrep -f "${APP_NAME}-.*\.jar" || true)
           if [ -z "${PID:-}" ]; then
-            PID=$(pgrep -f 'MJS_BACKEND-0.0.1-SNAPSHOT.jar' || true)
+            PID=$(pgrep -f "${DEFAULT_JAR}" || true)
           fi
           if [ -n "${PID:-}" ]; then
+            echo "killing $PID"
             kill -9 "$PID" || true
-            echo "killed: $PID"
           else
             echo "no running proc"
           fi
 
-          echo "[3] git pull"
+          echo "[3] 최신 코드 가져오기 (git pull)"
           git pull origin main
 
-          echo "[4] gradle build"
+          echo "[4] Gradle 버전 및 빌드"
           chmod +x ./gradlew || true
           ./gradlew --version
           ./gradlew clean build -x test
 
-          echo "[4.5] build 디렉토리 존재 확인"
+          echo "[4.5] 빌드 산출물 존재 확인"
           ls -al build || true
-          echo "[4.6] libs 디렉토리 존재 확인"
           ls -al build/libs || true
 
           echo "[5] JAR 자동 탐색"
-          # 루트 기준 4단계까지 검색(멀티모듈 대비)
-          find . -maxdepth 4 -type f -path "*/build/libs/*.jar" -printf "%p %TY-%Tm-%Td %TH:%TM\n" | sort -k2,2 -k3,3 | tail -n 20
+          # 단일/멀티모듈 모두 지원: 최대 깊이 4에서 검색
+          echo "[5.1] 최근 생성 JAR 목록 (상위 20개)"
+          find . -maxdepth 4 -type f -path "*/build/libs/*.jar" -printf "%p %TY-%Tm-%Td %TH:%TM\n" | sort -k2,2 -k3,3 | tail -n 20 || true
+
           JAR_PATH=$(find . -maxdepth 4 -type f -path "*/build/libs/*.jar" | head -n 1 || true)
           if [ -z "${JAR_PATH:-}" ]; then
             echo "❌ JAR not found under */build/libs"
+            echo "[디버그] build 디렉토리들:"
+            find . -maxdepth 4 -type d -name build -print || true
             exit 1
           fi
           echo "JAR_PATH: $JAR_PATH"
 
           JAR_DIR=$(dirname "$JAR_PATH")
           JAR_FILE=$(basename "$JAR_PATH")
+          echo "➡ 실행 대상: $JAR_FILE"
           cd "$JAR_DIR"
+          pwd
           ls -al
 
           echo "[6] nohup 로그 백업"
           mv nohup.out "nohup_$(date +%Y%m%d_%H%M%S).log" 2>/dev/null || true
 
-          echo "[7] 실행"
+          echo "[7] 백그라운드 실행"
           nohup java -jar "$JAR_FILE" > nohup.out 2>&1 &
-          echo "started: $JAR_FILE (PID: $!)"
+          NEW_PID=$!
+          echo "✅ started: $JAR_FILE (PID: $NEW_PID)"
 
+          echo "[8] 기동 직후 로그 미리보기"
           sleep 2
-          echo "[8] tail -n 80 nohup.out"
           tail -n 80 nohup.out || true
-          EOF
+
+          echo "[9] 간이 헬스체크 (포트 ${APP_PORT}, 최대 60초 대기)"
+          # nc가 없을 수도 있으므로 curl로도 체크 (원하는 health endpoint가 있으면 교체)
+          for i in $(seq 1 60); do
+            if command -v nc >/dev/null 2>&1; then
+              if nc -z localhost "${APP_PORT}"; then
+                echo "✅ 포트 ${APP_PORT} 열림"; break
+              fi
+            fi
+            if command -v curl >/dev/null 2>&1; then
+              if curl -fsS "http://localhost:${APP_PORT}/actuator/health" >/dev/null 2>&1; then
+                echo "✅ /actuator/health 통과"; break
+              fi
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "⚠️ 60초 내 기동 확인 실패(포트/헬스체크). 로그 확인 권장."
+              break
+            fi
+            sleep 1
+          done
+
+          echo "[10] 최종 프로세스/포트 상태"
+          ps -ef | grep java || true
+          (command -v ss >/dev/null 2>&1 && ss -ltnp | grep ":${APP_PORT}" ) || true
+
+          echo "🎉 배포 스크립트 종료"
+          EOS
+
+          chmod +x deploy_remote.sh
+          echo "== local deploy_remote.sh created =="
+          ls -al deploy_remote.sh
+          echo "== file content (head) =="
+          head -n 40 deploy_remote.sh
+
+      - name: 📤 Upload deploy script to EC2
+        shell: bash
+        run: |
+          scp -o StrictHostKeyChecking=no ./deploy_remote.sh "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}":/home/ubuntu/deploy_remote.sh
+
+      - name: 🚀 Run deploy script on EC2
+        shell: bash
+        run: |
+          ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" "bash /home/ubuntu/deploy_remote.sh"
