@@ -21,7 +21,7 @@ jobs:
       - name: 🚀 Deploy to EC2 via SSH
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
-            set -e  # 에러 발생 시 즉시 중단
+            set -ex  # e: 오류 시 중단, x: 실행 커맨드 표시
 
             echo "[1] 프로젝트 디렉토리 이동"
             cd /home/ubuntu/MJS_BACKEND
@@ -38,17 +38,20 @@ jobs:
             echo "[3] 최신 코드 가져오기"
             git pull origin main
 
-            echo "[4] Gradle 빌드 시작"
-            ./gradlew clean
-            ./gradlew build -x test
+            echo "[4] Gradle 빌드 (clean + build -x test)"
+            ./gradlew clean build -x test
 
-            echo "[5] 실행 JAR 백그라운드 실행"
+            echo "[5] JAR 확인 및 실행"
             cd build/libs
+            ls -al
             JAR_FILE=$(ls *.jar | head -n 1)
             if [ -z "$JAR_FILE" ]; then
               echo "❌ JAR 파일을 찾을 수 없습니다. (build/libs 비어있음)"
               exit 1
             fi
+            # 이전 로그 백업(있으면)
+            mv nohup.out "nohup_$(date +%Y%m%d_%H%M%S).log" 2>/dev/null || true
+
             nohup java -jar "$JAR_FILE" > nohup.out 2>&1 &
 
             echo "✅ 배포 완료: $JAR_FILE 실행됨"
