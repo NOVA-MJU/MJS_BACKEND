@@ -17,14 +17,19 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: 🚀 Deploy over SSH
+      - name: 🧪 Diagnose & Deploy via SSH
         shell: bash
         run: |
           ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" bash -s << "EOF"
-          set -euo pipefail
+          set -ex  # e: 오류 시 중단, x: 실행 커맨드 echo
+
+          echo "[whoami]"; whoami
+          echo "[pwd]"; pwd
+          echo "[java -version]"; java -version || true
 
           echo "[1] 프로젝트 디렉토리 이동"
           cd /home/ubuntu/MJS_BACKEND
+          pwd; ls -al
 
           echo "[2] 기존 프로세스 종료"
           PID=$(pgrep -f 'MJS_BACKEND-.*\.jar' || true)
@@ -33,41 +38,47 @@ jobs:
           fi
           if [ -n "${PID:-}" ]; then
             kill -9 "$PID" || true
-            echo "➡ 종료: $PID"
+            echo "killed: $PID"
           else
-            echo "➡ 실행 중 프로세스 없음"
+            echo "no running proc"
           fi
 
-          echo "[3] 최신 코드 가져오기 (git pull)"
+          echo "[3] git pull"
           git pull origin main
 
-          echo "[4] Gradle 빌드 (clean → build -x test)"
+          echo "[4] gradle build"
           chmod +x ./gradlew || true
-          ./gradlew clean
-          ./gradlew build -x test
+          ./gradlew --version
+          ./gradlew clean build -x test
 
-          echo "[5] build/libs 이동 및 JAR 실행"
-          cd build/libs
-          ls -al || true
+          echo "[4.5] build 디렉토리 존재 확인"
+          ls -al build || true
+          echo "[4.6] libs 디렉토리 존재 확인"
+          ls -al build/libs || true
 
-          # JAR 선택 (고정명 먼저, 없으면 첫 번째 .jar)
-          JAR_FILE="MJS_BACKEND-0.0.1-SNAPSHOT.jar"
-          if [ ! -f "\$JAR_FILE" ]; then
-            JAR_FILE=$(ls -1 *.jar 2>/dev/null | head -n 1 || true)
-          fi
-          if [ -z "${JAR_FILE:-}" ] || [ ! -f "\$JAR_FILE" ]; then
-            echo "❌ JAR 파일이 없습니다. (build/libs 비어있음)"
+          echo "[5] JAR 자동 탐색"
+          # 루트 기준 4단계까지 검색(멀티모듈 대비)
+          find . -maxdepth 4 -type f -path "*/build/libs/*.jar" -printf "%p %TY-%Tm-%Td %TH:%TM\n" | sort -k2,2 -k3,3 | tail -n 20
+          JAR_PATH=$(find . -maxdepth 4 -type f -path "*/build/libs/*.jar" | head -n 1 || true)
+          if [ -z "${JAR_PATH:-}" ]; then
+            echo "❌ JAR not found under */build/libs"
             exit 1
           fi
-          echo "➡ 실행 대상: \$JAR_FILE"
+          echo "JAR_PATH: $JAR_PATH"
 
-          # 이전 로그 백업
+          JAR_DIR=$(dirname "$JAR_PATH")
+          JAR_FILE=$(basename "$JAR_PATH")
+          cd "$JAR_DIR"
+          ls -al
+
+          echo "[6] nohup 로그 백업"
           mv nohup.out "nohup_$(date +%Y%m%d_%H%M%S).log" 2>/dev/null || true
 
-          # 백그라운드 실행
-          nohup java -jar "\$JAR_FILE" > nohup.out 2>&1 &
+          echo "[7] 실행"
+          nohup java -jar "$JAR_FILE" > nohup.out 2>&1 &
+          echo "started: $JAR_FILE (PID: $!)"
 
-          echo "✅ 기동 완료: \$JAR_FILE (PID: $!)"
-          sleep 1
-          tail -n 20 nohup.out || true
+          sleep 2
+          echo "[8] tail -n 80 nohup.out"
+          tail -n 80 nohup.out || true
           EOF
