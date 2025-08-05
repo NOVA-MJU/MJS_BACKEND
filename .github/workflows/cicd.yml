@@ -21,14 +21,16 @@ jobs:
       - name: 🚀 Deploy to EC2 via SSH
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
+            set -e  # 에러 발생 시 즉시 중단
+
             echo "[1] 프로젝트 디렉토리 이동"
             cd /home/ubuntu/MJS_BACKEND
 
             echo "[2] 실행 중인 프로세스 종료"
-            PID=$(pgrep -f 'MJS_BACKEND-0.0.1-SNAPSHOT.jar')
-            if [ -n "$PID" ]; then
-              kill -9 $PID
-              echo "기존 프로세스 종료됨: $PID"
+            PID=\$(pgrep -f 'MJS_BACKEND-0.0.1-SNAPSHOT.jar' || true)
+            if [ -n "\$PID" ]; then
+              kill -9 \$PID
+              echo "기존 프로세스 종료됨: \$PID"
             else
               echo "기존 프로세스 없음"
             fi
@@ -36,13 +38,14 @@ jobs:
             echo "[3] 최신 코드 가져오기"
             git pull origin main
 
-            echo "[4] Gradle 빌드 수행"
+            echo "[4] Gradle 빌드 시작"
             ./gradlew clean
             ./gradlew build -x test
 
-            echo "[5] 실행 JAR 이동 후 백그라운드 실행"
+            echo "[5] 실행 JAR 백그라운드 실행"
             cd build/libs
-            nohup java -jar MJS_BACKEND-0.0.1-SNAPSHOT.jar > nohup.out 2>&1 &
+            JAR_FILE=\$(ls *.jar | head -n 1)
+            nohup java -jar \$JAR_FILE > nohup.out 2>&1 &
 
-            echo "✅ 배포 완료"
+            echo "✅ 배포 완료: \$JAR_FILE 실행됨"
           EOF
