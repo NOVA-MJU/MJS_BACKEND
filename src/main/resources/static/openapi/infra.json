@@ -18,6 +18,10 @@
     {
       "name": "S3 Image",
       "description": "S3 이미지 업로드 및 임시 UUID 발급 관련 엔드포인트"
+    },
+    {
+      "name": "Contact",
+      "description": "사용자의 문의사항(버그 제보, 피드백 등)을 운영자 이메일로 전송하는 기능입니다. HTML과 이미지가 포함된 이메일 전송을 지원합니다."
     }
   ],
   "paths": {
@@ -158,6 +162,55 @@
           }
         }
       }
+    },
+    "/api/v1/contact/email": {
+      "post": {
+        "tags": ["Contact"],
+        "summary": "문의사항 이메일 전송",
+        "description": "사용자가 입력한 제목과 내용을 바탕으로 운영자에게 HTML 이메일을 전송합니다. 본문은 HTML 형식을 지원하며 이미지 삽입도 가능합니다. 서버 측에서 DB 저장은 하지 않고 메일만 발송됩니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailContactRequest"
+              },
+              "example": {
+                "subject": "버그 제보",
+                "content": "<p>다음 이미지를 참고하세요.<br><img src='https://mjsearch.org/static/images/member/profiles/a5fe8971-c436-4794-96d7-8dd29583d16a/0ac4e3ad18749a7029ea8876644c1a2b5bafc07aa31dc5d56a9d7dde8df07a6a.jpeg' /></p>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "문의 전송 결과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailContactResponse"
+                },
+                "examples": {
+                  "success": {
+                    "summary": "성공 응답",
+                    "value": {
+                      "success": true,
+                      "message": "문의가 성공적으로 전송되었습니다."
+                    }
+                  },
+                  "error": {
+                    "summary": "실패 응답",
+                    "value": {
+                      "success": false,
+                      "message": "이메일 전송 중 오류가 발생했습니다."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -222,6 +275,33 @@
           "DEPARTMENT_NOTICE"
         ],
         "example": "COMMUNITY_POST"
+      },
+      "EmailContactRequest": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "이메일 제목 (예: 버그 제보, 기능 요청 등)"
+          },
+          "content": {
+            "type": "string",
+            "description": "이메일 본문 내용 (HTML 형식 가능, 이미지 삽입 가능)"
+          }
+        },
+        "required": ["subject", "content"]
+      },
+      "EmailContactResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "이메일 전송 성공 여부"
+          },
+          "message": {
+            "type": "string",
+            "description": "처리 결과 메시지"
+          }
+        }
       }
     }
   }
