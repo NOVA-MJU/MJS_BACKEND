@@ -2,23 +2,22 @@ name: Deploy to EC2
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📦 Checkout source code
+      - name: 📦 Checkout
         uses: actions/checkout@v3
 
-      - name: 🔐 Set up SSH key
+      - name: 🔐 SSH agent
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: 🚀 Deploy to EC2 via SSH
+      - name: 🚀 Deploy over SSH
         shell: bash
         run: |
           ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" bash -s << "EOF"
@@ -27,39 +26,48 @@ jobs:
           echo "[1] 프로젝트 디렉토리 이동"
           cd /home/ubuntu/MJS_BACKEND
 
-          echo "[2] 실행 중인 프로세스 종료"
-          # 기존 프로세스 탐지(파일명 변경 대응 위해 와일드카드 우선, 실패 시 고정명 사용)
+          echo "[2] 기존 프로세스 종료"
           PID=$(pgrep -f 'MJS_BACKEND-.*\.jar' || true)
           if [ -z "${PID:-}" ]; then
             PID=$(pgrep -f 'MJS_BACKEND-0.0.1-SNAPSHOT.jar' || true)
           fi
           if [ -n "${PID:-}" ]; then
             kill -9 "$PID" || true
-            echo "기존 프로세스 종료됨: $PID"
+            echo "➡ 종료: $PID"
           else
-            echo "기존 프로세스 없음"
+            echo "➡ 실행 중 프로세스 없음"
           fi
 
-          echo "[3] 최신 코드 가져오기"
+          echo "[3] 최신 코드 가져오기 (git pull)"
           git pull origin main
 
-          echo "[4] Gradle 빌드 (clean + build -x test)"
-          ./gradlew clean build -x test
+          echo "[4] Gradle 빌드 (clean → build -x test)"
+          chmod +x ./gradlew || true
+          ./gradlew clean
+          ./gradlew build -x test
 
-          echo "[5] JAR 확인 및 실행"
+          echo "[5] build/libs 이동 및 JAR 실행"
           cd build/libs
           ls -al || true
-          # 최신 JAR 자동 탐색
-          JAR_FILE=$(ls -1 *.jar 2>/dev/null | head -n 1 || true)
-          if [ -z "${JAR_FILE:-}" ]; then
-            echo "❌ JAR 파일을 찾을 수 없습니다. (build/libs 비어있음)"
+
+          # JAR 선택 (고정명 먼저, 없으면 첫 번째 .jar)
+          JAR_FILE="MJS_BACKEND-0.0.1-SNAPSHOT.jar"
+          if [ ! -f "\$JAR_FILE" ]; then
+            JAR_FILE=$(ls -1 *.jar 2>/dev/null | head -n 1 || true)
+          fi
+          if [ -z "${JAR_FILE:-}" ] || [ ! -f "\$JAR_FILE" ]; then
+            echo "❌ JAR 파일이 없습니다. (build/libs 비어있음)"
             exit 1
           fi
+          echo "➡ 실행 대상: \$JAR_FILE"
 
-          # 이전 nohup 로그 백업(있으면)
+          # 이전 로그 백업
           mv nohup.out "nohup_$(date +%Y%m%d_%H%M%S).log" 2>/dev/null || true
 
           # 백그라운드 실행
-          nohup java -jar "$JAR_FILE" > nohup.out 2>&1 &
-          echo "✅ 배포 완료: $JAR_FILE 실행됨 (PID: $!)"
+          nohup java -jar "\$JAR_FILE" > nohup.out 2>&1 &
+
+          echo "✅ 기동 완료: \$JAR_FILE (PID: $!)"
+          sleep 1
+          tail -n 20 nohup.out || true
           EOF
