@@ -74,14 +74,14 @@ public class CommunityBoard extends BaseEntity {
 
 
     // === 생성 메서드 ===
-    public static CommunityBoard create(UUID boardUuid, String title, String content, CommunityCategory category, Boolean published, Member member) {
+    public static CommunityBoard create(String title, String content, String previewContent, CommunityCategory category, Boolean published, Member member) {
         CommunityBoard board = CommunityBoard.builder()
-                .uuid(boardUuid)
+                .uuid(UUID.randomUUID())
                 .title(title)
                 .content(content)
                 .category(category)
                 .published(published != null ? published : false)
-                .previewContent(makePreview(content))
+                .previewContent(previewContent)
                 .viewCount(0)
                 .likeCount(0)
                 .publishedAt(published != null && published ? LocalDateTime.now() : null)
@@ -91,9 +91,10 @@ public class CommunityBoard extends BaseEntity {
     }
 
     // === 업데이트 메서드 ===
-    public void update(String title, String content, Boolean published) {
+    public void update(String title, String content, String contentPreview, Boolean published) {
         if (title != null) this.title = title;
         if (content != null) this.content = content;
+        if (contentPreview != null) this.previewContent = contentPreview;
         if (published != null) {
             updatePublishedState(published);
         }

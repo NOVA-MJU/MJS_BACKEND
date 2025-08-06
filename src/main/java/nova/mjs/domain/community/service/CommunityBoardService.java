@@ -23,7 +23,7 @@ public interface CommunityBoardService {
     // 게시판 상세 조회
     CommunityBoardResponse.DetailDTO getBoardDetail(UUID uuid, String email);
     // 게시판 생성
-    CommunityBoardResponse.DetailDTO createBoard(CommunityBoardRequest request, UUID boardUuid, String emailId);
+    CommunityBoardResponse.DetailDTO createBoard(CommunityBoardRequest request, String emailId);
     // 게시판 업데이트
     CommunityBoardResponse.DetailDTO updateBoard(UUID uuid, CommunityBoardRequest request, String email);
     // 게시판 삭제

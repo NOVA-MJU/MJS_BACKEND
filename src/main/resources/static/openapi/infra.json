@@ -69,6 +69,7 @@
     "/s3/temp-uuid": {
       "get": {
         "tags": ["S3 Image"],
+        "deprecated": true,
         "summary": "임시 UUID 발급",
         "description": "새 게시글 작성 시 **프론트엔드에서 임시로 사용할 UUID**를 발급합니다. 이 UUID는 실제 게시글이 저장되기 전까지 업로드된 이미지와 게시글을 매핑하는 데 사용됩니다.",
         "operationId": "generateTempUuid",
@@ -113,23 +114,16 @@
                   },
                   "domain": {
                     "$ref": "#/components/schemas/S3DomainType"
-                  },
-                  "uuid": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "연관 엔티티의 UUID(임시 또는 실제)",
-                    "example": "4be35d77-4767-4e2d-837a-a2e7f9e9a802"
                   }
                 },
-                "required": ["file", "domain", "uuid"]
+                "required": ["file", "domain"]
               },
               "examples": {
                 "communityImage": {
                   "summary": "자유게시판 이미지 업로드 예시",
                   "value": {
                     "file": "(binary)",
-                    "domain": "COMMUNITY_POST",
-                    "uuid": "4be35d77-4767-4e2d-837a-a2e7f9e9a802"
+                    "domain": "COMMUNITY_POST"
                   }
                 }
               }

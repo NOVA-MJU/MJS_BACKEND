@@ -93,16 +93,15 @@ public class CommunityBoardController {
     /**
      * 3. 게시글 작성
      */
-    @PostMapping("/{boardUuid}")
+    @PostMapping("")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<CommunityBoardResponse.DetailDTO>> createBoard(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable UUID boardUuid,
             @RequestBody CommunityBoardRequest request
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.createBoard(request, boardUuid, email);
+        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.createBoard(request, email);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board));

@@ -38,13 +38,12 @@ public class S3ServiceImpl implements S3Service {
      *
      * @param file 업로드할 파일
      * @param domainType 도메인 타입
-     * @param folderUuid 폴더 식별용 UUID
      * @return 업로드된 파일의 CloudFront URL
      * @throws IOException
      */
     @Override
-    public String uploadFile(MultipartFile file, S3DomainType domainType, UUID folderUuid) throws IOException {
-        String fileUrl = S3KeyGenerator.generateFileKeyWithHash(file, domainType, folderUuid);
+    public String uploadFile(MultipartFile file, S3DomainType domainType) throws IOException {
+        String fileUrl = S3KeyGenerator.generateFileKeyWithHash(file, domainType);
 
         log.info("[S3 업로드 요청] key: {}", fileUrl);
 

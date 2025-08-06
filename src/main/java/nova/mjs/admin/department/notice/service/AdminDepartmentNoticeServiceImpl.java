@@ -49,7 +49,7 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
     @Override
     @Transactional
     public AdminDepartmentNoticeResponseDTO createNotice(
-            UserPrincipal userPrincipal, UUID departmentUuid, UUID noticeUuid,
+            UserPrincipal userPrincipal, UUID departmentUuid,
             AdminDepartmentNoticeRequestDTO request
     ) {
         Department department = departmentRepository.findByDepartmentUuid(departmentUuid)
@@ -58,7 +58,7 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
             throw new DepartmentAdminNotFoundException();
         }
 
-        DepartmentNotice notice = DepartmentNotice.create(noticeUuid, request,department);
+        DepartmentNotice notice = DepartmentNotice.create(request,department);
 
         departmentNoticeRepository.save(notice);
         log.info("[학과 공지 생성] dept={}, noticeUuid={}", departmentUuid, notice.getUuid());
