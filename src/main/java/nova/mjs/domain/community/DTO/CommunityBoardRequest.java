@@ -16,6 +16,6 @@ public class CommunityBoardRequest {
     private String title;               // 게시글 제목
     @NotBlank(message = "내용은 필수입니다.")
     private String content;             // 게시글 내용
-    @NotNull(message = "게시 여부는 필수입니다.")
+    private String contentPreview;      // 게시글 요약(프론트에서 전달)
     private Boolean published;          // 게시글 공개 여부
 }

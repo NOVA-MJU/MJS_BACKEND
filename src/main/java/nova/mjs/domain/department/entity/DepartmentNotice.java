@@ -57,12 +57,12 @@ public class DepartmentNotice extends BaseEntity {
 
 
     /* =================== 생성 =================== */
-    public static DepartmentNotice create(UUID noticeUuid, AdminDepartmentNoticeRequestDTO request, Department department) {
+    public static DepartmentNotice create(AdminDepartmentNoticeRequestDTO request, Department department) {
         return DepartmentNotice.builder()
-                .uuid(noticeUuid)
+                .uuid(UUID.randomUUID())
                 .title(request.getTitle())
                 .content(request.getContent())
-                .previewContent(ContentPreviewUtil.makePreview(request.getContent()))
+                .previewContent(request.getContentPreview())
                 .thumbnailUrl(hasText(request.getThumbnailUrl())
                                 ? request.getThumbnailUrl()
                                 : S3DomainType.DEFAULT_THUMBNAIL_URL.getPrefix())
@@ -74,7 +74,7 @@ public class DepartmentNotice extends BaseEntity {
     public void update(AdminDepartmentNoticeRequestDTO requestDTO) {
         this.title = getOrDefault(requestDTO.getTitle(), this.title);
         this.content = getOrDefault(requestDTO.getContent(), this.content);
-        this.previewContent = ContentPreviewUtil.makePreview(getOrDefault(requestDTO.getContent(), this.content)); // content 변경 기준
+        this.previewContent = getOrDefault(requestDTO.getContent(), this.content); // content 변경 기준
         this.thumbnailUrl = getOrDefault(requestDTO.getThumbnailUrl(), this.thumbnailUrl);
     }
 

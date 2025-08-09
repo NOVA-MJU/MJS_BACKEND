@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,5 +40,10 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     JOIN FETCH cb.author
     """)
     Page<CommunityBoard> findAllWithAuthor(Pageable pageable);
+
+    @Query("SELECT b FROM CommunityBoard b " +
+            "WHERE b.publishedAt >= :after AND b.published = true " +
+            "ORDER BY b.likeCount DESC")
+    List<CommunityBoard> findTop3PopularBoards(@Param("after") LocalDateTime after, Pageable pageable);
 
 }

@@ -13,6 +13,7 @@ public class AdminDepartmentNoticeResponseDTO {
     private UUID uuid;
     private String title;
     private String content;
+    private String contentPreview;
     private String thumbnailUrl;
     private LocalDateTime createAt;
 
@@ -21,6 +22,7 @@ public class AdminDepartmentNoticeResponseDTO {
                 .uuid(departmentNotice.getUuid())
                 .title(departmentNotice.getTitle())
                 .content(departmentNotice.getContent())
+                .contentPreview(departmentNotice.getPreviewContent())
                 .thumbnailUrl(departmentNotice.getThumbnailUrl())
                 .createAt(departmentNotice.getCreatedAt())
                 .build();

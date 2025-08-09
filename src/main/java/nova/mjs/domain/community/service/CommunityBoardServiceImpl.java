@@ -18,14 +18,16 @@ import nova.mjs.util.s3.S3DomainType;
 import nova.mjs.util.s3.S3Service;
 import nova.mjs.util.s3.S3ServiceImpl;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 커뮤니티 게시판 서비스 구현체
@@ -61,48 +63,111 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
      * @param email 로그인 사용자 이메일 (null 가능)
      * @return 게시글 목록 (SummaryDTO)
      */
+//    @Override
+//    public Page<CommunityBoardResponse.SummaryDTO> getBoards(Pageable pageable, String email) {
+//        // 1) 페이지네이션으로 게시글 목록 조회
+//        Page<CommunityBoard> boardPage = communityBoardRepository.findAllWithAuthor(pageable);
+//
+//        // 2) 게시글이 없으면 빈 응답 바로 반환
+//        if (boardPage.isEmpty()) {
+//            // Page.empty(...)로 반환하거나, boardPage.map(...) 형태로 반환
+//            return boardPage.map(board -> null);
+//        }
+//
+//        // 3) 비로그인 사용자면 -> isLiked = false
+//        if (email == null) {
+//            return mapBoardsWithoutLogin(boardPage);
+//        }
+//
+//        // 4) 로그인된 사용자 조회
+//        Member member = memberRepository.findByEmail(email).orElse(null);
+//        // 이메일은 있으나 DB에 없는 경우 -> isLiked = false
+//        if (member == null) {
+//            return mapBoardsWithoutLogin(boardPage);
+//        }
+//
+//        // 5) 모든 게시글의 UUID 목록 추출
+//        List<UUID> boardUuids = boardPage.stream()
+//                .map(CommunityBoard::getUuid)
+//                .toList();
+//
+//        // 6) 사용자가 좋아요한 게시글 UUID 조회
+//        List<UUID> likedUuids = communityLikeRepository.findCommunityUuidsLikedByMember(member, boardUuids);
+//        Set<UUID> likedSet = new HashSet<>(likedUuids);
+//
+//
+//        // 7) 각 게시글을 DTO로 매핑하면서 isLiked 설정
+//        return boardPage.map(board -> {
+//            int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
+//            int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
+//            boolean isLiked = likedSet.contains(board.getUuid());
+//
+//            log.info("작성자 닉네임 = {}", board.getAuthor() != null ? board.getAuthor().getNickname() : "null");
+//            return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, isLiked);
+//        });
+//    }
+
     @Override
     public Page<CommunityBoardResponse.SummaryDTO> getBoards(Pageable pageable, String email) {
-        // 1) 페이지네이션으로 게시글 목록 조회
-        Page<CommunityBoard> boardPage = communityBoardRepository.findAllWithAuthor(pageable);
-
-        // 2) 게시글이 없으면 빈 응답 바로 반환
-        if (boardPage.isEmpty()) {
-            // Page.empty(...)로 반환하거나, boardPage.map(...) 형태로 반환
-            return boardPage.map(board -> null);
-        }
-
-        // 3) 비로그인 사용자면 -> isLiked = false
-        if (email == null) {
-            return mapBoardsWithoutLogin(boardPage);
-        }
-
-        // 4) 로그인된 사용자 조회
-        Member member = memberRepository.findByEmail(email).orElse(null);
-        // 이메일은 있으나 DB에 없는 경우 -> isLiked = false
-        if (member == null) {
-            return mapBoardsWithoutLogin(boardPage);
-        }
-
-        // 5) 모든 게시글의 UUID 목록 추출
-        List<UUID> boardUuids = boardPage.stream()
+        // 1) 최근 2주 이내 인기글 3개 조회
+        LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
+        List<CommunityBoard> popularBoards = communityBoardRepository
+                .findTop3PopularBoards(twoWeeksAgo, PageRequest.of(0, 3));
+        Set<UUID> popularUuids = popularBoards.stream()
                 .map(CommunityBoard::getUuid)
+                .collect(Collectors.toSet());
+
+        // 2) 일반 게시글 페이지네이션 (인기글 제외는 DTO 변환 시 처리)
+        Page<CommunityBoard> boardPage = communityBoardRepository.findAllWithAuthor(pageable);
+        List<CommunityBoard> generalBoards = boardPage.getContent().stream()
+                .filter(board -> !popularUuids.contains(board.getUuid()))
                 .toList();
 
-        // 6) 사용자가 좋아요한 게시글 UUID 조회
-        List<UUID> likedUuids = communityLikeRepository.findCommunityUuidsLikedByMember(member, boardUuids);
-        Set<UUID> likedSet = new HashSet<>(likedUuids);
+        // 3) 로그인 사용자 좋아요 처리
+        Member member = (email != null) ? memberRepository.findByEmail(email).orElse(null) : null;
 
-        // 7) 각 게시글을 DTO로 매핑하면서 isLiked 설정
-        return boardPage.map(board -> {
-            int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
-            int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
-            boolean isLiked = likedSet.contains(board.getUuid());
+        final Set<UUID> likedUuids;
+        if (member != null) {
+            List<UUID> allUuids = Stream.concat(
+                    popularBoards.stream(),
+                    generalBoards.stream()
+            ).map(CommunityBoard::getUuid).toList();
 
-            log.info("작성자 닉네임 = {}", board.getAuthor() != null ? board.getAuthor().getNickname() : "null");
-            return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, isLiked);
-        });
+            likedUuids = new HashSet<>(communityLikeRepository.findCommunityUuidsLikedByMember(member, allUuids));
+        } else {
+            likedUuids = Collections.emptySet();
+        }
+
+        // 4) DTO 변환
+        List<CommunityBoardResponse.SummaryDTO> popularDTOs = toSummaryDTOs(popularBoards, likedUuids, true);
+        List<CommunityBoardResponse.SummaryDTO> generalDTOs = toSummaryDTOs(generalBoards, likedUuids, false);
+
+        // 5) 병합
+        List<CommunityBoardResponse.SummaryDTO> merged = new ArrayList<>();
+        merged.addAll(popularDTOs);
+        merged.addAll(generalDTOs);
+
+        // 6) PageImpl로 반환
+        return new PageImpl<>(merged, pageable, boardPage.getTotalElements());
     }
+
+    private List<CommunityBoardResponse.SummaryDTO> toSummaryDTOs(List<CommunityBoard> boards, Set<UUID> likedUuids, boolean isPopular) {
+        return boards.stream()
+                .map(board -> {
+                    int likeCount = isPopular
+                            ? board.getLikeCount() // 인기글은 필드 그대로 사용
+                            : communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
+
+                    int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
+                    boolean isLiked = likedUuids.contains(board.getUuid());
+
+                    return CommunityBoardResponse.SummaryDTO.fromEntityPreview(
+                            board, likeCount, commentCount, isLiked, isPopular
+                    );
+                })
+                .toList();
+    }
+
 
     // 2. [게시글 상세 조회] (좋아요 여부 포함)
     @Override
@@ -138,19 +203,20 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
     백엔드에서는 업로드된 파일 url과 글과 함께 모두 content로 요청 후 글은 content로 관리 = imageurl 관리 따로 안함.
 */
     @Transactional
-    public CommunityBoardResponse.DetailDTO createBoard(CommunityBoardRequest request, UUID boardUuid, String emailId) {
+    public CommunityBoardResponse.DetailDTO createBoard(CommunityBoardRequest request, String emailId) {
         log.info("[게시글 작성 요청] 사용자 이메일: {}", emailId);
     
         // 작성자 조회
         Member author = memberQueryService.getMemberByEmail(emailId);
+        boolean published = request.getPublished() == null || request.getPublished();
 
         // 게시글 생성
         CommunityBoard board = CommunityBoard.create(
-                boardUuid,
                 request.getTitle(),
                 request.getContent(),
+                request.getContentPreview(),
                 CommunityCategory.FREE,
-                request.getPublished(),
+                published,
                 author
         );
         communityBoardRepository.save(board);
@@ -180,7 +246,7 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
         }
 
         // 4. 게시글 업데이트
-        board.update(request.getTitle(), request.getContent(), request.getPublished());
+        board.update(request.getTitle(), request.getContent(), request.getContentPreview(), request.getPublished());
 
         // 5. 응답 생성
         int likeCount = communityLikeRepository.countByCommunityBoardUuid(board.getUuid());

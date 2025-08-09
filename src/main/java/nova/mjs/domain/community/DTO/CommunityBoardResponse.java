@@ -28,6 +28,7 @@ public class CommunityBoardResponse {
         private int commentCount;
         private String author;
         private boolean isLiked;
+        private boolean isPopular;
 
         public static SummaryDTO fromEntityPreview(CommunityBoard e,
                                                    int likeCnt, int cmtCnt, boolean liked) {
@@ -46,15 +47,35 @@ public class CommunityBoardResponse {
                     .isLiked(liked)
                     .build();
         }
+
+        public static SummaryDTO fromEntityPreview(CommunityBoard e,
+                                                   int likeCnt, int cmtCnt, boolean liked, boolean popular) {
+            return SummaryDTO.builder()
+                    .uuid(e.getUuid())
+                    .title(e.getTitle())
+                    .previewContent(e.getPreviewContent())
+                    .viewCount(e.getViewCount())
+                    .published(e.getPublished())
+                    .publishedAt(e.getPublishedAt())   // 그대로 반환
+                    .createdAt(e.getCreatedAt())
+                    .updatedAt(e.getUpdatedAt())
+                    .likeCount(likeCnt)
+                    .commentCount(cmtCnt)
+                    .author(e.getAuthor() != null ? e.getAuthor().getNickname() : "Unknown")
+                    .isLiked(liked)
+                    .isPopular(popular)
+                    .build();
+        }
     }
 
-    /* ========================== 상세 DTO ========================== */
+/* ========================== 상세 DTO ========================== */
     @Data
     @Builder
     public static class DetailDTO {
         private UUID uuid;
         private String title;
         private String content;
+        private String contentPreview;
         private int viewCount;
         private Boolean published;
         private LocalDateTime publishedAt;
@@ -71,6 +92,7 @@ public class CommunityBoardResponse {
                     .uuid(e.getUuid())
                     .title(e.getTitle())
                     .content(e.getContent())
+                    .contentPreview(e.getPreviewContent())
                     .viewCount(e.getViewCount())
                     .published(e.getPublished())
                     .publishedAt(e.getPublishedAt())   // atZone 제거, 그대로 사용

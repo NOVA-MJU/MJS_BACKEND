@@ -187,6 +187,47 @@
         }
       }
     },
+    "/admin/departments/{departmentUuid}/notices": {
+      "post": {
+        "tags": ["DEPARTMENT_NOTICE"],
+        "security": [{ "Authorization": [] }],
+        "summary": "학과 공지 등록",
+        "description": "해당 학과에 공지사항을 등록합니다. 관리자 또는 운영자만 접근 가능합니다.",
+        "parameters": [
+          {
+            "name": "departmentUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "공지사항이 등록될 학과 UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeRequestDTO" },
+              "example": {
+                "title": "중간고사 일정 공지",
+                "content": "중간고사는 10월 17일부터 시작됩니다.",
+                "contentPreview": "게시글 한줄소개를 작성합니다.",
+                "thumbnailUrl": "https://cdn.mju.ac.kr/notice/midterm-thumb.jpg"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "공지사항 등록 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeResponseDTO" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/departments/{departmentUuid}/notices/{noticeUuid}": {
       "get": {
         "tags": ["DEPARTMENT_NOTICE"],
@@ -212,51 +253,6 @@
         "responses": {
           "200": {
             "description": "공지 상세 정보 조회 성공",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeResponseDTO" }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": ["DEPARTMENT_NOTICE"],
-        "security": [{ "Authorization": [] }],
-        "summary": "학과 공지 등록",
-        "description": "해당 학과에 공지사항을 등록합니다. 관리자 또는 운영자만 접근 가능합니다.",
-        "parameters": [
-          {
-            "name": "departmentUuid",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "format": "uuid" },
-            "description": "공지사항이 등록될 학과 UUID"
-          },
-          {
-            "name": "noticeUuid",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "format": "uuid" },
-            "description": "등록할 공지사항 UUID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeRequestDTO" },
-              "example": {
-                "title": "중간고사 일정 공지",
-                "content": "중간고사는 10월 17일부터 시작됩니다.",
-                "thumbnailUrl": "https://cdn.mju.ac.kr/notice/midterm-thumb.jpg"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "공지사항 등록 성공",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/AdminDepartmentNoticeResponseDTO" }
@@ -294,6 +290,7 @@
               "example": {
                 "title": "중간고사 일정 변경 안내",
                 "content": "중간고사가 10월 19일로 연기되었습니다.",
+                "contentPreview": "게시글 한줄소개 입니다.",
                 "thumbnailUrl": "https://cdn.mju.ac.kr/notice/updated-thumb.jpg"
               }
             }
@@ -563,7 +560,7 @@
           "timestamp": { "type": "string", "format": "date-time" }
         }
       },
-      "AdminDepartmentNoticeRequestDTO": {
+        "AdminDepartmentNoticeRequestDTO": {
         "type": "object",
         "properties": {
           "title": {
@@ -575,6 +572,11 @@
             "type": "string",
             "description": "공지사항 내용",
             "example": "중간고사는 10월 17일부터 시작됩니다."
+          },
+          "contentPreview": {
+            "type": "string",
+            "description": "공지사항 내용 프리뷰",
+            "example": "한줄소개입니다 "
           },
           "thumbnailUrl": {
             "type": "string",
@@ -599,6 +601,10 @@
           "content": {
             "type": "string",
             "description": "공지사항 본문"
+          },
+          "contentPreview": {
+            "type": "string",
+            "description": "공지사항 contentPreview"
           },
           "thumbnailUrl": {
             "type": "string",

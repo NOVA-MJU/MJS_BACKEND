@@ -42,8 +42,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     @Override
     public String uploadProfileImage(MultipartFile file) {
         try {
-            UUID folderUuid = UUID.randomUUID(); // 사용자 UUID 등으로 대체 가능
-            return s3Service.uploadFile(file, S3DomainType.PROFILE_IMAGE, folderUuid);
+            return s3Service.uploadFile(file, S3DomainType.PROFILE_IMAGE);
         } catch (IOException e) {
             log.error("[프로필 이미지 업로드 실패]", e);
             throw new RequestException(ErrorCode.S3_IMAGE_UPLOAD_FAILED);

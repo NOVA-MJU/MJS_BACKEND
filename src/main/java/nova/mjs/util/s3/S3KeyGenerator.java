@@ -19,11 +19,10 @@ public class S3KeyGenerator {
      * 도메인 유형과 UUID를 조합하여 S3 prefix 생성
      *
      * @param domainType 도메인 구분 Enum
-     * @param folderUuid 폴더 구분용 UUID
      * @return 예: boards/temp/{UUID}/
      */
-    public static String generatePrefix(S3DomainType domainType, UUID folderUuid) {
-        return domainType.getPrefix() + folderUuid + "/";
+    public static String generatePrefix(S3DomainType domainType) {
+        return domainType.getPrefix() + "/";
     }
 
     /**
@@ -31,12 +30,11 @@ public class S3KeyGenerator {
      *
      * @param file MultipartFile
      * @param domainType 도메인 구분 Enum
-     * @param folderUuid 폴더 구분용 UUID
      * @return 예: boards/temp/{UUID}/{SHA-256}.{ext}
      * @throws IOException
      */
-    public static String generateFileKeyWithHash(MultipartFile file, S3DomainType domainType, UUID folderUuid) throws IOException {
-        String prefix = generatePrefix(domainType, folderUuid);
+    public static String generateFileKeyWithHash(MultipartFile file, S3DomainType domainType) throws IOException {
+        String prefix = generatePrefix(domainType);
         String extension = getExtension(Objects.requireNonNull(file.getOriginalFilename()));
         String fileHash = DigestUtils.sha256Hex(file.getInputStream());
         return prefix + fileHash + extension;
