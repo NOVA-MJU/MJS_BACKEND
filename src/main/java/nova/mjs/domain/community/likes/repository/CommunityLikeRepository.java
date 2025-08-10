@@ -2,6 +2,7 @@ package nova.mjs.domain.community.likes.repository;
 
 import nova.mjs.domain.community.likes.entity.CommunityLike;
 import nova.mjs.domain.community.entity.CommunityBoard;
+import nova.mjs.domain.community.repository.projection.UuidCount;
 import nova.mjs.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -33,5 +34,16 @@ public interface CommunityLikeRepository extends JpaRepository<CommunityLike, Lo
     );
 
     int countByMember(Member member);
+
+    // CommunityLikeRepository
+    @Query("""
+    select cb.uuid as uuid, count(l) as cnt
+    from CommunityLike l
+    join l.communityBoard cb
+    where cb.uuid in :uuids
+    group by cb.uuid
+""")
+    List<UuidCount> countLikesByBoardUuids(@Param("uuids") List<UUID> uuids);
+
 
 }

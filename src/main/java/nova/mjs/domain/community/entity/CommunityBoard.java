@@ -41,7 +41,6 @@ public class CommunityBoard extends BaseEntity {
     @Column(nullable = false)
     private String title; // 게시판 제목
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String content; // 내용 + 이미지 url 함께 구성되어있음
 

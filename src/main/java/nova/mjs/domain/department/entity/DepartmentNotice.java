@@ -42,8 +42,6 @@ public class DepartmentNotice extends BaseEntity {
     private String title;
 
     // 5) content
-    @Lob
-    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Column(columnDefinition = "TEXT")
     private String content;
 
