@@ -29,32 +29,6 @@
         <includeCallerData>false</includeCallerData>
     </appender>
 
-    <!-- (추가) p6spy 로그를 별도 파일로 분리 + 압축/보존 -->
-    <appender name="P6_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/var/log/app/p6spy.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/var/log/app/p6spy.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-            <maxHistory>7</maxHistory>
-            <totalSizeCap>2GB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d %-5level [%thread] %logger - %msg%n</pattern>
-            <charset>UTF-8</charset>
-        </encoder>
-    </appender>
-
-    <appender name="ASYNC_P6" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>8192</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="P6_FILE"/>
-    </appender>
-
-    <!-- (추가) p6spy 패키지 로깅은 별도 파일로 비동기 출력 -->
-    <logger name="com.p6spy" level="INFO" additivity="false">
-        <appender-ref ref="ASYNC_P6"/>
-    </logger>
-
-
     <!-- 5. 루트 로거 (INFO 이상만 동기 출력) -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
