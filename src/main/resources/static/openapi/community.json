@@ -709,6 +709,14 @@
           "timestamp": { "type": "string", "format": "date-time" }
         }
       },
+      "ApiSuccess_BoardPage": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/BoardPage" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
       "BoardPage": {
         "type": "object",
         "properties": {
