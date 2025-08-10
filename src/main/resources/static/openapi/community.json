@@ -57,37 +57,82 @@
                   "example": {
                     "summary": "게시글 목록 예시",
                     "value": {
-                      "status": "SUCCESS",
+                      "status": "API 요청 성공",
                       "data": {
                         "content": [
                           {
-                            "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                            "title": "게시글 제목",
-                            "previewContent": "미리보기 내용...",
-                            "contentImages": ["https://.../img1.jpg"],
-                            "viewCount": 123,
+                            "uuid": "4f08b15c-9cf7-44e7-8890-d06721d3f49d",
+                            "title": "똥글 남기고 간다",
+                            "previewContent": "노래가사",
+                            "viewCount": 0,
                             "published": true,
-                            "publishedAt": "2025-02-11T03:23:16.761Z",
-                            "createdAt": "2025-02-11T03:23:16.761Z",
-                            "updatedAt": "2025-04-08T23:10:02.205038",
+                            "publishedAt": "2025-08-09T12:29:18.296147",
+                            "createdAt": "2025-08-09T12:29:18.301662",
+                            "updatedAt": "2025-08-09T12:29:18.301704",
+                            "likeCount": 0,
+                            "commentCount": 2,
+                            "author": "홍길동",
+                            "liked": false,
+                            "popular": true
+                          },
+                          {
+                            "uuid": "dc3ff760-4dde-44c1-8171-14f3470114de",
+                            "title": "자전거 타고 괌 가는 방법6",
+                            "previewContent": "우선 비행기 타자고",
+                            "viewCount": 0,
+                            "published": true,
+                            "publishedAt": "2025-08-07T00:39:19.077225",
+                            "createdAt": "2025-08-07T00:39:19.099704",
+                            "updatedAt": "2025-08-07T00:39:19.100699",
                             "likeCount": 0,
                             "commentCount": 0,
                             "author": "MJS",
-                            "liked": false
+                            "liked": false,
+                            "popular": true
+                          },
+                          {
+                            "uuid": "7c2c1ac7-7a5e-4389-8bf6-3bfaa64c91bd",
+                            "title": "자전거 타고 괌 가는 방법6",
+                            "previewContent": "우선 비행기 타자고",
+                            "viewCount": 0,
+                            "published": true,
+                            "publishedAt": "2025-08-07T00:39:59.520658",
+                            "createdAt": "2025-08-07T00:39:59.520658",
+                            "updatedAt": "2025-08-07T00:39:59.520658",
+                            "likeCount": 0,
+                            "commentCount": 0,
+                            "author": "MJS",
+                            "liked": false,
+                            "popular": true
                           }
                         ],
-                        "totalPages": 5,
-                        "totalElements": 50,
+                        "pageable": {
+                          "pageNumber": 0,
+                          "pageSize": 10,
+                          "sort": {
+                            "empty": false,
+                            "sorted": true,
+                            "unsorted": false
+                          },
+                          "offset": 0,
+                          "unpaged": false,
+                          "paged": true
+                        },
+                        "last": false,
+                        "totalPages": 2,
+                        "totalElements": 12,
                         "size": 10,
                         "number": 0,
+                        "sort": {
+                          "empty": false,
+                          "sorted": true,
+                          "unsorted": false
+                        },
                         "first": true,
-                        "last": false,
-                        "numberOfElements": 1,
-                        "empty": false,
-                        "sort": {"empty": false,"sorted": true,"unsorted": false},
-                        "pageable": {"offset":0,"pageNumber":0,"pageSize":10,"paged":true,"unpaged":false,"sort":{"empty":false,"sorted":true,"unsorted":false}}
+                        "numberOfElements": 12,
+                        "empty": false
                       },
-                      "timestamp": "2025-02-11T03:23:16.761Z"
+                      "timestamp": "2025-08-10T16:41:37.7947005"
                     }
                   }
                 }
@@ -664,6 +709,14 @@
           "timestamp": { "type": "string", "format": "date-time" }
         }
       },
+      "ApiSuccess_BoardPage": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/BoardPage" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
       "BoardPage": {
         "type": "object",
         "properties": {
@@ -715,15 +768,17 @@
           "previewContent": { "type": "string" },
           "viewCount": { "type": "integer" },
           "published": { "type": "boolean" },
-          "publishedAt": { "type": "string", "format": "date-time" },
+          "publishedAt": { "type": "string", "format": "date-time", "nullable": true },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" },
           "likeCount": { "type": "integer" },
           "commentCount": { "type": "integer" },
           "author": { "type": "string" },
-          "liked": { "type": "boolean" }
+          "liked": { "type": "boolean" },
+          "popular": { "type": "boolean" }
         }
       },
+
       "ApiSuccess_BoardDetail": {
         "type": "object",
         "properties": {

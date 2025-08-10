@@ -1,5 +1,6 @@
 package nova.mjs.domain.community.repository;
 
+import nova.mjs.domain.community.DTO.CommunityBoardResponse;
 import nova.mjs.domain.community.entity.CommunityBoard;
 import nova.mjs.domain.member.entity.Member;
 import org.springframework.data.domain.Page;
@@ -45,5 +46,15 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
             "WHERE b.publishedAt >= :after AND b.published = true " +
             "ORDER BY b.likeCount DESC")
     List<CommunityBoard> findTop3PopularBoards(@Param("after") LocalDateTime after, Pageable pageable);
+
+
+    @EntityGraph(attributePaths = "author")
+    @Query("""
+    select cb
+    from CommunityBoard cb
+    where cb.uuid not in :excluded
+    order by cb.createdAt desc
+""")
+    Page<CommunityBoard> findAllWithAuthorExcluding(@Param("excluded") List<UUID> excluded, Pageable pageable);
 
 }

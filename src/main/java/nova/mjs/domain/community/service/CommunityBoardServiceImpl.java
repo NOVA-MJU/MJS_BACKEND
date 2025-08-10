@@ -2,6 +2,7 @@ package nova.mjs.domain.community.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import nova.mjs.domain.community.DTO.BoardsQueryResult;
 import nova.mjs.domain.community.comment.repository.CommentRepository;
 import nova.mjs.domain.community.DTO.CommunityBoardRequest;
 import nova.mjs.domain.community.DTO.CommunityBoardResponse;
@@ -10,6 +11,7 @@ import nova.mjs.domain.community.entity.enumList.CommunityCategory;
 import nova.mjs.domain.community.exception.CommunityNotFoundException;
 import nova.mjs.domain.community.likes.repository.CommunityLikeRepository;
 import nova.mjs.domain.community.repository.CommunityBoardRepository;
+import nova.mjs.domain.community.repository.projection.UuidCount;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.repository.MemberRepository;
 import nova.mjs.domain.member.exception.MemberNotFoundException;
@@ -42,7 +44,6 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 @Log4j2
-@Transactional(readOnly = true)
 public class CommunityBoardServiceImpl implements CommunityBoardService {
 
     private final CommunityBoardRepository communityBoardRepository;
@@ -107,70 +108,91 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
 //        });
 //    }
 
+    /**
+     * 커뮤니티 게시글 목록 조회 - 성능 개선 버전
+     *
+     * 핵심 개선점
+     * 1) 댓글/좋아요 카운트 N+1 제거 → 게시글 UUID 묶음으로 한 번에 집계 쿼리
+     * 2) 인기글을 DB에서 제외하고 페이지네이션 → 네트워크/전송량 절감 + 정확한 page.total 유지
+     * 3) 불필요한 단건 count 쿼리 삭제 → 맵으로 합치기
+     *
+     * 주의사항
+     * - fetch join + pagination 조합은 JPA에서 카디널리티에 따라 페이징 틀어질 수 있으므로, @EntityGraph로 author만 로딩
+     * - 인기글 UUID 리스트가 비어있을 때 NOT IN () 에러 방지를 위해 분기 처리
+     */
     @Override
+    // 트랜잭션 없음: 커넥션 점유 없이 DTO 가공만
     public Page<CommunityBoardResponse.SummaryDTO> getBoards(Pageable pageable, String email) {
-        // 1) 최근 2주 이내 인기글 3개 조회
-        LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
-        List<CommunityBoard> popularBoards = communityBoardRepository
-                .findTop3PopularBoards(twoWeeksAgo, PageRequest.of(0, 3));
-        Set<UUID> popularUuids = popularBoards.stream()
-                .map(CommunityBoard::getUuid)
-                .collect(Collectors.toSet());
+        BoardsQueryResult q = loadBoardsQueryResult(pageable, email); // ← 여기서만 DB/트랜잭션
 
-        // 2) 일반 게시글 페이지네이션 (인기글 제외는 DTO 변환 시 처리)
-        Page<CommunityBoard> boardPage = communityBoardRepository.findAllWithAuthor(pageable);
-        List<CommunityBoard> generalBoards = boardPage.getContent().stream()
-                .filter(board -> !popularUuids.contains(board.getUuid()))
-                .toList();
+        List<CommunityBoardResponse.SummaryDTO> popularDTOs =
+                toSummaryDTOs(q.popularBoards(), q.likeCountMap(), q.commentCountMap(), q.likedUuids(), true);
 
-        // 3) 로그인 사용자 좋아요 처리
-        Member member = (email != null) ? memberRepository.findByEmail(email).orElse(null) : null;
+        List<CommunityBoardResponse.SummaryDTO> generalDTOs =
+                toSummaryDTOs(q.generalBoardsPage().getContent(), q.likeCountMap(), q.commentCountMap(), q.likedUuids(), false);
 
-        final Set<UUID> likedUuids;
-        if (member != null) {
-            List<UUID> allUuids = Stream.concat(
-                    popularBoards.stream(),
-                    generalBoards.stream()
-            ).map(CommunityBoard::getUuid).toList();
-
-            likedUuids = new HashSet<>(communityLikeRepository.findCommunityUuidsLikedByMember(member, allUuids));
-        } else {
-            likedUuids = Collections.emptySet();
-        }
-
-        // 4) DTO 변환
-        List<CommunityBoardResponse.SummaryDTO> popularDTOs = toSummaryDTOs(popularBoards, likedUuids, true);
-        List<CommunityBoardResponse.SummaryDTO> generalDTOs = toSummaryDTOs(generalBoards, likedUuids, false);
-
-        // 5) 병합
-        List<CommunityBoardResponse.SummaryDTO> merged = new ArrayList<>();
+        List<CommunityBoardResponse.SummaryDTO> merged = new ArrayList<>(popularDTOs.size() + generalDTOs.size());
         merged.addAll(popularDTOs);
         merged.addAll(generalDTOs);
 
-        // 6) PageImpl로 반환
-        return new PageImpl<>(merged, pageable, boardPage.getTotalElements());
+        return new PageImpl<>(merged, pageable, q.generalBoardsPage().getTotalElements());
     }
 
-    private List<CommunityBoardResponse.SummaryDTO> toSummaryDTOs(List<CommunityBoard> boards, Set<UUID> likedUuids, boolean isPopular) {
-        return boards.stream()
-                .map(board -> {
-                    int likeCount = isPopular
-                            ? board.getLikeCount() // 인기글은 필드 그대로 사용
-                            : communityLikeRepository.countByCommunityBoardUuid(board.getUuid());
+    // 짧은 트랜잭션: DB 왕복만 수행하고 필요한 자료를 전부 실체화해 묶어서 반환
+    @Transactional(readOnly = true)
+    protected BoardsQueryResult loadBoardsQueryResult(Pageable pageable, String email) {
+        LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
 
-                    int commentCount = commentRepository.countByCommunityBoardUuid(board.getUuid());
-                    boolean isLiked = likedUuids.contains(board.getUuid());
+        List<CommunityBoard> popularBoards =
+                communityBoardRepository.findTop3PopularBoards(twoWeeksAgo, PageRequest.of(0, 3));
+        List<UUID> popularUuids = popularBoards.stream().map(CommunityBoard::getUuid).toList();
 
-                    return CommunityBoardResponse.SummaryDTO.fromEntityPreview(
-                            board, likeCount, commentCount, isLiked, isPopular
-                    );
-                })
+        Page<CommunityBoard> generalBoardsPage = popularUuids.isEmpty()
+                ? communityBoardRepository.findAllWithAuthor(pageable)
+                : communityBoardRepository.findAllWithAuthorExcluding(popularUuids, pageable);
+
+        List<UUID> allUuids = Stream.concat(popularBoards.stream(), generalBoardsPage.getContent().stream())
+                .map(CommunityBoard::getUuid)
                 .toList();
+
+        Set<UUID> likedUuids = Collections.emptySet();
+        if (email != null && !allUuids.isEmpty()) {
+            Member member = memberRepository.findByEmail(email).orElse(null);
+            if (member != null) {
+                likedUuids = new HashSet<>(communityLikeRepository.findCommunityUuidsLikedByMember(member, allUuids));
+            }
+        }
+
+        Map<UUID, Long> likeCountMap = allUuids.isEmpty() ? Map.of()
+                : communityLikeRepository.countLikesByBoardUuids(allUuids).stream()
+                .collect(Collectors.toMap(UuidCount::getUuid, UuidCount::getCnt));
+
+        Map<UUID, Long> commentCountMap = allUuids.isEmpty() ? Map.of()
+                : commentRepository.countCommentsByBoardUuids(allUuids).stream()
+                .collect(Collectors.toMap(UuidCount::getUuid, UuidCount::getCnt));
+
+        return new BoardsQueryResult(popularBoards, generalBoardsPage, likedUuids, likeCountMap, commentCountMap);
+    }
+
+    private List<CommunityBoardResponse.SummaryDTO> toSummaryDTOs(
+            List<CommunityBoard> boards,
+            Map<UUID, Long> likeCountMap,
+            Map<UUID, Long> commentCountMap,
+            Set<UUID> likedUuids,
+            boolean popular
+    ) {
+        return boards.stream().map(b -> {
+            long likeCount = likeCountMap.getOrDefault(b.getUuid(), (long) b.getLikeCount());
+            long commentCount = commentCountMap.getOrDefault(b.getUuid(), 0L);
+            boolean isLiked = likedUuids.contains(b.getUuid());
+            return CommunityBoardResponse.SummaryDTO.fromEntityPreview(b, (int) likeCount, (int) commentCount, isLiked, popular);
+        }).toList();
     }
 
 
     // 2. [게시글 상세 조회] (좋아요 여부 포함)
     @Override
+    @Transactional(readOnly = true)
     public CommunityBoardResponse.DetailDTO getBoardDetail(UUID uuid, String email) {
         CommunityBoard board = getExistingBoard(uuid);
         int likeCount = communityLikeRepository.countByCommunityBoardUuid(uuid);

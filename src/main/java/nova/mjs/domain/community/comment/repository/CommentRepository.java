@@ -2,6 +2,7 @@ package nova.mjs.domain.community.comment.repository;
 
 import nova.mjs.domain.community.comment.entity.Comment;
 import nova.mjs.domain.community.entity.CommunityBoard;
+import nova.mjs.domain.community.repository.projection.UuidCount;
 import nova.mjs.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -31,5 +32,14 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     int countByMember(Member member);
 
+    // CommentRepository
+    @Query("""
+    select cb.uuid as uuid, count(c) as cnt
+    from Comment c
+    join c.communityBoard cb
+    where cb.uuid in :uuids
+    group by cb.uuid
+    """)
+    List<UuidCount> countCommentsByBoardUuids(@Param("uuids") List<UUID> uuids);
 
 }

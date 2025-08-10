@@ -1,5 +1,6 @@
 package nova.mjs.domain.community.DTO;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import nova.mjs.domain.community.entity.CommunityBoard;
@@ -15,6 +16,7 @@ public class CommunityBoardResponse {
     /* ========================== 요약 DTO ========================== */
     @Data
     @Builder
+    @AllArgsConstructor
     public static class SummaryDTO {
         private UUID uuid;
         private String title;
@@ -28,7 +30,7 @@ public class CommunityBoardResponse {
         private int commentCount;
         private String author;
         private boolean isLiked;
-        private boolean isPopular;
+        private boolean popular;
 
         public static SummaryDTO fromEntityPreview(CommunityBoard e,
                                                    int likeCnt, int cmtCnt, boolean liked) {
@@ -63,7 +65,7 @@ public class CommunityBoardResponse {
                     .commentCount(cmtCnt)
                     .author(e.getAuthor() != null ? e.getAuthor().getNickname() : "Unknown")
                     .isLiked(liked)
-                    .isPopular(popular)
+                    .popular(popular)
                     .build();
         }
     }
