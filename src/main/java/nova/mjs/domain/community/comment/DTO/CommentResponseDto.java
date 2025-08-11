@@ -20,6 +20,7 @@ public class CommentResponseDto {
             "commentUUID",
             "content",
             "nickname",
+            "profileImageUrl",
             "likeCount",
             "createdAt",
             "liked",
@@ -32,6 +33,7 @@ public class CommentResponseDto {
         private UUID commentUUID;
         private String content;
         private String nickname;
+        private String profileImageUrl;
         private int likeCount;
         private LocalDateTime createdAt;
         private boolean isLiked; // 현재 로그인 한 사용자가 좋아요를 눌렀는가 T/F
@@ -43,6 +45,7 @@ public class CommentResponseDto {
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
+                    .profileImageUrl(comment.getMember().getProfileImageUrl())
                     .likeCount(comment.getLikeCount())
                     .isLiked(isLiked)
                     .createdAt(comment.getCreatedAt())
@@ -54,6 +57,7 @@ public class CommentResponseDto {
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
+                    .profileImageUrl(comment.getMember().getProfileImageUrl())
                     .likeCount(comment.getLikeCount())
                     .createdAt(comment.getCreatedAt())
                     .build();
@@ -65,6 +69,7 @@ public class CommentResponseDto {
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
+                    .profileImageUrl(comment.getMember().getProfileImageUrl())
                     .likeCount(comment.getLikeCount())
                     .createdAt(comment.getCreatedAt())
                     .isLiked(isLiked);
@@ -88,6 +93,7 @@ public class CommentResponseDto {
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
+                    .profileImageUrl(comment.getMember().getProfileImageUrl())
                     .likeCount(comment.getLikeCount())
                     .createdAt(comment.getCreatedAt())
                     .isLiked(isLiked)
