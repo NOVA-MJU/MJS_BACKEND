@@ -19,10 +19,7 @@ import nova.mjs.domain.member.service.query.MemberQueryService;
 import nova.mjs.util.s3.S3DomainType;
 import nova.mjs.util.s3.S3Service;
 import nova.mjs.util.s3.S3ServiceImpl;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -120,10 +117,12 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
      * - fetch join + pagination 조합은 JPA에서 카디널리티에 따라 페이징 틀어질 수 있으므로, @EntityGraph로 author만 로딩
      * - 인기글 UUID 리스트가 비어있을 때 NOT IN () 에러 방지를 위해 분기 처리
      */
+    // Service or Query Service 내
+
     @Override
-    // 트랜잭션 없음: 커넥션 점유 없이 DTO 가공만
+// 트랜잭션 없음: 커넥션 점유 없이 DTO 가공만
     public Page<CommunityBoardResponse.SummaryDTO> getBoards(Pageable pageable, String email) {
-        BoardsQueryResult q = loadBoardsQueryResult(pageable, email); // ← 여기서만 DB/트랜잭션
+        BoardsQueryResult q = loadBoardsQueryResultWithFirstPageAdjustment(pageable, email); // ← 여기서 DB 왕복 + 첫 페이지 사이즈 보정
 
         List<CommunityBoardResponse.SummaryDTO> popularDTOs =
                 toSummaryDTOs(q.popularBoards(), q.likeCountMap(), q.commentCountMap(), q.likedUuids(), true);
@@ -131,26 +130,67 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
         List<CommunityBoardResponse.SummaryDTO> generalDTOs =
                 toSummaryDTOs(q.generalBoardsPage().getContent(), q.likeCountMap(), q.commentCountMap(), q.likedUuids(), false);
 
+        // 1) 인기글(맨 위) + 일반글(그 뒤) 병합
         List<CommunityBoardResponse.SummaryDTO> merged = new ArrayList<>(popularDTOs.size() + generalDTOs.size());
         merged.addAll(popularDTOs);
         merged.addAll(generalDTOs);
 
-        return new PageImpl<>(merged, pageable, q.generalBoardsPage().getTotalElements());
+        // 2) 최종 정렬 규칙:
+        //    - popular = true 가 항상 먼저
+        //    - popular 내부 정렬은 likeCount DESC가 이미 반영된 상태이므로 그대로 보존
+        //    - 일반글/전체에 대해서는 요청한 createdAt 방향을 적용
+        Comparator<CommunityBoardResponse.SummaryDTO> createdAtCmp =
+                Comparator.comparing(CommunityBoardResponse.SummaryDTO::getCreatedAt);
+        Sort.Order createdOrder = pageable.getSort().getOrderFor("createdAt");
+        if (createdOrder != null && createdOrder.isDescending()) {
+            createdAtCmp = createdAtCmp.reversed();
+        }
+
+        // popular 우선, 그 다음 createdAt 순서 — 단, popular 내부의 likeCount DESC는 toSummaryDTOs 이전 단계에서 이미 반영된 순서를 보존하고 싶으므로
+        // stable sort 를 위해 popular 우선만 보장하고 createdAt은 popular=false 영역을 주로 정렬하게 설계.
+        merged.sort(
+                Comparator.<CommunityBoardResponse.SummaryDTO, Boolean>comparing(CommunityBoardResponse.SummaryDTO::isPopular)
+                        .reversed() // popular=true 먼저
+                        .thenComparing(dto -> dto.isPopular() ? 0 : 1) // popular 블록 보존용 보조 키(선택)
+                        .thenComparing(createdAtCmp)
+        );
+
+        // 3) totalElements 계산:
+        //    - 클라이언트 페이지네이션 표시는 보통 "일반글" 기준 합계가 직관적입니다.
+        //    - 고정 인기글은 헤더 성격이므로 totalElements는 일반글 total로 유지.
+        long totalElements = q.generalBoardsPage().getTotalElements();
+
+        return new PageImpl<>(merged, pageable, totalElements);
     }
 
-    // 짧은 트랜잭션: DB 왕복만 수행하고 필요한 자료를 전부 실체화해 묶어서 반환
+    /**
+     * 짧은 트랜잭션: DB 왕복만 수행하고 필요한 자료를 전부 실체화해 묶어서 반환
+     * 첫 페이지(page=0)일 때만, 일반글 page size를 (요청 size - 인기글 수)로 보정하여
+     * "인기글 + 일반글 = 요청 size"를 보장한다.
+     */
     @Transactional(readOnly = true)
-    protected BoardsQueryResult loadBoardsQueryResult(Pageable pageable, String email) {
+    protected BoardsQueryResult loadBoardsQueryResultWithFirstPageAdjustment(Pageable pageable, String email) {
         LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
 
+        // 1) 인기글 3건 조회 (likeCount DESC 고정)
         List<CommunityBoard> popularBoards =
                 communityBoardRepository.findTop3PopularBoards(twoWeeksAgo, PageRequest.of(0, 3));
         List<UUID> popularUuids = popularBoards.stream().map(CommunityBoard::getUuid).toList();
+        int popularCount = popularBoards.size();
+
+        // 2) 일반글 페이지네이션
+        //    - 첫 페이지면 일반글 size를 줄여서 (popular + general == requested size) 성립
+        Pageable generalPageable = pageable;
+        if (pageable.getPageNumber() == 0 && popularCount > 0) {
+            int adjustedSize = Math.max(0, pageable.getPageSize() - popularCount);
+            generalPageable = PageRequest.of(0, adjustedSize, pageable.getSort());
+        }
 
         Page<CommunityBoard> generalBoardsPage = popularUuids.isEmpty()
-                ? communityBoardRepository.findAllWithAuthor(pageable)
-                : communityBoardRepository.findAllWithAuthorExcluding(popularUuids, pageable);
+                ? communityBoardRepository.findAllWithAuthor(generalPageable)
+                : communityBoardRepository.findAllWithAuthorExcluding(popularUuids, generalPageable);
 
+        // 3) like/댓글/좋아요 여부 집계 준비
         List<UUID> allUuids = Stream.concat(popularBoards.stream(), generalBoardsPage.getContent().stream())
                 .map(CommunityBoard::getUuid)
                 .toList();
@@ -174,6 +214,7 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
         return new BoardsQueryResult(popularBoards, generalBoardsPage, likedUuids, likeCountMap, commentCountMap);
     }
 
+    /** 엔티티 → DTO 변환 (기존 로직 유지) */
     private List<CommunityBoardResponse.SummaryDTO> toSummaryDTOs(
             List<CommunityBoard> boards,
             Map<UUID, Long> likeCountMap,

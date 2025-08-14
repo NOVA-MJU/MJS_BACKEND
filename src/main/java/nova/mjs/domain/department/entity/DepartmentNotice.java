@@ -28,7 +28,7 @@ public class DepartmentNotice extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 2) department_notice_uuidc
+    // 2) department_notice_uuid 
     @Column(nullable = false, unique = true)
     private UUID uuid;
 

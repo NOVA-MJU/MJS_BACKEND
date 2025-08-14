@@ -50,10 +50,9 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
 
     @EntityGraph(attributePaths = "author")
     @Query("""
-    select cb
-    from CommunityBoard cb
-    where cb.uuid not in :excluded
-    order by cb.createdAt desc
+select cb
+from CommunityBoard cb
+where cb.uuid not in :excluded
 """)
     Page<CommunityBoard> findAllWithAuthorExcluding(@Param("excluded") List<UUID> excluded, Pageable pageable);
 
