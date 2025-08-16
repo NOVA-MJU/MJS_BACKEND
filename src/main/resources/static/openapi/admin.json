@@ -344,7 +344,7 @@
         }
       }
     },
-    "/admin/department/{departmentUuid}/schedules/{scheduleUuid}": {
+    "/admin/department/{departmentUuid}/schedules": {
       "post": {
         "tags": ["DEPARTMENT_SCHEDULE"],
         "security": [{ "Authorization": [] }],
@@ -356,13 +356,6 @@
             "in": "path",
             "required": true,
             "description": "일정이 속한 학과 UUID",
-            "schema": { "type": "string", "format": "uuid" }
-          },
-          {
-            "name": "scheduleUuid",
-            "in": "path",
-            "required": true,
-            "description": "생성할 일정 UUID",
             "schema": { "type": "string", "format": "uuid" }
           }
         ],
@@ -395,7 +388,9 @@
             }
           }
         }
-      },
+      }
+    },
+    "/admin/department/{departmentUuid}/schedules/{scheduleUuid}": {
       "patch": {
         "tags": ["DEPARTMENT_SCHEDULE"],
         "security": [{ "Authorization": [] }],

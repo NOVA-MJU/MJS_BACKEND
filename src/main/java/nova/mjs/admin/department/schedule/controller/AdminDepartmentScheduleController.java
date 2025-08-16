@@ -23,15 +23,14 @@ public class AdminDepartmentScheduleController {
 
     private final AdminDepartmentScheduleService scheduleService;
 
-    @PostMapping("/{scheduleUuid}")
+    @PostMapping("")
     public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> createSchedule(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable UUID departmentUuid,
-            @PathVariable UUID scheduleUuid,
             @RequestBody @Valid AdminDepartmentScheduleRequestDTO requestDTO) {
 
         return ResponseEntity.ok(
-                ApiResponse.success(scheduleService.createSchedule(userPrincipal, departmentUuid, scheduleUuid, requestDTO))
+                ApiResponse.success(scheduleService.createSchedule(userPrincipal, departmentUuid, requestDTO))
         );
     }
 
