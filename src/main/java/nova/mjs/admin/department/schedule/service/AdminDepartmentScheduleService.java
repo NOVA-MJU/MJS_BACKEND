@@ -34,9 +34,9 @@ public class AdminDepartmentScheduleService {
      * 학과 일정 생성
      */
     @Transactional
-    public AdminDepartmentScheduleResponseDTO createSchedule(UserPrincipal userPrincipal, UUID departmentUuid, UUID scheduleUuid, AdminDepartmentScheduleRequestDTO dto) {
+    public AdminDepartmentScheduleResponseDTO createSchedule(UserPrincipal userPrincipal, UUID departmentUuid, AdminDepartmentScheduleRequestDTO dto) {
         Department department = getVerifiedDepartment(userPrincipal, departmentUuid);
-        DepartmentSchedule schedule = DepartmentSchedule.create(scheduleUuid, dto, department);
+        DepartmentSchedule schedule = DepartmentSchedule.create(dto, department);
         return AdminDepartmentScheduleResponseDTO.fromEntity(scheduleRepository.save(schedule));
     }
 

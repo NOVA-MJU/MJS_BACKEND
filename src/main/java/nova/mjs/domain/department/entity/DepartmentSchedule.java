@@ -41,12 +41,12 @@ public class DepartmentSchedule extends BaseEntity {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    @Column
+    @Column(columnDefinition = "TEXT")   // PG: 사실상 길이 제한 없음
     private String content;
 
-    public static DepartmentSchedule create(UUID uuid, AdminDepartmentScheduleRequestDTO dto, Department department) {
+    public static DepartmentSchedule create(AdminDepartmentScheduleRequestDTO dto, Department department) {
         return DepartmentSchedule.builder()
-                .departmentScheduleUuid(uuid)
+                .departmentScheduleUuid(UUID.randomUUID())
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .colorCode(dto.getColorCode())
