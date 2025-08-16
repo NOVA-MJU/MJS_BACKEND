@@ -72,7 +72,7 @@ public class DepartmentNotice extends BaseEntity {
     public void update(AdminDepartmentNoticeRequestDTO requestDTO) {
         this.title = getOrDefault(requestDTO.getTitle(), this.title);
         this.content = getOrDefault(requestDTO.getContent(), this.content);
-        this.previewContent = getOrDefault(requestDTO.getContent(), this.content); // content 변경 기준
+        this.previewContent = getOrDefault(requestDTO.getContentPreview(), this.previewContent); // content 변경 기준
         this.thumbnailUrl = getOrDefault(requestDTO.getThumbnailUrl(), this.thumbnailUrl);
     }
 
