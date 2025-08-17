@@ -14,7 +14,7 @@ public class CommentWithBoardResponse {
     private UUID boardUuid;
     private String boardTitle;
     private String boardPreviewContent;
-    private int boardViewCount;
+    private int boardCommentCount;
     private Boolean boardPublished;
     private LocalDateTime boardCreatedAt;
     private int boardLikeCount;
