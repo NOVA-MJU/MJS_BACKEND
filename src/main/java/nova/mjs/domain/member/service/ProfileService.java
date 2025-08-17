@@ -8,6 +8,7 @@ import nova.mjs.domain.community.comment.likes.repository.CommentLikeRepository;
 import nova.mjs.domain.community.entity.CommunityBoard;
 import nova.mjs.domain.community.likes.repository.CommunityLikeRepository;
 import nova.mjs.domain.community.repository.CommunityBoardRepository;
+import nova.mjs.domain.community.repository.projection.UuidCount;
 import nova.mjs.domain.member.DTO.CommentWithBoardResponse;
 import nova.mjs.domain.member.DTO.ProfileCountResponse;
 import nova.mjs.domain.member.entity.Member;
@@ -22,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -108,6 +110,14 @@ public class ProfileService {
             likedCommentMap.put(id, Boolean.TRUE);
         }
 
+        // ✅ 게시글별 댓글 수 한 번에 조회해서 맵으로 (N+1 방지)
+        List<UuidCount> rows = commentRepository.countCommentsByBoardUuids(boardUuids);
+        Map<UUID, Integer> boardCommentCountMap = rows.stream()
+                .collect(Collectors.toMap(
+                        UuidCount::getUuid,
+                        u -> Math.toIntExact(u.getCnt())
+                ));
+
         return myComments.stream()
                 .sorted(Comparator.comparing(Comment::getCreatedAt).reversed())
                 .map(comment -> {
@@ -123,12 +133,15 @@ public class ProfileService {
                     int commentLikeCount = commentLikeRepository.countByCommentUuid(commentId);
                     boolean commentIsLiked = likedCommentMap.containsKey(commentId);
 
+                    // ✅ 정확한 댓글 수 넣기
+                    int boardCommentCount = boardCommentCountMap.getOrDefault(boardId, 0);
+
                     return CommentWithBoardResponse.builder()
                             // 게시글
                             .boardUuid(boardId)
                             .boardTitle(board.getTitle())
                             .boardPreviewContent(board.getPreviewContent())
-                            .boardViewCount(board.getViewCount())
+                            .boardCommentCount(boardCommentCount)   // ✅ 여기!
                             .boardPublished(board.getPublished())
                             .boardCreatedAt(board.getCreatedAt())
                             .boardLikeCount(boardLikeCount)
@@ -144,6 +157,7 @@ public class ProfileService {
                 })
                 .toList();
     }
+
 
     public ProfileCountResponse getMyProfileSummary(String email) {
         Member member = memberRepository.findByEmail(email)
