@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://api.mjsearch.org/api/v1"
+      "url": "https://api.mjsearch.org/api/v1"
     }
   ],
   "tags": [
