@@ -7,6 +7,7 @@ import nova.mjs.domain.realtimeKeyword.RealtimeKeywordService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +37,7 @@ public class CombinedSearchController {
             @RequestParam String keyword,
             @RequestParam(required = false) String type,
             @RequestParam(name = "order", required = false, defaultValue = "relevance") String order, // relevance(null ok) | latest | oldest
-            Pageable pageable) {
+            @PageableDefault(size = 10)  Pageable pageable) {
 
         Page<SearchResponseDTO> results = combinedSearchService.unifiedSearch(keyword, type, order, pageable);
 
