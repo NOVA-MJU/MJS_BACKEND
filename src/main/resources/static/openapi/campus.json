@@ -738,8 +738,40 @@
                             "thumbnailUrl": "https://i.ytimg.com/vi/3_60kdx3xKg/hqdefault.jpg",
                             "playlistTitle": "슬기로운 서울생활",
                             "publishedAt": "2025-07-07T06:25:40"
+                          },
+                          {
+                            "title": "[제36회 백마가요제👖] 참가자 팀 비하인드",
+                            "url": "https://www.youtube.com/watch?v=9WrW1sV28iA",
+                            "thumbnailUrl": "https://i.ytimg.com/vi/9WrW1sV28iA/hqdefault.jpg",
+                            "playlistTitle": null,
+                            "publishedAt": "2025-07-25T09:02:00"
                           }
-                        ]
+                        ],
+                        "pageable": {
+                          "pageNumber": 0,
+                          "pageSize": 9,
+                          "sort": {
+                            "empty": false,
+                            "sorted": true,
+                            "unsorted": false
+                          },
+                          "offset": 0,
+                          "paged": true,
+                          "unpaged": false
+                        },
+                        "last": true,
+                        "totalPages": 1,
+                        "totalElements": 2,
+                        "first": true,
+                        "size": 9,
+                        "number": 0,
+                        "sort": {
+                          "empty": false,
+                          "sorted": true,
+                          "unsorted": false
+                        },
+                        "numberOfElements": 2,
+                        "empty": false
                       },
                       "timestamp": "2025-07-21T20:48:58.1067"
                     }

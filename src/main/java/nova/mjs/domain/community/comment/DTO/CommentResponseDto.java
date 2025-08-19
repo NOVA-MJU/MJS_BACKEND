@@ -2,6 +2,7 @@ package nova.mjs.domain.community.comment.DTO;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 import nova.mjs.domain.community.comment.entity.Comment;
+import nova.mjs.domain.member.entity.Member;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,9 +21,11 @@ public class CommentResponseDto {
             "commentUUID",
             "content",
             "nickname",
+            "profileImageUrl",
             "likeCount",
             "createdAt",
             "liked",
+            "isAuthor",
             "replies"
     })
     @Getter
@@ -32,49 +35,64 @@ public class CommentResponseDto {
         private UUID commentUUID;
         private String content;
         private String nickname;
+        private String profileImageUrl;
         private int likeCount;
         private LocalDateTime createdAt;
-        private boolean isLiked; // 현재 로그인 한 사용자가 좋아요를 눌렀는가 T/F
+        private boolean isLiked;   // 현재 로그인한 사용자가 좋아요를 눌렀는가
+        private boolean commentIsAuthor;  // ✅ 내가 쓴 댓글인지
 
         private List<CommentSummaryDto> replies;
 
-        public static CommentSummaryDto fromEntity(Comment comment, boolean isLiked) {
+        // === 팩토리 메서드들 ===
+
+        public static CommentSummaryDto fromEntity(Comment comment, boolean isLiked, boolean commentIsAuthor) {
             return CommentSummaryDto.builder()
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
+                    .profileImageUrl(comment.getMember().getProfileImageUrl())
                     .likeCount(comment.getLikeCount())
                     .isLiked(isLiked)
+                    .commentIsAuthor(commentIsAuthor) // ✅
                     .createdAt(comment.getCreatedAt())
                     .build();
         }
 
-        public static CommentSummaryDto fromEntity(Comment comment) {
+        public static CommentSummaryDto fromEntity(Comment comment, boolean commentIsAuthor) {
             return CommentSummaryDto.builder()
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
+                    .profileImageUrl(comment.getMember().getProfileImageUrl())
                     .likeCount(comment.getLikeCount())
+                    .commentIsAuthor(commentIsAuthor) // ✅
                     .createdAt(comment.getCreatedAt())
                     .build();
         }
-        // "부모 댓글"을 DTO로 변환하되, 자식 목록도 함께 변환하는 메서드
-        public static CommentSummaryDto fromEntityWithReplies(Comment comment, boolean isLiked, Set<UUID> likedSet) {
-            // 1) 부모 댓글의 기본 정보
+
+        // 부모 댓글 + 자식(depth=1)까지 변환
+        public static CommentSummaryDto fromEntityWithReplies(Comment comment,
+                                                              boolean isLiked,
+                                                              Set<UUID> likedSet,
+                                                              Member me) {
+            boolean commentIsAuthor = me != null && comment.getMember().getId().equals(me.getId());
+
             CommentSummaryDto.CommentSummaryDtoBuilder builder = CommentSummaryDto.builder()
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
+                    .profileImageUrl(comment.getMember().getProfileImageUrl())
                     .likeCount(comment.getLikeCount())
                     .createdAt(comment.getCreatedAt())
-                    .isLiked(isLiked);
+                    .isLiked(isLiked)
+                    .commentIsAuthor(commentIsAuthor); // ✅
 
-            // 2) 자식 댓글(대댓글) 변환
-            //    depth=1만 허용 → 자식의 자식은 처리 안 함
+            // 자식 댓글 변환 (depth=1)
             List<CommentSummaryDto> replyDtos = comment.getReplies().stream()
                     .map(child -> {
                         boolean childIsLiked = (likedSet != null && likedSet.contains(child.getUuid()));
-                        return fromEntityNoReplies(child, childIsLiked);
+                        boolean childIsAuthor = me != null && child.getMember().getId().equals(me.getId());
+                        return fromEntityNoReplies(child, childIsLiked, childIsAuthor);
                     })
                     .toList();
 
@@ -82,19 +100,21 @@ public class CommentResponseDto {
             return builder.build();
         }
 
-        // "자식 댓글"은 더 이상의 자식 목록을 보지 않는다고 가정(depth=1)
-        public static CommentSummaryDto fromEntityNoReplies(Comment comment, boolean isLiked) {
+        public static CommentSummaryDto fromEntityNoReplies(Comment comment,
+                                                            boolean isLiked,
+                                                            boolean commentIsAuthor) {
             return CommentSummaryDto.builder()
                     .commentUUID(comment.getUuid())
                     .content(comment.getContent())
                     .nickname(comment.getMember().getNickname())
+                    .profileImageUrl(comment.getMember().getProfileImageUrl())
                     .likeCount(comment.getLikeCount())
                     .createdAt(comment.getCreatedAt())
                     .isLiked(isLiked)
-                    .replies(List.of()) // 자식은 depth=1까지만
+                    .commentIsAuthor(commentIsAuthor) // ✅
+                    .replies(List.of())
                     .build();
         }
-
     }
 }
 /*

@@ -6,19 +6,11 @@
     "description": "Elasticsearch를 활용한 통합 검색, 연관 검색어 추천, 데이터 동기화 API입니다."
   },
   "servers": [
-    {
-      "url": "https://api.mjsearch.org/api/v1"
-    }
+    { "url": "https://api.mjsearch.org/api/v1" }
   ],
   "tags": [
-    {
-      "name": "Search",
-      "description": "Elasticsearch 연동을 통한 통합 검색 및 데이터 인덱싱 기능"
-    },
-    {
-      "name": "Suggest",
-      "description": "검색어 자동완성(연관어) 추천 기능"
-    }
+    { "name": "Search", "description": "Elasticsearch 연동을 통한 통합 검색 및 데이터 인덱싱 기능" },
+    { "name": "Suggest", "description": "검색어 자동완성(연관어) 추천 기능" }
   ],
   "paths": {
     "/search/sync": {
@@ -46,7 +38,7 @@
       "get": {
         "tags": ["Search"],
         "summary": "통합 키워드 검색",
-        "description": "공지사항, 명대신문, 커뮤니티 등 여러 카테고리에서 통합 검색을 수행하고, 결과에 하이라이팅을 포함하여 반환합니다.",
+        "description": "공지사항, 명대신문, 커뮤니티 등 여러 카테고리에서 통합 검색을 수행하고, 하이라이트 및 페이지네이션 정보를 반환합니다.",
         "parameters": [
           {
             "name": "keyword",
@@ -63,43 +55,74 @@
               "type": "string",
               "enum": ["NOTICE", "NEWS", "COMMUNITY", "DEPARTMENT_NOTICE", "DEPARTMENT_SCHEDULE", "BROADCAST", "MJU_CALENDAR"]
             },
-            "description": "검색 대상 타입"
+            "description": "검색 대상 타입 (미지정 시 전체 대상으로 검색)"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["relevance", "latest", "oldest"],
+              "default": "relevance"
+            },
+            "description": "정렬 기준 (relevance: score로 정렬. null로 처리해도 됨, latest: score을 무시하고 최신순, oldest: score을 무시하고 오래된 순)"
           },
           {
             "name": "page",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "default": 0 },
+            "schema": { "type": "integer", "minimum": 0, "default": 0 },
             "description": "페이지 번호 (0부터 시작)"
           },
           {
             "name": "size",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "default": 10 },
+            "schema": { "type": "integer", "minimum": 1, "default": 10 },
             "description": "페이지당 결과 수"
           }
         ],
         "responses": {
           "200": {
-            "description": "검색 결과 반환",
+            "description": "검색 결과 페이지 반환",
             "content": {
               "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponsePageSearchResult" },
                 "example": {
                   "status": "API 요청 성공",
-                  "data": [
-                    {
-                      "id": "308",
-                      "highlightedTitle": "인권서포터즈 <em>혜윰</em>, 인권 캠페인 펼쳐",
-                      "highlightedContent": "지난 14일, 인문캠 인권서포터즈 <em>혜윰</em>이 캠페인을 진행했다.",
-                      "date": "2025-05-19T01:39:00",
-                      "link": "https://news.mju.ac.kr/news/articleView.html?idxno=13317",
-                      "category": "REPORT",
-                      "type": "NEWS",
-                      "imageUrl": "",
-                      "score": 33.6482
-                    }
-                  ],
+                  "data": {
+                    "content": [
+                      {
+                        "id": "308",
+                        "highlightedTitle": "인권서포터즈 <em>혜윰</em>, 인권 캠페인 펼쳐",
+                        "highlightedContent": "지난 14일, 인문캠 인권서포터즈 <em>혜윰</em>이 캠페인을 진행했다.",
+                        "date": "2025-05-19T01:39:00",
+                        "link": "https://news.mju.ac.kr/news/articleView.html?idxno=13317",
+                        "category": "REPORT",
+                        "type": "NEWS",
+                        "imageUrl": "",
+                        "score": 33.6482
+                      }
+                    ],
+                    "pageable": {
+                      "pageNumber": 0,
+                      "pageSize": 9,
+                      "sort": { "empty": false, "sorted": true, "unsorted": false },
+                      "offset": 0,
+                      "paged": true,
+                      "unpaged": false
+                    },
+                    "last": false,
+                    "totalPages": 62,
+                    "totalElements": 552,
+                    "first": true,
+                    "size": 10,
+                    "number": 0,
+                    "sort": { "empty": false, "sorted": true, "unsorted": false },
+                    "numberOfElements": 10,
+                    "empty": false
+                  },
                   "timestamp": "2025-07-18T02:47:34.580216"
                 }
               }
@@ -120,6 +143,17 @@
             "required": true,
             "schema": { "type": "string" },
             "description": "검색 키워드 (필수)"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["relevance", "latest", "oldest"],
+              "default": "relevance"
+            },
+            "description": "정렬 기준 (탭별 Top5 추출 시 적용)"
           }
         ],
         "responses": {
@@ -127,6 +161,7 @@
             "description": "탭별 검색 결과 요약 반환",
             "content": {
               "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseOverviewMap" },
                 "example": {
                   "status": "API 요청 성공",
                   "data": {
@@ -177,6 +212,7 @@
             "description": "추천 검색어 목록",
             "content": {
               "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseStringArray" },
                 "example": {
                   "status": "API 요청 성공",
                   "data": ["장학금", "장학 안내", "장학생 신청"],
@@ -198,6 +234,37 @@
       }
     },
     "schemas": {
+      "ApiResponsePageSearchResult": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/PageSearchResult" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ApiResponseOverviewMap": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/SearchResult" }
+            },
+            "description": "탭 키(notice, mjuCalendar, departmentNotice, departmentSchedule, community, news, broadcast)별 Top5 목록"
+          },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ApiResponseStringArray": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "data": { "type": "array", "items": { "type": "string" } },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
       "SearchResult": {
         "type": "object",
         "properties": {
@@ -210,6 +277,49 @@
           "type": { "type": "string" },
           "imageUrl": { "type": "string" },
           "score": { "type": "number", "format": "float" }
+        }
+      },
+      "PageSearchResult": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SearchResult" }
+          },
+          "pageable": {
+            "type": "object",
+            "properties": {
+              "pageNumber": { "type": "integer" },
+              "pageSize": { "type": "integer" },
+              "sort": {
+                "type": "object",
+                "properties": {
+                  "empty": { "type": "boolean" },
+                  "sorted": { "type": "boolean" },
+                  "unsorted": { "type": "boolean" }
+                }
+              },
+              "offset": { "type": "integer" },
+              "paged": { "type": "boolean" },
+              "unpaged": { "type": "boolean" }
+            }
+          },
+          "last": { "type": "boolean" },
+          "totalPages": { "type": "integer" },
+          "totalElements": { "type": "integer" },
+          "first": { "type": "boolean" },
+          "size": { "type": "integer" },
+          "number": { "type": "integer" },
+          "sort": {
+            "type": "object",
+            "properties": {
+              "empty": { "type": "boolean" },
+              "sorted": { "type": "boolean" },
+              "unsorted": { "type": "boolean" }
+            }
+          },
+          "numberOfElements": { "type": "integer" },
+          "empty": { "type": "boolean" }
         }
       }
     }

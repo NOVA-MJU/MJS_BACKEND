@@ -37,49 +37,43 @@ public class CommentService {
 
     // 1. GEt 댓글 목록 (게시글 ID 기반, 페이지네이션 제거)
     public List<CommentResponseDto.CommentSummaryDto> getCommentsByBoard(UUID communityBoardUuid, String email) {
-        // 1) 게시글 존재 여부 확인
         CommunityBoard board = getExistingBoard(communityBoardUuid);
 
-        // 2) 전체 댓글 목록 조회
         List<Comment> allComments = commentRepository.findByCommunityBoard(board);
-        if (allComments.isEmpty()) {
-            return List.of();
-        }
+        if (allComments.isEmpty()) return List.of();
 
-        // 3) 최상위 댓글(부모가 null)만 필터링
         List<Comment> topLevelComments = allComments.stream()
                 .filter(c -> c.getParent() == null)
                 .toList();
 
-        // 4) 비로그인 사용자면 -> isLiked = false (likedSet=null)
+        // 로그인 사용자
+        Member me = null;
         Set<UUID> likedSet = null;
         if (email != null) {
-            Member member = memberRepository.findByEmail(email).orElse(null);
-            if (member != null) {
-                List<UUID> allUuids = allComments.stream()
-                        .map(Comment::getUuid)
-                        .toList();
-                List<UUID> likedUuids = commentLikeRepository.findCommentUuidsLikedByMember(member, allUuids);
+            me = memberRepository.findByEmail(email).orElse(null);
+            if (me != null) {
+                List<UUID> allUuids = allComments.stream().map(Comment::getUuid).toList();
+                List<UUID> likedUuids = commentLikeRepository.findCommentUuidsLikedByMember(me, allUuids);
                 likedSet = new HashSet<>(likedUuids);
             }
         }
-        // ★ 여기가 핵심
         final Set<UUID> finalLikedSet = likedSet;
+        final Member finalMe = me;
 
-        // 5) 부모 + 자식(대댓글)까지 트리 구조로 DTO 변환
         return topLevelComments.stream()
                 .map(comment -> {
                     boolean isLiked = (finalLikedSet != null && finalLikedSet.contains(comment.getUuid()));
-                    return CommentResponseDto.CommentSummaryDto.fromEntityWithReplies(comment, isLiked, finalLikedSet);
+                    // ✅ me 전달해서 부모/자식 모두 isAuthor 채움
+                    return CommentResponseDto.CommentSummaryDto.fromEntityWithReplies(
+                            comment, isLiked, finalLikedSet, finalMe
+                    );
                 })
                 .toList();
     }
 
-
     // 2. POST 댓글 작성, 로그인 연동 추가
     @Transactional
     public CommentResponseDto.CommentSummaryDto createComment(UUID communityBoardUuid, String content, String email) {
-        // 이메일을 이용하여 현재 로그인한 회원 정보 가져오기
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
         CommunityBoard communityBoard = getExistingBoard(communityBoardUuid);
@@ -88,8 +82,9 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
 
         log.debug("댓글 작성 성공. UUID = {}, 작성자 : {}", savedComment.getUuid(), email);
-        return CommentResponseDto.CommentSummaryDto.fromEntity(savedComment);
+        return CommentResponseDto.CommentSummaryDto.fromEntity(savedComment, /*isAuthor=*/true);
     }
+
 
     // 3. DELETE 댓글 삭제, 로그인 연동 추가
     @Transactional
@@ -119,32 +114,21 @@ public class CommentService {
     // 6. 대댓글 작성
     @Transactional
     public CommentResponseDto.CommentSummaryDto createReply(UUID parentCommentUuid, String content, String email) {
-        // 1) 부모 댓글 조회
         Comment parentComment = commentRepository.findByUuid(parentCommentUuid)
                 .orElseThrow(CommentNotFoundException::new);
 
-        // 2) parentComment가 이미 "자식 댓글"(= 대댓글)인지 확인
         if (parentComment.getParent() != null) {
-            // 로그 남기기
             log.error("[MJS] 대댓글 생성 실패: 이미 대댓글인 댓글에는 다시 대댓글을 달 수 없습니다. parentCommentUuid={}", parentCommentUuid);
-
-            // 커스텀 예외 던지기
             throw new CommentReplyDepthException();
         }
 
-
-        // 3) 작성자 조회
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
 
-        // 4) 대댓글 생성
         Comment reply = Comment.createReply(parentComment, member, content);
-
-        // 5) DB 저장
         Comment savedReply = commentRepository.save(reply);
 
-        // 6) DTO 변환 (isLiked=false 초기값)
-        return CommentResponseDto.CommentSummaryDto.fromEntity(savedReply);
+        return CommentResponseDto.CommentSummaryDto.fromEntity(savedReply, /*isAuthor=*/true);
     }
 
 

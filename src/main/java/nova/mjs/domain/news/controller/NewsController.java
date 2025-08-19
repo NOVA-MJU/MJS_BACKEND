@@ -33,7 +33,7 @@ public class NewsController {
                 .body(ApiResponse.success(newsPage));
     }
 
-    @PostMapping("/fetch")
+    @PostMapping
     public ResponseEntity<ApiResponse<List<NewsResponseDTO>>> crawlAndSaveNews(
             @RequestParam(required = false) String category) {
 
@@ -44,7 +44,7 @@ public class NewsController {
                 .body(ApiResponse.success(savedNews));
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping
     public void deleteAllNews(@RequestParam(required = false) String category) {
         newsService.deleteAllNews(category);
     }
