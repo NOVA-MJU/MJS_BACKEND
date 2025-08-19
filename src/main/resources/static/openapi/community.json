@@ -236,7 +236,7 @@
           { "Authorization": [] }
         ],
         "summary": "게시글 상세 조회",
-        "description": "UUID에 해당하는 게시글의 상세 정보를 반환합니다.",
+        "description": "UUID에 해당하는 게시글의 상세 정보를 반환합니다. 수정은 작성자만 가능하지만, 삭제는 작성자와 operator도 가능합니다.",
         "parameters": [
           {
             "name": "boardUUID",
@@ -269,7 +269,10 @@
                         "likeCount": 1,
                         "commentCount": 1,
                         "author": "MJS",
-                        "liked": false
+                        "liked": false,
+                        "canEdit:" : true,
+                        "canDelete:" : true
+
                       }
                     }
                   }
@@ -787,6 +790,8 @@
           "commentCount": { "type": "integer" },
           "author": { "type": "string" },
           "liked": { "type": "boolean" },
+          "canEdit": { "type": "boolean" },
+          "canDelete": { "type": "boolean" },
           "popular": { "type": "boolean" }
         }
       },

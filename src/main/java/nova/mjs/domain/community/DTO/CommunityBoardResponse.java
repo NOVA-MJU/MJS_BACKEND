@@ -74,37 +74,60 @@ public class CommunityBoardResponse {
     @Data
     @Builder
     public static class DetailDTO {
-        private UUID uuid;
-        private String title;
-        private String content;
-        private String contentPreview;
-        private int viewCount;
-        private Boolean published;
-        private LocalDateTime publishedAt;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
-        private int likeCount;
-        private int commentCount;
-        private String author;
-        private boolean isLiked;
+    private UUID uuid;
+    private String title;
+    private String content;
+    private String contentPreview;
+    private int viewCount;
+    private Boolean published;
+    private LocalDateTime publishedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private int likeCount;
+    private int commentCount;
+    private String author;
+    private boolean isLiked;
+    private boolean canEdit;
+    private boolean canDelete;
 
-        public static DetailDTO fromEntity(CommunityBoard e,
-                                           int likeCnt, int cmtCnt, boolean liked) {
-            return DetailDTO.builder()
-                    .uuid(e.getUuid())
-                    .title(e.getTitle())
-                    .content(e.getContent())
-                    .contentPreview(e.getPreviewContent())
-                    .viewCount(e.getViewCount())
-                    .published(e.getPublished())
-                    .publishedAt(e.getPublishedAt())   // atZone 제거, 그대로 사용
-                    .createdAt(e.getCreatedAt())
-                    .updatedAt(e.getUpdatedAt())
-                    .likeCount(likeCnt)
-                    .commentCount(cmtCnt)
-                    .author(e.getAuthor() != null ? e.getAuthor().getNickname() : "Unknown")
-                    .isLiked(liked)
-                    .build();
+    public static DetailDTO fromEntity(CommunityBoard e,
+                                       int likeCnt, int cmtCnt, boolean liked, boolean canEdit, boolean canDelete) {
+        return DetailDTO.builder()
+                .uuid(e.getUuid())
+                .title(e.getTitle())
+                .content(e.getContent())
+                .contentPreview(e.getPreviewContent())
+                .viewCount(e.getViewCount())
+                .published(e.getPublished())
+                .publishedAt(e.getPublishedAt())   // atZone 제거, 그대로 사용
+                .createdAt(e.getCreatedAt())
+                .updatedAt(e.getUpdatedAt())
+                .likeCount(likeCnt)
+                .commentCount(cmtCnt)
+                .author(e.getAuthor() != null ? e.getAuthor().getNickname() : "Unknown")
+                .isLiked(liked)
+                .canEdit(canEdit)
+                .canDelete(canDelete)
+                .build();
+    }
+
+    public static DetailDTO fromEntity(CommunityBoard e,
+                                       int likeCnt, int cmtCnt, boolean liked) {
+        return DetailDTO.builder()
+                .uuid(e.getUuid())
+                .title(e.getTitle())
+                .content(e.getContent())
+                .contentPreview(e.getPreviewContent())
+                .viewCount(e.getViewCount())
+                .published(e.getPublished())
+                .publishedAt(e.getPublishedAt())   // atZone 제거, 그대로 사용
+                .createdAt(e.getCreatedAt())
+                .updatedAt(e.getUpdatedAt())
+                .likeCount(likeCnt)
+                .commentCount(cmtCnt)
+                .author(e.getAuthor() != null ? e.getAuthor().getNickname() : "Unknown")
+                .isLiked(liked)
+                .build();
         }
     }
 }
