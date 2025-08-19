@@ -5,6 +5,9 @@ import nova.mjs.util.ElasticSearch.Service.CombinedSearchService;
 import nova.mjs.util.ElasticSearch.SearchResponseDTO;
 import nova.mjs.domain.realtimeKeyword.RealtimeKeywordService;
 import nova.mjs.util.response.ApiResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,13 +33,13 @@ public class CombinedSearchController {
 
     // type별로 검색
     @GetMapping("/detail")
-    public ResponseEntity<ApiResponse<List<SearchResponseDTO>>> search(
+    public ResponseEntity<ApiResponse<Page<SearchResponseDTO>>> search(
             @RequestParam String keyword,
             @RequestParam(required = false) String type,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @PageableDefault(size = 9)
+            Pageable pageable) {
 
-        List<SearchResponseDTO> results = combinedSearchService.unifiedSearch(keyword, type, page, size);
+        Page<SearchResponseDTO> results = combinedSearchService.unifiedSearch(keyword, type, pageable);
 
         realtimeKeywordService.recordSearch(keyword);
 
