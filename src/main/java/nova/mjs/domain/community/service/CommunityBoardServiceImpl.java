@@ -237,26 +237,33 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
     public CommunityBoardResponse.DetailDTO getBoardDetail(UUID uuid, String email) {
         CommunityBoard board = getExistingBoard(uuid);
         int likeCount = communityLikeRepository.countByCommunityBoardUuid(uuid);
-        int commentCount = commentRepository.countByCommunityBoardUuid(uuid); // 댓글 개수 조회
+        int commentCount = commentRepository.countByCommunityBoardUuid(uuid);
 
-        // 1) 비로그인 -> isLiked = false
+        // 1) 비로그인 → 좋아요 = false, 수정/삭제 권한 = false
         if (email == null) {
-            return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount, false);
+            return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount,
+                    false, false, false);
         }
 
         // 2) 로그인된 사용자 찾기
         Member member = memberRepository.findByEmail(email).orElse(null);
         if (member == null) {
-            return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount, false);
+            return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount,
+                    false, false, false);
         }
 
         // 3) 좋아요 여부 확인
-        boolean isLiked = communityLikeRepository
-                .findByMemberAndCommunityBoard(member, board)
-                .isPresent();
+        boolean isLiked = communityLikeRepository.findByMemberAndCommunityBoard(member, board).isPresent();
 
-        log.debug("자유 게시글 조회 성공. = {}, 좋아요 개수 = {}, 댓글 개수 = {}, 좋아요 = {}", uuid, likeCount, commentCount, isLiked);
-        return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount, isLiked);
+        // 4) 권한 여부 확인 (작성자 == 로그인 사용자)
+        boolean canEdit = canEdit(board, member);
+        boolean canDelete = canDelete(board, member);
+
+        log.debug("자유 게시글 조회 성공. = {}, 좋아요={}, 댓글={}, isLiked={}, canEdit={}, canDelete={}",
+                uuid, likeCount, commentCount, isLiked, canEdit, canDelete);
+
+        return CommunityBoardResponse.DetailDTO.fromEntity(board, likeCount, commentCount,
+                isLiked, canEdit, canDelete);
     }
 
     // 3. POST 게시글 작성
@@ -329,7 +336,9 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
         // 2) 비로그인 or email == null → 에러
         Member member = memberQueryService.getMemberByEmail(emailId);
 
-        if (!board.getAuthor().equals(member)) {throw new IllegalArgumentException("작성자만 삭제할 수 있습니다.");}
+        if (!canDelete(board, member)) {
+            throw new IllegalArgumentException("삭제 권한이 없습니다. (작성자 또는 관리자만 삭제 가능)");
+        }
 
         // 5) 삭제
         // 게시글 삭제 로직에 추가
@@ -358,4 +367,14 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
             return CommunityBoardResponse.SummaryDTO.fromEntityPreview(board, likeCount, commentCount, false);
         });
     }
+
+    private boolean canDelete(CommunityBoard board, Member member) {
+        return Objects.equals(board.getAuthor(), member)
+                || Member.Role.OPERATOR.equals(member.getRole()); // NPE-safe
+    }
+
+    private boolean canEdit(CommunityBoard board, Member member) {
+        return Objects.equals(board.getAuthor(), member);       // NPE-safe
+    }
+
 }
