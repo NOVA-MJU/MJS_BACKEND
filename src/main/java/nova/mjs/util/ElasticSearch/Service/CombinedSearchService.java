@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -121,11 +120,11 @@ public class CombinedSearchService {
      *              )
      * @return 하이라이트 포함된 검색 결과 리스트
      */
-    public Page<SearchResponseDTO> unifiedSearch(String keyword, String type, Pageable pageable) {
+    public Page<SearchResponseDTO> unifiedSearch(String keyword, String type, String order, Pageable pageable) {
         SearchType searchType = SearchType.from(type);
 
         SearchHits<? extends SearchDocument> hits =
-                searchRepository.search(keyword, searchType, pageable);
+                searchRepository.search(keyword, searchType, order, pageable);
 
         long total = hits.getTotalHits();
 
@@ -160,19 +159,19 @@ public class CombinedSearchService {
         );
     }
 
-    public Map<String, List<SearchResponseDTO>> searchTop5EachType(String keyword) {
+    public Map<String, List<SearchResponseDTO>> searchTop5EachType(String keyword, String order) {
         Map<String, List<SearchResponseDTO>> result = new LinkedHashMap<>();
 
         Pageable top5 = PageRequest.of(0, 5);
 
         // 순서 : 공지사항 > 학사 일정(미정) > 학과 공지 > 학과 스케줄 > 자유게시판 > 명대신문 > 방송
-        result.put("notice",             unifiedSearch(keyword, "NOTICE",              top5).getContent());
-        result.put("mjuCalendar",        unifiedSearch(keyword, "MJU_CALENDAR",        top5).getContent());
-        result.put("departmentNotice",   unifiedSearch(keyword, "DEPARTMENT_NOTICE",   top5).getContent());
-        result.put("departmentSchedule", unifiedSearch(keyword, "DEPARTMENT_SCHEDULE", top5).getContent());
-        result.put("community",          unifiedSearch(keyword, "COMMUNITY",           top5).getContent());
-        result.put("news",               unifiedSearch(keyword, "NEWS",                top5).getContent());
-        result.put("broadcast",          unifiedSearch(keyword, "BROADCAST",           top5).getContent());
+        result.put("notice",             unifiedSearch(keyword, "NOTICE",              order, top5).getContent());
+        result.put("mjuCalendar",        unifiedSearch(keyword, "MJU_CALENDAR",        order, top5).getContent());
+        result.put("departmentNotice",   unifiedSearch(keyword, "DEPARTMENT_NOTICE",   order, top5).getContent());
+        result.put("departmentSchedule", unifiedSearch(keyword, "DEPARTMENT_SCHEDULE", order, top5).getContent());
+        result.put("community",          unifiedSearch(keyword, "COMMUNITY",           order, top5).getContent());
+        result.put("news",               unifiedSearch(keyword, "NEWS",                order, top5).getContent());
+        result.put("broadcast",          unifiedSearch(keyword, "BROADCAST",           order, top5).getContent());
 
         return result;
     }
