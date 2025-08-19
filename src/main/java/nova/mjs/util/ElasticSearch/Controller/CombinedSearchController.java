@@ -36,10 +36,10 @@ public class CombinedSearchController {
     public ResponseEntity<ApiResponse<Page<SearchResponseDTO>>> search(
             @RequestParam String keyword,
             @RequestParam(required = false) String type,
-            @PageableDefault(size = 9)
-            Pageable pageable) {
+            @RequestParam(name = "order", required = false, defaultValue = "relevance") String order, // relevance | latest | oldest
+            @PageableDefault(size = 9)  Pageable pageable) {
 
-        Page<SearchResponseDTO> results = combinedSearchService.unifiedSearch(keyword, type, pageable);
+        Page<SearchResponseDTO> results = combinedSearchService.unifiedSearch(keyword, type, order, pageable);
 
         realtimeKeywordService.recordSearch(keyword);
 
