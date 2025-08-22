@@ -10,7 +10,8 @@
   ],
   "tags": [
     { "name": "Search", "description": "Elasticsearch 연동을 통한 통합 검색 및 데이터 인덱싱 기능" },
-    { "name": "Suggest", "description": "검색어 자동완성(연관어) 추천 기능" }
+    { "name": "Suggest", "description": "검색어 자동완성(연관어) 추천 기능" },
+    { "name": "RealtimeKeyword", "description": "실시간 검색어 기록 및 조회 기능" }
   ],
   "paths": {
     "/search/sync": {
@@ -223,6 +224,81 @@
           }
         }
       }
+    },
+    "/keywords": {
+      "post": {
+        "tags": ["RealtimeKeyword"],
+        "summary": "검색어 기록",
+        "description": "사용자가 입력한 검색어를 실시간 검색어 랭킹 집계에 기록합니다. 실제로는 별도로 요청하지 않고 검색을 하면 자동으로 추가하도록 검색에 추가되어 있습니다",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SearchKeywordRequestDTO" },
+              "example": { "keyword": "장학금" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "검색어 기록 성공",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": null,
+                  "timestamp": "2025-07-18T03:00:00.000000"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keywords/top10": {
+      "get": {
+        "tags": [
+          "RealtimeKeyword"
+        ],
+        "summary": "실시간 검색어 상위 조회",
+        "description": "현재 집계된 실시간 검색어 중 상위 N개를 반환합니다.",
+        "parameters": [
+          {
+            "name": "count",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1
+            },
+            "description": "조회할 검색어 개수 (기본값 10)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "상위 검색어 목록 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseStringArray"
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": [
+                    "장학금",
+                    "총학생회",
+                    "강의평가",
+                    "기숙사",
+                    "등록금"
+                  ],
+                  "timestamp": "2025-07-18T03:05:00.000000"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -321,6 +397,13 @@
           "numberOfElements": { "type": "integer" },
           "empty": { "type": "boolean" }
         }
+      },
+      "SearchKeywordRequestDTO": {
+        "type": "object",
+        "properties": {
+          "keyword": { "type": "string", "description": "사용자가 검색한 키워드" }
+        },
+        "required": ["keyword"]
       }
     }
   }
