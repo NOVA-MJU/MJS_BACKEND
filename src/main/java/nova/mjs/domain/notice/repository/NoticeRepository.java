@@ -36,6 +36,24 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
             Pageable pageable
     );
 
+    // 전체(ALL) - 카테고리 조건 없음
+    @Query("""
+    SELECT new nova.mjs.domain.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
+    FROM Notice n
+    """)
+    Page<NoticeResponseDto> findAllNotices(Pageable pageable);
+
+    // 전체(ALL) + 연도 범위
+    @Query("""
+    SELECT new nova.mjs.domain.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
+    FROM Notice n
+    WHERE n.date BETWEEN :start AND :end
+    """)
+    Page<NoticeResponseDto> findNoticesByDateRange(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            Pageable pageable
+    );
 
 
     // 중복 여부 확인용: 날짜, 카테고리, 링크가 모두 같은지, 근데 링크는 중복 못알아 먹더라
