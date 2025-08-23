@@ -356,7 +356,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["general","academic","scholarship","career","activity","rule"]
+              "enum": ["all", "general","academic","scholarship","career","activity","rule"]
             },
             "required": true,
             "description": "공지사항 카테고리"
