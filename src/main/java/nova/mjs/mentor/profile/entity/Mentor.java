@@ -2,86 +2,144 @@ package nova.mjs.mentor.profile.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.domain.member.entity.enumList.DepartmentName;
+import nova.mjs.domain.member.entity.Member;
 import nova.mjs.mentor.mentoring.entity.Mentoring;
+import nova.mjs.mentor.profile.dto.MentorProfileDTO;
 import nova.mjs.util.entity.BaseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-// Entity
 @Entity
-@Table(name = "mentor")
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(
+    name = "mentor",
+    indexes = { @Index(name = "uk_mentor_member", columnList = "member_id", unique = true)}
+)
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 public class Mentor extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private UUID uuid;
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "member_id",
+            nullable = false,
+            unique = true,
+            foreignKey = @ForeignKey(name = "fk_mentor_member"))
+    private Member member;
 
+
+    /** 연락처(멘토 프로필 전용) */
+    @Column(nullable = false, length = 32)
+    private String phoneNumber;
+
+    /** 졸업연도 */
     @Column(nullable = false)
-    private String name; //실명
+    private int graduationYear;
 
+    /** 총 경력 연차 */
+    @Column(name = "career_year", nullable = false)
+    private int careerYear;
+
+    /** 현재 직장/회사 */
+    @Column(name = "workplace", length = 128)
+    private String workplace;
+
+    /** 현재 직무/포지션 */
+    @Column(name = "job_title", length = 128)
+    private String jobTitle;
+
+    /** 프로필 소개 (PostgreSQL text) */
+    @Column(nullable = false, columnDefinition = "text")
+    private String description;
+
+    /** 사실 여부 검증 */
     @Column(nullable = false)
-    private String email; //email
+    private boolean isVerified;
 
-    @Column(nullable = false)
-    private String password; //비밀번호
+    /** 추가 노하우 (text) */
+    @Column(name = "resume_tips",    columnDefinition = "text")
+    private String resumeTips;
+    @Column(name = "interview_tips", columnDefinition = "text")
+    private String interviewTips;
+    @Column(name = "portfolio_tips", columnDefinition = "text")
+    private String portfolioTips;
+    @Column(name = "networking_tips", columnDefinition = "text")
+    private String networkingTips;
 
-    @Column(nullable = false)
-    private String phoneNumber; //연락처
+    /** 커리어 이력 (자식 엔티티) */
+    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<JobCareer> careers = new ArrayList<>();
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "department_name", nullable = false)
-    private DepartmentName departmentName; //졸업 전공
+    /** 포트폴리오 (자식 엔티티) */
+    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Portfolio> portfolios = new ArrayList<>();
 
-    @Column(nullable = false)
-    private int year; //졸업 연도
-
-    @Column
-    private String workSpace; //현재 직장
-
-    @Column(nullable = false)
-    private String job; //직무 -> 밑에 category랑 중복? enum으로 정리?
-
-    @Column(nullable = false)
-    private String career; //총 경력 -> enum 으로 변경
-
-    @Column(nullable = false)
-    private String category; //직무 카테고리 -> enum으로 변경
-
-    @Column
-    private String jobDescription; //회사 및 업무 소개
-
-    @Column
-    private String growthProcess; //공부 방법 및 성장 과정 -> 굳이 필요할까?
-
+    /** 보유 스킬 (단순 문자열 리스트) */
     @ElementCollection
-    @Column(nullable = false)
-    private List<String> skills; //보유스킬 -> enum으로?
+    @CollectionTable(name = "mentor_skills", joinColumns = @JoinColumn(name = "mentor_id"))
+    @Column(name = "skill", nullable = false, length = 100)
+    @Builder.Default
+    private List<String> skills = new ArrayList<>();
 
-    //멘토링 정보는 멘토링 엔티티에
-    @Column
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mentoring_id", nullable = false)
-    private List<Mentoring> mentoring;
+    /** 멘토링(외부 도메인) */
+    @OneToMany(mappedBy = "mentor", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @Builder.Default
+    private List<Mentoring> mentorings = new ArrayList<>();
 
-    @Column(nullable = false)
-    private boolean termsAndConditions; //이용약관
+    /* ===== 정적 팩토리 / 부분 업데이트 (DTO 기반, null-safe) ===== */
 
-    @Column(nullable = false)
-    private boolean consentVerified; //사실 여부 확인
+    // DTO는 별도 패키지에서 정의 예정
+    public static Mentor create(Member member, MentorProfileDTO.Request request) {
+        return Mentor.builder()
+                .member(member)
+                .phoneNumber(digitsOnly(request.getPhoneNumber()))
+                .graduationYear(request.getGraduationYear())
+                .careerYear(request.getCareerYear())
+                .workplace(request.getWorkplace())
+                .jobTitle(request.getJobTitle())
+                .description(request.getDescription())
+                .isVerified(request.getIsVerified() != null ? request.getIsVerified() : false)
+                .resumeTips(request.getResumeTips())
+                .interviewTips(request.getInterviewTips())
+                .portfolioTips(request.getPortfolioTips())
+                .networkingTips(request.getNetworkingTips())
+                .build();
+    }
 
-    public enum Role {
-        USER, ADMIN, OPERATOR
-    } //role 추가
+    /** dto의 각 필드가 null이면 기존 값 유지 */
+    public Mentor update(nova.mjs.mentor.profile.dto.MentorProfileDTO.Update dto) {
+        this.phoneNumber    = getOrDefault(digitsOnly(dto.getPhoneNumber()), this.phoneNumber);
+        this.graduationYear = getOrDefault(dto.getGraduationYear(), this.graduationYear);
+        this.careerYear     = getOrDefault(dto.getCareerYear(), this.careerYear);
+        this.workplace      = getOrDefault(dto.getWorkplace(), this.workplace);
+        this.jobTitle       = getOrDefault(dto.getJobTitle(), this.jobTitle);
+        this.description    = getOrDefault(dto.getDescription(), this.description);
+        this.isVerified     = getOrDefault(dto.getIsVerified(), this.isVerified);
+        this.resumeTips     = getOrDefault(dto.getResumeTips(), this.resumeTips);
+        this.interviewTips  = getOrDefault(dto.getInterviewTips(), this.interviewTips);
+        this.portfolioTips  = getOrDefault(dto.getPortfolioTips(), this.portfolioTips);
+        this.networkingTips = getOrDefault(dto.getNetworkingTips(), this.networkingTips);
+        // skills, careers, portfolios는 별도 명령 API로 교체/추가/삭제를 권장
+        return this;
+    }
 
+    private <T> T getOrDefault(T newValue, T currentValue) {
+        return newValue != null ? newValue : currentValue;
+    }
+
+    /** 전화번호 하이픈/공백/괄호/플러스 등 제거 → 숫자만 남김 */
+    private static String digitsOnly(String raw) {
+        if (raw == null) return null;
+        String digits = raw.replaceAll("\\D+", ""); // \D = 숫자가 아닌 모든 문자
+        return digits.isEmpty() ? null : digits;    // 전부 비었으면 null 처리(선택)
+    }
 
 
 }

@@ -65,7 +65,7 @@ public class Member extends BaseEntity {
     }
 
     public enum Role {
-        USER, ADMIN, OPERATOR
+        USER, ADMIN, OPERATOR, MENTOR
     }
 
     public static Member create(MemberDTO.MemberRegistrationRequestDTO memberDTO, String encodePassword) {
@@ -82,6 +82,22 @@ public class Member extends BaseEntity {
                 .role(Role.USER)
                 .build();
     }
+
+    public static Member createMentor(MemberDTO.MemberRegistrationRequestDTO memberDTO, String encodePassword) {
+        return Member.builder()
+                .uuid(UUID.randomUUID()) // UUID 자동 생성
+                .name(memberDTO.getName())
+                .email(memberDTO.getEmail())
+                .password(encodePassword)
+                .gender(Gender.fromString(memberDTO.getGender())) // 대소문자 변환
+                .nickname(memberDTO.getNickname())
+                .profileImageUrl(memberDTO.getProfileImageUrl())
+                .departmentName(memberDTO.getDepartmentName())
+                .studentNumber(memberDTO.getStudentNumber())
+                .role(Role.MENTOR)
+                .build();
+    }
+
 
     public void update(MemberDTO.MemberUpdateRequestDTO memberDTO) {
         this.name = getOrDefault(memberDTO.getName(), this.name);
