@@ -1,0 +1,354 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Mentor Profile API",
+    "version": "v1.0.0",
+    "description": "멘토관 API"
+  },
+  "tags": [
+    { "name": "Profile", "description": "멘토 프로필 관리" }
+  ],
+  "servers": [
+    {
+      "url": "https://api.mjsearch.org/api/v1"
+    }
+  ],
+  "paths": {
+    "/api/v1/mentors": {
+      "post": {
+        "tags": ["Profile"],
+        "operationId": "registerMemberAndMentor",
+        "summary": "신규 회원가입 + 멘토 프로필 동시 등록",
+        "description": "회원(Member) 생성과 멘토 프로필(Mentor) 생성을 **단일 트랜잭션**으로 처리합니다. 성공 시 액세스/리프레시 토큰을 반환합니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MentorRegistrationRequest" },
+              "examples": {
+                "default": {
+                  "summary": "신규 회원 + 멘토 등록 예시",
+                  "value": {
+                    "name": "김코드",
+                    "email": "abc@mju.ac.kr",
+                    "password": "Passw0rd!",
+                    "nickname": "codekim",
+                    "gender": "MALE",
+                    "departmentName": "SOFTWARE",
+                    "studentNumber": "20231234",
+                    "profileImageUrl": "https://cdn.example.com/p/abc.png",
+                    "phoneNumber": "010-1234-5678",
+                    "graduationYear": 2023,
+                    "careerYear": 2,
+                    "workplace": "Acme Corp",
+                    "jobTitle": "Backend Engineer",
+                    "description": "물류 도메인 백엔드 개발자입니다.",
+                    "isVerified": true,
+                    "resumeTips": "STAR 기반으로 정리",
+                    "interviewTips": "꼬리질문 대비하기",
+                    "portfolioTips": "문제-해결-성과 중심",
+                    "networkingTips": "알럼니 적극 활용"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "생성 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseLogin" },
+                "examples": {
+                  "success": {
+                    "summary": "성공 응답",
+                    "value": {
+                      "success": true,
+                      "data": {
+                        "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+                        "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": {
+            "description": "무결성/중복 에러 (예: 이메일/닉네임/학번 중복)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "duplicateEmail": {
+                    "summary": "이메일 중복",
+                    "value": {
+                      "status": 409,
+                      "error": "DATA_INTEGRITY_VIOLATION",
+                      "message": "[MJS] 이미 가입된 이메일입니다.",
+                      "timestamp": "2025-08-26T12:34:56.789"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/api/v1/mentors/conversions": {
+      "post": {
+        "tags": ["Profile"],
+        "operationId": "addMentorProfileForExistingMember",
+        "summary": "기존 회원 멘토 프로필 추가",
+        "description": "로그인된 기존 회원에 대해 멘토 프로필을 **신규로 추가**합니다. 성공 시 저장된 멘토 프로필을 반환합니다.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MentorProfileRequest" },
+              "examples": {
+                "default": {
+                  "summary": "기존 회원 멘토 등록 예시",
+                  "value": {
+                    "phoneNumber": "+82 (10) 1234-5678",
+                    "graduationYear": 2022,
+                    "careerYear": 3,
+                    "workplace": "Acme Corp",
+                    "jobTitle": "Senior Backend Engineer",
+                    "description": "대규모 트래픽 처리 경험 보유.",
+                    "isVerified": true,
+                    "resumeTips": null,
+                    "interviewTips": "질문 의도 파악",
+                    "portfolioTips": "지표와 로그를 함께",
+                    "networkingTips": "밋업 참석"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "생성 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseMentorProfile" },
+                "examples": {
+                  "success": {
+                    "summary": "성공 응답",
+                    "value": {
+                      "success": true,
+                      "data": {
+                        "mentorId": 15,
+                        "memberUuid": "9d5c0d3a-2f5c-4a4b-9c7d-1a2b3c4d5e6f",
+                        "phoneNumber": "01012345678",
+                        "graduationYear": 2022,
+                        "careerYear": 3,
+                        "workplace": "Acme Corp",
+                        "jobTitle": "Senior Backend Engineer",
+                        "description": "대규모 트래픽 처리 경험 보유.",
+                        "verified": true,
+                        "skills": [],
+                        "createdAt": "2025-08-26T12:34:56.789",
+                        "updatedAt": "2025-08-26T12:34:56.789"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": {
+            "description": "무결성/중복 에러 (예: 이미 멘토 프로필 존재)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "mentorExists": {
+                    "summary": "이미 멘토 프로필 존재",
+                    "value": {
+                      "status": 409,
+                      "error": "DATA_INTEGRITY_VIOLATION",
+                      "message": "[MJS] 이미 멘토 프로필이 존재합니다.",
+                      "timestamp": "2025-08-26T12:34:56.789"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "schemas": {
+      "ApiResponseLogin": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": { "$ref": "#/components/schemas/LoginResponseDTO" }
+        },
+        "required": ["success", "data"]
+      },
+      "ApiResponseMentorProfile": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "data": { "$ref": "#/components/schemas/MentorProfileResponse" }
+        },
+        "required": ["success", "data"]
+      },
+      "LoginResponseDTO": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "refreshToken": { "type": "string" }
+        },
+        "required": ["accessToken", "refreshToken"]
+      },
+      "MentorRegistrationRequest": {
+        "type": "object",
+        "description": "신규 회원가입 + 멘토 프로필 등록 요청",
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 1 },
+          "nickname": { "type": "string", "minLength": 1 },
+          "gender": { "type": "string", "enum": ["MALE","FEMALE","OTHERS"] },
+          "departmentName": { "type": "string", "description": "학과 Enum 문자열" },
+          "studentNumber": { "type": "string", "pattern": "^\\d{8}$" },
+          "profileImageUrl": { "type": "string", "format": "uri" },
+          "phoneNumber": { "type": "string", "maxLength": 32, "pattern": "^[0-9+\\-()\\s]*$" },
+          "graduationYear": { "type": "integer", "minimum": 1900 },
+          "careerYear": { "type": "integer", "minimum": 0 },
+          "workplace": { "type": "string", "maxLength": 128 },
+          "jobTitle": { "type": "string", "maxLength": 128 },
+          "description": { "type": "string", "minLength": 1 },
+          "isVerified": { "type": "boolean" },
+          "resumeTips": { "type": "string", "nullable": true },
+          "interviewTips": { "type": "string", "nullable": true },
+          "portfolioTips": { "type": "string", "nullable": true },
+          "networkingTips": { "type": "string", "nullable": true }
+        },
+        "required": ["name","email","password","nickname","gender","departmentName","studentNumber","phoneNumber","graduationYear","careerYear","description"]
+      },
+      "MentorProfileRequest": {
+        "type": "object",
+        "description": "기존 회원의 멘토 프로필 신규 등록 요청",
+        "properties": {
+          "phoneNumber": { "type": "string", "maxLength": 32, "pattern": "^[0-9+\\-()\\s]*$" },
+          "graduationYear": { "type": "integer", "minimum": 1900 },
+          "careerYear": { "type": "integer", "minimum": 0 },
+          "workplace": { "type": "string", "maxLength": 128 },
+          "jobTitle": { "type": "string", "maxLength": 128 },
+          "description": { "type": "string", "minLength": 1 },
+          "isVerified": { "type": "boolean" },
+          "resumeTips": { "type": "string", "nullable": true },
+          "interviewTips": { "type": "string", "nullable": true },
+          "portfolioTips": { "type": "string", "nullable": true },
+          "networkingTips": { "type": "string", "nullable": true }
+        },
+        "required": ["phoneNumber","graduationYear","careerYear","description"]
+      },
+      "MentorProfileResponse": {
+        "type": "object",
+        "description": "저장된 멘토 프로필",
+        "properties": {
+          "mentorId": { "type": "integer", "format": "int64" },
+          "memberUuid": { "type": "string", "format": "uuid" },
+          "phoneNumber": { "type": "string", "description": "숫자만 저장된 전화번호" },
+          "graduationYear": { "type": "integer" },
+          "careerYear": { "type": "integer" },
+          "workplace": { "type": "string" },
+          "jobTitle": { "type": "string" },
+          "description": { "type": "string" },
+          "verified": { "type": "boolean" },
+          "skills": { "type": "array", "items": { "type": "string" } },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["mentorId","memberUuid","phoneNumber","graduationYear","careerYear","verified"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "integer", "example": 409 },
+          "error": { "type": "string", "example": "DATA_INTEGRITY_VIOLATION" },
+          "message": { "type": "string", "example": "[MJS] 이미 멘토 프로필이 존재합니다." },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "요청 형식/값 오류(검증 실패 등)",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "examples": {
+              "validationFailed": {
+                "summary": "검증 실패",
+                "value": {
+                  "status": 400,
+                  "error": "VALIDATION_FAILED",
+                  "message": "phoneNumber : 전화번호 형식이 올바르지 않습니다.",
+                  "timestamp": "2025-08-26T12:34:56.789"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "인증 필요/토큰 오류",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "examples": {
+              "noToken": {
+                "summary": "토큰 없음",
+                "value": {
+                  "status": 401,
+                  "error": "UNAUTHORIZED_ERROR",
+                  "message": "Full authentication is required to access this resource",
+                  "timestamp": "2025-08-26T12:34:56.789"
+                }
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "서버 내부 오류",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "examples": {
+              "default": {
+                "summary": "서버 오류",
+                "value": {
+                  "status": 500,
+                  "error": "INTERNAL_SERVER_ERROR",
+                  "message": "Unexpected error",
+                  "timestamp": "2025-08-26T12:34:56.789"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
