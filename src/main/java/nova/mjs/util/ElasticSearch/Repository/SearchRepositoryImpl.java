@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
@@ -21,7 +22,6 @@ import org.springframework.data.elasticsearch.core.query.HighlightQuery;
 
 import java.util.List;
 
-import static co.elastic.clients.elasticsearch._types.SuggestMode.Missing;
 
 @Repository
 @RequiredArgsConstructor
@@ -32,16 +32,25 @@ public class SearchRepositoryImpl implements SearchRepository {
     @Override
     public SearchHits<? extends SearchDocument> search(String keyword, SearchType type, String order, Pageable pageable) {
 
+        HighlightParameters hlParams = HighlightParameters.builder()
+                .withPreTags("<em>").withPostTags("</em>")
+                .withType("unified").withForceSource(true)
+                .withBoundaryScannerLocale("ko")
+                .withRequireFieldMatch(false)   // 다른 필드 매칭도 추출 허용
+                .build();
+
         List<HighlightField> highlightFields = List.of(
                 new HighlightField("title"),
-                new HighlightField("content")
+                new HighlightField("content"),
+                new HighlightField("title.keepdot"),
+                new HighlightField("content.keepdot")
         );
 
         // 지정된 type에 맞는 SearchDocument 클래스를 결정
         Class<? extends SearchDocument> targetClass = resolveTargetClass(type);
 
         HighlightQuery highlightQuery = new HighlightQuery(
-                new Highlight(highlightFields), targetClass
+                new Highlight(hlParams, highlightFields), targetClass
         );
 
         /**
@@ -60,6 +69,8 @@ public class SearchRepositoryImpl implements SearchRepository {
                                         .bool(b -> b
                                                 .should(s -> s.match(m -> m.field("title").query(keyword)))
                                                 .should(s -> s.match(m -> m.field("content").query(keyword)))
+                                                .should(s -> s.match(mt -> mt.field("title.keepdot").query(keyword)))
+                                                .should(s -> s.match(mt -> mt.field("content.keepdot").query(keyword)))
                                         )
                                 )
                                 .functions(List.of(

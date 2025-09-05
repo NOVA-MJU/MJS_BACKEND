@@ -141,10 +141,17 @@ public class CombinedSearchService {
      * @return 변환된 SearchResponseDTO
      */
     private SearchResponseDTO convertToDTO(SearchHit<SearchDocument> searchHit) {
-        String highlightedTitle = searchHit.getHighlightFields().get("title") != null ?
-                searchHit.getHighlightFields().get("title").get(0) : searchHit.getContent().getTitle();
-        String highlightedContent = searchHit.getHighlightFields().get("content") != null ?
-                searchHit.getHighlightFields().get("content").get(0) : searchHit.getContent().getContent();
+        Map<String, List<String>> hl = searchHit.getHighlightFields();
+
+        String highlightedTitle =
+                hl.containsKey("title") ? hl.get("title").get(0)
+                        : hl.containsKey("title.keepdot") ? hl.get("title.keepdot").get(0)
+                        : searchHit.getContent().getTitle();
+
+        String highlightedContent =
+                hl.containsKey("content") ? hl.get("content").get(0)
+                        : hl.containsKey("content.keepdot") ? hl.get("content.keepdot").get(0)
+                        : searchHit.getContent().getContent();
 
         return new SearchResponseDTO(
                 searchHit.getContent().getId(),
