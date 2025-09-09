@@ -1,4 +1,4 @@
-package nova.mjs.mentor.profile.service;
+package nova.mjs.mentor.profile.service.command;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

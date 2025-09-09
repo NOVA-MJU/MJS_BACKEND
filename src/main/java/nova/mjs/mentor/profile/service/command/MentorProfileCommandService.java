@@ -1,7 +1,6 @@
-package nova.mjs.mentor.profile.service;
+package nova.mjs.mentor.profile.service.command;
 
 import jakarta.validation.Valid;
-import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.mentor.profile.dto.MentorProfileDTO;
 import nova.mjs.mentor.profile.entity.Mentor;
 import nova.mjs.util.security.AuthDTO;
