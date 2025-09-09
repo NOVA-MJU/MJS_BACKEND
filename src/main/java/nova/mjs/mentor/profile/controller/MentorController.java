@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import nova.mjs.mentor.profile.dto.MentorProfileDTO;
 import nova.mjs.mentor.profile.dto.MentorRegistrationDTO;
 import nova.mjs.mentor.profile.entity.Mentor;
-import nova.mjs.mentor.profile.service.MentorProfileCommandService;
+import nova.mjs.mentor.profile.service.command.MentorProfileCommandService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.AuthDTO;
 import nova.mjs.util.security.UserPrincipal;
