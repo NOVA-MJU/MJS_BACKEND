@@ -104,4 +104,26 @@ public class MentorProfileCommandServiceImpl implements MentorProfileCommandServ
             throw new RequestException(ErrorCode.INVALID_REQUEST);
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MentorProfileDTO.MentorProfileResponse getMyProfile(UUID memberUuid){
+        Mentor mentor = findMentorByMentorId(memberUuid);
+        return MentorProfileDTO.MentorProfileResponse.fromMentorEntity(mentor);
+    }
+
+    @Override
+    @Transactional
+    public MentorProfileDTO.MentorProfileResponse updateMyProfile(UUID memberUuid, MentorProfileDTO.MentorProfileUpdate updateDTO){
+        Mentor mentor = findMentorByMentorId(memberUuid);
+        mentor.updateMyProfile(updateDTO);
+        return MentorProfileDTO.MentorProfileResponse.fromMentorEntity(mentor);
+    }
+
+    private Mentor findMentorByMentorId(UUID memberUuid) {
+        return mentorRepository.findByMember_Uuid(memberUuid)
+                .orElseThrow();
+    }
+
+
 }

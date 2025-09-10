@@ -16,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @Slf4j
 @RequestMapping("/api/v1/mentors")
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class MentorController {
 
     private final MentorProfileCommandService mentorProfileCommandService;
+
 
     /**
      * 신규 회원가입 + 멘토 프로필 동시 등록
@@ -50,5 +53,30 @@ public class MentorController {
         Mentor mentor = mentorProfileCommandService.addMentorProfileForExistingMember(email, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(MentorProfileDTO.Response.fromEntity(mentor)));
+    }
+
+    @GetMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<MentorProfileDTO.MentorProfileResponse>> getMentorProfile(
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ){
+        UUID currentMemberUuid = userPrincipal.getUuid();
+        MentorProfileDTO.MentorProfileResponse profile = mentorProfileCommandService.getMyProfile(currentMemberUuid);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(profile));
+    }
+
+    @PostMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<MentorProfileDTO.MentorProfileResponse>> updateMyProfile(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestBody @Valid MentorProfileDTO.MentorProfileUpdate updateRequestDTO
+            ){
+        UUID currentMemberUuid = userPrincipal.getUuid();
+        MentorProfileDTO.MentorProfileResponse updatedProfile =
+                mentorProfileCommandService.updateMyProfile(currentMemberUuid, updateRequestDTO);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(updatedProfile));
     }
 }

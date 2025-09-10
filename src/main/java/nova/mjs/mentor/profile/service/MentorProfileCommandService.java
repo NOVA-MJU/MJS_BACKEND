@@ -5,6 +5,9 @@ import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.mentor.profile.dto.MentorProfileDTO;
 import nova.mjs.mentor.profile.entity.Mentor;
 import nova.mjs.util.security.AuthDTO;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 public interface MentorProfileCommandService {
 
@@ -15,4 +18,11 @@ public interface MentorProfileCommandService {
 
     /** 기존 회원에 멘토 프로필 추가 */
     Mentor addMentorProfileForExistingMember(String email, @Valid MentorProfileDTO.Request mentorReq);
+
+    /** 멘토 프로필 조회 */
+    MentorProfileDTO.MentorProfileResponse getMyProfile(UUID memberUuid);
+
+    /** 멘토 프로필 수정 */
+    @Transactional
+    MentorProfileDTO.MentorProfileResponse updateMyProfile(UUID memeberUuid, MentorProfileDTO.MentorProfileUpdate updateDTO);
 }

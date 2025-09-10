@@ -130,6 +130,20 @@ public class Mentor extends BaseEntity {
         return this;
     }
 
+    public Mentor updateMyProfile(MentorProfileDTO.MentorProfileUpdate updateDTO){
+        this.phoneNumber    = getOrDefault(digitsOnly(updateDTO.getPhoneNumber()), this.phoneNumber);
+        this.workplace      = getOrDefault(updateDTO.getWorkplace(), this.workplace);
+        this.description    = getOrDefault(updateDTO.getDescription(), this.description);
+        this.jobTitle       = getOrDefault(updateDTO.getJobTitle(), this.jobTitle);
+        this.graduationYear = getOrDefault(updateDTO.getGraduationYear(), this.graduationYear);
+        this.careerYear     = getOrDefault(updateDTO.getCareerYear(), this.careerYear);
+        if (updateDTO.getSkills() != null){
+            this.getSkills().clear();
+            this.getSkills().addAll(updateDTO.getSkills());
+        }
+        return this;
+    }
+
     private <T> T getOrDefault(T newValue, T currentValue) {
         return newValue != null ? newValue : currentValue;
     }

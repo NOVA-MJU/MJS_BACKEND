@@ -155,4 +155,68 @@ public class MentorProfileDTO {
         private String  portfolioTips;
         private String  networkingTips;
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MentorProfileResponse{
+        private UUID memberUuid;
+        private String name;
+        private String email;
+        private String phoneNumber;
+        private String workplace;
+        private String jobTitle;
+        private String description;
+        private List<String> skills;
+        private int graduationYear;
+        private int careerYear;
+
+        public static MentorProfileResponse fromMentorEntity(Mentor mentor){
+            return MentorProfileResponse.builder()
+                    .memberUuid(mentor.getMember().getUuid())
+                    .name(mentor.getMember().getName())
+                    .email(mentor.getMember().getEmail())
+                    .phoneNumber(mentor.getPhoneNumber())
+                    .workplace(mentor.getWorkplace())
+                    .workplace(mentor.getWorkplace())
+                    .jobTitle(mentor.getJobTitle())
+                    .description(mentor.getDescription())
+                    .skills(mentor.getSkills())
+                    .graduationYear(mentor.getGraduationYear())
+                    .careerYear(mentor.getCareerYear())
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MentorProfileUpdate{
+        @Size(max = 32)
+        @Pattern(regexp = "^[0-9+\\-()\\s]*$", message = "전화번호 형식이 올바르지 않습니다.")
+        private String phoneNumber;
+
+        @Size(max = 128)
+        private String workplace;
+
+        private String  description;
+
+        private List<String> skills;
+
+        @Size(max = 128)
+        private String jobTitle;
+
+        @Min(1900)
+        private Integer graduationYear;
+
+        @Min(0)
+        private Integer careerYear;
+
+
+
+
+    }
 }
