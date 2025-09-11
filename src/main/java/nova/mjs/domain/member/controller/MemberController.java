@@ -109,12 +109,19 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.success("회원 정보가 삭제되었습니다."));
     }
 
-    // 이메일 중복 검증
+    // 이메일 중복 검증 (회원가입)
     @GetMapping("/validation/email")
     public ResponseEntity<ApiResponse<String>> validateEmail(@RequestParam String email) {
         memberQueryService.validateEmailDomain(email);
         memberQueryService.validateEmailDuplication(email);
         return ResponseEntity.ok(ApiResponse.success("사용 가능한 이메일입니다."));
+    }
+
+    // 비밀번호 재설정 시 이메일 존재 여부 확인
+    @GetMapping("/recovery/email")
+    public ResponseEntity<ApiResponse<String>> checkRecoveryEmail(@RequestParam String email) {
+        memberQueryService.validateEmailExistence(email);
+        return ResponseEntity.ok(ApiResponse.success("가입된 이메일입니다."));
     }
 
     // 닉네임 중복 검증

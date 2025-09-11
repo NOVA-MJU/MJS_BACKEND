@@ -41,4 +41,7 @@ public interface MemberQueryService {
 
     // 학번 검증 메서드
     void validateStudentNumber(String studentNumber);
+
+    // 이메일 존재 여부 검증 (비밀번호 찾기용)
+    void validateEmailExistence(String email);
 }
