@@ -90,14 +90,5 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
     }
 
-    @Override
-    public void validateEmailExistence(String email) {
-        if (email == null || email.isBlank()) {
-            throw new EmailIsInvalidException();
-        }
-        if (!memberRepository.existsByEmail(email)) {
-            throw new MemberNotFoundException();
-        }
-    }
 }
 
