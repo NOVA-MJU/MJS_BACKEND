@@ -3,8 +3,11 @@ package nova.mjs.domain.member.service.command;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.member.DTO.MemberDTO;
+import nova.mjs.domain.member.email.EmailService;
+import nova.mjs.domain.member.email.EmailVerificationResultDto;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.exception.DuplicateNicknameException;
+import nova.mjs.domain.member.exception.MemberNotFoundException;
 import nova.mjs.domain.member.exception.PasswordIsInvalidException;
 import nova.mjs.domain.member.repository.MemberRepository;
 import nova.mjs.domain.member.service.query.MemberQueryService;
@@ -32,6 +35,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     private final MemberQueryService memberQueryService;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
     private final JwtUtil jwtUtil;
     private final S3Service s3Service;
 
@@ -137,5 +141,66 @@ public class MemberCommandServiceImpl implements MemberCommandService {
         }
         memberRepository.delete(member);
         log.info("회원 삭제 - emailId: {}", emailId);
+    }
+
+    /**
+     * 2단계: 코드 검증 성공 시 내부 플래그 세팅 (존재/부재는 외부에 노출 금지)
+     */
+    @Transactional
+    public void verifyCodeForRecovery(String rawEmail, String verificationCode) {
+        EmailVerificationResultDto verificationResult = emailService.verifyEmailCode(rawEmail, verificationCode);
+        if (!verificationResult.isMatched()) {
+            throw new RequestException(ErrorCode.INVALID_REQUEST); // 코드 불일치/만료/없는 계정 모두 동일 처리
+        }
+
+        // 내부적으로만 계정 존재 확인 (없어도 같은 에러)
+        memberRepository.findByEmail(normalize(rawEmail))
+                .orElseThrow(() -> new RequestException(ErrorCode.INVALID_REQUEST));
+
+        // 인증 성공 플래그(15분) 세팅
+        emailService.markVerifiedForRecovery(rawEmail);
+    }
+
+    /**
+     * 3단계: 내부 플래그 확인되면 비밀번호 변경, 아니면 동일 실패 응답
+     */
+    @Transactional
+    public void resetPasswordAfterVerified(String rawEmail, String newPassword) {
+        final String email = normalize(rawEmail);
+
+        if (!emailService.hasVerifiedForRecovery(email)) {
+            throw new RequestException(ErrorCode.INVALID_REQUEST); // 미인증/만료
+        }
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(MemberNotFoundException::new); // 실제 예외는 내부에서만 사용, 외부에는 동일 코드로 응답 처리 가능
+
+        validateNewPasswordPolicy(newPassword);
+
+        if (passwordEncoder.matches(newPassword, member.getPassword())) {
+            throw new RequestException(ErrorCode.SAME_PASSWORD_NOT_ALLOWED);
+        }
+
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+        member.updatePassword(encodedNewPassword);
+        memberRepository.save(member);
+
+        // 인증 플래그 소각
+        emailService.clearVerifiedForRecovery(email);
+    }
+
+    // ===== 유틸 =====
+    private String normalize(String email) {
+        return email == null ? null : email.trim().toLowerCase();
+    }
+
+    private void validateNewPasswordPolicy(String password) {
+        if (password == null || password.isBlank()) {
+            throw new RequestException(ErrorCode.INVALID_REQUEST);
+        }
+        if (password.length() < 8) {
+            throw new RequestException(ErrorCode.PASSWORD_IS_INVALID);
+        }
+        // 필요 시 문자조합 규칙 추가
     }
 }
