@@ -10,10 +10,10 @@ jobs:
 
     steps:
       - name: 📦 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 🔐 SSH agent
-        uses: webfactory/ssh-agent@v0.7.0
+        uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
@@ -23,127 +23,99 @@ jobs:
         run: |
           cat > deploy_remote.sh <<'EOS'
           #!/usr/bin/env bash
-          # -e: 에러 시 종료, -u: 미정의 변수 에러, -o pipefail: 파이프라인 중간 에러 감지, -x: 실행 커맨드 echo
-          set -euo pipefail
+          set -Eeuo pipefail
+
+          # === 고정 변수(Secrets 추가 불필요) ===
+          APP_DIR="/home/ubuntu/MJS_BACKEND"
+          SERVICE_NAME="MJS_BACKEND"
+          APP_PORT="8080"
+          JAR_NAME="MJS_BACKEND-0.0.1-SNAPSHOT.jar"
+          JAR_PATH="${APP_DIR}/build/libs/${JAR_NAME}"
+
+          log(){ printf "\n[%(%F %T)T] %s\n" -1 "$*"; }
+          trap 'log "❌ 실패: 라인 $LINENO (명령: $BASH_COMMAND)"; exit 1' ERR
+
+          log "who=$(whoami) host=$(hostname)"
           set -x
 
-          APP_DIR="/home/ubuntu/MJS_BACKEND"
-          APP_NAME="MJS_BACKEND"
-          DEFAULT_JAR="MJS_BACKEND-0.0.1-SNAPSHOT.jar"
-          APP_PORT="${APP_PORT:-8080}"   # 필요시 Secrets/Env로 교체
+          # 0) github 호스트키 등록(첫 실행시 프롬프트 방지)
+          ssh-keyscan -H github.com | sudo tee -a /etc/ssh/ssh_known_hosts > /dev/null || true
 
-          echo "[whoami]"; whoami
-          echo "[hostname]"; hostname
-          echo "[date]"; date
-          echo "[java -version]"; java -version || true
+          # 1) 프로젝트 이동
+          cd "${APP_DIR}"
 
-          echo "[1] 프로젝트 디렉토리 이동"
-          cd "$APP_DIR"
-          pwd
-          ls -al
+          # 2) 메인 레포 최신화(안전: main 고정 + FF-only)
+          git fetch origin
+          git checkout main
+          git pull --ff-only origin main
 
-          echo "[1.1] Git 상태 출력"
-          git rev-parse --abbrev-ref HEAD || true
-          git log -1 --oneline || true
-          git status -sb || true
+          # 3) 서브모듈 최신화 (branch=main 추적)
+          #    .gitmodules: url=git@github.com:NOVA-MJU/MJS-BACK-SECURITY.git, branch=main
+          git submodule sync --recursive
+          git submodule update --init --recursive --remote
+          git submodule foreach --recursive 'git reset --hard || true'
+          git submodule foreach --recursive 'git clean -fdx || true'
 
-          echo "[2] 기존 프로세스 종료"
-          # JAR 이름이 바뀔 수 있으니 와일드카드 먼저 → 폴백: 고정 파일명
-          PID=$(pgrep -f "${APP_NAME}-.*\.jar" || true)
-          if [ -z "${PID:-}" ]; then
-            PID=$(pgrep -f "${DEFAULT_JAR}" || true)
-          fi
-          if [ -n "${PID:-}" ]; then
-            echo "killing $PID"
-            kill -9 "$PID" || true
-          else
-            echo "no running proc"
-          fi
-
-          echo "[3] 최신 코드 가져오기 (git pull)"
-          git pull origin main
-
-          echo "[4] Gradle 버전 및 빌드"
+          # 4) 빌드
           chmod +x ./gradlew || true
           ./gradlew --version
-          ./gradlew clean build -x test
+          ./gradlew clean bootJar -x test
 
-          echo "[4.5] 빌드 산출물 존재 확인"
-          ls -al build || true
-          ls -al build/libs || true
+          # 5) 산출물 확인
+          test -f "${JAR_PATH}" || { set +x; log "❌ JAR 미존재: ${JAR_PATH}"; exit 1; }
 
-          echo "[5] JAR 자동 탐색"
-          # 단일/멀티모듈 모두 지원: 최대 깊이 4에서 검색
-          echo "[5.1] 최근 생성 JAR 목록 (상위 20개)"
-          find . -maxdepth 4 -type f -path "*/build/libs/*.jar" -printf "%p %TY-%Tm-%Td %TH:%TM\n" | sort -k2,2 -k3,3 | tail -n 20 || true
+          # 6) systemd 재시작
+          sudo systemctl daemon-reload || true
+          sudo systemctl restart "${SERVICE_NAME}"
 
-          JAR_PATH=$(find . -maxdepth 4 -type f -path "*/build/libs/*.jar" | head -n 1 || true)
-          if [ -z "${JAR_PATH:-}" ]; then
-            echo "❌ JAR not found under */build/libs"
-            echo "[디버그] build 디렉토리들:"
-            find . -maxdepth 4 -type d -name build -print || true
-            exit 1
-          fi
-          echo "JAR_PATH: $JAR_PATH"
+          set +x
+          # 7) 빠른 헬스체크 (최대 20초, 조기성공: 로그/HTTP/포트)
+          alive(){ systemctl is-active --quiet "${SERVICE_NAME}"; }
+          ready_by_log(){ journalctl -u "${SERVICE_NAME}" -n 200 --no-pager 2>/dev/null | grep -q "Started .* in .* seconds"; }
+          ready_by_http(){ command -v curl >/dev/null 2>&1 && curl -fsS "http://127.0.0.1:${APP_PORT}/actuator/health" >/dev/null 2>&1; }
+          ready_by_port(){ (command -v ss >/dev/null 2>&1 && ss -lnt | grep -q ":${APP_PORT} ") || (command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "${APP_PORT}"); }
 
-          JAR_DIR=$(dirname "$JAR_PATH")
-          JAR_FILE=$(basename "$JAR_PATH")
-          echo "➡ 실행 대상: $JAR_FILE"
-          cd "$JAR_DIR"
-          pwd
-          ls -al
-
-          echo "[6] nohup 로그 백업"
-          mv nohup.out "nohup_$(date +%Y%m%d_%H%M%S).log" 2>/dev/null || true
-
-          echo "[7] 백그라운드 실행"
-          nohup java -jar "$JAR_FILE" > nohup.out 2>&1 &
-          NEW_PID=$!
-          echo "✅ started: $JAR_FILE (PID: $NEW_PID)"
-
-          echo "[8] 기동 직후 로그 미리보기"
-          sleep 2
-          tail -n 80 nohup.out || true
-
-          echo "[9] 간이 헬스체크 (포트 ${APP_PORT}, 최대 60초 대기)"
-          # nc가 없을 수도 있으므로 curl로도 체크 (원하는 health endpoint가 있으면 교체)
-          for i in $(seq 1 60); do
-            if command -v nc >/dev/null 2>&1; then
-              if nc -z localhost "${APP_PORT}"; then
-                echo "✅ 포트 ${APP_PORT} 열림"; break
-              fi
+          log "🩺 헬스체크 시작(최대 20초)"
+          for i in $(seq 1 20); do
+            if ! alive; then
+              log "❌ 서비스 비활성(조기 종료)"
+              sudo systemctl --no-pager --full status "${SERVICE_NAME}" || true
+              journalctl -u "${SERVICE_NAME}" -n 200 --no-pager || true
+              exit 1
             fi
-            if command -v curl >/dev/null 2>&1; then
-              if curl -fsS "http://localhost:${APP_PORT}/actuator/health" >/dev/null 2>&1; then
-                echo "✅ /actuator/health 통과"; break
-              fi
-            fi
-            if [ "$i" -eq 60 ]; then
-              echo "⚠️ 60초 내 기동 확인 실패(포트/헬스체크). 로그 확인 권장."
-              break
+            if ready_by_log || ready_by_http || ready_by_port; then
+              log "✅ 준비 완료 (~${i}s)"
+              exit 0
             fi
             sleep 1
           done
 
-          echo "[10] 최종 프로세스/포트 상태"
-          ps -ef | grep java || true
-          (command -v ss >/dev/null 2>&1 && ss -ltnp | grep ":${APP_PORT}" ) || true
-
-          echo "🎉 배포 스크립트 종료"
+          log "⚠️ 20초 내 준비 신호 미확인 — 최근 상태/로그"
+          sudo systemctl --no-pager --full status "${SERVICE_NAME}" || true
+          journalctl -u "${SERVICE_NAME}" -n 200 --no-pager || true
+          exit 1
           EOS
 
           chmod +x deploy_remote.sh
-          echo "== local deploy_remote.sh created =="
           ls -al deploy_remote.sh
-          echo "== file content (head) =="
-          head -n 40 deploy_remote.sh
+          head -n 20 deploy_remote.sh
 
       - name: 📤 Upload deploy script to EC2
         shell: bash
         run: |
-          scp -o StrictHostKeyChecking=no ./deploy_remote.sh "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}":/home/ubuntu/deploy_remote.sh
+          scp -o StrictHostKeyChecking=no ./deploy_remote.sh \
+            "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}":/home/ubuntu/deploy_remote.sh
 
       - name: 🚀 Run deploy script on EC2
         shell: bash
         run: |
-          ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" "bash /home/ubuntu/deploy_remote.sh"
+          ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" \
+            "bash /home/ubuntu/deploy_remote.sh"
+
+      - name: 📜 Show service status & logs (always)
+        if: always()
+        run: |
+          ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" \
+            "sudo systemctl --no-pager --full status MJS_BACKEND || true"
+          ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" \
+            "journalctl -u MJS_BACKEND -n 120 --no-pager || true"
