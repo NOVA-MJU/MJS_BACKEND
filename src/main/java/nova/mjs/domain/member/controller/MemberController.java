@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.member.DTO.MemberDTO;
+import nova.mjs.domain.member.email.EmailVerificationRequestDto;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.service.command.MemberCommandService;
 import nova.mjs.domain.member.service.query.MemberQueryService;
@@ -117,12 +118,6 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.success("사용 가능한 이메일입니다."));
     }
 
-    // 비밀번호 재설정 시 이메일 존재 여부 확인
-    @GetMapping("/recovery/email")
-    public ResponseEntity<ApiResponse<String>> checkRecoveryEmail(@RequestParam String email) {
-        memberQueryService.validateEmailExistence(email);
-        return ResponseEntity.ok(ApiResponse.success("가입된 이메일입니다."));
-    }
 
     // 닉네임 중복 검증
     @GetMapping("/validation/nickname")
@@ -139,5 +134,24 @@ public class MemberController {
     }
 
 
+    // == RECOVERY - 회원 정보 찾기 == //
+    // 비밀번호 찾기
+    /**
+     * 1단계: 이메일 보내기 - EMAIL CONTROLLER 에서 진행
+     * 2단계: 코드 검증 성공 시 내부 플래그 세팅
+     */
+    @PostMapping("/recovery/verify-code")
+    public ResponseEntity<ApiResponse<String>> verifyCodeForRecovery(
+            @RequestBody EmailVerificationRequestDto request) {
+        memberCommandService.verifyCodeForRecovery(request.getEmail(), request.getCode());
+        return ResponseEntity.ok(ApiResponse.success("이메일 인증이 완료되었습니다."));
+    }
+
+    @PostMapping("/recovery/reset")
+    public ResponseEntity<ApiResponse<String>> resetPassword(
+            @RequestBody MemberDTO.PasswordResetRequestDTO request) {
+        memberCommandService.resetPasswordAfterVerified(request.getEmail(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("비밀번호가 재설정되었습니다."));
+    }
 }
 

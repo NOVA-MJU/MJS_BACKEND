@@ -21,4 +21,10 @@ public interface MemberCommandService {
 
     /** 회원 삭제 */
     void deleteMember(String emailId, MemberDTO.PasswordRequestDTO requestPassword);
+
+    /** 비번찾기 2단계: 코드 검증 성공 시 내부 플래그 세팅 */
+    void verifyCodeForRecovery(String email, String code);
+
+    /** 비번찾기 3단계: 내부 플래그 확인되면 비밀번호 변경 */
+    void resetPasswordAfterVerified(String email, String newPassword);
 }

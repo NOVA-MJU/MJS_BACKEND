@@ -108,4 +108,13 @@ public class MemberDTO {
         private String password;
         private String newPassword;
     }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PasswordResetRequestDTO {
+        private String email;
+        private String newPassword;
+    }
 }
