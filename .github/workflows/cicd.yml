@@ -32,6 +32,9 @@ jobs:
           JAR_NAME="MJS_BACKEND-0.0.1-SNAPSHOT.jar"
           JAR_PATH="${APP_DIR}/build/libs/${JAR_NAME}"
 
+          # 헬스체크 최대 대기(초) - 기본 60초 (필요시 SSH 실행 시 MAX_WAIT=45처럼 덮어쓰기 가능)
+          MAX_WAIT="${MAX_WAIT:-60}"
+
           log(){ printf "\n[%(%F %T)T] %s\n" -1 "$*"; }
           trap 'log "❌ 실패: 라인 $LINENO (명령: $BASH_COMMAND)"; exit 1' ERR
 
@@ -44,7 +47,7 @@ jobs:
           # 1) 프로젝트 이동
           cd "${APP_DIR}"
 
-          # 2) 메인 레포 최신화(안전: main 고정 + FF-only)
+          # 2) 메인 레포 최신화(안전: main 고정 + Fast-forward만)
           git fetch origin
           git checkout main
           git pull --ff-only origin main
@@ -56,7 +59,7 @@ jobs:
           git submodule foreach --recursive 'git reset --hard || true'
           git submodule foreach --recursive 'git clean -fdx || true'
 
-          # 4) 빌드
+          # 4) 빌드 (clean -> bootJar)
           chmod +x ./gradlew || true
           ./gradlew --version
           ./gradlew clean bootJar -x test
@@ -69,16 +72,20 @@ jobs:
           sudo systemctl restart "${SERVICE_NAME}"
 
           set +x
-          # 7) 빠른 헬스체크 (최대 20초, 조기성공: 로그/HTTP/포트)
+          # 7) 빠른 헬스체크 (조기성공: 로그/HTTP/포트 중 하나라도 OK, 최대 ${MAX_WAIT}s)
           alive(){ systemctl is-active --quiet "${SERVICE_NAME}"; }
-          ready_by_log(){ journalctl -u "${SERVICE_NAME}" -n 200 --no-pager 2>/dev/null | grep -q "Started .* in .* seconds"; }
+          ready_by_log(){
+            # Spring Boot의 기동 완료 로그 시그널들
+            journalctl -u "${SERVICE_NAME}" -n 400 --no-pager 2>/dev/null | \
+              grep -Eq "Started .* in .* seconds|Tomcat started on port|Starting ProtocolHandler|Started MjsApplication"
+          }
           ready_by_http(){ command -v curl >/dev/null 2>&1 && curl -fsS "http://127.0.0.1:${APP_PORT}/actuator/health" >/dev/null 2>&1; }
           ready_by_port(){ (command -v ss >/dev/null 2>&1 && ss -lnt | grep -q ":${APP_PORT} ") || (command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "${APP_PORT}"); }
 
-          log "🩺 헬스체크 시작(최대 20초)"
-          for i in $(seq 1 20); do
+          log "🩺 헬스체크 시작(최대 ${MAX_WAIT}s)"
+          for i in $(seq 1 "${MAX_WAIT}"); do
             if ! alive; then
-              log "❌ 서비스 비활성(조기 종료)"
+              log "❌ 서비스 비활성 (조기 종료)"
               sudo systemctl --no-pager --full status "${SERVICE_NAME}" || true
               journalctl -u "${SERVICE_NAME}" -n 200 --no-pager || true
               exit 1
@@ -90,7 +97,7 @@ jobs:
             sleep 1
           done
 
-          log "⚠️ 20초 내 준비 신호 미확인 — 최근 상태/로그"
+          log "⚠️ ${MAX_WAIT}s 내 준비 신호 미확인 — 최근 상태/로그"
           sudo systemctl --no-pager --full status "${SERVICE_NAME}" || true
           journalctl -u "${SERVICE_NAME}" -n 200 --no-pager || true
           exit 1
@@ -106,11 +113,11 @@ jobs:
           scp -o StrictHostKeyChecking=no ./deploy_remote.sh \
             "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}":/home/ubuntu/deploy_remote.sh
 
-      - name: 🚀 Run deploy script on EC2
+      - name: 🚀 Run deploy script on EC2 (MAX_WAIT=60)
         shell: bash
         run: |
           ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" \
-            "bash /home/ubuntu/deploy_remote.sh"
+            "MAX_WAIT=60 bash /home/ubuntu/deploy_remote.sh"
 
       - name: 📜 Show service status & logs (always)
         if: always()
