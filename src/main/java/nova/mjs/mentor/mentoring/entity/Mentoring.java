@@ -62,6 +62,6 @@ public class Mentoring extends BaseEntity {
     /** 감사 메시지 (자식 엔티티) */
     @OneToMany(mappedBy = "mentoring", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ThanksMessage> thanksMessages = new ArrayList<>();
+    private List<MentoringReview> mentoringReviews = new ArrayList<>();
 
 }
