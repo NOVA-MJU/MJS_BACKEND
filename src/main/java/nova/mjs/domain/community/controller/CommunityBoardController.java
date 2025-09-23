@@ -42,7 +42,6 @@ public class CommunityBoardController {
      * @return 게시글 목록
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     @LogExecutionTime("게시글 페이지네이션 목록 조회")
     public ResponseEntity<ApiResponse<Page<CommunityBoardResponse.SummaryDTO>>> getBoards(
             @RequestParam(defaultValue = "0") int page,
@@ -77,7 +76,6 @@ public class CommunityBoardController {
      * 2. 게시글 상세 조회
      */
     @GetMapping("/{boardUuid}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<CommunityBoardResponse.DetailDTO>> getBoardDetail(
             @PathVariable UUID boardUuid,
             @AuthenticationPrincipal UserPrincipal userPrincipal
