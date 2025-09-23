@@ -28,11 +28,8 @@
     "/boards": {
       "get": {
         "tags": ["Board"],
-        "security": [
-          { "Authorization": [] }
-        ],
         "summary": "게시글 목록 조회 (페이징)",
-        "description": "로그인한 사용자가 조회 가능한 게시글 목록을 페이징 형태로 반환하며, 페이지 번호(page)와 페이지 크기(size)를 지정해 조회하고, 정렬 기준(sortBy)과 방향(direction)을 설정할 수 있으며, 허용되지 않은 sortBy 값은 createdAt으로, 잘못된 direction 값은 ASC로 처리되며, Authorization 헤더에 JWT 토큰이 필요합니다.",
+        "description": "조회 가능한 게시글 목록을 페이징 형태로 반환하며, 페이지 번호(page)와 페이지 크기(size)를 지정해 조회하고, 정렬 기준(sortBy)과 방향(direction)을 설정할 수 있으며, 허용되지 않은 sortBy 값은 createdAt으로, 잘못된 direction 값은 ASC로 처리됩니다.",
         "parameters": [
           {
             "name": "page",
@@ -232,9 +229,6 @@
     "/boards/{boardUUID}": {
       "get": {
         "tags": ["Board"],
-        "security": [
-          { "Authorization": [] }
-        ],
         "summary": "게시글 상세 조회",
         "description": "UUID에 해당하는 게시글의 상세 정보를 반환합니다. 수정은 작성자만 가능하지만, 삭제는 작성자와 operator도 가능합니다.",
         "parameters": [
