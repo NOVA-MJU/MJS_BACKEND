@@ -71,7 +71,7 @@ public class MentorProfileCommandServiceImpl implements MentorProfileCommandServ
             throw new RequestException(ErrorCode.INVALID_REQUEST);
         }
 
-        // 3) 토큰 발급 (MemberCommandServiceImpl 포맷 동일)
+        // 3) 토큰 발급 (MemberCommandServiceImpl 포맷 동일) -> 전담 컴포넌트로 분리 해야하나?
         UUID userId = member.getUuid();
         String email = member.getEmail();
         String role = String.valueOf(member.getRole());

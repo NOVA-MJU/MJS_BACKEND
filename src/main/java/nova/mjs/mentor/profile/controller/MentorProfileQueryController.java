@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.YearMonth;
 import java.util.List;
+import java.util.UUID;
 
 import static nova.mjs.util.response.ApiResponse.success;
 import static org.springframework.http.ResponseEntity.ok;
@@ -25,7 +26,7 @@ public class MentorProfileQueryController {
 
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<MentorStatsDTO>> stats() {
-        return ok(success(query.stats()));
+        return ok(success(query.getOverviewStatistics()));
     }
 
     @GetMapping
@@ -33,27 +34,27 @@ public class MentorProfileQueryController {
             MentorSearchConditionDTO cond,
             @PageableDefault(size = 12, sort = "createdAt",
                     direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
-        return ok(success(query.search(cond, pageable)));
+        return ok(success(query.findMentorCards(cond, pageable)));
     }
 
     @GetMapping("/featured")
     public ResponseEntity<ApiResponse<List<MentorListItemDTO>>> featured(@RequestParam YearMonth month) {
-        return ok(success(query.featured(month)));
+        return ok(success(query.findFeaturedMentorsForMonth(month)));
     }
 
     /**
-     * 상세(헤더+섹션+학력) — 안정적 데이터
+     * 상세(헤더+섹션+학력) — 안정적 데이터 (memberUuid 기반)
      */
-    @GetMapping("/{id}") // id 그대로 쓴거는 아직 entity에 uuid가 없길래 일단 씀
-    public ResponseEntity<ApiResponse<MentorDetailDTO>> detail(@PathVariable Long id) {
-        return ok(success(query.getDetail(id)));
+    @GetMapping("/{memberUuid}")
+    public ResponseEntity<ApiResponse<MentorDetailDTO>> detail(@PathVariable UUID memberUuid) {
+        return ok(success(query.getMentorDetailByMemberUuid(memberUuid)));
     }
 
     /**
-     * 지표(조회/감사/멘토링) — 자주 변하는 데이터
+     * 지표(조회/감사/멘토링) — 자주 변하는 데이터 (memberUuid 기반)
      */
-    @GetMapping("/{id}/metrics") // id 그대로 쓴거는 아직 entity에 uuid가 없길래 일단 씀
-    public ResponseEntity<ApiResponse<MentorMetricsDTO>> metrics(@PathVariable Long id) {
-        return ok(success(query.getMetrics(id, null)));
+    @GetMapping("/{memberUuid}/metrics")
+    public ResponseEntity<ApiResponse<MentorMetricsDTO>> metrics(@PathVariable UUID memberUuid) {
+        return ok(success(query.getMentorMetricsByMemberUuid(memberUuid, null)));
     }
 }
