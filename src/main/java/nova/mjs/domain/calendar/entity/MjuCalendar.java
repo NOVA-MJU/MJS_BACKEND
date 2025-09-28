@@ -32,10 +32,10 @@ public class MjuCalendar {
     /** DTO를 받아 엔티티를 생성하는 정적 팩토리 메서드 */
     public static MjuCalendar create(MjuCalendarDTO dto) {
         return MjuCalendar.builder()
-                .year(dto.year())
-                .startDate(dto.startDate())
-                .endDate(dto.endDate())
-                .description(dto.description())
+                .year(dto.getYear())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
+                .description(dto.getDescription())
                 .build();
     }
 }

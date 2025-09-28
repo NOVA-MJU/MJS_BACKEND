@@ -538,6 +538,7 @@
                       }
                     },
                     "timestamp": "2025-07-16T23:54:19.6712228"
+                    }
                   }
                 }
               }
@@ -545,10 +546,129 @@
           }
         }
       }
-    }
-  },
+    },
 
-  "/news": {
+    "/calendar/monthly": {
+      "get": {
+        "tags": ["MJU_Calendar"],
+        "summary": "월별 학사일정 조회 (교차기간 포함, 카테고리별 분류)",
+        "description": "요청한 연/월에 걸치는 학사일정을 조회하고, **전체(공통)** / **학부** / **대학원** / **휴일** 카테고리로 분류해 반환합니다.\n\n- 예: `2025-09-29 ~ 2025-10-03`은 10월 요청 시 포함됩니다.\n- `all`에는 학부/대학원 공통이거나 태그 없는 항목만 담깁니다.\n- `holiday`는 공휴일·연휴·방학 등 **수업/시험/강의평가 등 학사활동이 아닌** 쉬는 날만 포함합니다.",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "description": "조회 연도 (예: 2025)",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 2000, "maximum": 2100 }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "description": "조회 월 (1~12)",
+            "required": true,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "월별 학사일정 카테고리 응답",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponse_MonthlyResponse" },
+                "examples": {
+                  "monthlyExample": {
+                    "summary": "월별 응답 예시",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "year": 2025,
+                        "month": 10,
+                        "all": [
+                          {
+                            "id": 441,
+                            "startDate": "2025-09-29",
+                            "endDate": "2025-10-03",
+                            "description": "중간 강의평가 기간"
+                          }
+                        ],
+                        "undergrad": [
+                          {
+                            "id": 448,
+                            "startDate": "2025-10-20",
+                            "endDate": "2025-10-24",
+                            "description": "중간고사 기간"
+                          }
+                        ],
+                        "graduate": [
+                          {
+                            "id": 445,
+                            "startDate": "2025-10-13",
+                            "endDate": "2025-10-17",
+                            "description": "석사·박사학위 청구논문 심사 신청"
+                          },
+                          {
+                            "id": 446,
+                            "startDate": "2025-10-13",
+                            "endDate": "2025-10-24",
+                            "description": "학위청구논문 연구계획서 제출"
+                          },
+                          {
+                            "id": 447,
+                            "startDate": "2025-10-13",
+                            "endDate": "2025-11-07",
+                            "description": "2024학년도 전기 신・편입생 모집"
+                          }
+                        ],
+                        "holiday": [
+                          {
+                            "id": 442,
+                            "startDate": "2025-10-03",
+                            "endDate": "2025-10-03",
+                            "description": "개천절"
+                          },
+                          {
+                            "id": 443,
+                            "startDate": "2025-10-05",
+                            "endDate": "2025-10-08",
+                            "description": "추석 연휴(대체휴일 포함)"
+                          },
+                          {
+                            "id": 444,
+                            "startDate": "2025-10-09",
+                            "endDate": "2025-10-09",
+                            "description": "한글날"
+                          }
+                        ]
+                      },
+                      "timestamp": "2025-09-29T07:09:32.5421584"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "유효하지 않은 요청 (예: month가 1~12 범위 외)",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalidMonth": {
+                    "summary": "월 범위 오류 예시",
+                    "value": {
+                      "status": 400,
+                      "error": "INVALID_REQUEST",
+                      "message": "[MJS] 요청된 값이 잘못되었습니다."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/news": {
       "get": {
         "tags": ["News"],
         "summary": "명대신문 기사 조회",
@@ -1080,6 +1200,39 @@
           "description": { "type": "string", "example": "[학부] 수강신청 기간" }
         }
       },
+
+      "ApiResponse_MonthlyResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "API 요청 성공" },
+          "data": { "$ref": "#/components/schemas/MonthlyResponse" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["status", "data", "timestamp"]
+      },
+      "MonthlyResponse": {
+        "type": "object",
+        "properties": {
+          "year": { "type": "integer", "example": 2025 },
+          "month": { "type": "integer", "minimum": 1, "maximum": 12, "example": 10 },
+          "all":      { "type": "array", "items": { "$ref": "#/components/schemas/MonthlyCategoryItem" } },
+          "undergrad":{ "type": "array", "items": { "$ref": "#/components/schemas/MonthlyCategoryItem" } },
+          "graduate": { "type": "array", "items": { "$ref": "#/components/schemas/MonthlyCategoryItem" } },
+          "holiday":  { "type": "array", "items": { "$ref": "#/components/schemas/MonthlyCategoryItem" } }
+        },
+        "required": ["year", "month", "all", "undergrad", "graduate", "holiday"]
+      },
+      "MonthlyCategoryItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "startDate": { "type": "string", "format": "date" },
+          "endDate": { "type": "string", "format": "date" },
+          "description": { "type": "string" }
+        },
+        "required": ["id", "startDate", "endDate", "description"]
+      },
+
       "ApiResponse": {
         "type": "object",
         "properties": {
