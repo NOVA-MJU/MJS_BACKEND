@@ -68,9 +68,9 @@ dependencies {
 	implementation 'commons-codec:commons-codec:1.15'
 	//jsoup 의존성 추가
 	implementation 'org.jsoup:jsoup:1.16.1'
+	implementation 'org.postgresql:postgresql'
 
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
