@@ -24,6 +24,7 @@ public class MemberDTO {
     private String gender;
     private String nickname;
     private DepartmentName departmentName;
+    private UUID departmentUuid;
     private String studentNumber;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -47,6 +48,25 @@ public class MemberDTO {
                 .profileImageUrl(member.getProfileImageUrl())
                 .build();
     }
+
+    // 회원 초기 로그인 용 - departmentUUID 포함.
+    public static MemberDTO fromEntity(Member member, UUID departmentUuid) {
+        return MemberDTO.builder()
+                .uuid(member.getUuid())
+                .name(member.getName())
+                .email(member.getEmail())
+                .gender(String.valueOf(member.getGender()))
+                .nickname(member.getNickname())
+                .departmentName(member.getDepartmentName())
+                .departmentUuid(departmentUuid)
+                .studentNumber(member.getStudentNumber())
+                .createdAt(member.getCreatedAt())
+                .updatedAt(member.getUpdatedAt())
+                .role(member.getRole())
+                .profileImageUrl(member.getProfileImageUrl())
+                .build();
+    }
+
     /**
      * 회원가입 요청을 위한 DTO (내부 클래스)
      */

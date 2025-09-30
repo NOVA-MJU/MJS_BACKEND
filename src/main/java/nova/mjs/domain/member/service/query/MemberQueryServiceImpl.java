@@ -2,6 +2,9 @@ package nova.mjs.domain.member.service.query;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import nova.mjs.domain.department.entity.Department;
+import nova.mjs.domain.department.exception.DepartmentNotFoundException;
+import nova.mjs.domain.department.repository.DepartmentRepository;
 import nova.mjs.domain.member.DTO.MemberDTO;
 import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.exception.*;
@@ -20,6 +23,7 @@ import java.util.UUID;
 public class MemberQueryServiceImpl implements MemberQueryService {
 
     private final MemberRepository memberRepository;
+    private final DepartmentRepository departmentRepository;
 
 
     @Override
@@ -32,10 +36,23 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
     @Override
     public MemberDTO getMemberDtoByEmailId(String emailId) {
-      Member member = getMemberByEmail(emailId);
+        Member member = getMemberByEmail(emailId);
 
-      return MemberDTO.fromEntity(member);
+        // 사전 검증: Member에 학과명이 없다면 로직상 오류
+        if (member.getDepartmentName() == null) {
+            throw new DepartmentNotFoundException(); // 정책 유지
+        }
+
+        // member.departmentName으로 Department 조회 → 없으면 null로 처리
+        UUID departmentUuid = departmentRepository.findByDepartmentName(member.getDepartmentName())
+                .map(Department::getDepartmentUuid)
+                .orElse(null);
+
+        // DTO를 한 번에 생성 (departmentUuid가 null일 수 있음)
+        return MemberDTO.fromEntity(member, departmentUuid);
     }
+
+
 
     public Member getMemberByEmail(String emailId) {
         return memberRepository.findByEmail(emailId)

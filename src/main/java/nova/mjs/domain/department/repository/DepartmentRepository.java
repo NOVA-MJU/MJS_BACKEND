@@ -1,6 +1,7 @@
 package nova.mjs.domain.department.repository;
 
 import nova.mjs.domain.department.entity.Department;
+import nova.mjs.domain.member.entity.Member;
 import nova.mjs.domain.member.entity.enumList.College;
 import nova.mjs.domain.member.entity.enumList.DepartmentName;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,5 +24,10 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     @Query("SELECT d FROM Department d WHERE d.admin.email = :email")
     Optional<Department> findByAdminEmail(@Param("email") String email);
+
+    // ADMIN 계정 기반 조회
+    Optional<Department> findByAdmin(Member admin);
+
+
 
 }
