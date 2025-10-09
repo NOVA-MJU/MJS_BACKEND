@@ -12,6 +12,8 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.UUID;
+import org.springframework.http.ResponseCookie;
+import java.time.Duration;
 
 @Slf4j
 @Component
@@ -46,21 +48,31 @@ public class FormLoginSuccessHandler implements AuthenticationSuccessHandler {//
         String accessToken = jwtUtil.generateAccessToken(uuid, email, role);
         String refreshToken = jwtUtil.generateRefreshToken(uuid, email);
 
-        log.info("발급된 Access Token: {}", accessToken);
-        log.info("발급된 Refresh Token: {}", refreshToken);
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(true)              // HTTPS 사용 환경
+                .sameSite("None")          // 크로스사이트 요청 시 필요
+                .path("/")                 // 전역 경로
+                .maxAge(Duration.ofDays(14)) // 정책에 맞게 조정 (JwtUtil의 만료와 일치 권장)
+                // .domain(".your-domain.com") // 필요 시 설정
+                .build();
+        response.addHeader("Set-Cookie", refreshCookie.toString());
 
         //응답 json 생성 - 데이터 준비
         AuthDTO.LoginResponseDTO responseData = AuthDTO.LoginResponseDTO.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .build();
 
         // 실제 응답이 정상적으로 반환되는지 확인
         log.info("로그인 응답 데이터: {}", responseData);
 
         //json 응답 설정
-        response.setContentType("application/json"); //response가 json 형식임을 명시
-        response.getWriter().write(objectMapper.writeValueAsString(responseData)); //Map 객체를 json 문자열로 변환 후 응답
+        
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(objectMapper.writeValueAsString(responseData));
+        response.getWriter().flush();
+
 
         log.info("JWT 응답 전송 완료");
     }
