@@ -20,18 +20,16 @@ public class NewsController {
     private final NewsService newsService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<NewsResponseDTO>>> getNewsByCategory(
-            @RequestParam String category,
-            @RequestParam(defaultValue = "0") int page,  // 기본 페이지 번호
-            @RequestParam(defaultValue = "10") int size  // 기본 페이지 크기 (10개)
+    public ResponseEntity<ApiResponse<Page<NewsResponseDTO>>> getNews(
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
         Page<NewsResponseDTO> newsPage = newsService.getNewsByCategory(category, pageable);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(newsPage));
+        return ResponseEntity.ok(ApiResponse.success(newsPage));
     }
+
 
     @PostMapping
     public ResponseEntity<ApiResponse<List<NewsResponseDTO>>> crawlAndSaveNews(

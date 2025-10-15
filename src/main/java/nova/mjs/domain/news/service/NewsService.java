@@ -201,10 +201,20 @@ public class NewsService {
     }
 
     public Page<NewsResponseDTO> getNewsByCategory(String category, Pageable pageable) {
-        log.info("'{}' 카테고리 뉴스 조회 요청", category);
+        log.info("뉴스 조회 요청, category='{}'", category);
 
+        // 전체 조회 조건
+        if (category == null || category.isBlank() || "ALL".equalsIgnoreCase(category)) {
+            Page<News> newsPage = newsRepository.findAll(pageable); // JPA 기본 제공
+            if (newsPage.isEmpty()) {
+                log.warn("전체 뉴스 없음");
+                throw new NewsNotFoundException(ErrorCode.NEWS_NOT_FOUND);
+            }
+            return newsPage.map(NewsResponseDTO::fromEntity);
+        }
+
+        // 카테고리 조회
         News.Category categoryEnum;
-
         try {
             categoryEnum = News.Category.valueOf(category.toUpperCase());
         } catch (IllegalArgumentException e) {
@@ -212,10 +222,9 @@ public class NewsService {
         }
 
         Page<News> newsPage = newsRepository.findByCategory(categoryEnum, pageable);
-
         if (newsPage.isEmpty()) {
             log.warn("'{}' 카테고리 뉴스 없음", category);
-            throw new NewsNotFoundException("해당 카테고리에서 기사를 찾을 수 없습니다.", ErrorCode.NEWS_NOT_FOUND);
+            throw new NewsNotFoundException(ErrorCode.NEWS_NOT_FOUND);
         }
         return newsPage.map(NewsResponseDTO::fromEntity);
     }
