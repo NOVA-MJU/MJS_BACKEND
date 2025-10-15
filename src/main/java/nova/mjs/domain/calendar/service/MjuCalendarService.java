@@ -134,23 +134,20 @@ public class MjuCalendarService {
                     .id(event.getId())
                     .startDate(event.getStartDate())
                     .endDate(event.getEndDate())
-                    .description(parsed.cleanedDescription)
-//                    .rawTags(parsed.tags)
-//                    .matchedRules(parsed.matchedRuleNames)
+                    .description(parsed.displayDescription()) // ← 브래킷 유지된 설명
+                    // .rawTags(parsed.tags())                // DTO에 필드가 있으면 주석 해제
+                    // .matchedRules(parsed.matchedRuleNames())
                     .build();
 
-            // 1) 휴일은 holiday에만 (단, 학사활동 문구가 있으면 휴일 아님)
-            if (!parsed.matchedRuleNames.isEmpty() && !parsed.isAcademicActivity) {
+            // 휴일 분류 판단은 parsed.classifyText() / flags 로 이미 끝남
+            if (!parsed.matchedRuleNames().isEmpty() && !parsed.isAcademicActivity()) {
                 holidayOnly.add(item);
                 continue;
             }
+            boolean hasUndergrad = parsed.tags().contains("학부");
+            boolean hasGraduate  = parsed.tags().contains("대학원");
 
-            boolean hasUndergrad = parsed.tags.contains("학부");
-            boolean hasGraduate  = parsed.tags.contains("대학원");
-
-            // 2) 상호배타 분류
             if ((hasUndergrad && hasGraduate) || (!hasUndergrad && !hasGraduate)) {
-                // 학부·대학원 모두이거나 태그가 없으면 "전체(공통)"로만
                 generalCommon.add(item);
             } else if (hasUndergrad) {
                 undergraduateOnly.add(item);
@@ -212,7 +209,8 @@ public class MjuCalendarService {
 
     private record ParsedResult(
             Set<String> tags,
-            String cleanedDescription,
+            String displayDescription,     // ← 사용자에게 보여줄 설명(브래킷 유지)
+            String classifyText,           // ← 분류 판단에만 쓰는 텍스트(브래킷 제거)
             Set<String> matchedRuleNames,
             boolean isAcademicActivity
     ) {}
@@ -221,10 +219,14 @@ public class MjuCalendarService {
     private ParsedResult parseAndClassify(String rawDescription) {
         String normalizedDescription = normalizeDescription(rawDescription);
 
-        // 1) 선두 브래킷 태그 추출
-        Set<String> tags = new LinkedHashSet<>();
-        String descriptionWithoutLeadingBrackets = normalizedDescription;
+        // 표시용 설명은 그대로(브래킷 유지)
+        String displayDescription = normalizedDescription;
 
+        // 분류 판단에 사용할 텍스트는 선두 브래킷만 제거
+        String classifyText = normalizedDescription;
+
+        // 1) 선두 브래킷 태그 파싱
+        Set<String> tags = new LinkedHashSet<>();
         Matcher leadingMatcher = LEADING_BRACKETS_PATTERN.matcher(normalizedDescription);
         if (leadingMatcher.find()) {
             String leadingBlock = leadingMatcher.group(0);
@@ -239,23 +241,24 @@ public class MjuCalendarService {
                     }
                 }
             }
-            descriptionWithoutLeadingBrackets = normalizedDescription.substring(leadingMatcher.end()).trim();
+            // 분류 판단용 텍스트에서만 선두 브래킷 제거
+            classifyText = normalizedDescription.substring(leadingMatcher.end()).trim();
         }
 
         // 2) 학사활동 여부(휴일보다 우선)
-        boolean isAcademicActivity = ACADEMIC_ACTIVITY.matcher(descriptionWithoutLeadingBrackets).matches();
+        boolean isAcademicActivity = ACADEMIC_ACTIVITY.matcher(classifyText).matches();
 
         // 3) 휴일 규칙 매칭(쉬는 것 전부 휴일) — 단, 학사활동이면 휴일로 보지 않음
         Set<String> matchedRuleNames = new LinkedHashSet<>();
         if (!isAcademicActivity) {
             for (Map.Entry<String, Pattern> entry : HOLIDAY_RULES.entrySet()) {
-                if (entry.getValue().matcher(descriptionWithoutLeadingBrackets).matches()) {
+                if (entry.getValue().matcher(classifyText).matches()) {
                     matchedRuleNames.add(entry.getKey());
                 }
             }
         }
 
-        return new ParsedResult(tags, descriptionWithoutLeadingBrackets, matchedRuleNames, isAcademicActivity);
+        return new ParsedResult(tags, displayDescription, classifyText, matchedRuleNames, isAcademicActivity);
     }
 
     // <br> 정리, 유니코드 정규화, 다중 공백 제거
