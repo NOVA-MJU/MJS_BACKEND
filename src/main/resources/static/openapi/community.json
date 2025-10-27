@@ -28,20 +28,31 @@
     "/boards": {
       "get": {
         "tags": ["Board"],
-        "summary": "게시글 목록 조회 (페이징)",
-        "description": "조회 가능한 게시글 목록을 페이징 형태로 반환하며, 페이지 번호(page)와 페이지 크기(size)를 지정해 조회하고, 정렬 기준(sortBy)과 방향(direction)을 설정할 수 있으며, 허용되지 않은 sortBy 값은 createdAt으로, 잘못된 direction 값은 ASC로 처리됩니다.",
+        "summary": "게시글 목록 조회 (페이징 + 인기글 포함)",
+        "description": "인기글 상위 일부(popular=true)와 일반 글(popular=false)을 합쳐서 반환합니다. 첫 페이지(page=0)에서는 인기글이 먼저 포함되고, 이후 일반글이 이어집니다. totalElements는 일반글 기준이며 인기글은 total에 포함되지 않습니다. communityCategory가 'ALL'이면 전체 카테고리를 대상으로 조회하며, 그 외에는 해당 카테고리만 조회합니다.",
         "parameters": [
           {
             "name": "page",
             "in": "query",
-            "schema": { "type": "integer", "default": 0 },
+            "schema": { "type": "integer", "default": 0, "minimum": 0 },
             "description": "조회할 페이지 번호 (0부터 시작)"
           },
           {
             "name": "size",
             "in": "query",
-            "schema": { "type": "integer", "default": 10 },
-            "description": "한 페이지당 게시글 수"
+            "schema": { "type": "integer", "default": 10, "minimum": 1 },
+            "description": "한 페이지당 일반 게시글 수 기준 요청 사이즈. page=0에서는 인기글이 먼저 붙고, 일반글은 (size - 인기글수)만 포함됩니다."
+          },
+          {
+            "name": "communityCategory",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "ALL",
+              "description": "조회할 카테고리. 'ALL'이면 전체 조회, 그 외에는 특정 카테고리만 조회.",
+              "enum": ["ALL", "FREE", "NOTICE"]
+            },
+            "description": "조회 대상 카테고리. 'ALL'은 전체. 나머지는 CommunityCategory enum 값(FREE 등)."
           },
           {
             "name": "sortBy",
@@ -49,9 +60,9 @@
             "schema": {
               "type": "string",
               "default": "createdAt",
-              "enum": ["createdAt", "title", "likeCount", "commentCount"]
+              "enum": ["createdAt", "title", "likeCount", "viewCount"]
             },
-            "description": "정렬 기준 필드명 (허용 값: `createdAt`, `title`, `likeCount`, `commentCount`)"
+            "description": "정렬 기준 필드명. 허용 값 외의 값이 들어오면 'createdAt'으로 대체됩니다."
           },
           {
             "name": "direction",
@@ -61,7 +72,7 @@
               "default": "ASC",
               "enum": ["ASC", "DESC"]
             },
-            "description": "정렬 방향 (`ASC` 오름차순, `DESC` 내림차순)"
+            "description": "정렬 방향 (`ASC` 오름차순, `DESC` 내림차순). 잘못된 값이면 'DESC'로 처리됩니다."
           }
         ],
         "responses": {
@@ -79,21 +90,23 @@
                         "content": [
                           {
                             "uuid": "4f08b15c-9cf7-44e7-8890-d06721d3f49d",
-                            "title": "똥글 남기고 간다",
-                            "previewContent": "노래가사",
-                            "viewCount": 0,
+                            "communityCategory": "FREE",
+                            "title": "이번 주 서버 점검 공지",
+                            "previewContent": "이번 주말에 서버 점검이 예정되어 있습니다...",
+                            "viewCount": 120,
                             "published": true,
                             "publishedAt": "2025-08-09T12:29:18.296147",
                             "createdAt": "2025-08-09T12:29:18.301662",
                             "updatedAt": "2025-08-09T12:29:18.301704",
-                            "likeCount": 0,
-                            "commentCount": 2,
-                            "author": "홍길동",
-                            "liked": false,
+                            "likeCount": 45,
+                            "commentCount": 12,
+                            "author": "관리자",
+                            "isLiked": false,
                             "popular": true
                           },
                           {
                             "uuid": "dc3ff760-4dde-44c1-8171-14f3470114de",
+                            "communityCategory": "FREE",
                             "title": "자전거 타고 괌 가는 방법6",
                             "previewContent": "우선 비행기 타자고",
                             "viewCount": 0,
@@ -101,16 +114,17 @@
                             "publishedAt": "2025-08-07T00:39:19.077225",
                             "createdAt": "2025-08-07T00:39:19.099704",
                             "updatedAt": "2025-08-07T00:39:19.100699",
-                            "likeCount": 0,
+                            "likeCount": 3,
                             "commentCount": 0,
                             "author": "MJS",
-                            "liked": false,
+                            "isLiked": false,
                             "popular": true
                           },
                           {
                             "uuid": "7c2c1ac7-7a5e-4389-8bf6-3bfaa64c91bd",
-                            "title": "자전거 타고 괌 가는 방법6",
-                            "previewContent": "우선 비행기 타자고",
+                            "communityCategory": "FREE",
+                            "title": "자전거 타고 괌 가는 방법 (정리본)",
+                            "previewContent": "정리: 항공권 → 자전거 포장 → 입국 시 주의사항...",
                             "viewCount": 0,
                             "published": true,
                             "publishedAt": "2025-08-07T00:39:59.520658",
@@ -119,8 +133,8 @@
                             "likeCount": 0,
                             "commentCount": 0,
                             "author": "MJS",
-                            "liked": false,
-                            "popular": true
+                            "isLiked": false,
+                            "popular": false
                           }
                         ],
                         "pageable": {
@@ -146,7 +160,7 @@
                           "unsorted": false
                         },
                         "first": true,
-                        "numberOfElements": 12,
+                        "numberOfElements": 10,
                         "empty": false
                       },
                       "timestamp": "2025-08-10T16:41:37.7947005"
@@ -163,17 +177,8 @@
         "security": [
           { "Authorization": [] }
         ],
-        "parameters": [
-          {
-            "name": "boardUUID",
-            "in": "path",
-            "schema": { "type": "string" },
-            "required": true,
-            "description": "조회할 게시글의 UUID"
-          }
-        ],
         "summary": "게시글 생성",
-        "description": "제목, 본문, 공개 여부(`published`)을 포함하여 게시글을 작성합니다. 공개 여부는 필수가 아닙니다. 기본적으로 true를 제공합니다. 이미지 URL은 미리 업로드된 CloudFront URL이어야 합니다.",
+        "description": "제목, 본문, 공개 여부(published), 게시글 카테고리(communityCategory)를 받아 게시글을 생성합니다. published 값이 누락되면 기본적으로 true로 저장됩니다. 이미지는 별도 업로드 후 content 내에 URL 형태로 포함해 전달합니다.",
         "requestBody": {
           "required": true,
           "content": {
@@ -184,9 +189,10 @@
                   "summary": "게시글 작성 예시",
                   "value": {
                     "title": "자전거 타고 괌 가는 방법6",
-                    "content": "내용 본문 전체",
-                    "contentPreview": "내용 본문 전체",
-                    "published": true
+                    "content": "<p>우선 비행기부터 타야 합니다...</p>",
+                    "contentPreview": "일단 비행기를 타라",
+                    "published": true,
+                    "communityCategory": "FREE"
                   }
                 }
               }
@@ -207,14 +213,20 @@
                       "data": {
                         "uuid": "831619ee-7588-4a5a-82b4-148d3aeed319",
                         "title": "자전거 타고 괌 가는 방법6",
-                        "content": "본문 전체 내용",
-                        "contentPreview": "본문 contentPreview",
+                        "communityCategory": "FREE",
+                        "content": "<p>우선 비행기부터...</p>",
+                        "contentPreview": "우선 비행기부터...",
                         "viewCount": 0,
                         "published": true,
                         "publishedAt": "2025-03-09T01:16:45.9195322",
                         "createdAt": "2025-03-09T01:16:45.954082",
                         "updatedAt": "2025-03-09T01:16:45.954082",
-                        "author": "마루명치"
+                        "likeCount": 0,
+                        "commentCount": 0,
+                        "author": "마루명치",
+                        "isLiked": false,
+                        "canEdit": true,
+                        "canDelete": true
                       },
                       "timestamp": "2025-03-09T01:16:46.0782892"
                     }
@@ -230,12 +242,12 @@
       "get": {
         "tags": ["Board"],
         "summary": "게시글 상세 조회",
-        "description": "UUID에 해당하는 게시글의 상세 정보를 반환합니다. 수정은 작성자만 가능하지만, 삭제는 작성자와 operator도 가능합니다.",
+        "description": "특정 게시글(UUID)의 상세 정보를 반환합니다. isLiked는 현재 로그인 사용자가 이 게시글에 좋아요를 눌렀는지 여부입니다. canEdit은 작성자인지 여부, canDelete는 작성자 또는 OPERATOR 권한인지 여부입니다.",
         "parameters": [
           {
             "name": "boardUUID",
             "in": "path",
-            "schema": { "type": "string" },
+            "schema": { "type": "string", "format": "uuid" },
             "required": true,
             "description": "조회할 게시글의 UUID"
           }
@@ -254,8 +266,10 @@
                       "data": {
                         "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                         "title": "상세 게시글 제목",
-                        "content": "상세 본문 전체",
-                        "viewCount": 0,
+                        "communityCategory": "FREE",
+                        "content": "<p>상세 본문 전체</p>",
+                        "contentPreview": "상세 본문 요약",
+                        "viewCount": 153,
                         "published": true,
                         "publishedAt": "2025-04-09T14:22:39.238019",
                         "createdAt": "2025-04-09T14:22:39.250994",
@@ -263,11 +277,11 @@
                         "likeCount": 1,
                         "commentCount": 1,
                         "author": "MJS",
-                        "liked": false,
-                        "canEdit:" : true,
-                        "canDelete:" : true
-
-                      }
+                        "isLiked": false,
+                        "canEdit": true,
+                        "canDelete": true
+                      },
+                      "timestamp": "2025-04-09T14:31:12.120000"
                     }
                   }
                 }
