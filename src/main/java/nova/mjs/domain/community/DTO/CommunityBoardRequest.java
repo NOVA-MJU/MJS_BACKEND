@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import nova.mjs.domain.community.entity.enumList.CommunityCategory;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,4 +19,5 @@ public class CommunityBoardRequest {
     private String content;             // 게시글 내용
     private String contentPreview;      // 게시글 요약(프론트에서 전달)
     private Boolean published;          // 게시글 공개 여부
+    private CommunityCategory communityCategory;
 }

@@ -30,22 +30,22 @@ public class CommunityBoardController {
     private final CommunityBoardServiceImpl communityBoardServiceImpl;
     private final S3ServiceImpl s3ServiceImpl;
 
-    private static final List<String> ALLOWED_SORT_FIELDS = Arrays.asList("createdAt", "title", "likeCount", "viewCount");
+    private static final List<String> ALLOWED_SORT_FIELDS =
+            Arrays.asList("createdAt", "title", "likeCount", "viewCount");
 
     /**
-     * 1. 게시글 목록 조회 (페이지네이션 + 정렬)
-     * @param page 페이지 번호
-     * @param size 페이지 크기
-     * @param sortBy 정렬 기준 필드
-     * @param direction 정렬 방향 (ASC/DESC)
-     * @param userPrincipal 로그인 사용자 정보
-     * @return 게시글 목록
+     * 1. 게시글 목록 조회 (페이지네이션 + 정렬 + 카테고리)
+     *
+     * @param communityCategory 카테고리 문자열
+     *                          - "ALL": 전체
+     *                          - "FREE", "QNA", ... : enum CommunityCategory 값
      */
     @GetMapping
     @LogExecutionTime("게시글 페이지네이션 목록 조회")
     public ResponseEntity<ApiResponse<Page<CommunityBoardResponse.SummaryDTO>>> getBoards(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "ALL") String communityCategory,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "ASC") String direction,
             @AuthenticationPrincipal UserPrincipal userPrincipal
@@ -65,7 +65,9 @@ public class CommunityBoardController {
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-        Page<CommunityBoardResponse.SummaryDTO> boards = communityBoardServiceImpl.getBoards(pageable, email);
+
+        Page<CommunityBoardResponse.SummaryDTO> boards =
+                communityBoardServiceImpl.getBoards(pageable, email, communityCategory);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -82,7 +84,9 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.getBoardDetail(boardUuid, email);
+        CommunityBoardResponse.DetailDTO board =
+                communityBoardServiceImpl.getBoardDetail(boardUuid, email);
+
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board));
@@ -90,6 +94,15 @@ public class CommunityBoardController {
 
     /**
      * 3. 게시글 작성
+     *
+     * body 예:
+     * {
+     *   "title": "제목",
+     *   "content": "<p>본문</p>",
+     *   "contentPreview": "요약...",
+     *   "published": true,
+     *   "communityCategory": "FREE"
+     * }
      */
     @PostMapping("")
     @PreAuthorize("isAuthenticated()")
@@ -99,7 +112,9 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.createBoard(request, email);
+        CommunityBoardResponse.DetailDTO board =
+                communityBoardServiceImpl.createBoard(request, email);
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(board));
@@ -117,7 +132,9 @@ public class CommunityBoardController {
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
 
-        CommunityBoardResponse.DetailDTO board = communityBoardServiceImpl.updateBoard(boardUuid, request, email);
+        CommunityBoardResponse.DetailDTO board =
+                communityBoardServiceImpl.updateBoard(boardUuid, request, email);
+
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(board));
@@ -133,7 +150,9 @@ public class CommunityBoardController {
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
+
         communityBoardServiceImpl.deleteBoard(boardUuid, email);
+
         return ResponseEntity.noContent().build();
     }
 }
