@@ -67,7 +67,7 @@ public class CommunityDocument implements SearchDocument {
      */
     public static CommunityDocument from(CommunityBoard board) {
         return CommunityDocument.builder()
-                .id(String.valueOf(board.getId()))
+                .id(String.valueOf(board.getUuid()))
                 .title(board.getTitle())
                 .content(board.getContent())
                 .date(board.getPublishedAt() != null
