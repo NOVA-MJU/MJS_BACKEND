@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.community.entity.CommunityBoard;
+import nova.mjs.domain.community.entity.enumList.CommunityCategory;
 import nova.mjs.util.ElasticSearch.SearchType;
 import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
 import org.springframework.data.annotation.Id;
@@ -40,6 +41,8 @@ public class CommunityDocument implements SearchDocument {
 
     private String type;
 
+    private String category;
+
     private String link;
 
     @CompletionField
@@ -67,7 +70,7 @@ public class CommunityDocument implements SearchDocument {
      */
     public static CommunityDocument from(CommunityBoard board) {
         return CommunityDocument.builder()
-                .id(String.valueOf(board.getId()))
+                .id(String.valueOf(board.getUuid()))
                 .title(board.getTitle())
                 .content(board.getContent())
                 .date(board.getPublishedAt() != null
@@ -75,6 +78,7 @@ public class CommunityDocument implements SearchDocument {
                         : null)
                 .suggest(KomoranTokenizerUtil.generateSuggestions(board.getTitle()))
                 .type(SearchType.COMMUNITY.name())
+                .category(board.getCategory().name())
                 .build();
     }
 }
