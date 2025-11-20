@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.community.entity.CommunityBoard;
+import nova.mjs.domain.community.entity.enumList.CommunityCategory;
 import nova.mjs.util.ElasticSearch.SearchType;
 import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
 import org.springframework.data.annotation.Id;
@@ -39,6 +40,8 @@ public class CommunityDocument implements SearchDocument {
     private Instant date;
 
     private String type;
+
+    private String category;
 
     private String link;
 
@@ -75,6 +78,7 @@ public class CommunityDocument implements SearchDocument {
                         : null)
                 .suggest(KomoranTokenizerUtil.generateSuggestions(board.getTitle()))
                 .type(SearchType.COMMUNITY.name())
+                .category(board.getCategory().name())
                 .build();
     }
 }
