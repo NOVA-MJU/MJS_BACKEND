@@ -4,6 +4,8 @@ import nova.mjs.domain.community.likes.entity.CommunityLike;
 import nova.mjs.domain.community.entity.CommunityBoard;
 import nova.mjs.domain.community.repository.projection.UuidCount;
 import nova.mjs.domain.member.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,7 +27,7 @@ public interface CommunityLikeRepository extends JpaRepository<CommunityLike, Lo
 
     // 특정 회원이 찜한 게시물 리스트 조회
     @Query("SELECT likeCommunity.communityBoard FROM CommunityLike likeCommunity WHERE likeCommunity.member = :member")
-    List<CommunityBoard> findCommunityBoardsByMember(@Param("member") Member member);
+    Page<CommunityBoard> findCommunityBoardsByMember(@Param("member") Member member, Pageable pageable);
 
     @Query(" SELECT cl.communityBoard.uuid FROM CommunityLike cl WHERE cl.member = :member AND cl.communityBoard.uuid IN :communityBoardUUID")
     List<UUID> findCommunityUuidsLikedByMember(
