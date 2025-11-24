@@ -4,6 +4,8 @@ import nova.mjs.domain.community.comment.entity.Comment;
 import nova.mjs.domain.community.entity.CommunityBoard;
 import nova.mjs.domain.community.repository.projection.UuidCount;
 import nova.mjs.domain.member.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,7 +30,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<CommunityBoard> findDistinctCommunityBoardByMember(@Param("member") Member member);
 
     @Query("SELECT c FROM Comment c JOIN FETCH c.communityBoard WHERE c.member = :member")
-    List<Comment> findByMember(@Param("member") Member member);
+    Page<Comment> findByMember(@Param("member") Member member, Pageable pageable);
 
     int countByMember(Member member);
 
