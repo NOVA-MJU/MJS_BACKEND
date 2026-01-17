@@ -45,9 +45,5 @@ public class Notice {
                 .build();
     }
 
-    public void updateContent(String content) {
-        this.content = content;
-    }
-
 }
 
