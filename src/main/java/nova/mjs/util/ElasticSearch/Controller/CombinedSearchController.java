@@ -48,13 +48,15 @@ public class CombinedSearchController {
                 .body(ApiResponse.success(results));
     }
 
-    // 통합검색 페이지에서 상위 5개만 보여줌
+    // 통합검색 페이지에서 타입별로 사용자가 지정한 상위 top 갯수만 보여줌
     @GetMapping("/overview")
     public ResponseEntity<ApiResponse<Map<String, List<SearchResponseDTO>>>> searchOverview(
             @RequestParam String keyword,
-            @RequestParam(name = "order", required = false, defaultValue = "relevance") String order) {
+            @RequestParam(name = "order", required = false, defaultValue = "relevance") String order,
+            @RequestParam(name = "pageSize", required = false, defaultValue = "5" ) Integer pageSize) {
 
-        Map<String, List<SearchResponseDTO>> result = combinedSearchService.searchTop5EachType(keyword, order);
+
+        Map<String, List<SearchResponseDTO>> result = combinedSearchService.searchTop5EachType(keyword, order, pageSize);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

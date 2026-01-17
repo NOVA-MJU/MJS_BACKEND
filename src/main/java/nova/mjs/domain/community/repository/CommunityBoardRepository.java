@@ -53,7 +53,7 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     /**
      * 특정 작성자가 쓴 게시글 전체 조회 (마이페이지 등)
      */
-    List<CommunityBoard> findByAuthor(Member author);
+    Page<CommunityBoard> findByAuthor(Member author, Pageable pageable);
 
     /**
      * 특정 작성자가 쓴 게시글 개수

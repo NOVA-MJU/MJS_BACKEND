@@ -166,19 +166,19 @@ public class CombinedSearchService {
         );
     }
 
-    public Map<String, List<SearchResponseDTO>> searchTop5EachType(String keyword, String order) {
+    public Map<String, List<SearchResponseDTO>> searchTop5EachType(String keyword, String order, Integer pageSize) {
         Map<String, List<SearchResponseDTO>> result = new LinkedHashMap<>();
 
-        Pageable top5 = PageRequest.of(0, 5);
+        Pageable topNumber = PageRequest.of(0, pageSize);
 
         // 순서 : 공지사항 > 학사 일정(미정) > 학과 공지 > 학과 스케줄 > 자유게시판 > 명대신문 > 방송
-        result.put("notice",             unifiedSearch(keyword, "NOTICE",              order, top5).getContent());
-        result.put("mjuCalendar",        unifiedSearch(keyword, "MJU_CALENDAR",        order, top5).getContent());
-        result.put("departmentNotice",   unifiedSearch(keyword, "DEPARTMENT_NOTICE",   order, top5).getContent());
-        result.put("departmentSchedule", unifiedSearch(keyword, "DEPARTMENT_SCHEDULE", order, top5).getContent());
-        result.put("community",          unifiedSearch(keyword, "COMMUNITY",           order, top5).getContent());
-        result.put("news",               unifiedSearch(keyword, "NEWS",                order, top5).getContent());
-        result.put("broadcast",          unifiedSearch(keyword, "BROADCAST",           order, top5).getContent());
+        result.put("notice",             unifiedSearch(keyword, "NOTICE",              order, topNumber).getContent());
+        result.put("mjuCalendar",        unifiedSearch(keyword, "MJU_CALENDAR",        order, topNumber).getContent());
+        result.put("departmentNotice",   unifiedSearch(keyword, "DEPARTMENT_NOTICE",   order, topNumber).getContent());
+        result.put("departmentSchedule", unifiedSearch(keyword, "DEPARTMENT_SCHEDULE", order, topNumber).getContent());
+        result.put("community",          unifiedSearch(keyword, "COMMUNITY",           order, topNumber).getContent());
+        result.put("news",               unifiedSearch(keyword, "NEWS",                order, topNumber).getContent());
+        result.put("broadcast",          unifiedSearch(keyword, "BROADCAST",           order, topNumber).getContent());
 
         return result;
     }
