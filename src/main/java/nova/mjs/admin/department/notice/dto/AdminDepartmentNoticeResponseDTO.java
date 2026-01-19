@@ -2,7 +2,7 @@ package nova.mjs.admin.department.notice.dto;
 
 import lombok.Builder;
 import lombok.Data;
-import nova.mjs.domain.department.entity.DepartmentNotice;
+import nova.mjs.domain.thingo.department.entity.DepartmentNotice;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

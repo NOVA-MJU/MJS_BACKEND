@@ -3,7 +3,7 @@ package nova.mjs.util.ElasticSearch.Controller;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.util.ElasticSearch.Service.CombinedSearchService;
 import nova.mjs.util.ElasticSearch.SearchResponseDTO;
-import nova.mjs.domain.realtimeKeyword.RealtimeKeywordService;
+import nova.mjs.domain.thingo.realtimeKeyword.RealtimeKeywordService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

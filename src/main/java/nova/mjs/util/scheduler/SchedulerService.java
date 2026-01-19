@@ -2,16 +2,16 @@ package nova.mjs.util.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.domain.broadcast.service.BroadcastService;
-import nova.mjs.domain.news.service.NewsService;
-import nova.mjs.domain.notice.exception.NoticeCrawlingException;
-import nova.mjs.domain.notice.service.NoticeCrawlingService;
+import nova.mjs.domain.thingo.broadcast.service.BroadcastService;
+import nova.mjs.domain.thingo.news.service.NewsService;
+import nova.mjs.domain.thingo.notice.exception.NoticeCrawlingException;
+import nova.mjs.domain.thingo.notice.service.NoticeCrawlingService;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.scheduler.exception.SchedulerCronInvalidException;
 import nova.mjs.util.scheduler.exception.SchedulerTaskFailedException;
 import nova.mjs.util.scheduler.exception.SchedulerUnknownException;
-import nova.mjs.domain.weather.WeatherService;
-import nova.mjs.domain.weeklyMenu.service.WeeklyMenuService;
+import nova.mjs.domain.thingo.weather.WeatherService;
+import nova.mjs.domain.thingo.weeklyMenu.service.WeeklyMenuService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
