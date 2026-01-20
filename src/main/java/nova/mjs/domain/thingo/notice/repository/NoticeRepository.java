@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Repository
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
     @Query("""
-    SELECT new nova.mjs.domain.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
+    SELECT new nova.mjs.domain.thingo.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
     FROM Notice n
     WHERE n.category = :category
     """)
@@ -24,7 +24,7 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
     );
 
     @Query("""
-    SELECT new nova.mjs.domain.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
+    SELECT new nova.mjs.domain.thingo.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
     FROM Notice n
     WHERE n.category = :category
     AND n.date BETWEEN :start AND :end
@@ -38,14 +38,14 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
     // 전체(ALL) - 카테고리 조건 없음
     @Query("""
-    SELECT new nova.mjs.domain.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
+    SELECT new nova.mjs.domain.thingo.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
     FROM Notice n
     """)
     Page<NoticeResponseDto> findAllNotices(Pageable pageable);
 
     // 전체(ALL) + 연도 범위
     @Query("""
-    SELECT new nova.mjs.domain.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
+    SELECT new nova.mjs.domain.thingo.notice.dto.NoticeResponseDto(n.title, n.date, n.category, n.link)
     FROM Notice n
     WHERE n.date BETWEEN :start AND :end
     """)
