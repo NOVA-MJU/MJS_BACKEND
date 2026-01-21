@@ -5,18 +5,18 @@ import lombok.extern.log4j.Log4j2;
 import nova.mjs.admin.account.service.AdminQueryService;
 import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeRequestDTO;
 import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeResponseDTO;
-import nova.mjs.domain.department.entity.Department;
-import nova.mjs.domain.department.entity.DepartmentNotice;
-import nova.mjs.domain.department.exception.DepartmentAdminNotFoundException;
-import nova.mjs.domain.department.exception.DepartmentNoticeNotFoundException;
-import nova.mjs.domain.department.repository.DepartmentNoticeRepository;
-import nova.mjs.domain.department.repository.DepartmentRepository;
+import nova.mjs.domain.thingo.department.entity.Department;
+import nova.mjs.domain.thingo.department.entity.DepartmentNotice;
+import nova.mjs.domain.thingo.department.exception.DepartmentAdminNotFoundException;
+import nova.mjs.domain.thingo.department.exception.DepartmentNoticeNotFoundException;
+import nova.mjs.domain.thingo.department.repository.DepartmentNoticeRepository;
+import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
 import nova.mjs.util.s3.S3DomainType;
 import nova.mjs.util.s3.S3Service;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import nova.mjs.domain.department.exception.DepartmentNotFoundException;
+import nova.mjs.domain.thingo.department.exception.DepartmentNotFoundException;
 
 import java.util.UUID;
 

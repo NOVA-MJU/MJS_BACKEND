@@ -1,13 +1,13 @@
 package nova.mjs.util.ElasticSearch.Service;
 
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.broadcast.repository.BroadcastRepository;
-import nova.mjs.domain.calendar.repository.MjuCalendarRepository;
-import nova.mjs.domain.community.repository.CommunityBoardRepository;
-import nova.mjs.domain.department.repository.DepartmentNoticeRepository;
-import nova.mjs.domain.department.repository.DepartmentScheduleRepository;
-import nova.mjs.domain.news.repository.NewsRepository;
-import nova.mjs.domain.notice.repository.NoticeRepository;
+import nova.mjs.domain.thingo.broadcast.repository.BroadcastRepository;
+import nova.mjs.domain.thingo.calendar.repository.MjuCalendarRepository;
+import nova.mjs.domain.thingo.community.repository.CommunityBoardRepository;
+import nova.mjs.domain.thingo.department.repository.DepartmentNoticeRepository;
+import nova.mjs.domain.thingo.department.repository.DepartmentScheduleRepository;
+import nova.mjs.domain.thingo.news.repository.NewsRepository;
+import nova.mjs.domain.thingo.notice.repository.NoticeRepository;
 import nova.mjs.util.ElasticSearch.Document.*;
 import nova.mjs.util.ElasticSearch.Repository.*;
 import nova.mjs.util.ElasticSearch.SearchResponseDTO;

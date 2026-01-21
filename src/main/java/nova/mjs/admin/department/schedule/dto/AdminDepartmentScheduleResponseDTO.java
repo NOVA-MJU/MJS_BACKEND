@@ -2,7 +2,7 @@ package nova.mjs.admin.department.schedule.dto;
 
 import lombok.Builder;
 import lombok.Data;
-import nova.mjs.domain.department.entity.DepartmentSchedule;
+import nova.mjs.domain.thingo.department.entity.DepartmentSchedule;
 
 import java.time.LocalDate;
 import java.util.UUID;

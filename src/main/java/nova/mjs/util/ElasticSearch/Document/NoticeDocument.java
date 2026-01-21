@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nova.mjs.domain.notice.entity.Notice;
+import nova.mjs.domain.thingo.notice.entity.Notice;
 import nova.mjs.util.ElasticSearch.SearchType;
 import nova.mjs.util.ElasticSearch.config.KomoranTokenizerUtil;
 import org.springframework.data.annotation.Id;

@@ -1,6 +1,6 @@
 package nova.mjs.admin.account.service;
 
-import nova.mjs.domain.department.entity.Department;
+import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.util.security.UserPrincipal;
 
 import java.util.UUID;

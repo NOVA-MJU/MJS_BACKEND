@@ -4,7 +4,7 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.calendar.entity.MjuCalendar;
+import nova.mjs.domain.thingo.calendar.entity.MjuCalendar;
 import nova.mjs.util.ElasticSearch.Document.MjuCalendarDocument;
 import nova.mjs.util.ElasticSearch.EventSynchronization.EntityIndexEvent;
 import nova.mjs.util.ElasticSearch.EventSynchronization.SearchIndexPublisher;

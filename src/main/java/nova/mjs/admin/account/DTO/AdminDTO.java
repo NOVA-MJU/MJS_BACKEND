@@ -4,10 +4,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import nova.mjs.domain.department.entity.Department;
-import nova.mjs.domain.member.entity.Member;
-import nova.mjs.domain.member.entity.enumList.College;
-import nova.mjs.domain.member.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.entity.Department;
+import nova.mjs.domain.thingo.member.entity.Member;
+import nova.mjs.domain.thingo.member.entity.enumList.College;
+import nova.mjs.domain.thingo.member.entity.enumList.DepartmentName;
 
 public class AdminDTO {
     /**

@@ -4,7 +4,7 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.community.entity.CommunityBoard;
+import nova.mjs.domain.thingo.community.entity.CommunityBoard;
 import nova.mjs.util.ElasticSearch.Document.CommunityDocument;
 import nova.mjs.util.ElasticSearch.EventSynchronization.EntityIndexEvent.IndexAction;
 import nova.mjs.util.ElasticSearch.EventSynchronization.SearchIndexPublisher;

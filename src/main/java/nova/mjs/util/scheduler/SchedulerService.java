@@ -2,16 +2,16 @@ package nova.mjs.util.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.domain.broadcast.service.BroadcastService;
-import nova.mjs.domain.news.service.NewsService;
-import nova.mjs.domain.notice.exception.NoticeCrawlingException;
-import nova.mjs.domain.notice.service.NoticeCrawlingService;
+import nova.mjs.domain.thingo.broadcast.service.BroadcastService;
+import nova.mjs.domain.thingo.news.service.NewsService;
+import nova.mjs.domain.thingo.notice.exception.NoticeCrawlingException;
+import nova.mjs.domain.thingo.notice.service.NoticeCrawlingService;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.scheduler.exception.SchedulerCronInvalidException;
 import nova.mjs.util.scheduler.exception.SchedulerTaskFailedException;
 import nova.mjs.util.scheduler.exception.SchedulerUnknownException;
-import nova.mjs.domain.weather.WeatherService;
-import nova.mjs.domain.weeklyMenu.service.WeeklyMenuService;
+import nova.mjs.domain.thingo.weather.WeatherService;
+import nova.mjs.domain.thingo.weeklyMenu.service.WeeklyMenuService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -127,17 +127,18 @@ public class SchedulerService {
     @Scheduled(cron = "0 0 18 * * *")  // 매일 18:00
     //@Scheduled(cron = "0 36 16 * * *")  // TEST
     public void crawlAllNotices() {
-        log.info("[MJS] Scheduled crawling started.");
+        log.info("[MJS][Scheduler] Notice crawling started.");
         CompletableFuture.runAsync(() -> {
-            List<String> noticeTypes = List.of("general", "academic", "scholarship", "career", "activity", "rule");
-            for (String type : noticeTypes) {
-                try {
-                    noticeCrawlingService.fetchNotices(type);
-                } catch (NoticeCrawlingException e) {
-                    log.error("[MJS] {} 공지 크롤링 실패: {}", type, e.getMessage());
-                    // continue; // 이거 쓰면 해당 타입만 건너뛰고 다음으로 감
-                    throw e;     // 이거 쓰면 전체 중단
-                }
+            try {
+                noticeCrawlingService.fetchAllNotices();
+                log.info("[MJS][Scheduler] Notice crawling completed.");
+            } catch (Exception e) {
+                /*
+                 * 스케줄러 레벨에서는
+                 * - 어떤 category가 실패했는지 판단하지 않는다.
+                 * - 실패 원인 분석은 Service 로그를 기준으로 한다.
+                 */
+                log.error("[MJS][Scheduler] Notice crawling failed.", e);
             }
         });
     }

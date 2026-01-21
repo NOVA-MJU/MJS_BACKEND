@@ -96,6 +96,9 @@ dependencies {
 	// Komoran
 	implementation 'com.github.shin285:KOMORAN:3.3.9'
 
+	//websocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 }
 
 test {

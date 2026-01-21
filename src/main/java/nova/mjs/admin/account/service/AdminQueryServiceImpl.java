@@ -2,9 +2,9 @@ package nova.mjs.admin.account.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nova.mjs.domain.department.entity.Department;
-import nova.mjs.domain.department.repository.DepartmentRepository;
-import nova.mjs.domain.member.exception.MemberNotFoundException;
+import nova.mjs.domain.thingo.department.entity.Department;
+import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
+import nova.mjs.domain.thingo.member.exception.MemberNotFoundException;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
