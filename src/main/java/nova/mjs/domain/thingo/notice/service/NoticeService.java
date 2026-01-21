@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.notice.dto.NoticeResponseDto;
+import nova.mjs.domain.thingo.notice.entity.Notice;
 import nova.mjs.domain.thingo.notice.exception.NoticeNotFoundException;
 import nova.mjs.domain.thingo.notice.repository.NoticeRepository;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ public class NoticeService {
 
     private final NoticeRepository noticeRepository;
 
-    public Page<NoticeResponseDto> getNotices(String category, Integer year, int page, int size, String sort) {
+    public Page<NoticeResponseDto.Summary> getNotices(String category, Integer year, int page, int size, String sort) {
         if (category == null || category.isEmpty()) {
             throw new NoticeNotFoundException();
         }
@@ -40,7 +41,7 @@ public class NoticeService {
         );
 
 
-        Page<NoticeResponseDto> notices;
+        Page<Notice> notices;
 
         if (year != null) {
             // 연도 필터 있을 경우
@@ -48,13 +49,13 @@ public class NoticeService {
             LocalDateTime endDate = LocalDateTime.of(year, 12, 31, 23, 59, 59);
 
             notices = isAll
-                    ? noticeRepository.findNoticesByDateRange(startDate, endDate, pageable) // 전체 조회
-                    : noticeRepository.findNoticesByCategoryAndDateRange(category, startDate, endDate, pageable); // 카테고리별 조회
+                    ? noticeRepository.findByDateBetween(startDate, endDate, pageable) // 전체 조회
+                    : noticeRepository.findByCategoryAndDateBetween(category, startDate, endDate, pageable); // 카테고리별 조회
         } else {
             // 연도 필터 없을 경우
             notices = isAll
-                    ? noticeRepository.findAllNotices(pageable) // 전체 조회
-                    : noticeRepository.findNoticesByCategory(category, pageable); // 카테고리별 조회
+                    ? noticeRepository.findAll(pageable) // 전체 조회
+                    : noticeRepository.findByCategory(category, pageable); // 카테고리별 조회
         }
 
 
@@ -62,6 +63,7 @@ public class NoticeService {
             throw new NoticeNotFoundException();
         }
 
-        return notices;
+        return notices.map(NoticeResponseDto.Summary::fromEntity);
+
     }
 }

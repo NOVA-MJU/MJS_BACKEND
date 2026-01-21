@@ -7,26 +7,42 @@ import nova.mjs.domain.thingo.notice.dto.NoticeResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/notices")
 public class NoticeController {
-    private final NoticeCrawlingService noticeCrawlingServiceService;
+
+    private final NoticeCrawlingService noticeCrawlingService;
     private final NoticeService noticeService;
 
-    // 공지사항 크롤링 가져오기
-    @PostMapping ("/crawl")
-    public List<NoticeResponseDto> fetchNotices(
-            @RequestParam("type") String type) { // 공지 종류
-        return noticeCrawlingServiceService.fetchNotices(type);
+    /**
+     * 특정 공지 카테고리 크롤링 (운영/관리용)
+     *
+     * 예시:
+     *  - /crawl?type=general
+     *  - /crawl?type=law
+     */
+    @PostMapping("/crawl")
+    public void crawlByType(
+            @RequestParam("type") String type
+    ) {
+        noticeCrawlingService.fetchNoticesByType(type);
     }
 
-    // (2) DB에서 공지사항 조회
+    /**
+     * 전체 공지 크롤링 (모든 카테고리)
+     */
+    @PostMapping("/crawl/all")
+    public void crawlAll() {
+        noticeCrawlingService.fetchAllNotices();
+    }
+
+    /**
+     * DB에 저장된 공지 조회 (사용자 API)
+     */
     @GetMapping
-    public Page<NoticeResponseDto> getNotices(
-            @RequestParam(value = "category") String category,
+    public Page<NoticeResponseDto.Summary> getNotices(
+            @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "year", required = false) Integer year,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "15") int size,
@@ -34,11 +50,4 @@ public class NoticeController {
     ) {
         return noticeService.getNotices(category, year, page, size, sort);
     }
-
-    // (3) 전체 공지 크롤링 (모든 카테고리)
-    @PostMapping("/crawl/all")
-    public List<NoticeResponseDto> fetchAllNotices() {
-        return noticeCrawlingServiceService.fetchAllNotices();
-    }
-
 }
