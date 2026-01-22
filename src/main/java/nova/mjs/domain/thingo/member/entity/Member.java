@@ -65,7 +65,7 @@ public class Member extends BaseEntity {
     }
 
     public enum Role {
-        USER, ADMIN, OPERATOR
+        USER, ADMIN, OPERATOR, MENTOR
     }
 
     public static Member create(MemberDTO.MemberRegistrationRequestDTO memberDTO, String encodePassword) {
