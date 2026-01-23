@@ -3,6 +3,8 @@ package nova.mjs.domain.thingo.member.repository;
 
 import nova.mjs.domain.thingo.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -17,5 +19,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByNickname(String nickname);
     boolean existsByStudentNumber(String studentNumber);
 
+    @Query("select m.id from Member m where m.uuid = :uuid")
+    Optional<Long> findIdByUuid(@Param("uuid") UUID uuid);
 
 }
