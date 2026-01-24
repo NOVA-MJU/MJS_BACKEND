@@ -46,26 +46,30 @@ services:
       - "6379:6379"
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:2.9.8
     ports:
       - "3100:3100"
     volumes:
-      - /home/ubuntu/MJS_BACKEND/MJS-BACK-SECURITY/loki-config.yml:/etc/loki/loki-config.yml
+      #- /home/ubuntu/MJS_BACKEND/MJS-BACK-SECURITY/loki-config.yml:/etc/loki/loki-config.yml
+      - ./MJS-BACK-SECURITY/loki-config.yml:/etc/loki/config.yml:ro
       - loki_data:/loki
-    command: -config.file=/etc/loki/loki-config.yml
+    command: -config.file=/etc/loki/config.yml
+    restart: unless-stopped
 
 
   promtail:
     image: grafana/promtail:latest
     volumes:
-      - /home/ubuntu/MJS_BACKEND/MJS-BACK-SECURITY/promtail-config.yml:/etc/promtail/promtail-config.yml
-      - /home/ubuntu/MJS_BACKEND/logs:/var/log/mjs_backend_logs   # ✅ Spring Boot 로그 경로 매핑
+      - ./MJS-BACK-SECURITY/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /home/ubuntu/MJS_BACKEND/logs:/var/log/mjs_backend_logs:ro   # ✅ Spring Boot 로그 경로 매핑
+      - promtail_positions:/tmp
     depends_on:
       - loki
-    command: -config.file=/etc/promtail/promtail-config.yml
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.4.5
     ports:
       - "3000:3000"
     environment:
@@ -79,3 +83,4 @@ volumes:
   esdata:
   loki_data:
   grafana_data:
+  promtail_positions:

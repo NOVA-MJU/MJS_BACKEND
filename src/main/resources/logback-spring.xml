@@ -11,6 +11,14 @@
     <property name="LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} %clr([%thread]){faint} %clr(%-5level){ERROR=red bold, WARN=yellow bold, INFO=green, DEBUG=blue, TRACE=magenta} %clr(%X{TRACE_ID:-}-){yellow} %clr(%logger{36}){cyan} - %msg%n%wex"/>
 
+    <!--추가-->
+    <property name="LOG_DIR" value="/home/ubuntu/MJS_BACKEND/logs"/>
+    <property name="LOG_FILE" value="${LOG_DIR}/mjs-backend.log"/>
+
+    <!-- 파일은 ANSI 색상 넣지 말고 깔끔하게 -->
+    <property name="FILE_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %X{TRACE_ID:-}- %logger{36} - %msg%n"/>
+
     <!-- 3. 콘솔 Appender (동기) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -29,9 +37,27 @@
         <includeCallerData>false</includeCallerData>
     </appender>
 
+    <!-- 파일 Appender (추가) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <append>true</append>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 날짜별 롤링 -->
+            <fileNamePattern>${LOG_DIR}/mjs-backend.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>14</maxHistory>
+        </rollingPolicy>
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${FILE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
     <!-- 5. 루트 로거 (INFO 이상만 동기 출력) -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
     </root>
 
     <!-- 6. 상세 로거 (비동기 DEBUG 로깅 등) -->
