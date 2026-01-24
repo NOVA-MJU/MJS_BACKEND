@@ -50,7 +50,6 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      #- /home/ubuntu/MJS_BACKEND/MJS-BACK-SECURITY/loki-config.yml:/etc/loki/loki-config.yml
       - ./MJS-BACK-SECURITY/loki-config.yml:/etc/loki/config.yml:ro
       - loki_data:/loki
     command: -config.file=/etc/loki/config.yml
@@ -61,7 +60,7 @@ services:
     image: grafana/promtail:latest
     volumes:
       - ./MJS-BACK-SECURITY/promtail-config.yml:/etc/promtail/config.yml:ro
-      - /home/ubuntu/MJS_BACKEND/logs:/var/log/mjs_backend_logs:ro   # ✅ Spring Boot 로그 경로 매핑
+      - /home/ubuntu/MJS_BACKEND/logs:/var/log/mjs_backend_logs:ro
       - promtail_positions:/tmp
     depends_on:
       - loki
