@@ -28,6 +28,7 @@ services:
         fi &&
         /usr/local/bin/docker-entrypoint.sh
       "
+    networks: [ app ]
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
@@ -38,12 +39,14 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
+    networks: [ app ]
 
   redis:
     image: redis:7.2
     # container_name: redis          ← 삭제
     ports:
       - "6379:6379"
+    networks: [ app ]
 
   loki:
     image: grafana/loki:2.9.8
@@ -54,10 +57,11 @@ services:
       - loki_data:/loki
     command: -config.file=/etc/loki/config.yml
     restart: unless-stopped
+    networks: [ mon ]
 
 
   promtail:
-    image: grafana/promtail:latest
+    image: grafana/promtail:2.9.8
     volumes:
       - ./MJS-BACK-SECURITY/promtail-config.yml:/etc/promtail/config.yml:ro
       - /home/ubuntu/MJS_BACKEND/logs:/var/log/mjs_backend_logs:ro
@@ -66,6 +70,7 @@ services:
       - loki
     command: -config.file=/etc/promtail/config.yml
     restart: unless-stopped
+    networks: [ mon ]
 
   grafana:
     image: grafana/grafana:10.4.5
@@ -77,9 +82,42 @@ services:
       - loki
     volumes:
       - grafana_data:/var/lib/grafana
+    networks: [ mon ]
+
+  prometheus:
+    image: prom/prometheus:latest
+    expose:
+      - "9090"
+    volumes:
+      - ./MJS-BACK-SECURITY/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks: [ mon ]
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    expose:
+      - "9100"
+    networks: [ mon ]
+    # host의 /proc, /sys 등을 읽기 위해 권장되는 옵션들
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
 
 volumes:
   esdata:
   loki_data:
   grafana_data:
   promtail_positions:
+
+networks:
+  app:
+    driver: bridge
+  mon:
+    driver: bridge
