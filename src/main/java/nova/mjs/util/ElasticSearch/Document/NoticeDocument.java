@@ -57,7 +57,7 @@ public class NoticeDocument implements SearchDocument{
         return NoticeDocument.builder()
                 .id(notice.getId().toString())
                 .title(notice.getTitle())
-                .content("") // Notice는 content 없으면 빈 문자열 처리
+                .content(notice.getContent())
                 .date(notice.getDate().atZone(ZoneId.systemDefault()).toInstant())
                 .link(notice.getLink())
                 .category(notice.getCategory())
