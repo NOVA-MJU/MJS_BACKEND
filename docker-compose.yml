@@ -3,7 +3,7 @@ version: '3.8'   # ← 이 줄은 최근 Compose V2에선 경고만 뜨니 삭�
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
-    # container_name: elasticsearch   ← 삭제
+    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -31,7 +31,7 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
-    # container_name: kibana         ← 삭제
+    container_name: kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
