@@ -89,9 +89,10 @@ dependencies {
 
     //Email 인증
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
-
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	// Mongodb
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 
 	// Komoran
 	implementation 'com.github.shin285:KOMORAN:3.3.9'
