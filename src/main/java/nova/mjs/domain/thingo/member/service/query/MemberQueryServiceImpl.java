@@ -52,7 +52,11 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         return MemberDTO.fromEntity(member, departmentUuid);
     }
 
-
+    @Override
+    public Member getMemberEntityByUuid(UUID userUUID) {
+        return memberRepository.findByUuid(userUUID)
+                .orElseThrow(MemberNotFoundException::new);
+    }
 
     public Member getMemberByEmail(String emailId) {
         return memberRepository.findByEmail(emailId)
