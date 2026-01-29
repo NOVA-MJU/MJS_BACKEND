@@ -37,10 +37,10 @@ public class RedisSubscriber {
 
                 // 양쪽 유저에게 roomId 알려주기
                 messagingTemplate.convertAndSend(
-                        "/sub/chat/room-created/" + payload.getUserId(), payload
+                        "/sub/chat/room-created/" + payload.getMenteeUuid(), payload
                 );
                 messagingTemplate.convertAndSend(
-                        "/sub/chat/room-created/" + payload.getPartnerId(), payload
+                        "/sub/chat/room-created/" + payload.getMentorUuid(), payload
                 );
                 return;
             }

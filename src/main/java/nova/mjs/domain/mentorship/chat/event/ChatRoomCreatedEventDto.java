@@ -1,9 +1,8 @@
 package nova.mjs.domain.mentorship.chat.event;
 
 import lombok.*;
+import java.util.UUID;
 
-
-/** 룸 만들어지면 양쪽 모두에게 알려줄 payload **/
 @Getter
 @Setter
 @NoArgsConstructor
@@ -11,6 +10,6 @@ import lombok.*;
 @Builder
 public class ChatRoomCreatedEventDto {
     private String roomId;
-    private Long userId;     // 요청자(멘티)
-    private Long partnerId;  // 상대(멘토)
+    private UUID menteeUuid; // 요청자(멘티)
+    private UUID mentorUuid; // 상대(멘토)
 }

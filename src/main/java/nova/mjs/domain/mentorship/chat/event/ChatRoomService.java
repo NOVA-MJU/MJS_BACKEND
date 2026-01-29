@@ -2,8 +2,8 @@ package nova.mjs.domain.mentorship.chat.event;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.mentorship.chat.ChatRoomListGetResponse;
-import nova.mjs.domain.mentorship.chat.event.ChatRoomDocument;
-import nova.mjs.domain.mentorship.chat.event.ChatRoomRepository;
+import nova.mjs.util.exception.BusinessBaseException;
+import nova.mjs.util.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -19,10 +19,14 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
 
     /**
-     *  채팅방 생성 또는 기존 방 반환
-     *  멘티가 멘토 신청 + 첫 메시지 시작 시점에 호출하면 됨
+     * 채팅방 생성 또는 기존 방 반환
+     * - userA/userB 정규화로 "두 사람 조합은 한 방" 보장
      */
     public ChatRoomDocument createOrGetRoom(Long userId, Long partnerId) {
+        if (userId == null || partnerId == null) {
+            throw new BusinessBaseException(ErrorCode.INVALID_REQUEST);
+        }
+
         Long userA = Math.min(userId, partnerId);
         Long userB = Math.max(userId, partnerId);
 
@@ -39,48 +43,88 @@ public class ChatRoomService {
                 .createdAt(Instant.now())
                 .build();
 
-        return chatRoomRepository.save(room);
+        try {
+            return chatRoomRepository.save(room);
+        } catch (Exception e) {
+            throw new BusinessBaseException(ErrorCode.DATABASE_ERROR);
+        }
     }
 
-    /** 채팅방 삭제(소프트 삭제로 구현) */
-    public void deleteChatRoom(String accessToken, String roomId, Long userId) {
-        ChatRoomDocument room = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Chat room not found: " + roomId));
+    /**
+     * 채팅방 삭제(소프트 삭제)
+     * - 네 ErrorCode에 "ROOM_NOT_FOUND", "FORBIDDEN" 같은 게 없으므로
+     *   여기서는 INVALID_REQUEST로 처리
+     */
+    public void deleteChatRoom(String roomId, Long userId) {
+        if (roomId == null || roomId.isBlank() || userId == null) {
+            throw new BusinessBaseException(ErrorCode.INVALID_REQUEST);
+        }
 
-        // 권한 체크(최소): userId가 방의 참가자여야 함
+        ChatRoomDocument room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessBaseException(ErrorCode.INVALID_REQUEST));
+
+        // 이미 삭제된 방이면 멱등 처리(원하면 INVALID_REQUEST로 바꿔도 됨)
+        if (room.isDeleted()) {
+            return;
+        }
+
+        // 참가자가 아니면 삭제 불가
         if (!isParticipant(room, userId)) {
-            throw new IllegalStateException("Not a participant of this room.");
+            throw new BusinessBaseException(ErrorCode.INVALID_REQUEST);
         }
 
         room.setDeleted(true);
         room.setDeletedAt(Instant.now());
-        chatRoomRepository.save(room);
+
+        try {
+            chatRoomRepository.save(room);
+        } catch (Exception e) {
+            throw new BusinessBaseException(ErrorCode.DATABASE_ERROR);
+        }
     }
 
-    /** 채팅방 정보 1건 조회(파트너 id 포함) */
-    public ChatRoomListGetResponse getChatRoomInfo(String accessToken, String roomId) {
-        ChatRoomDocument room = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("Chat room not found: " + roomId));
-
-        if (room.isDeleted()) {
-            throw new IllegalStateException("Chat room is deleted.");
+    /**
+     * 채팅방 정보 1건 조회 (partnerId 정확 계산 가능)
+     */
+    public ChatRoomListGetResponse getChatRoomInfo(String roomId, Long userId) {
+        if (roomId == null || roomId.isBlank() || userId == null) {
+            throw new BusinessBaseException(ErrorCode.INVALID_REQUEST);
         }
 
-        // partnerId는 “요청자 기준”으로 계산해야 정확하지만,
-        // 현재 시그니처에 userId가 없으니, 이 메서드는 room 자체 정보만 반환하도록 둠.
-        // (필요하면 getChatRoomInfo(accessToken, roomId, userId)로 확장 추천)
+        ChatRoomDocument room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessBaseException(ErrorCode.INVALID_REQUEST));
+
+        if (room.isDeleted()) {
+            throw new BusinessBaseException(ErrorCode.INVALID_REQUEST);
+        }
+
+        if (!isParticipant(room, userId)) {
+            throw new BusinessBaseException(ErrorCode.INVALID_REQUEST);
+        }
+
         return ChatRoomListGetResponse.builder()
                 .chatRoomNumber(room.getId())
-                .partnerId(null) // 여기서 partnerId 결정하려면 userId가 필요함
+                .partnerId(getPartnerId(room, userId))
                 .lastMessage(room.getLastMessage())
                 .lastMessageTime(room.getLastMessageTime() == null ? null : room.getLastMessageTime().toString())
                 .unreadCount(0)
                 .build();
     }
 
-    /** 유저 채팅방 리스트 조회 */
-    public List<ChatRoomListGetResponse> getChatRoomList(Long userId, String accessToken) {
-        List<ChatRoomDocument> rooms = chatRoomRepository.findByUserAOrUserB(userId, userId);
+    /**
+     * 유저 채팅방 리스트 조회
+     */
+    public List<ChatRoomListGetResponse> getChatRoomList(Long userId) {
+        if (userId == null) {
+            throw new BusinessBaseException(ErrorCode.INVALID_REQUEST);
+        }
+
+        List<ChatRoomDocument> rooms;
+        try {
+            rooms = chatRoomRepository.findByUserAOrUserB(userId, userId);
+        } catch (Exception e) {
+            throw new BusinessBaseException(ErrorCode.DATABASE_ERROR);
+        }
 
         return rooms.stream()
                 .filter(r -> !r.isDeleted())
@@ -89,14 +133,19 @@ public class ChatRoomService {
                         .partnerId(getPartnerId(r, userId))
                         .lastMessage(r.getLastMessage())
                         .lastMessageTime(r.getLastMessageTime() == null ? null : r.getLastMessageTime().toString())
-                        .unreadCount(0) // 읽음처리는 다음 단계에서 설계
-                        .build()
-                )
+                        .unreadCount(0)
+                        .build())
                 .collect(Collectors.toList());
     }
 
-    /** 최신 메시지 기준 정렬 */
+    /**
+     * 최신 메시지 기준 정렬
+     */
     public List<ChatRoomListGetResponse> sortChatRoomListLatest(List<ChatRoomListGetResponse> list) {
+        if (list == null) {
+            throw new BusinessBaseException(ErrorCode.INVALID_REQUEST);
+        }
+
         list.sort(Comparator.comparing(
                 ChatRoomListGetResponse::getLastMessageTime,
                 Comparator.nullsLast(Comparator.reverseOrder())
@@ -105,12 +154,34 @@ public class ChatRoomService {
     }
 
     private boolean isParticipant(ChatRoomDocument room, Long userId) {
-        return room.getUserA().equals(userId) || room.getUserB().equals(userId);
+        return userId != null && (room.getUserA().equals(userId) || room.getUserB().equals(userId));
     }
 
     private Long getPartnerId(ChatRoomDocument room, Long userId) {
         if (room.getUserA().equals(userId)) return room.getUserB();
         if (room.getUserB().equals(userId)) return room.getUserA();
         return null;
+    }
+
+    // -----------------------------
+    // 기존 시그니처 유지용 호환 메서드 (원하면 지워도 됨)
+    // -----------------------------
+
+    /** @deprecated accessToken 안 쓰므로 정식 시그니처(roomId, userId)로 호출부 정리 추천 */
+    @Deprecated
+    public void deleteChatRoom(String accessToken, String roomId, Long userId) {
+        deleteChatRoom(roomId, userId);
+    }
+
+    /** @deprecated userId 없으면 partnerId 못 구함. getChatRoomInfo(roomId, userId)로 바꾸는 게 정답 */
+    @Deprecated
+    public ChatRoomListGetResponse getChatRoomInfo(String accessToken, String roomId) {
+        throw new BusinessBaseException(ErrorCode.INVALID_REQUEST);
+    }
+
+    /** @deprecated accessToken 안 쓰므로 정식 시그니처(userId)로 호출부 정리 추천 */
+    @Deprecated
+    public List<ChatRoomListGetResponse> getChatRoomList(Long userId, String accessToken) {
+        return getChatRoomList(userId);
     }
 }
