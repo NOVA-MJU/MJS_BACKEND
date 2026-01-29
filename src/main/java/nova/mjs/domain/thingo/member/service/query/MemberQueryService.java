@@ -15,6 +15,8 @@ import java.util.UUID;
  */
 public interface MemberQueryService {
 
+    // ===== 조회 / 외부 노출용 =====
+
     // 모든 회원 정보를 페이지 단위로 조회
     Page<MemberDTO> getAllMember(Pageable pageable);
 
@@ -23,6 +25,14 @@ public interface MemberQueryService {
 
     // 이메일 ID를 이용한 회원 상세 조회 - MemberDTO로 반환
     MemberDTO getMemberDtoByEmailId(String emailId);
+
+
+    // ===== 도메인 내부 전용 =====
+    /**
+     * Command / 도메인 내부 전용
+     * - 외부 조회용으로 사용 금지
+     */
+    Member getMemberEntityByUuid(UUID userUUID);
 
     // 이메일 ID를 이용한 회원 상세 조회
     Member getMemberByEmail(String emailId);
