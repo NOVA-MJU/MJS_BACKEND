@@ -35,13 +35,19 @@ public class MentoringProgram extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
-    /** 시작일 */
+    /** 신청 기간 */
     @Column(nullable = false)
-    private LocalDate startDate;
+    private LocalDate applyStartDate;
 
-    /** 종료일 */
     @Column(nullable = false)
-    private LocalDate endDate;
+    private LocalDate applyEndDate;
+
+    /** 프로그램 진행 기간 */
+    @Column(nullable = false)
+    private LocalDate programStartDate;
+
+    @Column(nullable = false)
+    private LocalDate programEndDate;
 
     /** 모집 인원 */
     @Column(nullable = false)
@@ -82,8 +88,10 @@ public class MentoringProgram extends BaseEntity {
     public static MentoringProgram create(
             String title,
             String description,
-            LocalDate startDate,
-            LocalDate endDate,
+            LocalDate applyStartDate,
+            LocalDate applyEndDate,
+            LocalDate programStartDate,
+            LocalDate programEndDate,
             int capacity,
             String targetAudience,
             String location,
@@ -95,8 +103,10 @@ public class MentoringProgram extends BaseEntity {
                 .uuid(UUID.randomUUID())
                 .title(title)
                 .description(description)
-                .startDate(startDate)
-                .endDate(endDate)
+                .applyStartDate(applyStartDate)
+                .applyEndDate(applyEndDate)
+                .programStartDate(programStartDate)
+                .programEndDate(programEndDate)
                 .capacity(capacity)
                 .targetAudience(targetAudience)
                 .location(location)

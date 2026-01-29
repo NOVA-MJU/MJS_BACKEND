@@ -40,33 +40,11 @@ public class ProgramAdminCommandServiceImpl
         }
 
         // 프로그램 생성
-        MentoringProgram program = MentoringProgram.create(
-                request.getTitle(),
-                request.getDescription(),
-                request.getStartDate(),
-                request.getEndDate(),
-                request.getCapacity(),
-                request.getTargetAudience(),
-                request.getLocation(),
-                request.getContact(),
-                request.getPreparation(),
-                mentors
-        );
-
+        MentoringProgram program = request.toEntity(mentors);
         programRepository.save(program);
 
-        // 등록 응답
-        return ProgramAdminDTO.CreateResponse.builder()
-                .programUuid(program.getUuid())
-                .title(program.getTitle())
-                .startDate(program.getStartDate())
-                .endDate(program.getEndDate())
-                .capacity(program.getCapacity())
-                .mentorEmails(
-                        mentors.stream()
-                                .map(mp -> mp.getMember().getEmail())
-                                .toList()
-                )
-                .build();
+        // 등록 응답 (DTO에게 위임)
+        return ProgramAdminDTO.CreateResponse.fromEntity(program, mentors);
     }
+
 }
