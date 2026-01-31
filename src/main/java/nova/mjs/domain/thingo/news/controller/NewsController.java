@@ -26,7 +26,7 @@ public class NewsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "newsIndex"));
         Page<NewsResponseDTO> newsPage = newsService.getNewsByCategory(category, pageable);
         return ResponseEntity.ok(ApiResponse.success(newsPage));
     }
