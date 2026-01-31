@@ -3,7 +3,7 @@
   "info": {
     "title": "MJU Mentorship API",
     "version": "v1.0.0",
-    "description": "명지대학교 멘토관(멘토링) 신청(Application) API 명세서입니다.\n\n## 프론트 구현 흐름(권장)\n1) (멘토 리스트/상세 화면) 사용자가 멘토를 선택하고 신청 폼을 작성합니다.\n2) POST /mentorship/applications 로 신청을 생성합니다. (status=SUBMITTED)\n3) (신청자 마이페이지) GET /mentorship/applications/me 로 신청 목록 및 상태를 확인합니다.\n4) (멘토 대시보드) GET /mentorship/applications/mentor 로 멘토가 받은 신청 목록을 확인합니다.\n5) 멘토링 신청 상세를 확인하려면 GET /mentorship/applications/{applicationUuid} 를 호출합니다.\n6) 멘토가 수락하면 POST /mentorship/applications/{applicationUuid}/accept\n   - ApplicationStatus가 ACCEPTED로 변경됩니다. 이는 대화 시작 시에 내부적으로 동작할 것 \n   - (백엔드 구현 단계에서) ChatRoom 생성 트랜잭션을 이 accept에 묶는 것을 권장합니다.\n7) 멘토가 거절하면 POST /mentorship/applications/{applicationUuid}/reject\n   - ApplicationStatus가 REJECTED로 변경됩니다. 여기서 수락, 진행 중은 내부적으로 진행할 예정. \n\n## 권한 규칙(중요)\n- 모든 엔드포인트는 JWT 인증이 필요합니다.\n- 신청 생성: 로그인한 사용자(신청자)만 가능\n- 신청 목록 / 상세:\n  - /me: 신청자 본인의 신청만\n  - /mentor: 멘토(응답자) 본인에게 들어온 신청만\n  - /{applicationUuid}: 해당 신청의 신청자 또는 멘토만 접근 가능\n- 수락/거절: 해당 신청의 멘토만 가능\n",
+    "description": "명지대학교 멘토관(멘토링) 신청(Application) API 명세서입니다.\n\n## 프론트 구현 흐름(권장)\n1) (멘토 리스트/상세 화면) 사용자가 멘토를 선택하고 신청 폼을 작성합니다.\n2) POST /mentorship/applications 로 신청을 생성합니다. (status=SUBMITTED)\n3) (신청자 마이페이지) GET /mentorship/applications/me 로 신청 목록 및 상태를 확인합니다.\n4) (멘토 대시보드) GET /mentorship/applications/mentor 로 멘토가 받은 신청 목록을 확인합니다.\n5) 멘토링 신청 상세를 확인하려면 GET /mentorship/applications/{applicationUuid} 를 호출합니다.\n6) 멘토가 수락하면 POST /mentorship/applications/{applicationUuid}/accept\n   - ApplicationStatus가 ACCEPTED로 변경됩니다. 이는 대화 시작 시에 내부적으로 동작할 것 \n   - (백엔드 구현 단계에서) ChatRoom 생성 트랜잭션을 이 accept에 묶는 것을 권장합니다.\n7) 멘토가 거절하면 POST /mentorship/applications/{applicationUuid}/reject\n   - ApplicationStatus가 REJECTED로 변경됩니다. 여기서 수락, 진행 중은 내부적으로 진행할 예정. \n\n## 권한 규칙(중요)\n- 모든 엔드포인트는 JWT 인증이 필요합니다.\n- 신청 생성: 로그인한 사용자(신청자)만 가능\n- 신청 목록 / 상세:\n  - /me: 신청자 본인의 신청만\n  - /mentor: 멘토(응답자) 본인에게 들어온 신청만\n  - /{applicationUuid}: 해당 신청의 신청자 또는 멘토만 접근 가능\n- 수락/거절: 해당 신청의 멘토만 가능\n"
 
 
   },
@@ -14,12 +14,133 @@
   ],
   "tags": [
     {
+      "name": "Mentoring Program",
+      "description": "멘토링 프로그램 생성 및 관리 API"
+    },
+    {
       "name": "Mentorship Application",
       "description": "멘토링 신청 생성/조회 및 수락·거절 API"
     }
   ],
   "paths": {
-    "/mentorship/applications": {
+
+    "/admin/programs": {
+      "get": {
+        "tags": ["Mentoring Program"],
+        "summary": "멘토링 프로그램 목록 조회",
+        "description": "관리자가 멘토링 프로그램 목록을 페이지 단위로 조회합니다.\n\n- 응답은 Spring Data Page 형태입니다.",
+        "security": [{ "Authorization": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 0 } },
+          { "name": "size", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "sort", "in": "query", "schema": { "type": "string" }, "description": "예: createdAt,desc" }
+        ],
+        "responses": {
+          "200": {
+            "description": "프로그램 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProgramSummaryPage" },
+                "example": {
+                  "content": [
+                    {
+                      "programUuid": "b3abdd01-d9e1-4307-9bca-62974928d759",
+                      "title": "2025 상반기 AI 개발자 멘토링",
+                      "applyStartDate": "2025-01-10",
+                      "applyEndDate": "2025-01-15",
+                      "programStartDate": "2025-01-21",
+                      "programEndDate": "2025-01-21",
+                      "capacity": 100,
+                      "contact": "02-1234-5678"
+                    },
+                    {
+                      "programUuid": "937203cc-97aa-4dc9-a333-1e3d901825b5",
+                      "title": "2025 상반기 AI 개발자 멘토링",
+                      "applyStartDate": "2025-01-10",
+                      "applyEndDate": "2025-01-15",
+                      "programStartDate": "2025-01-21",
+                      "programEndDate": "2025-01-21",
+                      "capacity": 100,
+                      "contact": "02-1234-5678"
+                    }
+                  ],
+                  "pageable": {
+                    "pageNumber": 0,
+                    "pageSize": 20,
+                    "sort": {
+                      "empty": true,
+                      "unsorted": true,
+                      "sorted": false
+                    },
+                    "offset": 0,
+                    "unpaged": false,
+                    "paged": true
+                  },
+                  "last": true,
+                  "totalElements": 2,
+                  "totalPages": 1,
+                  "size": 20,
+                  "number": 0,
+                  "sort": {
+                    "empty": true,
+                    "unsorted": true,
+                    "sorted": false
+                  },
+                  "first": true,
+                  "numberOfElements": 2,
+                  "empty": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/admin/programs/{programId}": {
+      "get": {
+        "tags": ["Mentoring Program"],
+        "summary": "멘토링 프로그램 상세 조회",
+        "description": "관리자가 특정 멘토링 프로그램의 상세 정보를 조회합니다.",
+        "security": [{ "Authorization": [] }],
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "프로그램 상세 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProgramDetailResponse" },
+                "example": {
+                  "programUuid": "9f5c0a22-8c3e-4e9e-8f0a-3c1f87dfe921",
+                  "title": "2026 상반기 AI 개발자 멘토링",
+                  "description": "현직자가 전하는 실무 특강",
+                  "applyStartDate": "2026-02-01",
+                  "applyEndDate": "2026-02-10",
+                  "programStartDate": "2026-02-15",
+                  "programEndDate": "2026-02-15",
+                  "capacity": 100,
+                  "targetAudience": "재학생 전체",
+                  "location": "본관 대강당",
+                  "contact": "02-1234-5678",
+                  "preparation": "노트북 지참",
+                  "mentorEmails": ["mentor1@company.com", "mentor2@company.com"]
+                }
+              }
+            }
+          },
+          "404": { "description": "존재하지 않는 프로그램" }
+        }
+      }
+    },
+
+  "/mentorship/applications": {
       "post": {
         "tags": ["Mentorship Application"],
         "summary": "멘토링 신청 생성",
@@ -333,6 +454,102 @@
         "description": "멘토링 신청 상태",
         "enum": ["SUBMITTED", "ACCEPTED", "REJECTED"]
       },
+
+      "ProgramSummaryPage": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "array", "items": { "$ref": "#/components/schemas/ProgramSummary" } },
+          "totalElements": { "type": "integer" },
+          "totalPages": { "type": "integer" },
+          "number": { "type": "integer", "description": "현재 페이지 번호" },
+          "size": { "type": "integer", "description": "페이지 사이즈" }
+        }
+      },
+
+      "ProgramSummary": {
+        "type": "object",
+        "properties": {
+          "programUuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "프로그램 UUID"
+          },
+          "title": {
+            "type": "string",
+            "description": "프로그램 제목"
+          },
+
+          "applyStartDate": {
+            "type": "string",
+            "format": "date",
+            "description": "신청 시작일"
+          },
+          "applyEndDate": {
+            "type": "string",
+            "format": "date",
+            "description": "신청 종료일"
+          },
+
+          "programStartDate": {
+            "type": "string",
+            "format": "date",
+            "description": "프로그램 시작일"
+          },
+          "programEndDate": {
+            "type": "string",
+            "format": "date",
+            "description": "프로그램 종료일"
+          },
+
+          "capacity": {
+            "type": "integer",
+            "description": "모집 인원"
+          },
+          "contact": {
+            "type": "string",
+            "description": "문의처"
+          }
+        },
+        "required": [
+          "programUuid",
+          "title",
+          "applyStartDate",
+          "applyEndDate",
+          "programStartDate",
+          "programEndDate",
+          "capacity",
+          "contact"
+        ]
+      },
+
+      "ProgramDetailResponse": {
+        "type": "object",
+        "properties": {
+          "programUuid": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+
+          "applyStartDate": { "type": "string", "format": "date" },
+          "applyEndDate": { "type": "string", "format": "date" },
+
+          "programStartDate": { "type": "string", "format": "date" },
+          "programEndDate": { "type": "string", "format": "date" },
+
+          "capacity": { "type": "integer" },
+          "currentApplicants": { "type": "integer", "format": "int64" },
+
+          "targetAudience": { "type": "string" },
+          "location": { "type": "string" },
+          "contact": { "type": "string" },
+          "preparation": { "type": "string" },
+
+          "mentorEmails": {
+            "type": "array",
+            "items": { "type": "string", "format": "email" }
+          }
+        }
+      },
+
       "ApplicationCreateRequest": {
         "type": "object",
         "required": [

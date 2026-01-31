@@ -80,6 +80,7 @@ public class MentoringProgram extends BaseEntity {
             joinColumns = @JoinColumn(name = "program_id"),
             inverseJoinColumns = @JoinColumn(name = "mentor_profile_id")
     )
+    @Builder.Default
     private List<MentorProfile> mentors = new ArrayList<>();
 
     // =========================
@@ -112,7 +113,7 @@ public class MentoringProgram extends BaseEntity {
                 .location(location)
                 .contact(contact)
                 .preparation(preparation)
-                .mentors(mentors)
+                .mentors(mentors == null ? new ArrayList<>() : mentors)
                 .build();
     }
 }

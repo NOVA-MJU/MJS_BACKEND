@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
-public interface ProgramAdminQueryService {
+public interface ProgramQueryService {
 
     /**
      * 프로그램 목록 조회 (Pagination)

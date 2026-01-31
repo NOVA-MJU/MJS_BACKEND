@@ -118,7 +118,10 @@ public class ProgramAdminDTO {
         private LocalDate programStartDate;
         private LocalDate programEndDate;
 
-        private int mentorCount;
+        // 모집인원
+        private int capacity;
+        // 문의처
+        private String contact;
 
         public static SummaryResponse fromEntity(MentoringProgram program) {
             return SummaryResponse.builder()
@@ -128,7 +131,8 @@ public class ProgramAdminDTO {
                     .applyEndDate(program.getApplyEndDate())
                     .programStartDate(program.getProgramStartDate())
                     .programEndDate(program.getProgramEndDate())
-                    .mentorCount(program.getMentors().size())
+                    .capacity(program.getCapacity())
+                    .contact(program.getContact())
                     .build();
         }
     }
@@ -143,7 +147,6 @@ public class ProgramAdminDTO {
 
         private UUID programUuid;
         private String title;
-        private String description;
 
         /** 신청 기간 */
         private LocalDate applyStartDate;
@@ -154,14 +157,19 @@ public class ProgramAdminDTO {
         private LocalDate programEndDate;
 
         private int capacity;
+        // 현재 신청 인원
+        private long currentApplicants;
+
+        private String contact;
         private String targetAudience;
         private String location;
-        private String contact;
+
+        private String description;
         private String preparation;
 
         private List<String> mentorEmails;
 
-        public static DetailResponse fromEntity(MentoringProgram program) {
+        public static DetailResponse fromEntity(MentoringProgram program, long currentApplicants) {
             return DetailResponse.builder()
                     .programUuid(program.getUuid())
                     .title(program.getTitle())
@@ -171,6 +179,7 @@ public class ProgramAdminDTO {
                     .programStartDate(program.getProgramStartDate())
                     .programEndDate(program.getProgramEndDate())
                     .capacity(program.getCapacity())
+                    .currentApplicants(currentApplicants)
                     .targetAudience(program.getTargetAudience())
                     .location(program.getLocation())
                     .contact(program.getContact())

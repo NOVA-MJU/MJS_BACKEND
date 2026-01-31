@@ -1,6 +1,8 @@
 package nova.mjs.domain.mentorship.program.service.query;
 
 import lombok.RequiredArgsConstructor;
+import nova.mjs.domain.mentorship.application.entity.MentorshipApplication;
+import nova.mjs.domain.mentorship.application.repository.MentorshipApplicationRepository;
 import nova.mjs.domain.mentorship.program.dto.ProgramAdminDTO;
 import nova.mjs.domain.mentorship.program.entity.MentoringProgram;
 import nova.mjs.domain.mentorship.program.repository.MentoringProgramRepository;
@@ -17,10 +19,11 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ProgramAdminQueryServiceImpl
-        implements ProgramAdminQueryService {
+public class ProgramQueryServiceImpl
+        implements ProgramQueryService {
 
     private final MentoringProgramRepository programRepository;
+    private final MentorshipApplicationRepository applicationRepository;
 
     @Override
     public Page<ProgramAdminDTO.SummaryResponse> getPrograms(Pageable pageable) {
@@ -33,6 +36,11 @@ public class ProgramAdminQueryServiceImpl
         MentoringProgram program = programRepository.findDetailByUuid(uuid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프로그램입니다."));
 
-        return ProgramAdminDTO.DetailResponse.fromEntity(program);
+        long currentApplicants =
+                applicationRepository.countByProgramUuidAndStatus(
+                        uuid,
+                        MentorshipApplication.ApplicationStatus.SUBMITTED
+                );
+        return ProgramAdminDTO.DetailResponse.fromEntity(program, currentApplicants);
     }
 }

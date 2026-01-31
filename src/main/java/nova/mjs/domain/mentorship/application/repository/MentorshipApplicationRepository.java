@@ -20,4 +20,10 @@ public interface MentorshipApplicationRepository
 
     @EntityGraph(attributePaths = {"applicant", "mentor"})
     Page<MentorshipApplication> findByMentor(Member mentor, Pageable pageable);
+
+
+    long countByProgramUuidAndStatus(
+            UUID programUuid,
+            MentorshipApplication.ApplicationStatus status
+    );
 }

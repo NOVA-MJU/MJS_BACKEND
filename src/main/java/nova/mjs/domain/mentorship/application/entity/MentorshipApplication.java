@@ -2,6 +2,7 @@ package nova.mjs.domain.mentorship.application.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.domain.mentorship.program.entity.MentoringProgram;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.util.entity.BaseEntity;
 
@@ -71,6 +72,10 @@ public class MentorshipApplication extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ApplicationStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private MentoringProgram program;
+
 
     /* =========================
        내부 상태 enum
