@@ -164,6 +164,22 @@ public class NewsService {
                     List<Long> idxList = new ArrayList<>(candidates.keySet());
                     Set<Long> existingIdxSet = new HashSet<>(newsRepository.findExistingNewsIndexIn(idxList));
 
+                    log.info(
+                            "page={}, candidatesSize={}, existingSize={}, newSize={}",
+                            page,
+                            candidates.size(),
+                            existingIdxSet.size(),
+                            candidates.size() - existingIdxSet.size()
+                    );
+
+                    log.info(
+                            "page={}, sampleCandidateIdx={}, sampleExistingIdx={}",
+                            page,
+                            candidates.keySet().stream().limit(5).toList(),
+                            existingIdxSet.stream().limit(5).toList()
+                    );
+
+
                     // ✅ 신규만 엔티티 생성해서 newsList에 추가
                     for (Candidate c : candidates.values()) {
                         if (existingIdxSet.contains(c.newsIndex())) {
