@@ -78,9 +78,44 @@ public class NewsService {
 
             while (!stop) {
                 try {
-                    String url = BASE_URL + categoryCode + "&view_type=sm&page=" + page;
-                    Document doc = Jsoup.connect(url).get();
+                    // ====== [추가] URL 구성 (정렬 파라미터 실험은 여기서) ======
+                    // 기존:
+                    // String url = BASE_URL + categoryCode + "&view_type=sm&page=" + page;
+
+                    // (추천) 최신순 정렬 파라미터 후보: sc_order_by=E
+                    // 실제 사이트가 어떤 파라미터를 쓰는지에 따라 바뀔 수 있습니다.
+                    String url = BASE_URL + categoryCode + "&view_type=sm&sc_order_by=E&page=" + page;
+
+                    log.info("[crawl] cat={}, page={}, url={}", cat, page, url);
+
+                    // ====== [추가] User-Agent / timeout / redirect / statusCode 확인 ======
+                    org.jsoup.Connection.Response res = Jsoup.connect(url)
+                            .userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+                            .timeout(10_000)
+                            .followRedirects(true)
+                            .execute();
+
+                    log.info("[crawl] http status={}, finalUrl={}", res.statusCode(), res.url());
+
+                    Document doc = res.parse();
+
+                    // ====== [추가] 셀렉터별로 기사 블록 개수 비교 ======
+                    int sel1 = doc.select(".article-list-content.type-sm .list-block").size();
+                    int sel2 = doc.select(".article-list-content .list-block").size();
+                    int sel3 = doc.select(".list-block").size();
+
+                    log.info("[crawl] selectorCounts: sel1(type-sm)={}, sel2(article-list-content)={}, sel3(all list-block)={}",
+                            sel1, sel2, sel3);
+
+                    // 기존 선택자
                     Elements articles = doc.select(".article-list-content.type-sm .list-block");
+
+                    // ====== [추가] 만약 sel1이 0인데 sel3는 크면, 선택자 문제 가능성 높음 ======
+                    // 디버그 편의상, sel1이 0이면 더 넓은 선택자로 fallback (원인 파악 후 정식 수정 권장)
+                    if (articles.isEmpty() && sel3 > 0) {
+                        log.warn("[crawl] sel1 결과가 비어 fallback 적용: .list-block 기준으로 파싱합니다.");
+                        articles = doc.select(".list-block");
+                    }
 
                     if (articles.isEmpty()) {
                         log.warn("페이지 {}에서 더 이상 기사를 찾을 수 없음", page);
@@ -89,6 +124,8 @@ public class NewsService {
 
                     // ✅ 이번 페이지에서 파싱한 기사 후보를 먼저 모음 (newsIndex로 dedupe)
                     Map<Long, Candidate> candidates = new LinkedHashMap<>();
+
+                    boolean firstLogged = false; // ====== [추가] 첫 기사(또는 첫 파싱 성공 기사)만 상세 로깅 ======
 
                     for (Element article : articles) {
                         String linkPath = article.select(".list-titles a").attr("href");
@@ -120,7 +157,12 @@ public class NewsService {
 
                         String bylineText = article.select(".list-dated").text();
 
-                        if (!bylineText.isBlank()) {
+                        // ====== [추가] bylineText가 비어있으면 경고 ======
+                        if (bylineText == null || bylineText.isBlank()) {
+                            log.warn("[crawl] bylineText empty. page={}, idx={}, link={}", page, newsIndex, link);
+                        }
+
+                        if (bylineText != null && !bylineText.isBlank()) {
                             String[] parts = Arrays.stream(bylineText.split("\\|"))
                                     .map(String::trim)
                                     .filter(s -> !s.isEmpty())
@@ -129,15 +171,33 @@ public class NewsService {
                             if (parts.length >= 2) {
                                 String rawDate = parts[parts.length - 1];
                                 date = parseDate(rawDate);
+
+                                // ====== [추가] 날짜 파싱 실패 시 rawDate/bylineText 로깅 ======
+                                if (date == null) {
+                                    log.warn("[crawl] date parse fail. rawDate='{}', bylineText='{}', link={}", rawDate, bylineText, link);
+                                }
+
                                 reporter = parts[parts.length - 2];
                             } else if (parts.length == 1) {
-                                date = parseDate(parts[0]);
+                                String rawDate = parts[0];
+                                date = parseDate(rawDate);
+
+                                if (date == null) {
+                                    log.warn("[crawl] date parse fail. rawDate='{}', bylineText='{}', link={}", rawDate, bylineText, link);
+                                }
                             }
                         }
 
                         if (date == null) {
                             log.warn("날짜 파싱 실패로 기사 스킵(날짜가 존재하지 않음): {}", link);
                             continue;
+                        }
+
+                        // ====== [추가] 첫 파싱 성공 기사 1개만 상세로 찍기 (page별) ======
+                        if (!firstLogged) {
+                            log.info("[crawl] firstArticle page={}, idx={}, date={}, title='{}', byline='{}'",
+                                    page, newsIndex, date, title, bylineText);
+                            firstLogged = true;
                         }
 
                         // 2023 이하(= MIN_YEAR_TO_CRAWL 미만) 등장하면 이후는 더 오래된 기사이므로 종료 (최신순 가정)
@@ -147,10 +207,15 @@ public class NewsService {
                         }
 
                         // ✅ 후보 등록 (같은 페이지에서 중복 idx면 최초만 유지)
-                        candidates.putIfAbsent(
+                        Candidate prev = candidates.putIfAbsent(
                                 newsIndex,
                                 new Candidate(newsIndex, title, date, reporter, imageUrl, summary, link)
                         );
+
+                        // ====== [추가] 페이지 내 중복 idx 감지 ======
+                        if (prev != null) {
+                            log.warn("[crawl] 페이지 내 중복 idx 감지: page={}, idx={}, link={}", page, newsIndex, link);
+                        }
                     }
 
                     // stop이 걸렸고 후보가 없으면 종료
@@ -178,7 +243,6 @@ public class NewsService {
                             candidates.keySet().stream().limit(5).toList(),
                             existingIdxSet.stream().limit(5).toList()
                     );
-
 
                     // ✅ 신규만 엔티티 생성해서 newsList에 추가
                     for (Candidate c : candidates.values()) {
@@ -219,6 +283,7 @@ public class NewsService {
 
         return responseList;
     }
+
 
     // ✅ NewsService 클래스 내부(하단)에 추가
     private record Candidate(
