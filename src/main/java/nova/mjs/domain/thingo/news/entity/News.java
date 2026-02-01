@@ -2,7 +2,7 @@ package nova.mjs.domain.thingo.news.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.util.ElasticSearch.EntityListner.NewsEntityListener;
+import nova.mjs.domain.mentorship.ElasticSearch.EntityListner.NewsEntityListener;
 
 import java.time.LocalDateTime;
 
