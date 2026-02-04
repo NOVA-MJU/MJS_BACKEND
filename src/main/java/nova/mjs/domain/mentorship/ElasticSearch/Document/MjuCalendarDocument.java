@@ -43,11 +43,9 @@ public class MjuCalendarDocument implements SearchDocument  {
         return SearchType.MJU_CALENDAR.name();
     }
 
-    @Override
-    public LocalDateTime getDate() {
-        return date != null
-                ? date.atZone(ZoneId.systemDefault()).toLocalDateTime()
-                : null;
+     @Override
+    public Instant getInstant() {
+        return date;
     }
 
     public static MjuCalendarDocument from(MjuCalendar mjuCalendar) {

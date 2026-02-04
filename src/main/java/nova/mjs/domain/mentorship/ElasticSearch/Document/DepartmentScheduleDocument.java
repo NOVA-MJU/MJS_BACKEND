@@ -44,11 +44,9 @@ public class DepartmentScheduleDocument implements SearchDocument{
         return SearchType.DEPARTMENT_SCHEDULE.name();
     }
 
-    @Override
-    public LocalDateTime getDate() {
-        return date != null
-                ? date.atZone(ZoneId.systemDefault()).toLocalDateTime()
-                : null;
+     @Override
+    public Instant getInstant() {
+        return date;
     }
     public static DepartmentScheduleDocument from(DepartmentSchedule schedule) {
         return DepartmentScheduleDocument.builder()

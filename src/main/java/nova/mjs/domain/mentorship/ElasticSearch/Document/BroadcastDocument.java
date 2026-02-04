@@ -48,11 +48,9 @@ public class BroadcastDocument implements SearchDocument {
         return SearchType.BROADCAST.name();
     }
 
-    @Override
-    public LocalDateTime getDate() {
-        return date != null
-                ? date.atZone(ZoneId.systemDefault()).toLocalDateTime()
-                : null;
+     @Override
+    public Instant getInstant() {
+        return date;
     }
 
     @Override

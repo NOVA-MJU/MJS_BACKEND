@@ -4,29 +4,29 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import lombok.RequiredArgsConstructor;
+import nova.mjs.domain.mentorship.ElasticSearch.EventSynchronization.notice.NoticeIndexEvent;
 import nova.mjs.domain.thingo.notice.entity.Notice;
-import nova.mjs.domain.mentorship.ElasticSearch.Document.NoticeDocument;
-import nova.mjs.domain.mentorship.ElasticSearch.EventSynchronization.EntityIndexEvent;
-import nova.mjs.domain.mentorship.ElasticSearch.EventSynchronization.SearchIndexPublisher;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class NoticeEntityListener {
-    private final SearchIndexPublisher publisher;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @PostPersist
     public void afterCreate(Notice notice) {
-        publisher.publish(NoticeDocument.from(notice), EntityIndexEvent.IndexAction.INSERT);
+        eventPublisher.publishEvent(NoticeIndexEvent.insert(notice));
     }
 
     @PostUpdate
-    public void afterSave(Notice notice) {
-        publisher.publish(NoticeDocument.from(notice), EntityIndexEvent.IndexAction.UPDATE);
+    public void afterUpdate(Notice notice) {
+        eventPublisher.publishEvent(NoticeIndexEvent.update(notice));
     }
 
     @PostRemove
     public void afterDelete(Notice notice) {
-        publisher.publish(NoticeDocument.builder().id(notice.getId().toString()).build(), EntityIndexEvent.IndexAction.DELETE);
+        eventPublisher.publishEvent(NoticeIndexEvent.delete(notice.getId()));
     }
 }

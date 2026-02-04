@@ -47,11 +47,9 @@ public class NewsDocument implements SearchDocument {
         return SearchType.NEWS.name();
     }
 
-    @Override
-    public LocalDateTime getDate() {
-        return date != null
-                ? date.atZone(ZoneId.systemDefault()).toLocalDateTime()
-                : null;
+     @Override
+    public Instant getInstant() {
+        return date;
     }
 
     @Override

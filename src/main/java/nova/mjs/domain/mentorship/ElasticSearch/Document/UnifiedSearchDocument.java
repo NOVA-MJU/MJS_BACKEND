@@ -4,30 +4,29 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.time.Instant;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(indexName = "search_unified") // 통합 인덱스명
+@Document(indexName = "search_unified")
 public class UnifiedSearchDocument {
 
     @Id
-    private String id;          // "NOTICE:{pk}" 같은 형태 추천 (충돌 방지)
+    private String id;              // TYPE:ORIGINAL_ID
 
     @Field(type = FieldType.Keyword)
-    private String type;        // NOTICE / COMMUNITY / ...
+    private String originalId;      // 원 도메인 문서 id
+
+    @Field(type = FieldType.Keyword)
+    private String type;            // NOTICE / COMMUNITY / ...
 
     @Field(type = FieldType.Text)
     private String title;
 
     @Field(type = FieldType.Text)
     private String content;
-
-    @Field(type = FieldType.Date, format = DateFormat.date_time)
-    private LocalDateTime date;
 
     @Field(type = FieldType.Keyword)
     private String category;
@@ -38,15 +37,16 @@ public class UnifiedSearchDocument {
     @Field(type = FieldType.Keyword)
     private String imageUrl;
 
-    // 운영 안정용
-    @Field(type = FieldType.Date, format = DateFormat.date_time)
-    private LocalDateTime updatedAt;
+    @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
+    private Instant date;
+
+    @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
+    private Instant updatedAt;
 
     @Field(type = FieldType.Boolean)
     private Boolean active;
 
-    // completion suggester를 쓸 거면 mapping에서 completion 타입으로 잡아야 함
-    // Spring Data Elasticsearch에서 completion 설정은 설정/매핑으로 관리 권장
-    @Field(type = FieldType.Keyword) // (임시) 실제로는 completion으로 매핑 권장
-    private List<String> suggest;
+    /** 인기도/권위 등 랭킹 신호 (있으면 강력해짐) */
+    @Field(type = FieldType.Double)
+    private Double popularity;
 }

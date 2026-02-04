@@ -8,9 +8,15 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class SearchIndexPublisher {
+
     private final ApplicationEventPublisher eventPublisher;
 
-    public <T extends SearchDocument> void publish(T document, EntityIndexEvent.IndexAction action) {
-        eventPublisher.publishEvent(new EntityIndexEvent<>(document, action));
+    public <T extends SearchDocument> void publish(
+            T document,
+            EntityIndexEvent.IndexAction action
+    ) {
+        eventPublisher.publishEvent(
+                new EntityIndexEvent<>(document, action)
+        );
     }
 }

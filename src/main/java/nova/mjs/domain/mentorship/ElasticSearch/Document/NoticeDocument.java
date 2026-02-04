@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nova.mjs.domain.mentorship.ElasticSearch.EventSynchronization.SearchContentPreprocessor;
 import nova.mjs.domain.thingo.notice.entity.Notice;
 import nova.mjs.domain.mentorship.ElasticSearch.SearchType;
 import nova.mjs.config.elasticsearch.KomoranTokenizerUtil;
@@ -11,7 +12,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -46,18 +46,18 @@ public class NoticeDocument implements SearchDocument{
         return SearchType.NOTICE.name();
     }
 
-    @Override
-    public LocalDateTime getDate() {
-        return date != null
-                ? date.atZone(ZoneId.systemDefault()).toLocalDateTime()
-                : null;
+     @Override
+    public Instant getInstant() {
+        return date;
     }
 
-    public static NoticeDocument from(Notice notice) {
+    public static NoticeDocument from(
+            Notice notice,
+            SearchContentPreprocessor preprocessor) {
         return NoticeDocument.builder()
                 .id(notice.getId().toString())
                 .title(notice.getTitle())
-                .content(notice.getContent())
+                .content(preprocessor.normalize(notice.getContent()))
                 .date(notice.getDate().atZone(ZoneId.systemDefault()).toInstant())
                 .link(notice.getLink())
                 .category(notice.getCategory())

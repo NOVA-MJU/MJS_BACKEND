@@ -44,11 +44,9 @@ public class DepartmentNoticeDocument implements SearchDocument{
         return SearchType.DEPARTMENT_NOTICE.name();
     }
 
-    @Override
-    public LocalDateTime getDate() {
-        return date != null
-                ? date.atZone(ZoneId.systemDefault()).toLocalDateTime()
-                : null;
+     @Override
+    public Instant getInstant() {
+        return date;
     }
 
     public static DepartmentNoticeDocument from(DepartmentNotice departmentNotice) {

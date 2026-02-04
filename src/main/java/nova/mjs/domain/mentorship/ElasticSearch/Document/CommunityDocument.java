@@ -56,11 +56,9 @@ public class CommunityDocument implements SearchDocument {
      * Elasticsearch 색인을 위한 날짜 변환
      * - 저장된 date(Instant)를 LocalDateTime으로 변환
      */
-    @Override
-    public LocalDateTime getDate() {
-        return date != null
-                ? date.atZone(ZoneId.systemDefault()).toLocalDateTime()
-                : null;
+     @Override
+    public Instant getInstant() {
+        return date;
     }
 
     /**
