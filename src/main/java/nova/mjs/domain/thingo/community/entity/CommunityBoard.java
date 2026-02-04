@@ -7,7 +7,7 @@ import nova.mjs.domain.thingo.community.comment.entity.Comment;
 import nova.mjs.domain.thingo.community.entity.enumList.CommunityCategory;
 import nova.mjs.domain.thingo.community.likes.entity.CommunityLike;
 import nova.mjs.domain.thingo.member.entity.Member;
-import nova.mjs.domain.mentorship.ElasticSearch.EntityListner.CommunityEntityListener;
+import nova.mjs.domain.thingo.ElasticSearch.EntityListner.CommunityEntityListener;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.time.LocalDateTime;

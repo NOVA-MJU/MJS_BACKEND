@@ -9,11 +9,48 @@
     { "url": "https://api.mjsearch.org/api/v1" }
   ],
   "tags": [
+    { "name": "AI", "description": "Gemini와 Rag를 활용한 AI 연관 검색어" },
     { "name": "Search", "description": "Elasticsearch 연동을 통한 통합 검색 및 데이터 인덱싱 기능" },
     { "name": "Suggest", "description": "검색어 자동완성(연관어) 추천 기능" },
     { "name": "RealtimeKeyword", "description": "실시간 검색어 기록 및 조회 기능" }
   ],
   "paths": {
+    "/ai/summary": {
+      "get": {
+        "tags": ["AI"],
+        "summary": "검색어 기반 AI 요약",
+        "description": "검색어를 기준으로 Elasticsearch 문서를 분석하고, AI 모델을 통해 핵심 내용을 요약합니다. 요약 결과와 함께 요약에 사용된 문서 수 및 출처 링크를 반환합니다.",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "요약을 생성할 검색어"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI 요약 결과 반환",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AiSummaryResponse" },
+                "example": {
+                  "query": "졸업",
+                  "summary": "### 검색어 '졸업' - AI 요약\n\n2025년 8월 졸업 예정이거나 기졸업생을 위한 국민취업지원제도 참여 안내와 2025년 2월 졸업 대상자의 졸업사정 결과 조회, 2024학년도 후기 학위수여식 안내입니다.\n\n- 현재 기준으로 새로 공지된 일정은 아직 없습니다.\n  (참고) 2025년 8월 13일 9:00 ~ 2025년 8월 20일 17:00 (졸업사정 결과 조회 기간)\n\n2025년 8월 졸업예정자 및 기졸업생은 국민취업지원제도를 신청하여 인적성 무료 검사, 모의 면접 등의 취업 지원 혜택을 받을 수 있습니다.",
+                  "document_count": 8,
+                  "source_links": [
+                    "https://www.mju.ac.kr/mjukr/255/subview.do?...",
+                    "https://news.mju.ac.kr/news/articleView.html?idxno=13590"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
     "/search/sync": {
       "post": {
         "tags": ["Search"],
@@ -310,6 +347,32 @@
       }
     },
     "schemas": {
+      "AiSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "사용자가 입력한 검색어"
+          },
+          "summary": {
+            "type": "string",
+            "description": "AI가 생성한 요약 결과 (Markdown 형식 가능)"
+          },
+          "document_count": {
+            "type": "integer",
+            "description": "요약에 사용된 Elasticsearch 문서 수"
+          },
+          "source_links": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "요약에 사용된 원문 출처 링크 목록"
+          }
+        },
+        "required": ["query", "summary", "document_count", "source_links"]
+      },
       "ApiResponsePageSearchResult": {
         "type": "object",
         "properties": {

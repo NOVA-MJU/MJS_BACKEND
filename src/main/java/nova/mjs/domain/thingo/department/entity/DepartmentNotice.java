@@ -2,7 +2,7 @@ package nova.mjs.domain.thingo.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.domain.mentorship.ElasticSearch.EntityListner.DepartmentNoticeEntityListener;
+import nova.mjs.domain.thingo.ElasticSearch.EntityListner.DepartmentNoticeEntityListener;
 import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeRequestDTO;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.util.s3.S3DomainType;

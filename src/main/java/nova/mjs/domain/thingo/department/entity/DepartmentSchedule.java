@@ -3,7 +3,7 @@ package nova.mjs.domain.thingo.department.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleRequestDTO;
-import nova.mjs.domain.mentorship.ElasticSearch.EntityListner.DepartmentScheduleEntityListener;
+import nova.mjs.domain.thingo.ElasticSearch.EntityListner.DepartmentScheduleEntityListener;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.time.LocalDate;

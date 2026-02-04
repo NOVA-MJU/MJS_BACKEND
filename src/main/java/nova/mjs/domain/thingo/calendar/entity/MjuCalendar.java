@@ -3,7 +3,7 @@ package nova.mjs.domain.thingo.calendar.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.domain.thingo.calendar.dto.MjuCalendarDTO;
-import nova.mjs.domain.mentorship.ElasticSearch.EntityListner.MjuCalendarEntityListener;
+import nova.mjs.domain.thingo.ElasticSearch.EntityListner.MjuCalendarEntityListener;
 
 import java.time.LocalDate;
 
