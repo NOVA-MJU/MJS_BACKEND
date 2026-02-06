@@ -33,8 +33,28 @@ public class Broadcast {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    private LocalDateTime lastSyncedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void syncFromYoutube(
+            String title,
+            String thumbnailUrl,
+            LocalDateTime publishedAt,
+            String playlistTitle,
+            LocalDateTime syncTime
+    ) {
+        this.title = title;
+        this.thumbnailUrl = thumbnailUrl;
+        this.publishedAt = publishedAt;
+
+        if (playlistTitle != null && !playlistTitle.isBlank()) {
+            this.playlistTitle = playlistTitle;
+        }
+
+        this.lastSyncedAt = syncTime;
     }
 }

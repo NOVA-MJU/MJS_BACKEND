@@ -81,7 +81,10 @@ public enum ErrorCode {
     DEPARTMENT_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_SCHEDULE_NOT_FOUND", "[MJS] 존재하지 않는 학과 일정입니다."),
 
     // 멘토관 서비스 관련 에러
-    MENTOR_NOT_FOUND(HttpStatus.NOT_FOUND,"MENTOR_NOT_FOUND" ,"[MJS] 멘토 정보를 찾을 수 없습니다." );
+    MENTOR_NOT_FOUND(HttpStatus.NOT_FOUND,"MENTOR_NOT_FOUND" ,"[MJS] 멘토 정보를 찾을 수 없습니다." ),
+
+    // 명대방송국 관련 에러
+    BROADCAST_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "BROADCAST_SYNC_FAILED", "[MJS] Broadcast 동기화에 실패했습니다.");
 
     private final HttpStatus status;
     private final String error;
