@@ -6,8 +6,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +40,13 @@ public class NoticeCrawlingService {
      */
     private static final String SUBVIEW_BASE =
             "https://www.mju.ac.kr/mjukr/255/subview.do?enc=";
+
+    /**
+     * 반복 공지/재게시 정리 기준(휴리스틱)
+     * - "최근 1개월" 이내 동일 title 교체 대상 탐색 범위
+     * - 운영 안정성을 위해 범위를 반드시 제한한다.
+     */
+    private static final int DUPLICATE_WINDOW_MONTHS = 1;
 
     /**
      * 모든 공지 크롤링 진입점.
@@ -105,7 +114,6 @@ public class NoticeCrawlingService {
      *
      * 중단 정책:
      * - 오래된 공지를 만나면 더 이상 볼 필요가 없으므로 즉시 중단한다.
-     * - 이미 DB에 존재하는 최신 공지를 만나면 "이 카테고리는 이미 최신 상태"로 보고 즉시 중단한다.
      */
     private void crawlSingleCategory(String category, String path) {
 
@@ -116,16 +124,22 @@ public class NoticeCrawlingService {
         /*
          * 저장 버퍼.
          * - DB 저장은 마지막에 한 번만 수행하여 트랜잭션 및 flush 횟수를 줄인다.
-         * - 초기 크기는 임의값이며, 실제 공지 평균 수에 맞춰 조정할 수 있다.
          */
         List<Notice> toSave = new ArrayList<>(32);
+
+        /*
+         * (선택) 최근 1개월 목록 동기화를 위한 링크 수집.
+         * - 크롤링 결과에 없는 DB row를 정리하는 cleanup에 사용한다.
+         * - 최근 범위만 다루기 때문에 리스트가 커지지 않는다.
+         */
+        LocalDateTime recentThreshold = LocalDateTime.now().minusMonths(DUPLICATE_WINDOW_MONTHS);
+        Set<String> crawledLinksRecent = new HashSet<>(128);
 
         while (!stop) {
 
             /*
              * 목록 페이지 크롤링.
              * - Helper에서 네트워크/파싱/셀렉터를 담당한다.
-             * - 여기서 예외가 발생하면 해당 카테고리만 중단된다(상위에서 category 단위 격리).
              */
             Elements rows = NoticeCrawlHelper.crawlList(path, page);
             if (rows.isEmpty()) {
@@ -135,10 +149,8 @@ public class NoticeCrawlingService {
             for (Element row : rows) {
                 /*
                  * row 처리 결과가 stop이면, 현재 카테고리 크롤링을 즉시 종료한다.
-                 * - 중복 공지 발견 시, 이후 페이지에 더 최신 공지가 나올 가능성이 낮으므로 종료한다.
-                 * - cutoffYear 기준으로 오래된 공지를 만나면 더 이상 의미가 없어 종료한다.
                  */
-                stop = processRow(row, category, cutoffYear, toSave);
+                stop = processRow(row, category, cutoffYear, recentThreshold, crawledLinksRecent, toSave);
                 if (stop) {
                     break;
                 }
@@ -149,38 +161,48 @@ public class NoticeCrawlingService {
 
         /*
          * DB 저장은 마지막에 한 번만 수행한다.
-         * - 트랜잭션을 짧게 유지하여 커넥션 점유 시간을 최소화한다.
-         * - saveAll이 "Spring Batch"는 아니지만, 반복 save()에 비해 flush/트랜잭션 비용이 줄어든다.
-         * - 대량 insert 최적화가 필요하다면 hibernate.jdbc.batch_size 등의 설정을 추가로 고려한다.
          */
         applicationContext
                 .getBean(NoticeCrawlingService.class)
                 .saveNotices(toSave);
 
-        log.info("[MJS] category={} 크롤링 종료. 저장 대상 {}건", category, toSave.size());
+        /*
+         * (선택) 최근 1개월 범위 동기화(cleanup)
+         * - 크롤링 목록에 없는 row를 제거한다.
+         * - 오래된 데이터는 건드리지 않는다.
+         */
+        applicationContext
+                .getBean(NoticeCrawlingService.class)
+                .cleanupRecentNotices(category, recentThreshold, crawledLinksRecent);
+
+        log.info("[MJS] category={} 크롤링 종료. 저장 대상 {}건, 최근 링크 {}건",
+                category, toSave.size(), crawledLinksRecent.size());
     }
 
     /**
-     * 목록 row 단위 처리.
+     * 목록 페이지의 단일 row를 처리한다.
      *
-     * 처리 순서(성능 최적화 관점):
-     * 1) 목록 데이터 파싱/정규화 (가벼움)
-     * 2) 중단 조건 검사(오래된 공지) (가벼움)
-     * 3) 중복 존재 여부 검사(DB) (중간 비용)
-     * 4) 상세 페이지 content 크롤링(네트워크 I/O) (가장 비쌈)
+     * 처리 목표:
+     * - "진짜 새로운 공지"만 DB 저장 대상으로 선별한다.
+     * - 중복/반복 공지는 최대한 이른 단계에서 차단하여
+     *   불필요한 네트워크 I/O(상세 페이지 크롤링)를 수행하지 않는다.
      *
-     * 가장 비싼 본문 크롤링을 "중복 체크 이후"로 배치하여 불필요한 네트워크 요청을 최소화한다.
-     *
-     * @return true면 현재 카테고리 크롤링을 중단한다.
+     * 중단(return true)과 스킵(return false)의 의미:
+     * - return true  : 이 row 이후의 공지는 더 이상 의미가 없다고 판단하여
+     *                  현재 카테고리 크롤링 자체를 종료한다.
+     * - return false : 이 row만 건너뛰고 다음 row 처리를 계속한다.
      */
     private boolean processRow(
             Element row,
             String category,
             int cutoffYear,
+            LocalDateTime recentThreshold,
+            Set<String> crawledLinksRecent,
             List<Notice> toSave
     ) {
 
-        // (1) 목록 페이지 데이터 추출
+        // (1) 목록 페이지에서 최소한의 메타 정보 추출
+        // - 이 단계에서는 가벼운 문자열 파싱만 수행한다.
         String rawDate = row.select("._artclTdRdate").text();
         String rawTitle = row.select(".artclLinkView strong").text();
         String rawLink = row.select(".artclLinkView").attr("href");
@@ -189,32 +211,125 @@ public class NoticeCrawlingService {
         String title = normalizeTitle(rawTitle);
 
         /*
-         * 목록 파싱 결과가 비정상인 경우 해당 row는 건너뛴다.
-         * - 이 경우는 실패가 아니라 "데이터 품질" 문제이므로 stop하지 않는다.
+         * (1-1) 파싱 결과 검증
+         * - 날짜나 제목이 없는 row는 비정상 데이터로 간주한다.
+         * - 이는 시스템 오류가 아닌 "원본 HTML 품질 문제"이므로
+         *   전체 크롤링을 중단하지 않고 해당 row만 스킵한다.
          */
         if (date == null || title.isEmpty()) {
             return false;
         }
 
-        // (2) 오래된 공지면 중단
+        /*
+         * (2) 오래된 공지 중단 조건
+         *
+         * - 목록은 최신 → 과거 순으로 내려온다고 가정한다.
+         * - cutoffYear 이전의 공지를 만나면
+         *   이후 페이지에는 더 최신 공지가 존재하지 않으므로
+         *   현재 카테고리 크롤링을 즉시 종료한다.
+         */
         if (date.getYear() <= cutoffYear) {
             return true;
         }
 
-        // (3) 중복 공지 체크: 이미 DB에 있으면 해당 카테고리는 최신 상태로 보고 중단
-        if (noticeRepository.existsByDateAndCategoryAndTitle(date, category, title)) {
-            return true;
-        }
-
-        // (4) 상세 페이지 링크 생성
+        /*
+         * (3-1) 상세 페이지 URL(enc) 생성
+         *
+         * - enc 값은 공지 게시글의 기술적 식별자 역할을 한다.
+         * - 동일 enc는 "완전히 동일한 게시글"로 간주한다.
+         */
         String finalUrl = SUBVIEW_BASE + encodeArtclViewToEnc(rawLink);
 
-        // (5) 상세 페이지 content 크롤링
+        /*
+         * (3-1-a) 최근 범위 링크 수집
+         * - cleanup(최근 1개월 동기화)에 사용한다.
+         */
+        if (!date.isBefore(recentThreshold)) {
+            crawledLinksRecent.add(finalUrl);
+        }
+
+        /*
+         * (3-2) 완전 중복 차단
+         *
+         * 조건:
+         * - 동일 category
+         * - 동일 상세 link(enc)
+         *
+         * 의미:
+         * - 이미 DB에 저장된 동일 게시글이므로
+         *   상세 페이지 크롤링을 수행할 필요가 없다.
+         *
+         * 처리 방식:
+         * - 이 row만 스킵하고 다음 row를 계속 처리한다.
+         */
+        if (noticeRepository.existsByCategoryAndLink(category, finalUrl)) {
+            return false;
+        }
+
+        /*
+         * (3-3) "동일 title 재게시" 교체 전략
+         *
+         * 배경:
+         * - 직원이 잘못 올렸다가 다시 올리는 케이스가 존재한다.
+         * - 이 경우 title은 동일하지만 link(enc)는 새로 생성된다.
+         *
+         * 전략:
+         * - 최근 1개월 내 동일 title의 최신 공지가 존재하면,
+         *   기존 DB row를 제거하고 "새 link 공지로 교체"한다.
+         *
+         * 주의:
+         * - 오래된 히스토리를 삭제하지 않기 위해 최근 1개월로 제한한다.
+         * - 동일 title이지만 서로 다른 진짜 공지가 존재할 수 있다는 리스크는
+         *   "최근 1개월 제한"으로 운영 리스크를 최소화한다.
+         */
+        LocalDateTime oneMonthAgo = date.minusMonths(DUPLICATE_WINDOW_MONTHS);
+
+        noticeRepository
+                .findTopByCategoryAndTitleAndDateAfterOrderByDateDesc(category, title, oneMonthAgo)
+                .ifPresent(existing -> {
+                    /*
+                     * 교체 조건:
+                     * - title은 동일
+                     * - link(enc)는 다름
+                     *
+                     * 동작:
+                     * - 기존 row를 제거하고 최신 공지로 교체한다.
+                     * - 실제 저장은 toSave에 의해 일괄 insert된다.
+                     */
+                    if (!finalUrl.equals(existing.getLink())) {
+                        noticeRepository.delete(existing);
+                        log.info("[MJS][NOTICE][REPLACE] category={} title='{}' oldLink={} newLink={}",
+                                category, title, existing.getLink(), finalUrl);
+                    }
+                });
+
+        /*
+         * (4) 상세 페이지 본문 크롤링
+         *
+         * - 여기까지 도달한 경우에만
+         *   "새롭고 의미 있는 공지"라고 판단한다.
+         * - 네트워크 I/O가 가장 비싼 단계이므로
+         *   모든 중복/교체 판단 이후에 수행한다.
+         */
         String content = NoticeCrawlHelper.crawlContent(finalUrl);
 
-        // (6) 엔티티 생성 및 저장 버퍼 적재
-        toSave.add(Notice.createNotice(title, content, date, category, finalUrl));
+        /*
+         * (5) 엔티티 생성 및 저장 버퍼 적재
+         *
+         * - 실제 DB 저장은 카테고리 크롤링이 끝난 후
+         *   saveAll()로 한 번에 수행된다.
+         */
+        toSave.add(
+                Notice.createNotice(
+                        title,
+                        content,
+                        date,
+                        category,
+                        finalUrl
+                )
+        );
 
+        // 다음 row 처리를 계속한다.
         return false;
     }
 
@@ -229,6 +344,30 @@ public class NoticeCrawlingService {
     protected void saveNotices(List<Notice> notices) {
         if (!notices.isEmpty()) {
             noticeRepository.saveAll(notices);
+        }
+    }
+
+    /**
+     * (선택) 최근 1개월 범위 동기화(cleanup)
+     *
+     * 목적:
+     * - "목록에 더 이상 존재하지 않는 공지"가 DB에 남아있는 경우를 정리한다.
+     *
+     * 주의:
+     * - 반드시 최근 범위로 제한한다(운영 안정성).
+     * - 링크 목록이 비어있으면 실수로 전부 지우는 사고가 날 수 있으므로
+     *   안전장치로 early return 한다.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected void cleanupRecentNotices(String category, LocalDateTime threshold, Set<String> links) {
+        if (links == null || links.isEmpty()) {
+            log.warn("[MJS][NOTICE][CLEANUP] category={} skipped (links is empty)", category);
+            return;
+        }
+
+        int deleted = noticeRepository.deleteRecentNotInLinks(category, threshold, links);
+        if (deleted > 0) {
+            log.info("[MJS][NOTICE][CLEANUP] category={} deleted={} (threshold={})", category, deleted, threshold);
         }
     }
 
