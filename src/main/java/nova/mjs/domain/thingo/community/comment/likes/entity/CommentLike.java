@@ -32,4 +32,12 @@ public class CommentLike {
                 .build();
 
     }
+//    추가 권장(중복 좋아요 방지)
+//
+//    DB에 유니크 제약이 없으면 동시 요청에서 중복 좋아요 row가 생길 수 있어.
+//
+//    CommentLike(member_id, comment_id) 유니크 인덱스 권장
+//
+//    CommunityLike(member_id, community_board_id)도 동일
+
 }

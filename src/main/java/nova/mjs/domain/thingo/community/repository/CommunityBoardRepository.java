@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,25 +24,19 @@ import java.util.UUID;
  * - 게시글 단건 조회, 페이징 조회
  * - 인기글 조회 (likeCount DESC 상위 N개)
  * - 카테고리별 조회/제외 조회
+ * - 좋아요/댓글 집계 컬럼(likeCount/commentCount) 원자적 증감
  *
  * 주의
  * - @EntityGraph(attributePaths = "author") 로 author를 항상 함께 로딩해서
  *   Service 단에서 N+1 문제 없이 작성자 닉네임 등을 바로 DTO로 변환할 수 있도록 한다.
- * - 인기글 UUID를 제외하고 일반글을 조회할 때 NOT IN (:excluded)를 쓰므로,
- *   excluded 리스트가 비어있을 경우는 Service에서 분기 처리한다.
+ * - NOT IN (:excluded) 는 excluded가 비어있으면 오류가 날 수 있으니 Service에서 분기 처리한다.
+ * - 컬렉션 fetch join + 페이징은 위험하므로 댓글 fetch join 메서드는 상세 조회 전용으로만 사용한다.
  */
 @Repository
 public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, Long> {
 
-    /**
-     * UUID로 게시글 단건 조회
-     */
     Optional<CommunityBoard> findByUuid(UUID uuid);
 
-    /**
-     * 댓글 lazy loading 해결용: 게시글 + 댓글까지 fetch join
-     * - 주의: 컬렉션 fetch join + 페이징은 위험하므로 상세 조회 전용에서만 사용
-     */
     @Query("""
         SELECT cb
         FROM CommunityBoard cb
@@ -50,40 +45,34 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     """)
     Optional<CommunityBoard> findByUuidWithComment(@Param("uuid") UUID uuid);
 
-    /**
-     * 특정 작성자가 쓴 게시글 전체 조회 (마이페이지 등)
-     */
     Page<CommunityBoard> findByAuthor(Member author, Pageable pageable);
 
-    /**
-     * 특정 작성자가 쓴 게시글 개수
-     */
     int countByAuthor(Member author);
 
     /**
      * ===== 인기글 조회 =====
      *
-     * 조건:
-     * - 최근 after 이후에 작성(publishedAt >= after)
-     * - 공개 게시글만(published = true)
-     * - 좋아요 많은 순서대로
-     * - Pageable 로 top N (보통 PageRequest.of(0,3))
+     * - 최근 after 이후 작성(publishedAt >= after)
+     * - 공개글(published=true)
+     * - likeCount DESC
+     * - Pageable로 상위 N개 제한
+     *
+     * 주의
+     * - 메서드명이 top3로 고정돼 보이지만, 실제로는 Pageable로 N을 제어한다.
+     *   (서비스에서 PageRequest.of(0,3)을 넘기므로 top3가 된다)
      */
-
-    // 전체 카테고리에서 인기글 TOP N
     @Query("""
-        SELECT board
-        FROM CommunityBoard board
-        WHERE board.publishedAt >= :after
-          AND board.published = true
-        ORDER BY board.likeCount DESC
+        SELECT b
+        FROM CommunityBoard b
+        WHERE b.publishedAt >= :after
+          AND b.published = true
+        ORDER BY b.likeCount DESC
     """)
     List<CommunityBoard> findTop3PopularBoards(
             @Param("after") LocalDateTime after,
             Pageable pageable
     );
 
-    // 특정 카테고리 안에서만 인기글 TOP N
     @Query("""
         SELECT b
         FROM CommunityBoard b
@@ -101,16 +90,8 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     /**
      * ===== 일반글 / 전체글 조회 =====
      *
-     * author를 즉시 로딩해서 N+1 방지
-     *
-     * 기본 규칙:
-     * - findAllWithAuthor(...)                     : 전체 카테고리 조회
-     * - findAllWithAuthorExcluding(..., excluded)  : 전체 카테고리 + 인기글 UUID 제외
-     * - findAllWithAuthorByCategory(category, ...) : 특정 카테고리만
-     * - findAllWithAuthorByCategoryExcluding(...)  : 특정 카테고리만 + 인기글 UUID 제외
+     * author 즉시 로딩으로 N+1 방지
      */
-
-    // 전체 카테고리
     @EntityGraph(attributePaths = "author")
     @Query("""
         SELECT b
@@ -118,7 +99,6 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     """)
     Page<CommunityBoard> findAllWithAuthor(Pageable pageable);
 
-    // 전체 카테고리 - 인기글 제외
     @EntityGraph(attributePaths = "author")
     @Query("""
         SELECT b
@@ -130,7 +110,6 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
             Pageable pageable
     );
 
-    // 특정 카테고리
     @EntityGraph(attributePaths = "author")
     @Query("""
         SELECT b
@@ -142,7 +121,6 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
             Pageable pageable
     );
 
-    // 특정 카테고리 - 인기글 제외
     @EntityGraph(attributePaths = "author")
     @Query("""
         SELECT b
@@ -155,4 +133,77 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
             @Param("excluded") List<UUID> excluded,
             Pageable pageable
     );
+
+    /**
+     * ===== 집계 컬럼 원자적 증감 =====
+     *
+     * - likeCount/commentCount는 이벤트 시점에만 업데이트한다.
+     * - 벌크 업데이트이므로 영속성 컨텍스트와 불일치가 발생할 수 있어
+     *   clearAutomatically/flushAutomatically로 안전성을 높인다.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update CommunityBoard cb
+        set cb.likeCount = cb.likeCount + 1
+        where cb.uuid = :uuid
+    """)
+    int increaseLikeCount(@Param("uuid") UUID uuid);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update CommunityBoard cb
+        set cb.likeCount =
+            case when cb.likeCount > 0 then cb.likeCount - 1 else 0 end
+        where cb.uuid = :uuid
+    """)
+    int decreaseLikeCount(@Param("uuid") UUID uuid);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update CommunityBoard cb
+        set cb.commentCount = cb.commentCount + 1
+        where cb.uuid = :uuid
+    """)
+    int increaseCommentCount(@Param("uuid") UUID uuid);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update CommunityBoard cb
+        set cb.commentCount =
+            case when cb.commentCount > 0 then cb.commentCount - 1 else 0 end
+        where cb.uuid = :uuid
+    """)
+    int decreaseCommentCount(@Param("uuid") UUID uuid);
+
+    @Query("""
+        select cb.likeCount
+        from CommunityBoard cb
+        where cb.uuid = :uuid
+    """)
+    int findLikeCount(@Param("uuid") UUID uuid);
+
+    @Query("""
+        select cb.commentCount
+        from CommunityBoard cb
+        where cb.uuid = :uuid
+    """)
+    int findCommentCount(@Param("uuid") UUID uuid);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    update CommunityBoard cb
+    set cb.commentCount = cb.commentCount + :delta
+    where cb.uuid = :uuid
+""")
+    int increaseCommentCountBy(@Param("uuid") UUID uuid, @Param("delta") int delta);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    update CommunityBoard cb
+    set cb.commentCount =
+        case when cb.commentCount >= :delta then cb.commentCount - :delta else 0 end
+    where cb.uuid = :uuid
+""")
+    int decreaseCommentCountBy(@Param("uuid") UUID uuid, @Param("delta") int delta);
+
 }
