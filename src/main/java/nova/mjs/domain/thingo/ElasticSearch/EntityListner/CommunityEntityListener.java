@@ -10,11 +10,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
- * Community 엔티티 변경을 감지하여 도메인 이벤트를 발행한다.
+ * Community 엔티티 변경 감지 전용 리스너
  *
- * 원칙:
- * - JPA EntityListener는 "변경 감지 + 이벤트 발행"만 담당한다.
- * - Elasticsearch, Document, 전처리 로직은 절대 관여하지 않는다.
+ * - 변경 감지 + 도메인 이벤트 발행만 담당
+ * - Elasticsearch, Document, 전처리 로직에 관여하지 않는다
  */
 @Component
 @RequiredArgsConstructor
@@ -24,16 +23,22 @@ public class CommunityEntityListener {
 
     @PostPersist
     public void afterCreate(CommunityBoard board) {
-        eventPublisher.publishEvent(CommunityIndexEvent.insert(board));
+        eventPublisher.publishEvent(
+                CommunityIndexEvent.insert(board)
+        );
     }
 
     @PostUpdate
     public void afterUpdate(CommunityBoard board) {
-        eventPublisher.publishEvent(CommunityIndexEvent.update(board));
+        eventPublisher.publishEvent(
+                CommunityIndexEvent.update(board)
+        );
     }
 
     @PostRemove
     public void afterDelete(CommunityBoard board) {
-        eventPublisher.publishEvent(CommunityIndexEvent.delete(board.getId()));
+        eventPublisher.publishEvent(
+                CommunityIndexEvent.delete(board.getUuid())
+        );
     }
 }
