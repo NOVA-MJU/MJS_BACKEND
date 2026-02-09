@@ -1,10 +1,9 @@
-package nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.notice;
+package nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.notice;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.ElasticSearch.Document.NoticeDocument;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.EntityIndexEvent;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.SearchContentPreprocessor;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.SearchIndexPublisher;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.event.EntityIndexEvent;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.publisher.SearchIndexPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class NoticeIndexEventHandler {
 
-    private final SearchContentPreprocessor preprocessor;
+    private final NoticeContentPreprocessor preprocessor;
     private final SearchIndexPublisher searchIndexPublisher;
 
     @EventListener

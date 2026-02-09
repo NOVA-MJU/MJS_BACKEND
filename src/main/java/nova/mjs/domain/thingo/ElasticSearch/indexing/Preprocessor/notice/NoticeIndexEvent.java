@@ -1,4 +1,4 @@
-package nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.notice;
+package nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.notice;
 
 import lombok.Getter;
 import nova.mjs.domain.thingo.notice.entity.Notice;

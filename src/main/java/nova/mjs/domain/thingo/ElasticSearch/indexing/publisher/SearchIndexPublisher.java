@@ -1,7 +1,8 @@
-package nova.mjs.domain.thingo.ElasticSearch.EventSynchronization;
+package nova.mjs.domain.thingo.ElasticSearch.indexing.publisher;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.ElasticSearch.Document.SearchDocument;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.event.EntityIndexEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 

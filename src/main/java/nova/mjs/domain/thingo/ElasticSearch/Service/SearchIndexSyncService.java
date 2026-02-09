@@ -3,9 +3,10 @@ package nova.mjs.domain.thingo.ElasticSearch.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.thingo.ElasticSearch.Document.*;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.SearchContentPreprocessor;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.community.CommunityContentPreprocessor;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.notice.NoticeContentPreprocessor;
 import nova.mjs.domain.thingo.ElasticSearch.Repository.*;
-import nova.mjs.domain.thingo.ElasticSearch.unified.UnifiedSearchMapper;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.mapper.UnifiedSearchMapper;
 import nova.mjs.domain.thingo.broadcast.repository.BroadcastRepository;
 import nova.mjs.domain.thingo.calendar.repository.MjuCalendarRepository;
 import nova.mjs.domain.thingo.community.repository.CommunityBoardRepository;
@@ -27,12 +28,12 @@ import java.util.stream.StreamSupport;
  * SearchIndexSyncService
  *
  * 역할
- * - DB → 도메인 Elasticsearch 인덱스 동기화
- * - 모든 도메인 인덱스 동기화 완료 후 Unified 인덱스 재생성
+ * - RDB → 도메인 Elasticsearch 인덱스 동기화
+ * - 모든 도메인 인덱스 기준으로 Unified 인덱스 재생성
  *
  * 설계 원칙
  * - Unified 인덱스는 파생 인덱스
- * - 도메인 ES 기준으로만 생성
+ * - 도메인 인덱스가 Single Source of Truth
  * - 항상 drop & recreate 전략
  */
 @Slf4j
@@ -67,8 +68,18 @@ public class SearchIndexSyncService {
     private final UnifiedSearchRepository unifiedSearchRepository;
     private final UnifiedSearchMapper unifiedSearchMapper;
 
+    /* =========================
+       Infrastructure
+       ========================= */
+
     private final ElasticsearchOperations elasticsearchOperations;
-    private final SearchContentPreprocessor searchContentPreprocessor;
+
+    /* =========================
+       Preprocessors
+       ========================= */
+
+    private final NoticeContentPreprocessor noticeContentPreprocessor;
+    private final CommunityContentPreprocessor communityContentPreprocessor;
 
     /**
      * Controller 단일 진입점
@@ -88,27 +99,30 @@ public class SearchIndexSyncService {
 
     private void syncDomainIndexes() {
 
-        // Notice만 전처리 적용
+        // Notice (HTML 전처리 필요)
         syncWithPreprocessor(
                 "NOTICE",
                 noticeRepository.findAll(),
+                noticeContentPreprocessor,
                 NoticeDocument::from,
                 noticeSearchRepository
         );
 
-        // 나머지는 순수 변환
+        // Community (Editor JSON 전처리 필요)
+        syncWithPreprocessor(
+                "COMMUNITY",
+                communityBoardRepository.findAll(),
+                communityContentPreprocessor,
+                CommunityDocument::from,
+                communitySearchRepository
+        );
+
+        // 전처리 없는 도메인들
         sync(
                 "NEWS",
                 newsRepository.findAll(),
                 NewsDocument::from,
                 newsSearchRepository
-        );
-
-        sync(
-                "COMMUNITY",
-                communityBoardRepository.findAll(),
-                CommunityDocument::from,
-                communitySearchRepository
         );
 
         sync(
@@ -159,16 +173,21 @@ public class SearchIndexSyncService {
     }
 
     /**
-     * 전처리가 필요한 도메인 전용 sync (Notice)
+     * 전처리가 필요한 도메인 전용 sync
+     *
+     * 설계 의도:
+     * - 전처리 필요 여부를 Service 레벨에서 명시적으로 드러낸다.
+     * - Document.from(...) 시그니처에 전처리 의존성을 강제한다.
      */
-    private <E, D> void syncWithPreprocessor(
+    private <E, P, D> void syncWithPreprocessor(
             String domainName,
             List<E> entities,
-            BiFunction<E, SearchContentPreprocessor, D> mapper,
+            P preprocessor,
+            BiFunction<E, P, D> mapper,
             ElasticsearchRepository<D, ?> repository
     ) {
         List<D> documents = entities.stream()
-                .map(entity -> mapper.apply(entity, searchContentPreprocessor))
+                .map(entity -> mapper.apply(entity, preprocessor))
                 .toList();
 
         repository.saveAll(documents);

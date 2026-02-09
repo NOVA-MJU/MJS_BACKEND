@@ -1,21 +1,18 @@
 package nova.mjs.domain.thingo.community.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
+import nova.mjs.domain.thingo.ElasticSearch.EntityListner.CommunityEntityListener;
 import nova.mjs.domain.thingo.community.comment.entity.Comment;
 import nova.mjs.domain.thingo.community.entity.enumList.CommunityCategory;
 import nova.mjs.domain.thingo.community.likes.entity.CommunityLike;
 import nova.mjs.domain.thingo.member.entity.Member;
-import nova.mjs.domain.thingo.ElasticSearch.EntityListner.CommunityEntityListener;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import static nova.mjs.domain.thingo.community.util.ContentPreviewUtil.makePreview;
 
 @Entity
 @Getter
@@ -36,71 +33,116 @@ public class CommunityBoard extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CommunityCategory category; // 게시판 카테고리: 추후 확장성을 위하여 고려
+    private CommunityCategory category;
 
     @Column(nullable = false)
-    private String title; // 게시판 제목
+    private String title;
 
     @Column(columnDefinition = "TEXT")
-    private String content; // 내용 + 이미지 url 함께 구성되어있음
+    private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
-    private Member author; // 작성자
+    private Member author;
 
     @Column(columnDefinition = "TEXT")
-    private String previewContent; // 게시글 미리보기
+    private String previewContent;
 
+    /**
+     * 조회 수
+     *
+     * - 집계 값은 Integer 사용
+     * - NULL 방지를 위해 기본값 0 보장
+     */
     @Column(nullable = false)
-    private int viewCount; // 조회 수
+    private Integer viewCount = 0;
 
-    @Column
-    private int likeCount; // 게시글 좋아요 여부
+    /**
+     * 좋아요 수
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer likeCount = 0;
 
-    @Column
-    private Boolean published; // 임시저장 여부
+    /**
+     * 댓글 수
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer commentCount = 0;
 
+    /**
+     * 게시 여부
+     */
+    @Column(nullable = false)
+    private Boolean published = false;
+
+    /**
+     * 게시 시각
+     */
     @Column
-    private LocalDateTime publishedAt;  // 공개 게시 시간
+    private LocalDateTime publishedAt;
 
     @Builder.Default
     @OneToMany(mappedBy = "communityBoard", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CommunityLike> communityLike = new ArrayList<>();
+    private List<CommunityLike> communityLikes = new ArrayList<>();
 
-    // 댓글
+    @Builder.Default
     @OneToMany(mappedBy = "communityBoard", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
-    private List<Comment> comment;
+    private List<Comment> comment = new ArrayList<>();
 
+    // =========================
+    // 생성 메서드
+    // =========================
+    public static CommunityBoard create(
+            String title,
+            String content,
+            String previewContent,
+            CommunityCategory category,
+            Boolean published,
+            Member author
+    ) {
+        boolean isPublished = Boolean.TRUE.equals(published);
 
-    // === 생성 메서드 ===
-    public static CommunityBoard create(String title, String content, String previewContent, CommunityCategory category, Boolean published, Member member) {
-        CommunityBoard board = CommunityBoard.builder()
+        return CommunityBoard.builder()
                 .uuid(UUID.randomUUID())
                 .title(title)
                 .content(content)
-                .category(category)
-                .published(published != null ? published : false)
                 .previewContent(previewContent)
+                .category(category)
+                .author(author)
+                .published(isPublished)
+                .publishedAt(isPublished ? LocalDateTime.now() : null)
                 .viewCount(0)
                 .likeCount(0)
-                .publishedAt(published != null && published ? LocalDateTime.now() : null)
-                .author(member)
+                .commentCount(0)
                 .build();
-        return board;
     }
 
-    // === 업데이트 메서드 ===
-    public void update(String title, String content, String contentPreview, Boolean published) {
-        if (title != null) this.title = title;
-        if (content != null) this.content = content;
-        if (contentPreview != null) this.previewContent = contentPreview;
+    // =========================
+    // 수정 메서드
+    // =========================
+    public void update(
+            String title,
+            String content,
+            String previewContent,
+            Boolean published
+    ) {
+        if (title != null) {
+            this.title = title;
+        }
+        if (content != null) {
+            this.content = content;
+        }
+        if (previewContent != null) {
+            this.previewContent = previewContent;
+        }
         if (published != null) {
             updatePublishedState(published);
         }
     }
 
-    // 발행 상태 업데이트 메서드
-    private void updatePublishedState(Boolean isPublished) {
+    private void updatePublishedState(boolean isPublished) {
         if (isPublished && !this.published) {
             this.publishedAt = LocalDateTime.now();
         } else if (!isPublished && this.published) {
@@ -109,18 +151,4 @@ public class CommunityBoard extends BaseEntity {
         this.published = isPublished;
     }
 
-    // 게시물 좋아요
-    public void increaseLikeCount() {
-        this.likeCount++;
-    }
-
-    public void decreaseLikeCount() {
-        if (this.likeCount > 0) {
-            this.likeCount--;
-        }
-    }
-
-    private <T> T getOrDefault(T newValue, T currentValue) {
-        return newValue != null ? newValue : currentValue;
-    }
 }

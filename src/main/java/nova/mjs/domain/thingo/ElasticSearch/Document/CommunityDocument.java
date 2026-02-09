@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.thingo.community.entity.CommunityBoard;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.community.CommunityContentPreprocessor;
 import nova.mjs.domain.thingo.ElasticSearch.SearchType;
 import nova.mjs.config.elasticsearch.KomoranTokenizerUtil;
 import org.springframework.data.annotation.Id;
@@ -15,10 +16,12 @@ import java.time.ZoneId;
 import java.util.List;
 
 /**
- * Elasticsearch 색인을 위한 커뮤니티 문서 객체
+ * Elasticsearch 색인을 위한 Community 문서
  *
- * - 게시글이 실제 게시된 경우에만 publishedAt을 Instant로 변환하여 date 필드에 저장
- * - publishedAt이 null인 경우 색인 시점에서 null 방어
+ * 설계 원칙:
+ * - content는 검색용 평문만 저장한다.
+ * - 에디터 JSON 원문은 Elasticsearch에 저장하지 않는다.
+ * - 전처리는 Document 생성 시점에 완료된다.
  */
 @Document(indexName = "community_index")
 @Data
@@ -32,6 +35,10 @@ public class CommunityDocument implements SearchDocument {
 
     private String title;
 
+    /**
+     * 검색 전용 content
+     * - CommunityContentPreprocessor를 통해 정규화된 텍스트만 저장
+     */
     private String content;
 
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
@@ -43,6 +50,9 @@ public class CommunityDocument implements SearchDocument {
 
     private String link;
 
+    private Integer likeCount;
+    private Integer commentCount;
+
     @CompletionField
     private List<String> suggest;
 
@@ -51,30 +61,45 @@ public class CommunityDocument implements SearchDocument {
         return SearchType.COMMUNITY.name();
     }
 
-    /**
-     * Elasticsearch 색인을 위한 날짜 변환
-     * - 저장된 date(Instant)를 LocalDateTime으로 변환
-     */
-     @Override
+    @Override
     public Instant getInstant() {
         return date;
     }
 
+    @Override
+    public Integer getLikeCount() {
+        return likeCount;
+    }
+
+    @Override
+    public Integer getCommentCount() {
+        return commentCount;
+    }
+
     /**
-     * CommunityBoard 엔티티를 Elasticsearch 문서로 변환
-     * - publishedAt이 null일 수 있으므로 atZone 호출 전 null 체크 필요
+     * CommunityBoard → CommunityDocument 변환
+     *
+     * - content는 Editor JSON을 전처리하여 검색용 텍스트로 변환
+     * - publishedAt이 null일 수 있으므로 날짜 변환 시 방어
      */
-    public static CommunityDocument from(CommunityBoard board) {
+    public static CommunityDocument from(
+            CommunityBoard board,
+            CommunityContentPreprocessor preprocessor
+    ) {
         return CommunityDocument.builder()
-                .id(String.valueOf(board.getUuid()))
+                .id(board.getUuid().toString())
                 .title(board.getTitle())
-                .content(board.getContent())
+                .content(preprocessor.normalize(board.getContent()))
                 .date(board.getPublishedAt() != null
-                        ? board.getPublishedAt().atZone(ZoneId.systemDefault()).toInstant()
+                        ? board.getPublishedAt()
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant()
                         : null)
                 .suggest(KomoranTokenizerUtil.generateSuggestions(board.getTitle()))
                 .type(SearchType.COMMUNITY.name())
                 .category(board.getCategory().name())
+                .likeCount(board.getLikeCount())
+                .commentCount(board.getCommentCount())
                 .build();
     }
 }

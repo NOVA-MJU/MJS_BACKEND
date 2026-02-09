@@ -41,4 +41,16 @@ public interface SearchDocument {
     default String getImageUrl() {
         return null;
     }
+
+    default Integer getLikeCount() {
+        return null;
+    }
+
+    default Integer getCommentCount() {
+        return null;
+    }
+
+    default String getAuthorName() {
+        return null;
+    }
 }

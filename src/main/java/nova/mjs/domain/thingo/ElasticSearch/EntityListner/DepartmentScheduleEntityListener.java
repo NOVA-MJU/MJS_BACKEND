@@ -6,8 +6,8 @@ import jakarta.persistence.PostUpdate;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.department.entity.DepartmentSchedule;
 import nova.mjs.domain.thingo.ElasticSearch.Document.DepartmentScheduleDocument;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.SearchIndexPublisher;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.EntityIndexEvent.IndexAction;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.publisher.SearchIndexPublisher;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.event.EntityIndexEvent.IndexAction;
 
 import org.springframework.stereotype.Component;
 

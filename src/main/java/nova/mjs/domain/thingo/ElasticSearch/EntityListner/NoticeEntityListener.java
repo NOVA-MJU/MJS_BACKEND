@@ -4,7 +4,7 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.notice.NoticeIndexEvent;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.notice.NoticeIndexEvent;
 import nova.mjs.domain.thingo.notice.entity.Notice;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;

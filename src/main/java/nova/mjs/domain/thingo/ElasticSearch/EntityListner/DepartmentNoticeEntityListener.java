@@ -4,10 +4,10 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.thingo.department.entity.DepartmentNotice;
 import nova.mjs.domain.thingo.ElasticSearch.Document.DepartmentNoticeDocument;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.EntityIndexEvent;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.SearchIndexPublisher;
+import nova.mjs.domain.thingo.department.entity.DepartmentNotice;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.event.EntityIndexEvent;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.publisher.SearchIndexPublisher;
 import org.springframework.stereotype.Component;
 
 @Component

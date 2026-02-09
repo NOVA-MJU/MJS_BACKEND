@@ -1,4 +1,4 @@
-package nova.mjs.domain.thingo.ElasticSearch.unified;
+package nova.mjs.domain.thingo.ElasticSearch.indexing.mapper;
 
 import nova.mjs.domain.thingo.ElasticSearch.Document.SearchDocument;
 import nova.mjs.domain.thingo.ElasticSearch.Document.UnifiedSearchDocument;
@@ -17,14 +17,17 @@ public class UnifiedSearchMapper {
         return doc.getType() + ":" + doc.getId();
     }
 
+    public String buildId(String type, String originalId) {
+        return type + ":" + originalId;
+    }
+
     /**
-     * 도메인 SearchDocument → 통합 검색 문서
+     * 도메인 SearchDocument → UnifiedSearchDocument 변환
      *
-     * - 시간 타입 변환 없음
-     * - Instant 그대로 전달
+     * - Unified 인덱스는 파생 인덱스
+     * - 없는 값은 null로 유지
      */
     public UnifiedSearchDocument from(SearchDocument doc) {
-
         return UnifiedSearchDocument.builder()
                 .id(buildId(doc))
                 .originalId(doc.getId())
@@ -36,6 +39,9 @@ public class UnifiedSearchMapper {
                 .imageUrl(doc.getImageUrl())
                 .date(doc.getInstant())
                 .updatedAt(Instant.now())
+                .likeCount(doc.getLikeCount())
+                .commentCount(doc.getCommentCount())
+                .authorName(doc.getAuthorName())
                 .active(true)
                 .popularity(0.0)
                 .build();

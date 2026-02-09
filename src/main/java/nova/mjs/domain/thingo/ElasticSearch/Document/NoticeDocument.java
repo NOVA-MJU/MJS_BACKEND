@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.SearchContentPreprocessor;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.notice.NoticeContentPreprocessor;
 import nova.mjs.domain.thingo.notice.entity.Notice;
 import nova.mjs.domain.thingo.ElasticSearch.SearchType;
 import nova.mjs.config.elasticsearch.KomoranTokenizerUtil;
@@ -53,7 +53,7 @@ public class NoticeDocument implements SearchDocument{
 
     public static NoticeDocument from(
             Notice notice,
-            SearchContentPreprocessor preprocessor) {
+            NoticeContentPreprocessor preprocessor) {
         return NoticeDocument.builder()
                 .id(notice.getId().toString())
                 .title(notice.getTitle())
