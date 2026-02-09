@@ -49,4 +49,14 @@ public class UnifiedSearchDocument {
     /** 인기도/권위 등 랭킹 신호 (있으면 강력해짐) */
     @Field(type = FieldType.Double)
     private Double popularity;
+
+    @Field(type = FieldType.Integer)
+    private Integer likeCount;
+
+    @Field(type = FieldType.Integer)
+    private Integer commentCount;
+
+    @Field(type = FieldType.Keyword)
+    private String authorName;
+
 }

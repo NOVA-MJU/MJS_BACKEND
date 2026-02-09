@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
-public class SuggestService {
+    public class SuggestService {
 
     private final ElasticsearchTemplate elasticsearchTemplate;
 

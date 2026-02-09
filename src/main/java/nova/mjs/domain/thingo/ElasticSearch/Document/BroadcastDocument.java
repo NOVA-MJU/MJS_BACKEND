@@ -47,7 +47,7 @@ public class BroadcastDocument implements SearchDocument {
         return SearchType.BROADCAST.name();
     }
 
-     @Override
+    @Override
     public Instant getInstant() {
         return date;
     }

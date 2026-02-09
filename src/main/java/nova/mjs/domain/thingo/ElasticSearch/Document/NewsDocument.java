@@ -40,6 +40,8 @@ public class NewsDocument implements SearchDocument {
     private List<String> suggest;
 
     private String type;
+    // 편집자 명
+    private String authorName;
 
     @Override
     public String getType() {
@@ -56,6 +58,11 @@ public class NewsDocument implements SearchDocument {
         return this.imageUrl;
     }
 
+    @Override
+    public String getAuthorName() {
+        return authorName;
+    }
+
     public static NewsDocument from(News news) {
         return NewsDocument.builder()
                 .id(news.getId().toString())
@@ -67,6 +74,7 @@ public class NewsDocument implements SearchDocument {
                 .category(news.getCategory().name())
                 .suggest(KomoranTokenizerUtil.generateSuggestions(news.getTitle()))
                 .type(SearchType.NEWS.name())
+                .authorName(news.getReporter())
                 .build();
     }
 }

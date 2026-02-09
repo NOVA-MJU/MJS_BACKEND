@@ -1,4 +1,4 @@
-package nova.mjs.domain.thingo.ElasticSearch.EventSynchronization;
+package nova.mjs.domain.thingo.ElasticSearch.indexing.event;
 
 import lombok.Data;
 import nova.mjs.domain.thingo.ElasticSearch.Document.SearchDocument;

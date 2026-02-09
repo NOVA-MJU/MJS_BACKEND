@@ -1,4 +1,4 @@
-package nova.mjs.domain.thingo.ElasticSearch.EventSynchronization;
+package nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.notice;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.stream.Collectors;
 
 @Component
-public class SearchContentPreprocessor {
+public class NoticeContentPreprocessor {
 
     /** 검색에 의미 있다고 판단하는 최소 길이 */
     private static final int MIN_MEANINGFUL_LENGTH = 30;

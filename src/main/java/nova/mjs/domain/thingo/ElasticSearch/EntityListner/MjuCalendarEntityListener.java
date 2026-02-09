@@ -6,8 +6,8 @@ import jakarta.persistence.PostUpdate;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.calendar.entity.MjuCalendar;
 import nova.mjs.domain.thingo.ElasticSearch.Document.MjuCalendarDocument;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.EntityIndexEvent;
-import nova.mjs.domain.thingo.ElasticSearch.EventSynchronization.SearchIndexPublisher;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.event.EntityIndexEvent;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.publisher.SearchIndexPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
