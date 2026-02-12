@@ -19,49 +19,50 @@ import org.springframework.transaction.annotation.Transactional;
 @Log4j2
 @Transactional(readOnly = true)
 public class AdminCommandServiceImpl implements AdminCommandService {
+
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final MemberQueryService memberQueryService;
     private final AdminQueryService adminQueryService;
     private final MemberRepository memberRepository;
 
-
-
     /**
-     * 회원 가입 로직
+     * 초기 학생회 관리자 계정 등록 (OPERATOR 전용)
+     *
+     * - Member만 생성
+     * - Department 연결은 추후 생성 로직에서 assignAdmin() 처리
      */
-    // 1. OPERATOR(시스템 관리자)가 초기 어드민 객체 생성.
     @Transactional
-    public ApiResponse<String> registerInitAdmin(AdminDTO.StudentCouncilInitRegistrationRequestDTO request) {
-        // 회원이 입력한 비밀번호 암호화
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
+    public ApiResponse<String> registerInitAdmin(
+            AdminDTO.StudentCouncilInitRegistrationRequestDTO request) {
 
-        // 이메일 중복 확인
+        // 1. 이메일 중복 확인
         memberQueryService.validateEmailDuplication(request.getEmail());
 
-        // 회원객체 생성
-        Member newMember = Member.createAdminInit(request, encodedPassword);
-        Department department = Department.createWithAdmin(request, newMember);
-        memberRepository.save(newMember);
-        departmentRepository.save(department);
+        // 2. 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
 
+        // 3. Member 생성
+        Member admin = Member.createAdminInit(request, encodedPassword);
+        memberRepository.save(admin);
 
-        // 응답 DTO 반환
-        return ApiResponse.success("초기 어드민 계정이 성공적으로 등록되었습니다.");
+        return ApiResponse.success("초기 관리자 등록 완료");
     }
 
     /**
-     * 학생회(ADMIN) 계정 + 학과 정보를 동시에 수정
+     * 학생회(ADMIN) 계정 정보 수정
      *
-     * @param request 수정 요청 DTO
-     * @return 수정 완료된 Member 엔티티
+     * - Member 정보 수정
+     * - 연결된 Department 존재 시 함께 수정
      */
     @Transactional
-    public AdminDTO.StudentCouncilResponseDTO updateAdmin(AdminDTO.StudentCouncilUpdateDTO request) {
-        // 1. 관리자 계정 조회
-        Member member = memberQueryService.getMemberByEmail(request.getEmail()); // 이메일은 불변값이라 기준으로 삼음
+    public AdminDTO.StudentCouncilResponseDTO updateAdmin(
+            AdminDTO.StudentCouncilUpdateDTO request) {
 
-        // 3. 회원(Member) 정보 업데이트
+        // 1. 관리자 계정 조회
+        Member member = memberQueryService.getMemberByEmail(request.getEmail());
+
+        // 2. Member 정보 수정
         member.updateAdmin(request);
 
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
@@ -69,22 +70,27 @@ public class AdminCommandServiceImpl implements AdminCommandService {
             member.updatePassword(encodedPassword);
         }
 
-        Department department = adminQueryService.getDepartmentByAdminEmail(member.getEmail());
-        department.updateInfo(request);
+        // 3. 연결된 Department 조회 (없을 수 있음)
+        Department department = departmentRepository
+                .findByAdminEmail(member.getEmail())
+                .orElse(null);
+
+        if (department != null) {
+            department.updateInfo(request);
+        }
 
         return AdminDTO.StudentCouncilResponseDTO.fromEntity(member, department);
     }
 
-
-
+    /**
+     * 주어진 이메일이 관리자 계정인지 검증
+     */
     public Boolean validationInitAdminID(String emailId) {
         try {
-            Member member = memberQueryService.getMemberByEmail(emailId);
+            memberQueryService.getMemberByEmail(emailId);
             return true;
         } catch (MemberNotFoundException e) {
-            return false; // 회원이 없으면 검증 실패
+            return false;
         }
     }
-
-
 }

@@ -1,6 +1,7 @@
 package nova.mjs.admin.account.service;
 
 import nova.mjs.admin.account.DTO.AdminDTO;
+import nova.mjs.domain.thingo.department.dto.DepartmentDTO;
 import nova.mjs.util.response.ApiResponse;
 
 public interface AdminCommandService {
