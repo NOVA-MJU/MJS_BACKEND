@@ -76,13 +76,13 @@ public class CommunityBoard extends BaseEntity {
      * 게시 여부
      */
     @Column(nullable = false)
+    @Builder.Default
     private Boolean published = false;
 
     /**
      * 게시 시각
      */
     @Column
-    @Builder.Default
     private LocalDateTime publishedAt;
 
     @Builder.Default
