@@ -3,8 +3,9 @@ package nova.mjs.domain.thingo.member.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.admin.account.DTO.AdminDTO;
+import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.member.DTO.MemberDTO;
-import nova.mjs.domain.thingo.member.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.util.entity.BaseEntity;
 
 import java.util.UUID;
@@ -47,8 +48,13 @@ public class Member extends BaseEntity {
     private String nickname;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "department_name", nullable = false)
+    @Column(nullable = false)
+    private College college;
+
+    @Enumerated(EnumType.STRING)
+    @Column
     private DepartmentName departmentName;
+
 
     private String studentNumber;
 
@@ -77,6 +83,7 @@ public class Member extends BaseEntity {
                 .gender(Gender.fromString(memberDTO.getGender())) // 대소문자 변환
                 .nickname(memberDTO.getNickname())
                 .profileImageUrl(memberDTO.getProfileImageUrl())
+                .college(memberDTO.getCollege())
                 .departmentName(memberDTO.getDepartmentName())
                 .studentNumber(memberDTO.getStudentNumber())
                 .role(Role.USER)
@@ -87,6 +94,7 @@ public class Member extends BaseEntity {
         this.name = getOrDefault(memberDTO.getName(), this.name);
         this.nickname = getOrDefault(memberDTO.getNickname(), this.nickname);
         this.departmentName = getOrDefault(memberDTO.getDepartmentName(), this.departmentName);
+        this.college = getOrDefault(memberDTO.getCollege(), this.college);
         this.studentNumber = getOrDefault(memberDTO.getStudentNumber(), this.studentNumber);
         this.profileImageUrl = getOrDefault(memberDTO.getProfileImageUrl(), this.profileImageUrl);
         this.gender = memberDTO.getGender() != null ? Gender.fromString(memberDTO.getGender()) : this.gender;
@@ -103,6 +111,7 @@ public class Member extends BaseEntity {
                 .email(memberDTO.getEmail())
                 .password(encodePassword)
                 .name(memberDTO.getName())
+                .college(memberDTO.getCollege())
                 .departmentName(memberDTO.getDepartmentName())
                 .role(Role.ADMIN)
                 .gender(Gender.OTHERS)
@@ -116,6 +125,7 @@ public class Member extends BaseEntity {
     public void updateAdmin(AdminDTO.StudentCouncilUpdateDTO memberDTO) {
         this.name = getOrDefault(memberDTO.getName(), this.name); // 학생회 명
         this.nickname = name;
+        this.college = getOrDefault(memberDTO.getCollege(), this.college);
         this.departmentName = getOrDefault(memberDTO.getDepartmentName(), this.departmentName); // 소속학과
         this.profileImageUrl = getOrDefault(memberDTO.getProfileImageUrl(), this.profileImageUrl); // 학생회 프로필 로고
     }

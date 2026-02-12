@@ -7,7 +7,7 @@ import nova.mjs.domain.mentorship.mentor.entity.MentorProfile;
 import nova.mjs.domain.mentorship.mentor.repository.MentorProfileRepository;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.entity.Member.Role;
-import nova.mjs.domain.thingo.member.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.exception.request.RequestException;
