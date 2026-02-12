@@ -1,43 +1,65 @@
 package nova.mjs.admin.department.notice.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import nova.mjs.domain.thingo.department.entity.StudentCouncilNotice;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class AdminStudentCouncilNoticeDTO {
 
+    /* ==========================================================
+     * 요청
+     * ========================================================== */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Request {
-        @NotBlank(message = "제목은 필수입니다.")
-        private String title;               // 공지사항 제목
-        private String content;             // 공지사항 내용
-        private String contentPreview;             // 공지사항 내용
-        private String thumbnailUrl;        // 썸네일 이미지
+        private String title;
+        private String content;
+
+
+        @Builder.Default
+        private List<String> imageUrls = new ArrayList<>();
     }
 
+
+    /* ==========================================================
+     * 응답
+     * ========================================================== */
     @Data
     @Builder
     public static class Response {
+
         private UUID uuid;
         private String title;
         private String content;
-        private String contentPreview;
+        private String authorNickname;
+        private LocalDateTime publishedAt;
         private String thumbnailUrl;
-        private LocalDateTime createAt;
+        private List<String> imageUrls;
 
-        public static AdminStudentCouncilNoticeDTO.Response fromEntity(StudentCouncilNotice studentCouncilNotice) {
-            return AdminStudentCouncilNoticeDTO.Response.builder()
-                    .uuid(studentCouncilNotice.getUuid())
-                    .title(studentCouncilNotice.getTitle())
-                    .content(studentCouncilNotice.getContent())
-                    .contentPreview(studentCouncilNotice.getPreviewContent())
-                    .thumbnailUrl(studentCouncilNotice.getThumbnailUrl())
-                    .createAt(studentCouncilNotice.getCreatedAt())
+        public static Response fromEntity(StudentCouncilNotice notice) {
+            return Response.builder()
+                    .uuid(notice.getUuid())
+                    .title(notice.getTitle())
+                    .content(notice.getContent())
+                    .authorNickname(notice.getAuthorNickname())
+                    .publishedAt(notice.getPublishedAt())
+                    .thumbnailUrl(notice.getThumbnailUrl())
+                    .imageUrls(
+                            notice.getImages()
+                                    .stream()
+                                    .map(img -> img.getImageUrl())
+                                    .toList()
+                    )
                     .build();
         }
     }

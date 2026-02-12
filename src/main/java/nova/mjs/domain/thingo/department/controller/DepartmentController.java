@@ -61,7 +61,7 @@ public class DepartmentController {
      *  공지사항
      * ------------------------------------------------------------------ */
 
-    @GetMapping("/notices")
+    @GetMapping("/student-council/notices")
     public ResponseEntity<ApiResponse<Page<StudentCouncilNoticeDTO.Summary>>> getNotices(
             @RequestParam College college,
             @RequestParam DepartmentName department,

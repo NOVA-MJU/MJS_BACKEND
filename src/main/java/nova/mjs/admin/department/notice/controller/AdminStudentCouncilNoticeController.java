@@ -60,7 +60,7 @@ public class AdminStudentCouncilNoticeController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam College college,
             @RequestParam DepartmentName department,
-            @RequestBody @Valid AdminStudentCouncilNoticeDTO.Request requestDto
+            @RequestBody AdminStudentCouncilNoticeDTO.Request requestDto
     ) {
         AdminStudentCouncilNoticeDTO.Response created =
                 service.createNotice(userPrincipal, college, department, requestDto);

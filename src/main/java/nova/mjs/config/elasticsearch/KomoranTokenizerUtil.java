@@ -3,6 +3,7 @@ package nova.mjs.config.elasticsearch;
 import kr.co.shineware.nlp.komoran.constant.DEFAULT_MODEL;
 import kr.co.shineware.nlp.komoran.core.Komoran;
 import kr.co.shineware.nlp.komoran.model.Token;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.*;
 
@@ -28,6 +29,10 @@ public class KomoranTokenizerUtil {
      * suggest 필드에 넣을 키워드 후보 리스트 생성
      */
     public static List<String> generateSuggestions(String text) {
+
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
         List<Token> tokens = komoran.analyze(text).getTokenList();
 
         List<String> units = new ArrayList<>();
@@ -37,13 +42,11 @@ public class KomoranTokenizerUtil {
             String morph = token.getMorph();
             String pos = token.getPos();
 
-            // 숫자/순서 정보 유지: ex. 2025년, 제37회
             if (isYearOrOrdinal(morph)) {
                 units.add(morph);
                 continue;
             }
 
-            // 유의미한 명사류 + 외래어만 사용
             if ((pos.startsWith("NN") || pos.equals("SL")) &&
                     morph.length() >= 2 &&
                     !stopwords.contains(morph)) {
@@ -57,12 +60,10 @@ public class KomoranTokenizerUtil {
             }
         }
 
-        // 마지막 처리
         if (current.length() > 0) {
             units.add(current.toString());
         }
 
-        // n-gram 생성 (2-gram만)
         List<String> ngrams = new ArrayList<>();
         for (int i = 0; i < units.size() - 1; i++) {
             ngrams.add(units.get(i) + " " + units.get(i + 1));

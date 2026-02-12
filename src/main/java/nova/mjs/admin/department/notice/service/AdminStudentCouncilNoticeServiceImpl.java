@@ -75,7 +75,7 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
         Department department =
                 validateAdminAndGetDepartment(userPrincipal, college, departmentName);
 
-        StudentCouncilNotice notice = StudentCouncilNotice.create(request, department);
+        StudentCouncilNotice notice = StudentCouncilNotice.create(request, department, userPrincipal.getEmail());
         studentCouncilNoticeRepository.save(notice);
 
         log.info("[학과 공지 생성] college={}, department={}, noticeUuid={}",

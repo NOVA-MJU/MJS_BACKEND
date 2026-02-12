@@ -38,4 +38,10 @@ public interface StudentCouncilNoticeRepository extends JpaRepository<StudentCou
             Department department,
             UUID uuid
     );
+
+    /* 최신 공지 순 */
+    Page<StudentCouncilNotice> findByDepartmentOrderByPublishedAtDesc(
+            Department department,
+            Pageable pageable
+    );
 }

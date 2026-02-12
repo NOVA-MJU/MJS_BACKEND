@@ -48,15 +48,35 @@ public class StudentCouncilNoticeDocument implements SearchDocument{
         return date;
     }
 
-    public static StudentCouncilNoticeDocument from(StudentCouncilNotice studentCouncilNotice) {
+    public static StudentCouncilNoticeDocument from(StudentCouncilNotice notice) {
+
+        String safeContent = nullToEmpty(notice.getContent());
+        String derivedTitle = deriveTitle(notice.getTitle(), safeContent);
+
         return StudentCouncilNoticeDocument.builder()
-                .id(studentCouncilNotice.getUuid().toString())
-                .title(studentCouncilNotice.getTitle())
-                .content(studentCouncilNotice.getContent())
-                .department(studentCouncilNotice.getDepartment().getDepartmentName().getLabel())
-                .date(studentCouncilNotice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
-                .suggest(KomoranTokenizerUtil.generateSuggestions(studentCouncilNotice.getTitle()))
+                .id(notice.getUuid().toString())
+                .title(derivedTitle)
+                .content(safeContent)
+                .department(notice.getDepartment().getDepartmentName().getLabel())
+                .date(notice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
+                .suggest(KomoranTokenizerUtil.generateSuggestions(derivedTitle))
                 .type(SearchType.DEPARTMENT_NOTICE.name())
                 .build();
     }
+
+
+    /* 제목 생성 규칙 */
+    private static String deriveTitle(String title, String content) {
+        if (title != null && !title.isBlank()) {return title;}
+
+        if (content == null || content.isBlank()) {return "(제목 없음)";}
+
+        int limit = Math.min(40, content.length());
+        return content.substring(0, limit);
+    }
+
+    private static String nullToEmpty(String str) {
+        return str == null ? "" : str;
+    }
+
 }

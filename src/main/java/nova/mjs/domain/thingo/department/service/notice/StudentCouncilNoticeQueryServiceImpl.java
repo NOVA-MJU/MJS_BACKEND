@@ -17,13 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * 학과 공지 조회 서비스 (읽기 전용)
- *
- * 비즈니스 규칙:
- *  - 학과는 College + DepartmentName으로 식별
- *  - 공지는 해당 학과에 속한 것만 조회 가능
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -32,9 +25,7 @@ public class StudentCouncilNoticeQueryServiceImpl implements StudentCouncilNotic
     private final DepartmentRepository departmentRepository;
     private final StudentCouncilNoticeRepository noticeRepository;
 
-    /* ==========================================================
-     * 공지 목록 조회
-     * ========================================================== */
+    /* 목록 */
     @Override
     public Page<StudentCouncilNoticeDTO.Summary> getNoticePage(
             College college,
@@ -44,16 +35,11 @@ public class StudentCouncilNoticeQueryServiceImpl implements StudentCouncilNotic
         Department department = getDepartment(college, departmentName);
 
         return noticeRepository
-                .findByDepartment(department, pageable)
+                .findByDepartmentOrderByPublishedAtDesc(department, pageable)
                 .map(StudentCouncilNoticeDTO.Summary::fromEntity);
     }
 
-    /* ==========================================================
-     * 공지 상세 조회
-     *
-     * 단건 조회는 noticeUuid 기준으로 조회하되,
-     * 해당 공지가 특정 학과에 속해있는지 검증한다.
-     * ========================================================== */
+    /* 상세 */
     @Override
     public StudentCouncilNoticeDTO.Detail getNoticeDetail(
             College college,
@@ -69,14 +55,7 @@ public class StudentCouncilNoticeQueryServiceImpl implements StudentCouncilNotic
         return StudentCouncilNoticeDTO.Detail.fromEntity(notice);
     }
 
-    /* ==========================================================
-     * 공통 내부 메서드
-     * ========================================================== */
-
-    private Department getDepartment(
-            College college,
-            DepartmentName departmentName
-    ) {
+    private Department getDepartment(College college, DepartmentName departmentName) {
         return departmentRepository
                 .findByCollegeAndDepartmentName(college, departmentName)
                 .orElseThrow(DepartmentNotFoundException::new);
