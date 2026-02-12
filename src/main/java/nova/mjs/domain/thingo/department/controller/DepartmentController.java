@@ -2,12 +2,12 @@ package nova.mjs.domain.thingo.department.controller;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.department.dto.DepartmentDTO;
-import nova.mjs.domain.thingo.department.dto.DepartmentNoticesDTO;
+import nova.mjs.domain.thingo.department.dto.StudentCouncilNoticeDTO;
 import nova.mjs.domain.thingo.department.dto.DepartmentScheduleDTO;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.domain.thingo.department.service.info.DepartmentInfoQueryService;
-import nova.mjs.domain.thingo.department.service.notice.DepartmentNoticeQueryService;
+import nova.mjs.domain.thingo.department.service.notice.StudentCouncilNoticeQueryService;
 import nova.mjs.domain.thingo.department.service.schedule.DepartmentScheduleService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.data.domain.Page;
@@ -25,7 +25,7 @@ public class DepartmentController {
 
     private final DepartmentInfoQueryService departmentInfoQueryService;
     private final DepartmentScheduleService departmentScheduleService;
-    private final DepartmentNoticeQueryService departmentNoticeQueryService;
+    private final StudentCouncilNoticeQueryService studentCouncilNoticeQueryService;
 
     /* ------------------------------------------------------------------
      *  학과 정보 (단건)
@@ -62,14 +62,14 @@ public class DepartmentController {
      * ------------------------------------------------------------------ */
 
     @GetMapping("/notices")
-    public ResponseEntity<ApiResponse<Page<DepartmentNoticesDTO.Summary>>> getNotices(
+    public ResponseEntity<ApiResponse<Page<StudentCouncilNoticeDTO.Summary>>> getNotices(
             @RequestParam College college,
             @RequestParam DepartmentName department,
             @PageableDefault(page = 0, size = 5) Pageable pageable
     ) {
         return ResponseEntity.ok(
                 ApiResponse.success(
-                        departmentNoticeQueryService.getNoticePage(
+                        studentCouncilNoticeQueryService.getNoticePage(
                                 college,
                                 department,
                                 pageable
@@ -83,14 +83,14 @@ public class DepartmentController {
      *
      * 반드시 학과 정보와 함께 검증
      * ========================================================== */
-    @GetMapping("/notices/{noticeUuid}")
-    public ResponseEntity<ApiResponse<DepartmentNoticesDTO.Detail>> getNoticeDetail(
+    @GetMapping("/student-council/notices/{noticeUuid}")
+    public ResponseEntity<ApiResponse<StudentCouncilNoticeDTO.Detail>> getNoticeDetail(
             @RequestParam College college,
             @RequestParam DepartmentName department,
             @PathVariable UUID noticeUuid
     ) {
         return ResponseEntity.ok(ApiResponse.success(
-                departmentNoticeQueryService.getNoticeDetail(
+                studentCouncilNoticeQueryService.getNoticeDetail(
                         college,
                         department,
                         noticeUuid)

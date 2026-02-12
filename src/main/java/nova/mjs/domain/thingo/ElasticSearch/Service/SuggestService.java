@@ -47,7 +47,7 @@ import java.util.stream.Stream;
         List<String> results = Stream.of(
                         NoticeDocument.class,
                         DepartmentScheduleDocument.class,
-                        DepartmentNoticeDocument.class,
+                        StudentCouncilNoticeDocument.class,
                         CommunityDocument.class,
                         NewsDocument.class,
                         BroadcastDocument.class,

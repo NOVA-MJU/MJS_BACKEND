@@ -10,7 +10,7 @@ import nova.mjs.domain.thingo.ElasticSearch.indexing.mapper.UnifiedSearchMapper;
 import nova.mjs.domain.thingo.broadcast.repository.BroadcastRepository;
 import nova.mjs.domain.thingo.calendar.repository.MjuCalendarRepository;
 import nova.mjs.domain.thingo.community.repository.CommunityBoardRepository;
-import nova.mjs.domain.thingo.department.repository.DepartmentNoticeRepository;
+import nova.mjs.domain.thingo.department.repository.StudentCouncilNoticeRepository;
 import nova.mjs.domain.thingo.department.repository.DepartmentScheduleRepository;
 import nova.mjs.domain.thingo.news.repository.NewsRepository;
 import nova.mjs.domain.thingo.notice.repository.NoticeRepository;
@@ -49,7 +49,7 @@ public class SearchIndexSyncService {
     private final NewsRepository newsRepository;
     private final CommunityBoardRepository communityBoardRepository;
     private final DepartmentScheduleRepository departmentScheduleRepository;
-    private final DepartmentNoticeRepository departmentNoticeRepository;
+    private final StudentCouncilNoticeRepository studentCouncilNoticeRepository;
     private final BroadcastRepository broadcastRepository;
     private final MjuCalendarRepository mjuCalendarRepository;
 
@@ -61,7 +61,7 @@ public class SearchIndexSyncService {
     private final NewsSearchRepository newsSearchRepository;
     private final CommunitySearchRepository communitySearchRepository;
     private final DepartmentScheduleSearchRepository departmentScheduleSearchRepository;
-    private final DepartmentNoticeSearchRepository departmentNoticeSearchRepository;
+    private final StudentCouncilNoticeSearchRepository studentCouncilNoticeSearchRepository;
     private final BroadcastSearchRepository broadcastSearchRepository;
     private final MjuCalendarSearchRepository mjuCalendarSearchRepository;
 
@@ -134,9 +134,9 @@ public class SearchIndexSyncService {
 
         sync(
                 "DEPARTMENT_NOTICE",
-                departmentNoticeRepository.findAll(),
-                DepartmentNoticeDocument::from,
-                departmentNoticeSearchRepository
+                studentCouncilNoticeRepository.findAll(),
+                StudentCouncilNoticeDocument::from,
+                studentCouncilNoticeSearchRepository
         );
 
         sync(
@@ -219,7 +219,7 @@ public class SearchIndexSyncService {
         rebuildFrom(newsSearchRepository.findAll());
         rebuildFrom(communitySearchRepository.findAll());
         rebuildFrom(departmentScheduleSearchRepository.findAll());
-        rebuildFrom(departmentNoticeSearchRepository.findAll());
+        rebuildFrom(studentCouncilNoticeSearchRepository.findAll());
         rebuildFrom(broadcastSearchRepository.findAll());
         rebuildFrom(mjuCalendarSearchRepository.findAll());
 

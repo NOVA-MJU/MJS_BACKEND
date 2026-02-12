@@ -146,7 +146,7 @@ public class SearchRepositoryImpl implements SearchRepository {
         return switch (type) {
             case NOTICE -> NoticeDocument.class;
             case MJU_CALENDAR -> MjuCalendarDocument.class;
-            case DEPARTMENT_NOTICE -> DepartmentNoticeDocument.class;
+            case DEPARTMENT_NOTICE -> StudentCouncilNoticeDocument.class;
             case DEPARTMENT_SCHEDULE -> DepartmentScheduleDocument.class;
             case COMMUNITY -> CommunityDocument.class;
             case NEWS -> NewsDocument.class;

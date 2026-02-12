@@ -3,7 +3,7 @@ package nova.mjs.domain.thingo.department.dto;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import nova.mjs.domain.thingo.department.entity.DepartmentNotice;
+import nova.mjs.domain.thingo.department.entity.StudentCouncilNotice;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.UUID;
  *
  * <p>외부에 노출되는 실질 DTO는 내부 static 클래스를 통해 제공됩니다.</p>
  */
-public final class DepartmentNoticesDTO {
+public final class StudentCouncilNoticeDTO {
 
     @Getter
     @Builder(access = AccessLevel.PRIVATE)
@@ -27,7 +27,7 @@ public final class DepartmentNoticesDTO {
         private final LocalDateTime createdAt;
 
         /* ---- 변환 메서드 ---- */
-        public static Summary fromEntity(DepartmentNotice n) {
+        public static Summary fromEntity(StudentCouncilNotice n) {
             return Summary.builder()
                     .noticeUuid(n.getUuid())
                     .title(n.getTitle())
@@ -37,7 +37,7 @@ public final class DepartmentNoticesDTO {
                     .build();
         }
 
-        public static List<Summary> fromList(List<DepartmentNotice> entities) {
+        public static List<Summary> fromList(List<StudentCouncilNotice> entities) {
             return entities.stream()
                     .map(Summary::fromEntity)
                     .toList();
@@ -54,7 +54,7 @@ public final class DepartmentNoticesDTO {
         private final String thumbnailUrl;
         private final LocalDateTime createdAt;
 
-        public static Detail fromEntity(DepartmentNotice n) {
+        public static Detail fromEntity(StudentCouncilNotice n) {
             return Detail.builder()
                     .noticeUuid(n.getUuid())
                     .title(n.getTitle())

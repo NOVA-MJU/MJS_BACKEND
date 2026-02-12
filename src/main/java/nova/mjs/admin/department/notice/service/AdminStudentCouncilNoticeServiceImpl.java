@@ -3,15 +3,14 @@ package nova.mjs.admin.department.notice.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import nova.mjs.admin.account.service.AdminQueryService;
-import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeRequestDTO;
-import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeResponseDTO;
+import nova.mjs.admin.department.notice.dto.AdminStudentCouncilNoticeDTO;
 import nova.mjs.domain.thingo.department.entity.Department;
-import nova.mjs.domain.thingo.department.entity.DepartmentNotice;
+import nova.mjs.domain.thingo.department.entity.StudentCouncilNotice;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.domain.thingo.department.exception.DepartmentAdminNotFoundException;
 import nova.mjs.domain.thingo.department.exception.DepartmentNoticeNotFoundException;
-import nova.mjs.domain.thingo.department.repository.DepartmentNoticeRepository;
+import nova.mjs.domain.thingo.department.repository.StudentCouncilNoticeRepository;
 import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
 import nova.mjs.util.s3.S3DomainType;
 import nova.mjs.util.s3.S3Service;
@@ -25,11 +24,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 @Transactional(readOnly = true)
-public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeService {
+public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncilNoticeService {
 
     private final AdminQueryService adminQueryService;
     private final DepartmentRepository departmentRepository;
-    private final DepartmentNoticeRepository departmentNoticeRepository;
+    private final StudentCouncilNoticeRepository studentCouncilNoticeRepository;
     private final S3Service s3Service;
 
     private final String departmentNoticePrefix =
@@ -44,16 +43,16 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
      *  3) 해당 학과에 속한 공지인지 검증
      * ========================================================== */
     @Override
-    public AdminDepartmentNoticeResponseDTO getAdminDepartmentNoticeDetail(
+    public AdminStudentCouncilNoticeDTO.Response getAdminDepartmentNoticeDetail(
             College college,
             DepartmentName departmentName,
             UUID noticeUuid,
             UserPrincipal userPrincipal
     ) {
-        DepartmentNotice notice =
+        StudentCouncilNotice notice =
                 validateAdminAndGetNotice(college, departmentName, noticeUuid, userPrincipal);
 
-        return AdminDepartmentNoticeResponseDTO.fromEntity(notice);
+        return AdminStudentCouncilNoticeDTO.Response.fromEntity(notice);
     }
 
     /* ==========================================================
@@ -67,22 +66,22 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
      * ========================================================== */
     @Override
     @Transactional
-    public AdminDepartmentNoticeResponseDTO createNotice(
+    public AdminStudentCouncilNoticeDTO.Response createNotice(
             UserPrincipal userPrincipal,
             College college,
             DepartmentName departmentName,
-            AdminDepartmentNoticeRequestDTO request
+            AdminStudentCouncilNoticeDTO.Request request
     ) {
         Department department =
                 validateAdminAndGetDepartment(userPrincipal, college, departmentName);
 
-        DepartmentNotice notice = DepartmentNotice.create(request, department);
-        departmentNoticeRepository.save(notice);
+        StudentCouncilNotice notice = StudentCouncilNotice.create(request, department);
+        studentCouncilNoticeRepository.save(notice);
 
         log.info("[학과 공지 생성] college={}, department={}, noticeUuid={}",
                 college, departmentName, notice.getUuid());
 
-        return AdminDepartmentNoticeResponseDTO.fromEntity(notice);
+        return AdminStudentCouncilNoticeDTO.Response.fromEntity(notice);
     }
 
     /* ==========================================================
@@ -96,14 +95,14 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
      * ========================================================== */
     @Override
     @Transactional
-    public AdminDepartmentNoticeResponseDTO updateNotice(
+    public AdminStudentCouncilNoticeDTO.Response updateNotice(
             UserPrincipal userPrincipal,
             College college,
             DepartmentName departmentName,
             UUID noticeUuid,
-            AdminDepartmentNoticeRequestDTO request
+            AdminStudentCouncilNoticeDTO.Request request
     ) {
-        DepartmentNotice notice =
+        StudentCouncilNotice notice =
                 validateAdminAndGetNotice(college, departmentName, noticeUuid, userPrincipal);
 
         notice.update(request);
@@ -111,7 +110,7 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
         log.info("[학과 공지 수정] college={}, department={}, noticeUuid={}",
                 college, departmentName, noticeUuid);
 
-        return AdminDepartmentNoticeResponseDTO.fromEntity(notice);
+        return AdminStudentCouncilNoticeDTO.Response.fromEntity(notice);
     }
 
     /* ==========================================================
@@ -132,13 +131,13 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
             DepartmentName departmentName,
             UUID noticeUuid
     ) {
-        DepartmentNotice notice =
+        StudentCouncilNotice notice =
                 validateAdminAndGetNotice(college, departmentName, noticeUuid, userPrincipal);
 
         String folder = departmentNoticePrefix + notice.getUuid() + "/";
         s3Service.deleteFolder(folder);
 
-        departmentNoticeRepository.delete(notice);
+        studentCouncilNoticeRepository.delete(notice);
 
         log.info("[학과 공지 삭제] college={}, department={}, noticeUuid={}",
                 college, departmentName, noticeUuid);
@@ -173,7 +172,7 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
     /**
      * 관리자 검증 + 공지 조회
      */
-    private DepartmentNotice validateAdminAndGetNotice(
+    private StudentCouncilNotice validateAdminAndGetNotice(
             College college,
             DepartmentName departmentName,
             UUID noticeUuid,
@@ -182,7 +181,7 @@ public class AdminDepartmentNoticeServiceImpl implements AdminDepartmentNoticeSe
         Department department =
                 validateAdminAndGetDepartment(userPrincipal, college, departmentName);
 
-        return departmentNoticeRepository
+        return studentCouncilNoticeRepository
                 .findByDepartmentAndUuid(department, noticeUuid)
                 .orElseThrow(DepartmentNoticeNotFoundException::new);
     }

@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nova.mjs.domain.thingo.department.entity.DepartmentNotice;
+import nova.mjs.domain.thingo.department.entity.StudentCouncilNotice;
 import nova.mjs.domain.thingo.ElasticSearch.SearchType;
 import nova.mjs.config.elasticsearch.KomoranTokenizerUtil;
 import org.springframework.data.elasticsearch.annotations.*;
@@ -19,7 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DepartmentNoticeDocument implements SearchDocument{
+public class StudentCouncilNoticeDocument implements SearchDocument{
 
     @Id
     private String id;
@@ -48,14 +48,14 @@ public class DepartmentNoticeDocument implements SearchDocument{
         return date;
     }
 
-    public static DepartmentNoticeDocument from(DepartmentNotice departmentNotice) {
-        return DepartmentNoticeDocument.builder()
-                .id(departmentNotice.getUuid().toString())
-                .title(departmentNotice.getTitle())
-                .content(departmentNotice.getContent())
-                .department(departmentNotice.getDepartment().getDepartmentName().getLabel())
-                .date(departmentNotice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
-                .suggest(KomoranTokenizerUtil.generateSuggestions(departmentNotice.getTitle()))
+    public static StudentCouncilNoticeDocument from(StudentCouncilNotice studentCouncilNotice) {
+        return StudentCouncilNoticeDocument.builder()
+                .id(studentCouncilNotice.getUuid().toString())
+                .title(studentCouncilNotice.getTitle())
+                .content(studentCouncilNotice.getContent())
+                .department(studentCouncilNotice.getDepartment().getDepartmentName().getLabel())
+                .date(studentCouncilNotice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
+                .suggest(KomoranTokenizerUtil.generateSuggestions(studentCouncilNotice.getTitle()))
                 .type(SearchType.DEPARTMENT_NOTICE.name())
                 .build();
     }

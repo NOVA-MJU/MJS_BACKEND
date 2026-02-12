@@ -18,7 +18,7 @@ public class SearchIndexEventListener {
     private final NewsSearchRepository newsSearchRepository;
     private final CommunitySearchRepository communitySearchRepository;
     private final DepartmentScheduleSearchRepository departmentScheduleSearchRepository;
-    private final DepartmentNoticeSearchRepository departmentNoticeSearchRepository;
+    private final StudentCouncilNoticeSearchRepository studentCouncilNoticeSearchRepository;
     private final MjuCalendarSearchRepository mjuCalendarSearchRepository;
     private final BroadcastSearchRepository broadcastSearchRepository;
 
@@ -103,8 +103,8 @@ public class SearchIndexEventListener {
             departmentScheduleSearchRepository.save(schedule);
             return;
         }
-        if (doc instanceof DepartmentNoticeDocument deptNotice) {
-            departmentNoticeSearchRepository.save(deptNotice);
+        if (doc instanceof StudentCouncilNoticeDocument deptNotice) {
+            studentCouncilNoticeSearchRepository.save(deptNotice);
             return;
         }
         if (doc instanceof MjuCalendarDocument calendar) {
@@ -146,8 +146,8 @@ public class SearchIndexEventListener {
             departmentScheduleSearchRepository.deleteById(id);
             return;
         }
-        if (doc instanceof DepartmentNoticeDocument) {
-            departmentNoticeSearchRepository.deleteById(id);
+        if (doc instanceof StudentCouncilNoticeDocument) {
+            studentCouncilNoticeSearchRepository.deleteById(id);
             return;
         }
         if (doc instanceof MjuCalendarDocument) {

@@ -4,30 +4,30 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import lombok.RequiredArgsConstructor;
-import nova.mjs.domain.thingo.ElasticSearch.Document.DepartmentNoticeDocument;
-import nova.mjs.domain.thingo.department.entity.DepartmentNotice;
+import nova.mjs.domain.thingo.ElasticSearch.Document.StudentCouncilNoticeDocument;
+import nova.mjs.domain.thingo.department.entity.StudentCouncilNotice;
 import nova.mjs.domain.thingo.ElasticSearch.indexing.event.EntityIndexEvent;
 import nova.mjs.domain.thingo.ElasticSearch.indexing.publisher.SearchIndexPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class DepartmentNoticeEntityListener {
+public class StudentCouncilNoticeEntityListener {
     private final SearchIndexPublisher publisher;
 
     @PostPersist
-    public void afterNoticeCreate(DepartmentNotice notice) {
-        publisher.publish(DepartmentNoticeDocument.from(notice), EntityIndexEvent.IndexAction.INSERT);
+    public void afterNoticeCreate(StudentCouncilNotice notice) {
+        publisher.publish(StudentCouncilNoticeDocument.from(notice), EntityIndexEvent.IndexAction.INSERT);
     }
 
     @PostUpdate
-    public void afterNoticeUpdate(DepartmentNotice notice) {
-        publisher.publish(DepartmentNoticeDocument.from(notice), EntityIndexEvent.IndexAction.UPDATE);
+    public void afterNoticeUpdate(StudentCouncilNotice notice) {
+        publisher.publish(StudentCouncilNoticeDocument.from(notice), EntityIndexEvent.IndexAction.UPDATE);
     }
 
     @PostRemove
-    public void afterNoticeDelete(DepartmentNotice notice) {
-        publisher.publish(DepartmentNoticeDocument.builder()
+    public void afterNoticeDelete(StudentCouncilNotice notice) {
+        publisher.publish(StudentCouncilNoticeDocument.builder()
                 .id(notice.getUuid().toString())
                 .build(), EntityIndexEvent.IndexAction.DELETE);
     }

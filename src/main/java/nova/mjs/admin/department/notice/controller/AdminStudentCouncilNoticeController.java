@@ -22,9 +22,9 @@ import java.util.UUID;
  * 학과 식별: College + DepartmentName
  */
 @RestController
-@RequestMapping("/api/v1/admin/departments/notices")
+@RequestMapping("/api/v1/admin/departments/student-council/notices")
 @RequiredArgsConstructor
-public class AdminDepartmentNoticeController {
+public class AdminStudentCouncilNoticeController {
 
     private final AdminStudentCouncilNoticeService service;
 

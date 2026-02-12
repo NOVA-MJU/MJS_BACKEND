@@ -2,8 +2,8 @@ package nova.mjs.domain.thingo.department.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nova.mjs.domain.thingo.ElasticSearch.EntityListner.DepartmentNoticeEntityListener;
-import nova.mjs.admin.department.notice.dto.AdminDepartmentNoticeRequestDTO;
+import nova.mjs.admin.department.notice.dto.AdminStudentCouncilNoticeDTO;
+import nova.mjs.domain.thingo.ElasticSearch.EntityListner.StudentCouncilNoticeEntityListener;
 import nova.mjs.util.entity.BaseEntity;
 import nova.mjs.util.s3.S3DomainType;
 
@@ -16,9 +16,9 @@ import static org.springframework.util.StringUtils.hasText;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(DepartmentNoticeEntityListener.class)
+@EntityListeners(StudentCouncilNoticeEntityListener.class)
 @Table(name = "department_notice")
-public class DepartmentNotice extends BaseEntity {
+public class StudentCouncilNotice extends BaseEntity {
 
     // 1) PK
     @Id
@@ -52,8 +52,8 @@ public class DepartmentNotice extends BaseEntity {
 
 
     /* =================== 생성 =================== */
-    public static DepartmentNotice create(AdminDepartmentNoticeRequestDTO request, Department department) {
-        return DepartmentNotice.builder()
+    public static StudentCouncilNotice create(AdminStudentCouncilNoticeDTO.Request request, Department department) {
+        return StudentCouncilNotice.builder()
                 .uuid(UUID.randomUUID())
                 .title(request.getTitle())
                 .content(request.getContent())
@@ -66,7 +66,7 @@ public class DepartmentNotice extends BaseEntity {
     }
 
     /* =================== 수정 =================== */
-    public void update(AdminDepartmentNoticeRequestDTO requestDTO) {
+    public void update(AdminStudentCouncilNoticeDTO.Request requestDTO) {
         this.title = getOrDefault(requestDTO.getTitle(), this.title);
         this.content = getOrDefault(requestDTO.getContent(), this.content);
         this.previewContent = getOrDefault(requestDTO.getContentPreview(), this.previewContent); // content 변경 기준
