@@ -3,13 +3,13 @@ package nova.mjs.admin.account.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.thingo.department.entity.Department;
+import nova.mjs.domain.thingo.department.entity.enumList.College;
+import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.exception.DepartmentNotFoundException;
 import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
-import nova.mjs.domain.thingo.member.exception.MemberNotFoundException;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -19,22 +19,60 @@ public class AdminQueryServiceImpl implements AdminQueryService {
 
     private final DepartmentRepository departmentRepository;
 
-    // 관리자인지 확인하기
-    // 1. 로그인한 회원 Email과 Deparment에 등록된 관리자와 동일한지 검증 메서드
-
+    /**
+     * 로그인 사용자가 특정 학과의 관리자 여부 검증
+     *
+     * 기준:
+     * - college + departmentName 으로 Department 조회
+     * - Department.admin.email 과 로그인 email 비교
+     */
     @Override
-    public Boolean validateIsAdminOfDepartment(UserPrincipal userPrincipal, UUID departmentUuid) {
-        String loginEmail = userPrincipal.getUsername();
+    public boolean validateIsAdminOfDepartment(
+            UserPrincipal userPrincipal,
+            College college,
+            DepartmentName departmentName
+    ) {
+        Department department = getDepartment(college, departmentName);
 
-        return departmentRepository.findAdminEmailByDepartmentUuid(departmentUuid)
-                .map(adminEmail -> adminEmail.equals(loginEmail))
-                .orElse(false);
+        if (department.getAdmin() == null) {
+            return false;
+        }
+
+        return department.getAdmin().getEmail()
+                .equals(userPrincipal.getUsername());
     }
 
+    /**
+     * 관리자 이메일 기준으로 담당 Department 조회
+     */
     @Override
     public Department getDepartmentByAdminEmail(String emailId) {
         return departmentRepository.findByAdminEmail(emailId)
-                .orElseThrow(MemberNotFoundException::new);
+                .orElseThrow(DepartmentNotFoundException::new);
     }
 
+    /* ==================================================
+     * 공통 내부 메서드
+     * ================================================== */
+
+    /**
+     * college + departmentName 기준 Department 조회
+     *
+     * - departmentName == null → 단과대 학생회
+     * - departmentName != null → 학과 학생회
+     */
+    private Department getDepartment(
+            College college,
+            DepartmentName departmentName) {
+
+        if (departmentName == null) {
+            return departmentRepository
+                    .findByCollegeAndDepartmentNameIsNull(college)
+                    .orElseThrow(DepartmentNotFoundException::new);
+        }
+
+        return departmentRepository
+                .findByCollegeAndDepartmentName(college, departmentName)
+                .orElseThrow(DepartmentNotFoundException::new);
+    }
 }
