@@ -32,7 +32,6 @@ public class DepartmentSchedule extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String title;
 
-    @Column(nullable = false)
     private String colorCode;
 
     @Column(nullable = false)
@@ -45,6 +44,10 @@ public class DepartmentSchedule extends BaseEntity {
     private String content;
 
     public static DepartmentSchedule create(AdminDepartmentScheduleRequestDTO dto, Department department) {
+
+        if (dto.getEndDate() != null && dto.getEndDate().isBefore(dto.getStartDate())) {
+            throw new IllegalArgumentException("종료일은 시작일보다 이전일 수 없습니다.");
+        }
         return DepartmentSchedule.builder()
                 .departmentScheduleUuid(UUID.randomUUID())
                 .title(dto.getTitle())
