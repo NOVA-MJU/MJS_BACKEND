@@ -1,4 +1,4 @@
-package nova.mjs.domain.thingo.member.entity.enumList;
+package nova.mjs.domain.thingo.department.entity.enumList;
 
 public enum College {
     HUMANITIES, //인문대학
@@ -8,5 +8,4 @@ public enum College {
     AI_SOFTWARE, //인공지능-소프트웨어융합대학
     FUTURE_CONVERGENCE, //미래융합대학
     HONOR, //아너칼리지
-    OTHER;
 }

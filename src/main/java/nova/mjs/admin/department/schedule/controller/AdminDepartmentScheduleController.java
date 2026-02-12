@@ -2,57 +2,62 @@ package nova.mjs.admin.department.schedule.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleRequestDTO;
 import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleResponseDTO;
 import nova.mjs.admin.department.schedule.service.AdminDepartmentScheduleService;
+import nova.mjs.domain.thingo.department.entity.enumList.College;
+import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/department/{departmentUuid}/schedules")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
-@Slf4j
+@RequestMapping("/api/v1/admin/departments/schedules")
 public class AdminDepartmentScheduleController {
 
-    private final AdminDepartmentScheduleService scheduleService;
+    private final AdminDepartmentScheduleService service;
 
-    @PostMapping("")
-    public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> createSchedule(
+    @PostMapping
+    public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> create(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable UUID departmentUuid,
-            @RequestBody @Valid AdminDepartmentScheduleRequestDTO requestDTO) {
-
+            @RequestParam College college,
+            @RequestParam DepartmentName department,
+            @RequestBody @Valid AdminDepartmentScheduleRequestDTO request
+    ) {
         return ResponseEntity.ok(
-                ApiResponse.success(scheduleService.createSchedule(userPrincipal, departmentUuid, requestDTO))
+                ApiResponse.success(
+                        service.createSchedule(userPrincipal, college, department, request)
+                )
         );
     }
 
     @PatchMapping("/{scheduleUuid}")
-    public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> updateSchedule(
+    public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> update(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable UUID departmentUuid,
+            @RequestParam College college,
+            @RequestParam DepartmentName department,
             @PathVariable UUID scheduleUuid,
-            @RequestBody @Valid AdminDepartmentScheduleRequestDTO requestDTO) {
-
+            @RequestBody @Valid AdminDepartmentScheduleRequestDTO request
+    ) {
         return ResponseEntity.ok(
-                ApiResponse.success(scheduleService.updateSchedule(userPrincipal, departmentUuid, scheduleUuid, requestDTO))
+                ApiResponse.success(
+                        service.updateSchedule(userPrincipal, college, department, scheduleUuid, request)
+                )
         );
     }
 
     @DeleteMapping("/{scheduleUuid}")
-    public ResponseEntity<ApiResponse<String>> deleteSchedule(
+    public ResponseEntity<ApiResponse<String>> delete(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable UUID departmentUuid,
-            @PathVariable UUID scheduleUuid) {
-
-        scheduleService.deleteSchedule(userPrincipal, departmentUuid, scheduleUuid);
-        return ResponseEntity.ok(ApiResponse.success("학과 일정이 삭제되었습니다."));
+            @RequestParam College college,
+            @RequestParam DepartmentName department,
+            @PathVariable UUID scheduleUuid
+    ) {
+        service.deleteSchedule(userPrincipal, college, department, scheduleUuid);
+        return ResponseEntity.ok(ApiResponse.success("삭제 완료"));
     }
 }

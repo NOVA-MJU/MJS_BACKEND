@@ -54,6 +54,7 @@ public class CommunityBoard extends BaseEntity {
      * - 집계 값은 Integer 사용
      * - NULL 방지를 위해 기본값 0 보장
      */
+    @Builder.Default
     @Column(nullable = false)
     private Integer viewCount = 0;
 
@@ -75,6 +76,7 @@ public class CommunityBoard extends BaseEntity {
      * 게시 여부
      */
     @Column(nullable = false)
+    @Builder.Default
     private Boolean published = false;
 
     /**

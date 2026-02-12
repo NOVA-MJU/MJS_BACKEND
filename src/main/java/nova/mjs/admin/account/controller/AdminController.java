@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.admin.account.service.AdminCommandService;
+import nova.mjs.domain.thingo.department.dto.DepartmentDTO;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,9 +22,11 @@ public class AdminController {
     @PreAuthorize("isAuthenticated() and hasRole('OPERATOR')")
     public ResponseEntity<ApiResponse<String>> registerInitialAdmin(
             @Valid @RequestBody AdminDTO.StudentCouncilInitRegistrationRequestDTO request) {
+
         ApiResponse<String> response = adminCommandService.registerInitAdmin(request);
         return ResponseEntity.ok(response);
     }
+
 
     @PatchMapping("/update")
     @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")

@@ -5,8 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.member.entity.Member;
-import nova.mjs.domain.thingo.member.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -23,8 +24,8 @@ public class MemberDTO {
     private String profileImageUrl;
     private String gender;
     private String nickname;
+    private College college;
     private DepartmentName departmentName;
-    private UUID departmentUuid;
     private String studentNumber;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -40,25 +41,8 @@ public class MemberDTO {
                 .email(member.getEmail())
                 .gender(String.valueOf(member.getGender()))
                 .nickname(member.getNickname())
+                .college(member.getCollege())
                 .departmentName(member.getDepartmentName())
-                .studentNumber(member.getStudentNumber())
-                .createdAt(member.getCreatedAt())
-                .updatedAt(member.getUpdatedAt())
-                .role(member.getRole())
-                .profileImageUrl(member.getProfileImageUrl())
-                .build();
-    }
-
-    // 회원 초기 로그인 용 - departmentUUID 포함.
-    public static MemberDTO fromEntity(Member member, UUID departmentUuid) {
-        return MemberDTO.builder()
-                .uuid(member.getUuid())
-                .name(member.getName())
-                .email(member.getEmail())
-                .gender(String.valueOf(member.getGender()))
-                .nickname(member.getNickname())
-                .departmentName(member.getDepartmentName())
-                .departmentUuid(departmentUuid)
                 .studentNumber(member.getStudentNumber())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
@@ -91,8 +75,10 @@ public class MemberDTO {
         @NotNull(message = "성별은 필수입니다.")
         private String gender;
 
-        @NotNull(message = "학과 정보는 필수입니다.")
         private DepartmentName departmentName;
+
+        @NotNull(message = "단과대 정보는 필수입니다.")
+        private College college;
 
         @Pattern(regexp = "\\d{8}", message = "학번은 정확히 8자리 숫자여야 합니다.")
         @NotNull(message = "학번은 필수입니다.")
@@ -111,6 +97,7 @@ public class MemberDTO {
         private String name;
         private String nickname;
         private String gender; // "MALE", "FEMALE", "OTHERS"
+        private College college;
         private DepartmentName departmentName;
         private String studentNumber;
         private String profileImageUrl;

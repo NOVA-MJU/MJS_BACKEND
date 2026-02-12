@@ -24,7 +24,6 @@ public class AdminDepartmentScheduleRequestDTO {
 
     private String content;
 
-    @NotBlank(message = "색상 코드는 필수입니다.")
     private String colorCode;
 
     @NotNull(message = "시작일은 필수입니다.")

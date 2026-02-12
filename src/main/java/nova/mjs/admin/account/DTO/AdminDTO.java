@@ -1,13 +1,16 @@
 package nova.mjs.admin.account.DTO;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.member.entity.Member;
-import nova.mjs.domain.thingo.member.entity.enumList.College;
-import nova.mjs.domain.thingo.member.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.entity.enumList.College;
+import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 
 public class AdminDTO {
     /**
@@ -25,10 +28,11 @@ public class AdminDTO {
         @NotBlank(message = "이름은 필수입니다.")
         private String name;
 
-        @NotBlank(message = "컨텍 이메일은 필수입니다.")
-        private String contactEmail;
+        @Enumerated(EnumType.STRING)
+        @Column(nullable = false)
+        @NotNull(message = "담당 단과대를 입력해주세요")
+        private College college;
 
-        @NotNull(message = "담당 학과를 입력해주세요")
         private DepartmentName departmentName;
 
         @Builder.Default
@@ -87,12 +91,9 @@ public class AdminDTO {
             return AdminDTO.StudentCouncilResponseDTO.builder()
                     .adminEmail(member.getEmail())
                     .name(member.getName())
-                    .studentCouncilEmail(department.getStudentCouncilContactEmail())
                     .college(department.getCollege())
                     .departmentName(department.getDepartmentName())
                     .profileImageUrl(member.getProfileImageUrl())
-                    .slogan(department.getSlogan())
-                    .description(department.getDescription())
                     .instagramUrl(department.getInstagramUrl())
                     .homepageUrl(department.getHomepageUrl())
                     .build();

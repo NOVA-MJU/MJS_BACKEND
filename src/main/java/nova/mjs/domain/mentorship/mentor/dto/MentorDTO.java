@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nova.mjs.domain.thingo.member.entity.Member;
-import nova.mjs.domain.thingo.member.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

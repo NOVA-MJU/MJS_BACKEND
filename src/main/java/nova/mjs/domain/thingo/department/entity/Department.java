@@ -3,21 +3,22 @@ package nova.mjs.domain.thingo.department.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.admin.account.DTO.AdminDTO;
+import nova.mjs.domain.thingo.department.dto.DepartmentDTO;
 import nova.mjs.domain.thingo.member.entity.Member;
-import nova.mjs.domain.thingo.member.entity.enumList.College;
-import nova.mjs.domain.thingo.member.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.entity.enumList.College;
+import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.util.entity.BaseEntity;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "department")
+@Table(
+    name = "department",uniqueConstraints = {
+            @UniqueConstraint(
+                name = "uk_department_college_name",
+                columnNames = {"college", "department_name"})})
 public class Department extends BaseEntity {
 
     @Id
@@ -25,24 +26,17 @@ public class Department extends BaseEntity {
     @Column(name = "department_id")
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_member_id")
-    private Member admin; // 관리자로 연결된 회원
-
-    @Column(nullable = false, unique = true)
-    private UUID departmentUuid;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private College college;
 
     @Enumerated(EnumType.STRING)
+    @Column
     private DepartmentName departmentName;
 
+    // 교학팀 전화번호
     @Column
-    private String slogan;
-
-    @Column
-    private String description;
-
-    @Column
-    private String studentCouncilContactEmail; // 학생회 연락 계정
+    private String academicOfficePhone;
 
     @Column
     private String instagramUrl;
@@ -50,36 +44,65 @@ public class Department extends BaseEntity {
     @Column
     private String homepageUrl;
 
-    @Enumerated(EnumType.STRING)
-    private College college;
+    /**
+     * 학과 담당 관리자
+     * - 학생회 계정 또는 교학팀 계정
+     * - 한 관리자가 여러 학과를 담당할 수 있음
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_member_id")
+    private Member admin;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DepartmentSchedule> schedules = new ArrayList<>();
-
-    @Builder.Default
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DepartmentNotice> notices = new ArrayList<>();
-
-
-    public static Department createWithAdmin(AdminDTO.StudentCouncilInitRegistrationRequestDTO dto, Member admin) {
+    // 관리자 없이 생성
+    public static Department create(DepartmentDTO.CreateRequest request) {
         return Department.builder()
-            .departmentUuid(UUID.randomUUID())
-            .studentCouncilContactEmail(dto.getContactEmail())
-            .admin(admin)
-            .build();
+                .college(request.getCollege())
+                .departmentName(request.getDepartmentName())
+                .academicOfficePhone(request.getAcademicOfficePhone())
+                .homepageUrl(request.getHomepageUrl())
+                .instagramUrl(request.getInstagramUrl())
+                .build();
+    }
+
+    public static Department createWithAdmin(
+            DepartmentDTO.CreateRequest request,
+            Member admin
+    ) {
+        return Department.builder()
+                .college(request.getCollege())
+                .departmentName(request.getDepartmentName())
+                .academicOfficePhone(request.getAcademicOfficePhone())
+                .homepageUrl(request.getHomepageUrl())
+                .instagramUrl(request.getInstagramUrl())
+                .admin(admin)
+                .build();
     }
 
     public void updateInfo(AdminDTO.StudentCouncilUpdateDTO request) {
         this.departmentName = getOrDefault(request.getDepartmentName(), this.departmentName);
         this.homepageUrl = getOrDefault(request.getHomepageUrl(), this.homepageUrl);
         this.instagramUrl = getOrDefault(request.getInstagramUrl(), this.instagramUrl);
-        this.description = getOrDefault(request.getDescription(), this.description);
-        this.slogan = getOrDefault(request.getSlogan(), this.slogan);
         this.college = getOrDefault(request.getCollege(), this.college);
     }
 
-    // 어드민 변경
+    /* ==========================================================
+     * 상태 변경 (Admin 전용 업데이트)
+     *
+     * - null 값은 기존 값 유지
+     * - DTO 의존은 허용 (현재 설계 선택 기준)
+     * ========================================================== */
+    public void updateAdminInfo(DepartmentDTO.UpdateRequest request) {
+
+        this.college = getOrDefault(request.getCollege(), this.college);
+        this.departmentName = getOrDefault(request.getDepartmentName(), this.departmentName);
+        this.academicOfficePhone = getOrDefault(request.getAcademicOfficePhone(), this.academicOfficePhone);
+        this.instagramUrl = getOrDefault(request.getInstagramUrl(), this.instagramUrl);
+        this.homepageUrl = getOrDefault(request.getHomepageUrl(), this.homepageUrl);
+    }
+
+
+
+    // 관리자 변경
     public void assignAdmin(Member newAdmin) {
         this.admin = newAdmin;
     }
