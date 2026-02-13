@@ -54,7 +54,6 @@ public class DepartmentScheduleDocument implements SearchDocument{
                 .content(schedule.getContent())
                 .department(schedule.getDepartment().getDepartmentName().getLabel())
                 .date(schedule.getStartDate().atStartOfDay(ZoneId.systemDefault()).toInstant())
-                .suggest(KomoranTokenizerUtil.generateSuggestions(schedule.getTitle()))
                 .type(SearchType.DEPARTMENT_SCHEDULE.name())
                 .build();
     }

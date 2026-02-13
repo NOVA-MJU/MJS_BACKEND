@@ -29,9 +29,6 @@ public class MjuCalendarDocument implements SearchDocument  {
 
     private String content;
 
-    @CompletionField
-    private List<String> suggest;
-
     private String type;
 
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
@@ -53,7 +50,6 @@ public class MjuCalendarDocument implements SearchDocument  {
                 .title(mjuCalendar.getDescription())
                 .content("")
                 .date(mjuCalendar.getStartDate().atStartOfDay(ZoneId.systemDefault()).toInstant())
-                .suggest(KomoranTokenizerUtil.generateSuggestions(mjuCalendar.getDescription()))
                 .type(SearchType.MJU_CALENDAR.name())
                 .build();
     }

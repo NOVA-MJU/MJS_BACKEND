@@ -32,7 +32,7 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
     private final S3Service s3Service;
 
     private final String departmentNoticePrefix =
-            S3DomainType.DEPARTMENT_NOTICE.getPrefix();
+            S3DomainType.STUDENT_COUNCIL_NOTICE.getPrefix();
 
     /* ==========================================================
      * 1. 상세 조회

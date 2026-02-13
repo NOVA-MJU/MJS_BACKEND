@@ -36,9 +36,6 @@ public class NoticeDocument implements SearchDocument{
 
     private String category;
 
-    @CompletionField
-    private List<String> suggest;
-
     private String type;
 
     @Override
@@ -61,7 +58,6 @@ public class NoticeDocument implements SearchDocument{
                 .date(notice.getDate().atZone(ZoneId.systemDefault()).toInstant())
                 .link(notice.getLink())
                 .category(notice.getCategory())
-                .suggest(KomoranTokenizerUtil.generateSuggestions(notice.getTitle()))
                 .type(SearchType.NOTICE.name())
                 .build();
     }

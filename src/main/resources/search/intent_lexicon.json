@@ -1,0 +1,165 @@
+{
+  "version": 2,
+  "meta": {
+    "minCompletionPrefixLength": 2,
+    "globalStopwords": [
+      "안내",
+      "모집",
+      "공고",
+      "개최",
+      "신청",
+      "기간",
+      "공지",
+      "안내문",
+      "확인",
+      "관련",
+      "제출",
+      "필독"
+    ],
+    "baseTypeWeight": {
+      "MJU_CALENDAR": 60,
+      "NOTICE": 55,
+      "DEPARTMENT_SCHEDULE": 50,
+      "STUDENT_COUNCIL_NOTICE": 45,
+      "COMMUNITY": 35,
+      "NEWS": 30,
+      "BROADCAST": 30
+    }
+  },
+  "entries": [
+    {
+      "major": "ACADEMIC_CORE",
+      "minor": "GRADUATION",
+      "intent": "졸업",
+      "weight": 140,
+      "matchKeywords": ["졸업", "졸업사정", "졸업요건", "학위수여", "학위수여식", "졸업유예", "학사학위취득유예", "수료"],
+      "expansions": ["학위수여식", "졸업사정", "졸업요건", "졸업유예", "수료", "졸업학점", "졸업대상자"],
+      "negativeKeywords": ["서포터즈", "공모전"],
+      "typeBoost": { "NOTICE": 15, "MJU_CALENDAR": 10 }
+    },
+    {
+      "major": "ACADEMIC_CORE",
+      "minor": "LEAVE_RETURN",
+      "intent": "휴학",
+      "weight": 135,
+      "matchKeywords": ["휴학", "복학", "미복학", "제적", "자퇴", "재입학", "군휴학", "조기복학"],
+      "expansions": ["복학", "군휴학", "미복학", "제적", "재입학", "조기복학"],
+      "negativeKeywords": [],
+      "typeBoost": { "NOTICE": 12, "MJU_CALENDAR": 8 }
+    },
+    {
+      "major": "ACADEMIC_CORE",
+      "minor": "COURSE_REGISTRATION",
+      "intent": "수강신청",
+      "weight": 130,
+      "matchKeywords": ["수강신청", "수강", "수강정정", "수강변경", "재수강", "강의시간표", "폐강", "분반"],
+      "expansions": ["수강정정", "수강변경", "재수강", "강의시간표", "폐강", "분반"],
+      "negativeKeywords": [],
+      "typeBoost": { "NOTICE": 10, "MJU_CALENDAR": 8 }
+    },
+    {
+      "major": "ACADEMIC_CORE",
+      "minor": "GRADE_EXAM",
+      "intent": "성적",
+      "weight": 125,
+      "matchKeywords": ["성적", "성적이의", "성적정정", "시험", "중간", "기말", "강의평가", "계절학기", "보강"],
+      "expansions": ["시험", "강의평가", "계절학기", "중간고사", "기말고사", "성적이의신청", "성적정정"],
+      "negativeKeywords": [],
+      "typeBoost": { "MJU_CALENDAR": 15, "NOTICE": 8 }
+    },
+    {
+      "major": "ACADEMIC_CORE",
+      "minor": "ACADEMIC_CALENDAR",
+      "intent": "학사일정",
+      "weight": 120,
+      "matchKeywords": ["학사일정", "개강", "종강", "방학", "휴강", "보강", "공휴일", "계절수업", "계절학기"],
+      "expansions": ["개강", "종강", "방학", "휴강", "보강", "계절학기", "계절수업", "공휴일"],
+      "negativeKeywords": [],
+      "typeBoost": { "MJU_CALENDAR": 20 }
+    },
+
+    {
+      "major": "FINANCE",
+      "minor": "TUITION",
+      "intent": "등록금",
+      "weight": 115,
+      "matchKeywords": ["등록금", "납부", "분납", "고지서", "환불", "추가납부", "최종납부"],
+      "expansions": ["등록금납부", "등록금분납", "등록금고지서", "등록금환불", "추가납부", "최종납부"],
+      "negativeKeywords": [],
+      "typeBoost": { "NOTICE": 10 }
+    },
+    {
+      "major": "FINANCE",
+      "minor": "SCHOLARSHIP_LOAN",
+      "intent": "장학",
+      "weight": 110,
+      "matchKeywords": ["장학", "장학생", "국가장학", "교내장학", "학자금", "대출", "한국장학재단"],
+      "expansions": ["국가장학", "교내장학", "학자금대출", "한국장학재단"],
+      "negativeKeywords": [],
+      "typeBoost": { "NOTICE": 8 }
+    },
+
+    {
+      "major": "LIFE",
+      "minor": "DORMITORY",
+      "intent": "기숙사",
+      "weight": 95,
+      "matchKeywords": ["기숙사", "생활관", "입사", "퇴사", "상벌점", "호실", "식비"],
+      "expansions": ["생활관", "기숙사입사", "기숙사퇴사", "상벌점"],
+      "negativeKeywords": [],
+      "typeBoost": { "NOTICE": 5 }
+    },
+    {
+      "major": "LIFE",
+      "minor": "LIBRARY",
+      "intent": "도서관",
+      "weight": 90,
+      "matchKeywords": ["도서관", "열람실", "대출", "반납", "연장", "좌석", "이용시간"],
+      "expansions": ["열람실", "도서대출", "반납", "대출연장", "좌석"],
+      "negativeKeywords": [],
+      "typeBoost": { "NOTICE": 3 }
+    },
+
+    {
+      "major": "CAREER",
+      "minor": "RECRUITMENT",
+      "intent": "채용",
+      "weight": 85,
+      "matchKeywords": ["채용", "취업", "공채", "면접", "인턴", "현장실습", "채용공고"],
+      "expansions": ["인턴", "현장실습", "공채", "면접", "채용공고"],
+      "negativeKeywords": [],
+      "typeBoost": { "NOTICE": 3 }
+    },
+    {
+      "major": "CAREER",
+      "minor": "EMPLOYMENT_SUPPORT",
+      "intent": "취업지원",
+      "weight": 90,
+      "matchKeywords": ["대학일자리", "취업지원", "국민취업지원", "진로", "상담", "컨설팅"],
+      "expansions": ["국민취업지원제도", "진로상담", "취업상담", "컨설팅"],
+      "negativeKeywords": [],
+      "typeBoost": { "NOTICE": 5 }
+    },
+
+    {
+      "major": "PROGRAM_EXTERNAL",
+      "minor": "CONTEST",
+      "intent": "공모전",
+      "weight": 75,
+      "matchKeywords": ["공모전", "대회", "해커톤", "경진대회"],
+      "expansions": ["대회", "해커톤", "경진대회"],
+      "negativeKeywords": ["개최", "안내"],
+      "typeBoost": { "NOTICE": 2 }
+    },
+    {
+      "major": "PROGRAM_EXTERNAL",
+      "minor": "SEMINAR_LECTURE",
+      "intent": "특강",
+      "weight": 70,
+      "matchKeywords": ["특강", "설명회", "세미나", "포럼", "워크숍", "강연"],
+      "expansions": ["설명회", "세미나", "포럼", "워크숍", "강연"],
+      "negativeKeywords": ["개최", "안내"],
+      "typeBoost": { "NOTICE": 2 }
+    }
+  ]
+}

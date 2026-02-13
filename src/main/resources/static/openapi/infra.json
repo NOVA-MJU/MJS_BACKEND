@@ -266,7 +266,7 @@
           "PROFILE_IMAGE",
           "DEPARTMENT_LOGO",
           "DEPARTMENT_SCHEDULE",
-          "DEPARTMENT_NOTICE"
+          "STUDENT_COUNCIL_NOTICE"
         ],
         "example": "COMMUNITY_POST"
       },

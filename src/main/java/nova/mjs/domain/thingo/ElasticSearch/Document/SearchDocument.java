@@ -26,10 +26,6 @@ public interface SearchDocument {
      */
     Instant getInstant();
 
-    List<String> getSuggest();
-
-    /* 선택 필드들 */
-
     default String getCategory() {
         return null;
     }

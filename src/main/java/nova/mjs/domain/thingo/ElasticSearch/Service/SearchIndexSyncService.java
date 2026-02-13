@@ -133,7 +133,7 @@ public class SearchIndexSyncService {
         );
 
         sync(
-                "DEPARTMENT_NOTICE",
+                "STUDENT_COUNCIL_NOTICE",
                 studentCouncilNoticeRepository.findAll(),
                 StudentCouncilNoticeDocument::from,
                 studentCouncilNoticeSearchRepository

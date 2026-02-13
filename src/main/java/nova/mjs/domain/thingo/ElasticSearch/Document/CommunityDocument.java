@@ -53,8 +53,7 @@ public class CommunityDocument implements SearchDocument {
     private Integer likeCount;
     private Integer commentCount;
 
-    @CompletionField
-    private List<String> suggest;
+
 
     @Override
     public String getType() {
@@ -95,7 +94,6 @@ public class CommunityDocument implements SearchDocument {
                         .atZone(ZoneId.systemDefault())
                         .toInstant()
                         : null)
-                .suggest(KomoranTokenizerUtil.generateSuggestions(board.getTitle()))
                 .type(SearchType.COMMUNITY.name())
                 .category(board.getCategory().name())
                 .likeCount(board.getLikeCount())
