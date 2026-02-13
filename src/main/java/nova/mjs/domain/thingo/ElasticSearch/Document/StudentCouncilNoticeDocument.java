@@ -33,14 +33,11 @@ public class StudentCouncilNoticeDocument implements SearchDocument{
     @Field(type = FieldType.Date, format = DateFormat.epoch_millis)
     private Instant date;
 
-    @CompletionField
-    private List<String> suggest;
-
     private String type;
 
     @Override
     public String getType() {
-        return SearchType.DEPARTMENT_NOTICE.name();
+        return SearchType.STUDENT_COUNCIL_NOTICE.name();
     }
 
      @Override
@@ -59,8 +56,7 @@ public class StudentCouncilNoticeDocument implements SearchDocument{
                 .content(safeContent)
                 .department(notice.getDepartment().getDepartmentName().getLabel())
                 .date(notice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
-                .suggest(KomoranTokenizerUtil.generateSuggestions(derivedTitle))
-                .type(SearchType.DEPARTMENT_NOTICE.name())
+                .type(SearchType.STUDENT_COUNCIL_NOTICE.name())
                 .build();
     }
 

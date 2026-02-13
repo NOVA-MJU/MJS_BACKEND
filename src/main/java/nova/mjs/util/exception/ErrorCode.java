@@ -42,7 +42,7 @@ public enum ErrorCode {
 
     // 공지사항 에러 관련 추가 코드
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTICE_NOT_FOUND", "[MJS] 해당 조건의 공지사항을 찾을 수 없습니다."),
-    DEPARTMENT_NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "DEPARTMENT_NOTICE_NOT_FOUND", "[MJS] 해당 조건의 학과 공지사항을 찾을 수 없습니다."),
+    STUDENT_COUNCIL_NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDENT_COUNCIL_NOTICE_NOT_FOUND", "[MJS] 해당 조건의 학과 공지사항을 찾을 수 없습니다."),
 
     // 자유 게시판 관련 에러(C)
     COMMUNITY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMUNITY_NOT_FOUND", "[MJS] 요청한 게시판을 찾을 수 없습니다."),

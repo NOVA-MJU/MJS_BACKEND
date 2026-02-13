@@ -36,9 +36,6 @@ public class NewsDocument implements SearchDocument {
 
     private String imageUrl;
 
-    @CompletionField
-    private List<String> suggest;
-
     private String type;
     // 편집자 명
     private String authorName;
@@ -72,7 +69,6 @@ public class NewsDocument implements SearchDocument {
                 .link(news.getLink())
                 .imageUrl(news.getImageUrl())
                 .category(news.getCategory().name())
-                .suggest(KomoranTokenizerUtil.generateSuggestions(news.getTitle()))
                 .type(SearchType.NEWS.name())
                 .authorName(news.getReporter())
                 .build();

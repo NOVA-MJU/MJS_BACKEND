@@ -20,6 +20,7 @@ import org.springframework.data.elasticsearch.core.query.highlight.HighlightFiel
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
 
 
+import java.time.Duration;
 import java.util.List;
 
 
@@ -57,10 +58,10 @@ public class SearchRepositoryImpl implements SearchRepository {
          * Spring Data Elasticsearch DSL
          */
         long now   = System.currentTimeMillis();
-        long d7    = now - java.time.Duration.ofDays(7).toMillis();
-        long d30   = now - java.time.Duration.ofDays(30).toMillis();
-        long d120  = now - java.time.Duration.ofDays(120).toMillis();
-        long d360  = now - java.time.Duration.ofDays(360).toMillis();
+        long d7    = now - Duration.ofDays(7).toMillis();
+        long d30   = now - Duration.ofDays(30).toMillis();
+        long d120  = now - Duration.ofDays(120).toMillis();
+        long d360  = now - Duration.ofDays(360).toMillis();
 
         NativeQueryBuilder builder = NativeQuery.builder()
                 .withQuery(q -> q
@@ -146,7 +147,8 @@ public class SearchRepositoryImpl implements SearchRepository {
         return switch (type) {
             case NOTICE -> NoticeDocument.class;
             case MJU_CALENDAR -> MjuCalendarDocument.class;
-            case DEPARTMENT_NOTICE -> StudentCouncilNoticeDocument.class;
+            case DEPARTMENT_NOTICE -> null;
+            case STUDENT_COUNCIL_NOTICE -> StudentCouncilNoticeDocument.class;
             case DEPARTMENT_SCHEDULE -> DepartmentScheduleDocument.class;
             case COMMUNITY -> CommunityDocument.class;
             case NEWS -> NewsDocument.class;

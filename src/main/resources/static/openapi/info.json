@@ -91,7 +91,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["NOTICE", "NEWS", "COMMUNITY", "DEPARTMENT_NOTICE", "DEPARTMENT_SCHEDULE", "BROADCAST", "MJU_CALENDAR"]
+              "enum": ["NOTICE", "NEWS", "COMMUNITY", "STUDENT_COUNCIL_NOTICE", "DEPARTMENT_SCHEDULE", "BROADCAST", "MJU_CALENDAR"]
             },
             "description": "검색 대상 타입 (미지정 시 전체 대상으로 검색)"
           },
