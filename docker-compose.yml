@@ -122,7 +122,7 @@ services:
     environment:
       - BASE_URL=http://172.17.0.1:8080
       - K6_OUT=experimental-prometheus-rw
-      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+      - K6_PROMETHEUS_RW_SERVER_URL=http://172.17.0.1:9090/api/v1/write
     command: run /scripts/notice_list.js
 
 
