@@ -12,6 +12,8 @@ import nova.mjs.domain.thingo.department.exception.DepartmentAdminNotFoundExcept
 import nova.mjs.domain.thingo.department.exception.DepartmentNoticeNotFoundException;
 import nova.mjs.domain.thingo.department.repository.StudentCouncilNoticeRepository;
 import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
+import nova.mjs.domain.thingo.member.entity.Member;
+import nova.mjs.domain.thingo.member.service.query.MemberQueryService;
 import nova.mjs.util.s3.S3DomainType;
 import nova.mjs.util.s3.S3Service;
 import nova.mjs.util.security.UserPrincipal;
@@ -30,6 +32,7 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
     private final DepartmentRepository departmentRepository;
     private final StudentCouncilNoticeRepository studentCouncilNoticeRepository;
     private final S3Service s3Service;
+    private final MemberQueryService memberQueryService;
 
     private final String departmentNoticePrefix =
             S3DomainType.STUDENT_COUNCIL_NOTICE.getPrefix();
@@ -74,8 +77,8 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
     ) {
         Department department =
                 validateAdminAndGetDepartment(userPrincipal, college, departmentName);
-
-        StudentCouncilNotice notice = StudentCouncilNotice.create(request, department, userPrincipal.getEmail());
+        Member member = memberQueryService.getMemberByEmail(userPrincipal.getEmail());
+        StudentCouncilNotice notice = StudentCouncilNotice.create(request, department, member.getNickname());
         studentCouncilNoticeRepository.save(notice);
 
         log.info("[학과 공지 생성] college={}, department={}, noticeUuid={}",
@@ -104,8 +107,8 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
     ) {
         StudentCouncilNotice notice =
                 validateAdminAndGetNotice(college, departmentName, noticeUuid, userPrincipal);
-
-        notice.update(request);
+        Member member = memberQueryService.getMemberByEmail(userPrincipal.getEmail());
+        notice.update(request, member.getNickname());
 
         log.info("[학과 공지 수정] college={}, department={}, noticeUuid={}",
                 college, departmentName, noticeUuid);

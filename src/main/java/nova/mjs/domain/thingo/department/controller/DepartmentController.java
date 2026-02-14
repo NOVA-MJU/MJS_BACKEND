@@ -85,14 +85,10 @@ public class DepartmentController {
      * ========================================================== */
     @GetMapping("/student-council/notices/{noticeUuid}")
     public ResponseEntity<ApiResponse<StudentCouncilNoticeDTO.Detail>> getNoticeDetail(
-            @RequestParam College college,
-            @RequestParam DepartmentName department,
             @PathVariable UUID noticeUuid
     ) {
         return ResponseEntity.ok(ApiResponse.success(
                 studentCouncilNoticeQueryService.getNoticeDetail(
-                        college,
-                        department,
                         noticeUuid)
         ));
     }

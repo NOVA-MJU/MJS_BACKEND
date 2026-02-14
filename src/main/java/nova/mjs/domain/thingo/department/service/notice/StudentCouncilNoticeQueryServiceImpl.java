@@ -42,14 +42,11 @@ public class StudentCouncilNoticeQueryServiceImpl implements StudentCouncilNotic
     /* 상세 */
     @Override
     public StudentCouncilNoticeDTO.Detail getNoticeDetail(
-            College college,
-            DepartmentName departmentName,
             UUID noticeUuid
     ) {
-        Department department = getDepartment(college, departmentName);
 
         StudentCouncilNotice notice = noticeRepository
-                .findByDepartmentAndUuid(department, noticeUuid)
+                .findByUuid(noticeUuid)
                 .orElseThrow(DepartmentNoticeNotFoundException::new);
 
         return StudentCouncilNoticeDTO.Detail.fromEntity(notice);

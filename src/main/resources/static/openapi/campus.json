@@ -295,18 +295,6 @@
         "description": "학과 검증을 포함하여 특정 공지사항의 상세 내용을 조회합니다.",
         "parameters": [
           {
-            "name": "college",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR","OTHER"] }
-          },
-          {
-            "name": "department",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string" }
-          },
-          {
             "name": "noticeUuid",
             "in": "path",
             "required": true,
@@ -321,18 +309,17 @@
                 "example": {
                   "status": "API 요청 성공",
                   "data": {
-                    "noticeUuid": "625d425f-aeee-452d-845d-c682f953ad0e",
-                    "title": null,
-                    "content": "두쫀쿠?",
+                    "noticeUuid": "662f8000-1fb7-4f14-b0e9-7cfb13bb1427",
+                    "title": "스타벅스 쏘기로 했어요~?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!?!",
+                    "content": "오늘 저희는 스타벅스를 쏘기로 했어요. 엄청나지 않아요~?!?!?!?!?!?!?!?",
                     "authorNickname": "kimgusqls1@mju.ac.kr",
-                    "publishedAt": "2026-02-12T20:28:49.639196",
+                    "publishedAt": "2026-02-12T20:26:10.079364",
                     "imageUrls": [
                       "https://image.istarbucks.co.kr/upload/banner/wrlsbnr/NSBiPV_20260202153856077.jpg",
-                      "https://mjsearch.org/static/image/departments/noti8a081a5424fb7c1b83dab0f0dcb3218df001fd4df5463.png",
                       "https://image.istarbucks.co.kr/upload/banner/wrlsbnr/NSBiPV_20260202153856077.jpg"
                     ]
                   },
-                  "timestamp": "2026-02-12T20:29:45.0176446"
+                  "timestamp": "2026-02-14T13:29:43.224358"
                 }
               }
             }

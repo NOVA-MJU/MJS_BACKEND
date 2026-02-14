@@ -23,8 +23,6 @@ public interface StudentCouncilNoticeQueryService {
      * 학과별 공지 상세 조회
      */
     StudentCouncilNoticeDTO.Detail getNoticeDetail(
-            College college,
-            DepartmentName departmentName,
             UUID noticeUuid
     );
 }
