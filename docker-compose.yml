@@ -90,6 +90,9 @@ services:
       - "9090"
     volumes:
       - ./MJS-BACK-SECURITY/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
     networks: [ mon ]
 
   node_exporter:
@@ -110,6 +113,19 @@ services:
       - "--path.rootfs=/rootfs"
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
 
+  k6:
+    image: grafana/k6:latest
+    profiles: [ "loadtest" ]
+    networks: [ mon ]
+    volumes:
+      - ./k6/scripts:/scripts:ro
+    environment:
+      - BASE_URL=http://172.17.0.1:8080
+      - K6_OUT=experimental-prometheus-rw
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+    command: run /scripts/notice_list.js
+
+
 volumes:
   esdata:
   loki_data:
@@ -121,3 +137,4 @@ networks:
     driver: bridge
   mon:
     driver: bridge
+
