@@ -1,3 +1,5 @@
+console.log(`[INIT] BASE_URL=${BASE_URL} NOTICE_CATEGORY=${NOTICE_CATEGORY} NOTICE_MAX_PAGE=${NOTICE_MAX_PAGE} NOTICE_YEAR=${NOTICE_YEAR}`);
+
 import http from "k6/http";
 import { check, sleep, group } from "k6";
 import { Trend, Counter, Rate } from "k6/metrics";
