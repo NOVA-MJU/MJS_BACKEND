@@ -86,14 +86,15 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    expose:
-      - "9090"
+    ports:
+      - "9090:9090"
     volumes:
       - ./MJS-BACK-SECURITY/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--web.enable-remote-write-receiver"
     networks: [ mon ]
+
 
   node_exporter:
     image: prom/node-exporter:latest
