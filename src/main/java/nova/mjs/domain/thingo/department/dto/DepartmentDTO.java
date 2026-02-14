@@ -42,6 +42,7 @@ public class DepartmentDTO {
 
         private College college;
         private DepartmentName departmentName;
+        private String academicOfficePhone;
         private String instagramUrl;
         private String homepageUrl;
 
@@ -49,6 +50,7 @@ public class DepartmentDTO {
             return InfoResponse.builder()
                     .college(department.getCollege())
                     .departmentName(department.getDepartmentName())
+                    .academicOfficePhone(department.getAcademicOfficePhone())
                     .instagramUrl(department.getInstagramUrl())
                     .homepageUrl(department.getHomepageUrl())
                     .build();
