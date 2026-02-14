@@ -100,10 +100,10 @@ public class StudentCouncilNotice extends BaseEntity {
      * 수정
      * ========================================================== */
 
-    public void update(AdminStudentCouncilNoticeDTO.Request request) {
+    public void update(AdminStudentCouncilNoticeDTO.Request request, String authorNickname) {
         this.title = getOrDefault(request.getTitle(), this.title);
         this.content = getOrDefault(request.getContent(), this.content);
-
+        this.authorNickname = getOrDefault(authorNickname, this.authorNickname);
         if (request.getImageUrls() != null) {
             replaceImages(request.getImageUrls());
         }
