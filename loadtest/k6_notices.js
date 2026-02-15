@@ -39,10 +39,12 @@ export const options = {
             executor: "ramping-vus",
             startVUs: 0,
             stages: [
-                { duration: "30s", target: 10 },  // warm-up
-                { duration: "2m", target: 50 },   // steady load
-                { duration: "30s", target: 0 },   // ramp down
+                { duration: "30s", target: 50 },
+                { duration: "1m", target: 500 },
+                { duration: "2m", target: 500 },  // 유지 구간
+                { duration: "30s", target: 0 },
             ],
+
             gracefulRampDown: "30s",
             exec: "noticeListScenario",
             tags: { test_type: "notice_list" },
