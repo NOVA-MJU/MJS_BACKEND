@@ -126,6 +126,6 @@ export function noticeListScenario() {
             noticeListFail.add(1);
         }
 
-        sleep(0.2);
+        sleep(0.05);
     });
 }
