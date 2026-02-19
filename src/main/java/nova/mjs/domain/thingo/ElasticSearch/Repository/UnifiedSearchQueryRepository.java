@@ -1,27 +1,26 @@
 package nova.mjs.domain.thingo.ElasticSearch.Repository;
 
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+import co.elastic.clients.json.JsonData;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.ElasticSearch.Document.UnifiedSearchDocument;
+import nova.mjs.domain.thingo.ElasticSearch.search.SearchQueryPlan;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Repository;
-import co.elastic.clients.elasticsearch._types.SortOrder;
 
+import java.util.List;
 
 /**
- * UnifiedSearchQueryRepository
+ * 검색 쿼리 어댑터 Repository.
  *
- * 검색 전용 Repository.
- * - Elasticsearch 저장(CRUD)은 담당하지 않는다.
- * - 검색 조건, 가중치(weight), 정렬(order), 필터(type)를 모두 이 계층에서 제어한다.
- *
- * Service 계층은 "무엇을 검색할지"만 결정하고,
- * "어떻게 검색할지"는 이 Repository가 책임진다.
+ * 역할:
+ * - SearchQueryPlan(정책 결과)을 Elasticsearch NativeQuery로 변환
+ * - 실제 ES 검색 실행
  */
-
-
 @Repository
 @RequiredArgsConstructor
 public class UnifiedSearchQueryRepository {
@@ -29,79 +28,117 @@ public class UnifiedSearchQueryRepository {
     private final ElasticsearchOperations elasticsearchOperations;
 
     /**
-     * 통합 검색 쿼리 실행
-     *
-     * @param keyword   검색 키워드
-     * @param type      문서 타입 필터 (null 허용)
-     * @param order     정렬 기준 (relevance | latest | oldest)
-     * @param pageable  페이징 정보
+     * 검색 계획(plan)을 기반으로 ES 쿼리를 구성해 실행한다.
      */
     public SearchHits<UnifiedSearchDocument> search(
-            String keyword,
-            String type,
-            String order,
+            SearchQueryPlan plan,
             Pageable pageable
     ) {
+        String normalizedKeyword = safe(plan.keyword());
 
         NativeQuery nativeQuery = NativeQuery.builder()
                 .withQuery(query -> query.bool(boolQuery -> {
 
-                    /*
-                     * 1. 키워드 기반 가중치 부여 검색
-                     *
-                     * title        : 가장 중요한 필드 (가중치 높음)
-                     * title.ngram  : 부분 검색 대응
-                     * category     : 문서 성격을 드러내는 보조 신호
-                     * content      : 내용 전문 검색 (가중치 낮음)
-                     *
-                     * UX 관점에서 "제목 중심 검색"을 강제하기 위한 설계
-                     */
-                    boolQuery.must(mustQuery ->
-                            mustQuery.multiMatch(multiMatchQuery ->
-                                    multiMatchQuery
-                                            .query(keyword)
-                                            .fields(
-                                                    "title^4",
-                                                    "title.ngram^3",
-                                                    "category^2",
-                                                    "content^1"
-                                            )
-                            )
-                    );
+                    if (normalizedKeyword.isBlank()) {
+                        boolQuery.must(m -> m.matchAll(ma -> ma));
+                    } else {
+                        boolQuery.must(m -> m.bool(keywordBool -> {
+                            keywordBool.should(s -> s.multiMatch(mm -> mm
+                                    .query(normalizedKeyword)
+                                    .fields(
+                                            "title^5",
+                                            "title.ngram^4",
+                                            "category^2",
+                                            "content^1"
+                                    )
+                            ));
 
-                    /*
-                     * 2. 타입 필터
-                     *
-                     * overview / detail 검색에서 공통 사용
-                     * type이 null이면 전체 검색
-                     */
-                    if (type != null) {
+                            keywordBool.should(s -> s.multiMatch(mm -> mm
+                                    .query(normalizedKeyword)
+                                    .type(TextQueryType.BoolPrefix)
+                                    .fields(
+                                            "title_autocomplete^" + plan.autocompleteBoost(),
+                                            "title_autocomplete._2gram",
+                                            "title_autocomplete._3gram"
+                                    )
+                            ));
+
+                            for (String expandedKeyword : nullSafe(plan.expandedKeywords())) {
+                                keywordBool.should(s -> s.multiMatch(mm -> mm
+                                        .query(expandedKeyword)
+                                        .fields("title^3", "title.ngram^2", "category^2", "content")
+                                        .boost(plan.expansionTermBoost())
+                                ));
+                            }
+
+                            keywordBool.minimumShouldMatch("1");
+                            return keywordBool;
+                        }));
+                    }
+
+                    if (plan.category() != null) {
                         boolQuery.filter(filterQuery ->
                                 filterQuery.term(termQuery ->
-                                        termQuery
-                                                .field("type")
-                                                .value(type)
+                                        termQuery.field("type").value(plan.category())
                                 )
                         );
                     }
 
+                    plan.categoryBoosts().forEach((targetType, boost) -> {
+                        if (targetType == null || boost == null || boost <= 0) {
+                            return;
+                        }
+
+                        boolQuery.should(shouldQuery -> shouldQuery.term(termQuery ->
+                                termQuery
+                                        .field("type")
+                                        .value(targetType)
+                                        .boost(boost.floatValue())
+                        ));
+                    });
+
+                    for (String negativeKeyword : nullSafe(plan.negativeKeywords())) {
+                        if (plan.negativeStrategy() == SearchQueryPlan.NegativeStrategy.HARD_FILTER) {
+                            boolQuery.mustNot(m -> m.multiMatch(mm -> mm
+                                    .query(negativeKeyword)
+                                    .fields("title", "title.ngram", "category", "content")
+                            ));
+                            continue;
+                        }
+
+                        boolQuery.should(s -> s.multiMatch(mm -> mm
+                                .query(negativeKeyword)
+                                .fields("title", "title.ngram", "category", "content")
+                                .boost(plan.negativeDownrankBoost())
+                        ));
+                    }
+
+                    for (SearchQueryPlan.FreshnessRule rule : nullSafe(plan.freshnessRules())) {
+                        boolQuery.should(s -> s.range(r -> r.date(d -> d
+                                .field("date")
+                                .gte(JsonData.of(rule.gte()))
+                                .boost(rule.boost())
+                        )));
+                    }
+
+                    for (SearchQueryPlan.PopularityRule rule : nullSafe(plan.popularityRules())) {
+                        boolQuery.should(s -> s.range(r -> r.number(n -> n
+                                .field(rule.field())
+                                .gte(JsonData.of(rule.gte()))
+                                .boost(rule.boost())
+                        )));
+                    }
+
                     return boolQuery;
                 }))
-                /*
-                 * 3. 정렬 전략
-                 *
-                 * relevance : Elasticsearch score 기준
-                 * latest    : 최신 문서 우선
-                 * oldest    : 오래된 문서 우선
-                 */
                 .withSort(sortBuilder -> {
-                    if ("latest".equals(order)) {
+                    if ("latest".equals(plan.order())) {
                         return sortBuilder.field(fieldSort ->
                                 fieldSort.field("date").order(SortOrder.Desc)
                         );
                     }
 
-                    if ("oldest".equals(order)) {
+                    if ("oldest".equals(plan.order())) {
                         return sortBuilder.field(fieldSort ->
                                 fieldSort.field("date").order(SortOrder.Asc)
                         );
@@ -109,9 +146,22 @@ public class UnifiedSearchQueryRepository {
 
                     return sortBuilder.score(scoreSort -> scoreSort);
                 })
+                .withSort(sortBuilder -> sortBuilder.field(fieldSort ->
+                        fieldSort.field("date").order(SortOrder.Desc)
+                ))
                 .withPageable(pageable)
                 .build();
 
         return elasticsearchOperations.search(nativeQuery, UnifiedSearchDocument.class);
+    }
+
+    /** null-safe 문자열 trim. */
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    /** null-safe 리스트 변환. */
+    private <T> List<T> nullSafe(List<T> values) {
+        return values == null ? List.of() : values;
     }
 }
