@@ -17,6 +17,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 통합 검색 오케스트레이션 서비스.
@@ -51,12 +52,54 @@ public class UnifiedSearchService {
         SearchHits<UnifiedSearchDocument> hits =
                 unifiedSearchQueryRepository.search(plan, pageable);
 
+        if (shouldFallbackToCategoryOnlyKeyword(hits, normalizedCategory, intentContext.normalizedKeyword())) {
+            SearchQueryPlan fallbackPlan = withoutIntentExpansion(plan);
+            hits = unifiedSearchQueryRepository.search(fallbackPlan, pageable);
+        }
+
         List<SearchResponseDTO> content = hits.getSearchHits()
                 .stream()
                 .map(this::toResponse)
                 .toList();
 
         return new PageImpl<>(content, pageable, hits.getTotalHits());
+    }
+
+    /**
+     * 카테고리 상세 검색에서 결과가 비어있으면, 과도한 의도 확장을 제거한 fallback 실행 여부를 판단한다.
+     */
+    private boolean shouldFallbackToCategoryOnlyKeyword(
+            SearchHits<UnifiedSearchDocument> hits,
+            String normalizedCategory,
+            String normalizedKeyword
+    ) {
+        return normalizedCategory != null
+                && normalizedKeyword != null
+                && !normalizedKeyword.isBlank()
+                && hits.getTotalHits() == 0;
+    }
+
+    /**
+     * 의도 확장어 제약을 제거한 fallback 계획을 만든다.
+     */
+    private SearchQueryPlan withoutIntentExpansion(SearchQueryPlan plan) {
+        return new SearchQueryPlan(
+                plan.keyword(),
+                plan.category(),
+                plan.order(),
+                List.of(),
+                plan.categoryBoosts(),
+                plan.negativeKeywords(),
+                plan.negativeStrategy(),
+                plan.negativeDownrankBoost(),
+                plan.expansionTermBoost(),
+                plan.autocompleteBoost(),
+                plan.noticeTypeBoost(),
+                plan.noticeGeneralCategoryBoost(),
+                plan.intentRecencyWindowDays(),
+                plan.freshnessRules(),
+                plan.popularityRules()
+        );
     }
 
     /**
@@ -108,6 +151,6 @@ public class UnifiedSearchService {
     /** category 파라미터를 내부 SearchType enum 값으로 정규화. */
     private String normalizeCategory(String rawCategory) {
         SearchType parsed = SearchType.from(rawCategory);
-        return parsed == null ? null : parsed.name();
+        return parsed == null ? null : parsed.name().toLowerCase(Locale.ROOT);
     }
 }
