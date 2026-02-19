@@ -1,9 +1,9 @@
 package nova.mjs.domain.thingo.ElasticSearch.Controller;
 
 import lombok.RequiredArgsConstructor;
+import nova.mjs.domain.thingo.ElasticSearch.SearchResponseDTO;
 import nova.mjs.domain.thingo.ElasticSearch.Service.SearchIndexSyncService;
 import nova.mjs.domain.thingo.ElasticSearch.Service.UnifiedSearchService;
-import nova.mjs.domain.thingo.ElasticSearch.SearchResponseDTO;
 import nova.mjs.domain.thingo.realtimeKeyword.RealtimeKeywordService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.data.domain.Page;
@@ -12,15 +12,13 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-
 /**
- * SearchController
+ * 검색 API 진입점.
  *
- * - 검색 API의 단일 진입점
- * - 검색 로직은 UnifiedSearchService에 전적으로 위임
- * - Controller는 요청/응답 조립만 담당
+ * 역할:
+ * - 요청 파라미터 수집
+ * - 서비스 호출
+ * - 공통 ApiResponse 래핑
  */
 @RestController
 @RequiredArgsConstructor
@@ -32,9 +30,8 @@ public class SearchController {
     private final RealtimeKeywordService realtimeKeywordService;
 
     /**
-     * Elasticsearch 전체 재색인
-     * - 운영/관리 목적
-     * - 성능 평가 대상 아님
+     * 통합 인덱스 전체 동기화.
+     * 운영/관리 목적 엔드포인트.
      */
     @PostMapping("/sync")
     public ResponseEntity<ApiResponse<String>> syncElasticsearch() {
@@ -43,36 +40,24 @@ public class SearchController {
     }
 
     /**
-     * 통합 검색 상세 조회
+     * 검색 상세 조회.
+     *
+     * @param keyword  사용자 검색어
+     * @param category 검색 카테고리(내부 type enum에 매핑)
+     * @param order    relevance | latest | oldest
+     * @param pageable 페이지 정보
      */
     @GetMapping("/detail")
     public ResponseEntity<ApiResponse<Page<SearchResponseDTO>>> searchDetail(
-            @RequestParam String keyword,
-            @RequestParam(required = false) String type,
-            @RequestParam(name = "order", defaultValue = "relevance") String order,
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(name = "order", defaultValue = "latest") String order,
             @PageableDefault(size = 10) Pageable pageable
     ) {
         Page<SearchResponseDTO> result =
-                unifiedSearchService.search(keyword, type, order, pageable);
+                unifiedSearchService.search(keyword, category, order, pageable);
 
         realtimeKeywordService.recordSearch(keyword);
-
-        return ResponseEntity.ok(ApiResponse.success(result));
-    }
-
-    /**
-     * 통합 검색 Overview
-     * - 타입별 Top N
-     * - unified index만 사용
-     */
-    @GetMapping("/overview")
-    public ResponseEntity<ApiResponse<Map<String, List<SearchResponseDTO>>>> searchOverview(
-            @RequestParam String keyword,
-            @RequestParam(name = "order", defaultValue = "relevance") String order,
-            @RequestParam(name = "pageSize", defaultValue = "5") int pageSize
-    ) {
-        Map<String, List<SearchResponseDTO>> result =
-                unifiedSearchService.overview(keyword, order, pageSize);
 
         return ResponseEntity.ok(ApiResponse.success(result));
     }
