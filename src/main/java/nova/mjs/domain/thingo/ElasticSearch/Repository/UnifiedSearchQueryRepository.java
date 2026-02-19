@@ -77,7 +77,7 @@ public class UnifiedSearchQueryRepository {
                                 ));
                             }
 
-                            String minimumShouldMatch = nullSafe(plan.expandedKeywords()).isEmpty() ? "1" : "2";
+                            String minimumShouldMatch = nullSafe(plan.expandedKeywords()).isEmpty() ? "1" : "3";
                             keywordBool.minimumShouldMatch(minimumShouldMatch);
                             return keywordBool;
                         }));
@@ -129,22 +129,22 @@ public class UnifiedSearchQueryRepository {
                         ));
                     }
 
-                    if (!"relevance".equals(plan.order())) {
-                        for (SearchQueryPlan.FreshnessRule rule : nullSafe(plan.freshnessRules())) {
-                            boolQuery.should(s -> s.range(r -> r
-                                    .field("date")
-                                    .gte(JsonData.of(rule.gte()))
-                                    .boost(rule.boost())
-                            ));
-                        }
+                    float recencyMultiplier = "relevance".equals(plan.order()) ? 0.45f : 1.0f;
 
-                        for (SearchQueryPlan.PopularityRule rule : nullSafe(plan.popularityRules())) {
-                            boolQuery.should(s -> s.range(r -> r
-                                    .field(rule.field())
-                                    .gte(JsonData.of(rule.gte()))
-                                    .boost(rule.boost())
-                            ));
-                        }
+                    for (SearchQueryPlan.FreshnessRule rule : nullSafe(plan.freshnessRules())) {
+                        boolQuery.should(s -> s.range(r -> r
+                                .field("date")
+                                .gte(JsonData.of(rule.gte()))
+                                .boost(rule.boost() * recencyMultiplier)
+                        ));
+                    }
+
+                    for (SearchQueryPlan.PopularityRule rule : nullSafe(plan.popularityRules())) {
+                        boolQuery.should(s -> s.range(r -> r
+                                .field(rule.field())
+                                .gte(JsonData.of(rule.gte()))
+                                .boost(rule.boost() * recencyMultiplier)
+                        ));
                     }
 
                     return boolQuery;

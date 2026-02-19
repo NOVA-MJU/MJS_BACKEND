@@ -33,9 +33,9 @@ public class SearchRankingPolicyStore {
             SearchQueryPlan.NegativeStrategy.HARD_FILTER,
             0.2f,
             List.of(
-                    new SearchQueryPlan.FreshnessRule("now-7d/d", 0.4f),
-                    new SearchQueryPlan.FreshnessRule("now-30d/d", 0.2f),
-                    new SearchQueryPlan.FreshnessRule("now-90d/d", 0.1f)
+                    new SearchQueryPlan.FreshnessRule("now-7d/d", 1.1f),
+                    new SearchQueryPlan.FreshnessRule("now-30d/d", 0.6f),
+                    new SearchQueryPlan.FreshnessRule("now-90d/d", 0.3f)
             ),
             List.of(
                     new SearchQueryPlan.PopularityRule("likeCount", 20, 0.6f),
