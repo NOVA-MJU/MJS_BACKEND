@@ -211,6 +211,10 @@ public class IntentLexicon {
         return meta;
     }
 
+    public List<IntentLexiconEntry> entries() {
+        return List.copyOf(entries);
+    }
+
     /* ========================= records ========================= */
 
     public record IntentMatch(IntentLexiconEntry entry, int score) {}
