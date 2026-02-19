@@ -21,6 +21,8 @@ public record SearchQueryPlan(
         float negativeDownrankBoost,
         float expansionTermBoost,
         float autocompleteBoost,
+        float noticeTypeBoost,
+        float noticeGeneralCategoryBoost,
         List<FreshnessRule> freshnessRules,
         List<PopularityRule> popularityRules
 ) {

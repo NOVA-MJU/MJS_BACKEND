@@ -35,6 +35,8 @@ public class SearchRankingPolicy {
                 policyStore.snapshot().negativeDownrankBoost(),
                 policyStore.snapshot().expansionTermBoost(),
                 policyStore.snapshot().autocompleteBoost(),
+                policyStore.snapshot().noticeTypeBoost(),
+                policyStore.snapshot().noticeGeneralCategoryBoost(),
                 policyStore.snapshot().freshnessRules(),
                 policyStore.snapshot().popularityRules()
         );

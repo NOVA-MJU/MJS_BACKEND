@@ -85,6 +85,15 @@ public class UnifiedSearchQueryRepository {
                         );
                     }
 
+                    // 학교 대표 공지 우선 노출: NOTICE + category=general 강화
+                    boolQuery.should(shouldQuery -> shouldQuery.term(termQuery ->
+                            termQuery.field("type").value("NOTICE").boost(plan.noticeTypeBoost())
+                    ));
+
+                    boolQuery.should(shouldQuery -> shouldQuery.term(termQuery ->
+                            termQuery.field("category").value("general").boost(plan.noticeGeneralCategoryBoost())
+                    ));
+
                     plan.categoryBoosts().forEach((targetType, boost) -> {
                         if (targetType == null || boost == null || boost <= 0) {
                             return;

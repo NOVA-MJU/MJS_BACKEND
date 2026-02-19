@@ -1,6 +1,8 @@
 {
-  "expansionTermBoost": 0.65,
+  "expansionTermBoost": 2.4,
   "autocompleteBoost": 4.0,
+  "noticeTypeBoost": 1.8,
+  "noticeGeneralCategoryBoost": 2.8,
   "negativeStrategy": "HARD_FILTER",
   "negativeDownrankBoost": 0.2,
   "freshnessRules": [
