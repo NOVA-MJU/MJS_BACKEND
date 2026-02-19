@@ -51,7 +51,7 @@ public class SearchController {
     public ResponseEntity<ApiResponse<Page<SearchResponseDTO>>> searchDetail(
             @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false) String category,
-            @RequestParam(name = "order", defaultValue = "latest") String order,
+            @RequestParam(name = "order", defaultValue = "relevance") String order,
             @PageableDefault(size = 10) Pageable pageable
     ) {
         Page<SearchResponseDTO> result =

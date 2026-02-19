@@ -66,8 +66,14 @@ public class UnifiedSearchQueryRepository {
                             for (String expandedKeyword : nullSafe(plan.expandedKeywords())) {
                                 keywordBool.should(s -> s.multiMatch(mm -> mm
                                         .query(expandedKeyword)
-                                        .fields("title^3", "title.ngram^2", "category^2", "content")
+                                        .fields("title^4", "title.ngram^3", "category^2", "content")
                                         .boost(plan.expansionTermBoost())
+                                ));
+
+                                keywordBool.should(s -> s.matchPhrase(mp -> mp
+                                        .field("title")
+                                        .query(expandedKeyword)
+                                        .boost(plan.expansionTermBoost() * 1.5f)
                                 ));
                             }
 
@@ -123,20 +129,22 @@ public class UnifiedSearchQueryRepository {
                         ));
                     }
 
-                    for (SearchQueryPlan.FreshnessRule rule : nullSafe(plan.freshnessRules())) {
-                        boolQuery.should(s -> s.range(r -> r
-                                .field("date")
-                                .gte(JsonData.of(rule.gte()))
-                                .boost(rule.boost())
-                        ));
-                    }
+                    if (!"relevance".equals(plan.order())) {
+                        for (SearchQueryPlan.FreshnessRule rule : nullSafe(plan.freshnessRules())) {
+                            boolQuery.should(s -> s.range(r -> r
+                                    .field("date")
+                                    .gte(JsonData.of(rule.gte()))
+                                    .boost(rule.boost())
+                            ));
+                        }
 
-                    for (SearchQueryPlan.PopularityRule rule : nullSafe(plan.popularityRules())) {
-                        boolQuery.should(s -> s.range(r -> r
-                                .field(rule.field())
-                                .gte(JsonData.of(rule.gte()))
-                                .boost(rule.boost())
-                        ));
+                        for (SearchQueryPlan.PopularityRule rule : nullSafe(plan.popularityRules())) {
+                            boolQuery.should(s -> s.range(r -> r
+                                    .field(rule.field())
+                                    .gte(JsonData.of(rule.gte()))
+                                    .boost(rule.boost())
+                            ));
+                        }
                     }
 
                     return boolQuery;

@@ -26,16 +26,16 @@ public class SearchRankingPolicyStore {
     private static final String RUNTIME_POLICY_PATH = "runtime/search_ranking_policy.runtime.json";
 
     private static final SearchRankingPolicySnapshot DEFAULT = new SearchRankingPolicySnapshot(
-            2.4f,
+            3.2f,
             4.0f,
             1.8f,
             2.8f,
             SearchQueryPlan.NegativeStrategy.HARD_FILTER,
             0.2f,
             List.of(
-                    new SearchQueryPlan.FreshnessRule("now-7d/d", 2.2f),
-                    new SearchQueryPlan.FreshnessRule("now-30d/d", 1.3f),
-                    new SearchQueryPlan.FreshnessRule("now-90d/d", 0.8f)
+                    new SearchQueryPlan.FreshnessRule("now-7d/d", 0.4f),
+                    new SearchQueryPlan.FreshnessRule("now-30d/d", 0.2f),
+                    new SearchQueryPlan.FreshnessRule("now-90d/d", 0.1f)
             ),
             List.of(
                     new SearchQueryPlan.PopularityRule("likeCount", 20, 0.6f),
