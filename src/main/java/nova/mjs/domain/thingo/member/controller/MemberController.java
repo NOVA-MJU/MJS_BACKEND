@@ -116,7 +116,6 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.success("사용 가능한 이메일입니다."));
     }
 
-
     // 닉네임 중복 검증
     @GetMapping("/validation/nickname")
     public ResponseEntity<ApiResponse<String>> validateNickname(@RequestParam String nickname) {

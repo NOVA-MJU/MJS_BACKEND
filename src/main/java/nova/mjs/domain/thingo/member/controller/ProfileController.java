@@ -23,7 +23,7 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
-// 1. 내가 작성한 글 조회 (페이지네이션)
+    // 1. 내가 작성한 글 조회 (페이지네이션)
     @GetMapping("/posts")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Page<CommunityBoardResponse.SummaryDTO>>> getMyPosts(
