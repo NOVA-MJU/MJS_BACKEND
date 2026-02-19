@@ -35,6 +35,7 @@ public class UnifiedSearchQueryRepository {
             Pageable pageable
     ) {
         String normalizedKeyword = safe(plan.keyword());
+        List<String> expandedKeywords = nullSafe(plan.expandedKeywords());
 
         NativeQuery nativeQuery = NativeQuery.builder()
                 .withQuery(query -> query.bool(boolQuery -> {
@@ -63,7 +64,7 @@ public class UnifiedSearchQueryRepository {
                                     )
                             ));
 
-                            for (String expandedKeyword : nullSafe(plan.expandedKeywords())) {
+                            for (String expandedKeyword : expandedKeywords) {
                                 keywordBool.should(s -> s.multiMatch(mm -> mm
                                         .query(expandedKeyword)
                                         .fields("title^4", "title.ngram^3", "category^2", "content")
@@ -77,9 +78,31 @@ public class UnifiedSearchQueryRepository {
                                 ));
                             }
 
-                            String minimumShouldMatch = nullSafe(plan.expandedKeywords()).isEmpty() ? "1" : "3";
+                            String minimumShouldMatch = expandedKeywords.isEmpty() ? "1" : "2";
                             keywordBool.minimumShouldMatch(minimumShouldMatch);
                             return keywordBool;
+                        }));
+                    }
+
+
+
+                    if (!expandedKeywords.isEmpty()) {
+                        boolQuery.must(m -> m.bool(intentBool -> {
+                            for (String expandedKeyword : expandedKeywords) {
+                                intentBool.should(s -> s.matchPhrase(mp -> mp
+                                        .field("title")
+                                        .query(expandedKeyword)
+                                        .boost(plan.expansionTermBoost() * 2.2f)
+                                ));
+
+                                intentBool.should(s -> s.multiMatch(mm -> mm
+                                        .query(expandedKeyword)
+                                        .fields("title^6", "title.ngram^4", "category^2", "content")
+                                        .boost(plan.expansionTermBoost())
+                                ));
+                            }
+                            intentBool.minimumShouldMatch("1");
+                            return intentBool;
                         }));
                     }
 
@@ -129,7 +152,18 @@ public class UnifiedSearchQueryRepository {
                         ));
                     }
 
-                    float recencyMultiplier = "relevance".equals(plan.order()) ? 0.45f : 1.0f;
+
+
+                    if ("relevance".equals(plan.order()) && !expandedKeywords.isEmpty()) {
+                        boolQuery.filter(filterQuery ->
+                                filterQuery.range(rangeQuery -> rangeQuery
+                                        .field("date")
+                                        .gte(JsonData.of("now-" + plan.intentRecencyWindowDays() + "d/d"))
+                                )
+                        );
+                    }
+
+                    float recencyMultiplier = "relevance".equals(plan.order()) ? 0.55f : 1.0f;
 
                     for (SearchQueryPlan.FreshnessRule rule : nullSafe(plan.freshnessRules())) {
                         boolQuery.should(s -> s.range(r -> r

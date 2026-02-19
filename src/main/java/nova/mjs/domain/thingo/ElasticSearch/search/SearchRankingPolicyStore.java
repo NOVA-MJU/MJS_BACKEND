@@ -30,6 +30,7 @@ public class SearchRankingPolicyStore {
             4.0f,
             1.8f,
             2.8f,
+            60,
             SearchQueryPlan.NegativeStrategy.HARD_FILTER,
             0.2f,
             List.of(
@@ -102,6 +103,7 @@ public class SearchRankingPolicyStore {
         float autocompleteBoost = loaded.autocompleteBoost() <= 0 ? DEFAULT.autocompleteBoost() : loaded.autocompleteBoost();
         float noticeTypeBoost = loaded.noticeTypeBoost() <= 0 ? DEFAULT.noticeTypeBoost() : loaded.noticeTypeBoost();
         float noticeGeneralCategoryBoost = loaded.noticeGeneralCategoryBoost() <= 0 ? DEFAULT.noticeGeneralCategoryBoost() : loaded.noticeGeneralCategoryBoost();
+        int intentRecencyWindowDays = loaded.intentRecencyWindowDays() <= 0 ? DEFAULT.intentRecencyWindowDays() : loaded.intentRecencyWindowDays();
 
         SearchQueryPlan.NegativeStrategy negativeStrategy = loaded.negativeStrategy() == null
                 ? DEFAULT.negativeStrategy()
@@ -124,6 +126,7 @@ public class SearchRankingPolicyStore {
                 autocompleteBoost,
                 noticeTypeBoost,
                 noticeGeneralCategoryBoost,
+                intentRecencyWindowDays,
                 negativeStrategy,
                 negativeDownrankBoost,
                 freshnessRules,
@@ -136,6 +139,7 @@ public class SearchRankingPolicyStore {
             float autocompleteBoost,
             float noticeTypeBoost,
             float noticeGeneralCategoryBoost,
+            int intentRecencyWindowDays,
             SearchQueryPlan.NegativeStrategy negativeStrategy,
             float negativeDownrankBoost,
             List<SearchQueryPlan.FreshnessRule> freshnessRules,

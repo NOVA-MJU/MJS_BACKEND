@@ -37,6 +37,7 @@ public class SearchRankingPolicy {
                 policyStore.snapshot().autocompleteBoost(),
                 policyStore.snapshot().noticeTypeBoost(),
                 policyStore.snapshot().noticeGeneralCategoryBoost(),
+                policyStore.snapshot().intentRecencyWindowDays(),
                 policyStore.snapshot().freshnessRules(),
                 policyStore.snapshot().popularityRules()
         );

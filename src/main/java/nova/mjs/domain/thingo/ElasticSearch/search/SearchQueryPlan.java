@@ -23,6 +23,7 @@ public record SearchQueryPlan(
         float autocompleteBoost,
         float noticeTypeBoost,
         float noticeGeneralCategoryBoost,
+        int intentRecencyWindowDays,
         List<FreshnessRule> freshnessRules,
         List<PopularityRule> popularityRules
 ) {
