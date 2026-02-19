@@ -4,9 +4,9 @@
   "negativeStrategy": "HARD_FILTER",
   "negativeDownrankBoost": 0.2,
   "freshnessRules": [
-    { "gte": "now-7d/d", "boost": 1.3 },
-    { "gte": "now-30d/d", "boost": 0.8 },
-    { "gte": "now-90d/d", "boost": 0.4 }
+    { "gte": "now-7d/d", "boost": 2.2 },
+    { "gte": "now-30d/d", "boost": 1.3 },
+    { "gte": "now-90d/d", "boost": 0.8 }
   ],
   "popularityRules": [
     { "field": "likeCount", "gte": 20, "boost": 0.6 },

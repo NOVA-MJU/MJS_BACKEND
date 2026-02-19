@@ -47,10 +47,7 @@ public class SearchIntentResolver {
 
         return selected
                 .map(entry -> {
-                    List<String> expandedKeywords = Stream.concat(
-                                    Stream.of(entry.intent()),
-                                    nullSafe(entry.expansions()).stream()
-                            )
+                    List<String> expandedKeywords = nullSafe(entry.expansions()).stream()
                             .flatMap(v -> Stream.of(v, compact(v)))
                             .filter(Objects::nonNull)
                             .map(String::trim)

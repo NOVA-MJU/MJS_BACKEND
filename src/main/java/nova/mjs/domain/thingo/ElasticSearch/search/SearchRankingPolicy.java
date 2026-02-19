@@ -45,6 +45,6 @@ public class SearchRankingPolicy {
         if ("latest".equals(order) || "oldest".equals(order)) {
             return order;
         }
-        return "relevance";
+        return "latest";
     }
 }

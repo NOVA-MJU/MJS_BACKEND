@@ -71,7 +71,8 @@ public class UnifiedSearchQueryRepository {
                                 ));
                             }
 
-                            keywordBool.minimumShouldMatch("1");
+                            String minimumShouldMatch = nullSafe(plan.expandedKeywords()).isEmpty() ? "1" : "2";
+                            keywordBool.minimumShouldMatch(minimumShouldMatch);
                             return keywordBool;
                         }));
                     }
