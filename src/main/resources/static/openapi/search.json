@@ -98,8 +98,8 @@
         "tags": [
           "Search"
         ],
-        "summary": "통합 상세 검색 (카테고리/정렬/페이지네이션)",
-        "description": "키워드 기반 통합 검색 API입니다.\\n\\n- `category`를 지정하면 해당 타입으로만 필터링합니다. (대소문자 무관, 내부적으로 enum으로 정규화)\\n- `order`는 `relevance`(기본), `latest`, `oldest`를 지원합니다.\\n- 페이지네이션은 Spring Pageable 규약(`page`, `size`)을 따르며 기본값은 `page=0`, `size=10`입니다.\\n- `keyword`를 비우면 선택한 category(없으면 전체) 기준의 목록 조회처럼 동작합니다.",
+        "summary": "통합 상세 검색 (type + category 이중 필터/정렬/페이지네이션)",
+        "description": "키워드 기반 통합 검색 API입니다.\\n\\n동작 규칙\\n- `type`은 상위 탭 필터입니다. (`NOTICE`, `COMMUNITY`, `NEWS` 등)\\n- `category`는 문서의 세부 분류 필터입니다. (`NOTICE`의 경우 `general`, `academic` 등)\\n- `type`과 `category`를 함께 주면 **교집합(AND)** 조건으로 필터링합니다.\\n- `order`는 `relevance`(기본), `latest`, `oldest`를 지원합니다.\\n- 페이지네이션은 Spring Pageable 규약(`page`, `size`)을 따르며 기본값은 `page=0`, `size=10`입니다.\\n- `keyword`를 비우면 필터(`type`/`category`) + 정렬 기준으로 목록 조회처럼 동작합니다.\\n\\n권장 사용 예시\\n1) 전체 통합 검색: `/search/detail?keyword=졸업`\\n2) 탭만 제한: `/search/detail?keyword=졸업&type=NOTICE`\\n3) 탭 + 세부 카테고리 제한: `/search/detail?keyword=졸업&type=NOTICE&category=general`\\n4) 최신순 정렬: `/search/detail?keyword=장학금&type=NEWS&order=latest`\\n5) 페이지 이동: `/search/detail?keyword=기숙사&page=1&size=10`",
         "parameters": [
           {
             "name": "keyword",
@@ -112,23 +112,29 @@
             "description": "검색어. 공백/미입력 시 match_all 기반으로 조회합니다."
           },
           {
-            "name": "category",
+            "name": "type",
             "in": "query",
             "required": false,
             "schema": {
               "type": "string",
               "enum": [
                 "NOTICE",
-                "MJU_CALENDAR",
-                "DEPARTMENT_NOTICE",
-                "STUDENT_COUNCIL_NOTICE",
-                "DEPARTMENT_SCHEDULE",
                 "COMMUNITY",
                 "NEWS",
                 "BROADCAST"
               ]
             },
-            "description": "검색 범위를 제한할 타입. 예: `NEWS`를 주면 뉴스 문서만 검색합니다."
+            "description": "상위 검색 탭(type) 필터. 대소문자 무관하게 처리되며 내부 enum으로 정규화됩니다. 예: `type=NOTICE`"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "general"
+            },
+            "description": "세부 카테고리 필터. 문서의 `category` 필드와 exact match 됩니다. 예: `category=general`, `category=REPORT`"
           },
           {
             "name": "order",
@@ -178,22 +184,72 @@
                   "$ref": "#/components/schemas/ApiResponsePageSearchResult"
                 },
                 "examples": {
-                  "newsFilter": {
-                    "summary": "카테고리 필터 + 기본 페이지 크기(10)",
+                  "typeAndCategoryFilter": {
+                    "summary": "type + category 동시 필터 (size=10 유지)",
                     "value": {
                       "status": "API 요청 성공",
                       "data": {
                         "content": [
                           {
-                            "id": "NEWS:13317",
+                            "id": "NOTICE:13317",
                             "highlightedTitle": "2025학년도 8월 <em>졸업</em> 관련 안내",
                             "highlightedContent": "2025년 8월 <em>졸업</em>예정자 대상 일정 안내...",
                             "date": "2025-05-19T01:39:00",
-                            "link": "https://news.mju.ac.kr/news/articleView.html?idxno=13317",
-                            "category": "REPORT",
-                            "type": "news",
+                            "link": "https://www.mju.ac.kr/mjukr/255/subview.do?...",
+                            "category": "general",
+                            "type": "notice",
                             "imageUrl": "",
                             "score": 33.6482,
+                            "authorName": "",
+                            "likeCount": 0,
+                            "commentCount": 0
+                          }
+                        ],
+                        "pageable": {
+                          "pageNumber": 0,
+                          "pageSize": 10,
+                          "sort": {
+                            "empty": false,
+                            "sorted": true,
+                            "unsorted": false
+                          },
+                          "offset": 0,
+                          "paged": true,
+                          "unpaged": false
+                        },
+                        "last": false,
+                        "totalElements": 42,
+                        "totalPages": 5,
+                        "size": 10,
+                        "number": 0,
+                        "sort": {
+                          "empty": false,
+                          "sorted": true,
+                          "unsorted": false
+                        },
+                        "first": true,
+                        "numberOfElements": 10,
+                        "empty": false
+                      },
+                      "timestamp": "2026-02-20T10:58:19.1800413"
+                    }
+                  },
+                  "typeOnlyFilter": {
+                    "summary": "type만 제한 (category 미지정)",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "content": [
+                          {
+                            "id": "NEWS:12941",
+                            "highlightedTitle": "내년 인문캠 총학 <em>비대위</em>… 후보 불출마로 선거 무산",
+                            "highlightedContent": "...총동아리연합회 비상대책위원회...",
+                            "date": "2024-11-11T01:51:00",
+                            "link": "https://news.mju.ac.kr/news/articleView.html?idxno=12941",
+                            "category": "REPORT",
+                            "type": "news",
+                            "imageUrl": "http://news.mju.ac.kr/news/thumbnail//202411/12941_13881_1514_v150.jpg",
+                            "score": 16.830822,
                             "authorName": "명대신문",
                             "likeCount": 0,
                             "commentCount": 0
@@ -212,8 +268,8 @@
                           "unpaged": false
                         },
                         "last": false,
-                        "totalElements": 57,
-                        "totalPages": 6,
+                        "totalElements": 128,
+                        "totalPages": 13,
                         "size": 10,
                         "number": 0,
                         "sort": {
