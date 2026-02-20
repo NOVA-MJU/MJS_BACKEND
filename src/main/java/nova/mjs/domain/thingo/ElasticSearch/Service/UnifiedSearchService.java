@@ -17,7 +17,6 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 통합 검색 오케스트레이션 서비스.
@@ -151,32 +150,9 @@ public class UnifiedSearchService {
         return highlights.get(0);
     }
 
-    /** type 파라미터를 내부 SearchType enum 값으로 정규화. */
-    private String normalizeType(String rawType) {
-        SearchType parsed = SearchType.from(rawType);
+    /** category 파라미터를 내부 SearchType enum 값으로 정규화. */
+    private String normalizeCategory(String rawCategory) {
+        SearchType parsed = SearchType.from(rawCategory);
         return parsed == null ? null : parsed.name();
-    }
-
-    /** category 파라미터 정규화. (도메인별 category 저장 규칙 반영) */
-    private String normalizeCategory(String normalizedType, String rawCategory) {
-        if (rawCategory == null) {
-            return null;
-        }
-
-        String trimmed = rawCategory.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-
-        if (SearchType.NOTICE.name().equals(normalizedType)) {
-            return trimmed.toLowerCase(Locale.ROOT);
-        }
-
-        if (SearchType.NEWS.name().equals(normalizedType)
-                || SearchType.COMMUNITY.name().equals(normalizedType)) {
-            return trimmed.toUpperCase(Locale.ROOT);
-        }
-
-        return trimmed;
     }
 }
