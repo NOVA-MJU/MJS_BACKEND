@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public record SearchQueryPlan(
         String keyword,
+        String type,
         String category,
         String order,
         List<String> expandedKeywords,

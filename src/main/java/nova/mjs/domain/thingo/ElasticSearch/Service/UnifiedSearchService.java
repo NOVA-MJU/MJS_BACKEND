@@ -39,19 +39,21 @@ public class UnifiedSearchService {
      */
     public Page<SearchResponseDTO> search(
             String keyword,
+            String type,
             String category,
             String order,
             Pageable pageable
     ) {
+        String normalizedType = normalizeType(type);
         String normalizedCategory = normalizeCategory(category);
 
         SearchIntentContext intentContext = searchIntentResolver.resolve(keyword);
-        SearchQueryPlan plan = searchRankingPolicy.plan(intentContext, normalizedCategory, order);
+        SearchQueryPlan plan = searchRankingPolicy.plan(intentContext, normalizedType, normalizedCategory, order);
 
         SearchHits<UnifiedSearchDocument> hits =
                 unifiedSearchQueryRepository.search(plan, pageable);
 
-        if (shouldFallbackToCategoryOnlyKeyword(hits, normalizedCategory, intentContext.normalizedKeyword())) {
+        if (shouldFallbackToTypeKeyword(hits, normalizedType, intentContext.normalizedKeyword())) {
             SearchQueryPlan fallbackPlan = withoutIntentExpansion(plan);
             hits = unifiedSearchQueryRepository.search(fallbackPlan, pageable);
         }
@@ -67,12 +69,12 @@ public class UnifiedSearchService {
     /**
      * 카테고리 상세 검색에서 결과가 비어있으면, 과도한 의도 확장을 제거한 fallback 실행 여부를 판단한다.
      */
-    private boolean shouldFallbackToCategoryOnlyKeyword(
+    private boolean shouldFallbackToTypeKeyword(
             SearchHits<UnifiedSearchDocument> hits,
-            String normalizedCategory,
+            String normalizedType,
             String normalizedKeyword
     ) {
-        return normalizedCategory != null
+        return normalizedType != null
                 && normalizedKeyword != null
                 && !normalizedKeyword.isBlank()
                 && hits.getTotalHits() == 0;
@@ -84,6 +86,7 @@ public class UnifiedSearchService {
     private SearchQueryPlan withoutIntentExpansion(SearchQueryPlan plan) {
         return new SearchQueryPlan(
                 plan.keyword(),
+                plan.type(),
                 plan.category(),
                 plan.order(),
                 List.of(),
@@ -147,9 +150,19 @@ public class UnifiedSearchService {
         return highlights.get(0);
     }
 
-    /** category 파라미터를 내부 SearchType enum 값으로 정규화. */
-    private String normalizeCategory(String rawCategory) {
-        SearchType parsed = SearchType.from(rawCategory);
+    /** type 파라미터를 내부 SearchType enum 값으로 정규화. */
+    private String normalizeType(String rawType) {
+        SearchType parsed = SearchType.from(rawType);
         return parsed == null ? null : parsed.name();
+    }
+
+    /** category 파라미터를 null-safe trim 처리. */
+    private String normalizeCategory(String rawCategory) {
+        if (rawCategory == null) {
+            return null;
+        }
+
+        String normalized = rawCategory.trim();
+        return normalized.isBlank() ? null : normalized;
     }
 }

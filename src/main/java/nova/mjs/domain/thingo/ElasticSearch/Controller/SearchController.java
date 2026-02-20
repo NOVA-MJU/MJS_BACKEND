@@ -43,19 +43,21 @@ public class SearchController {
      * 검색 상세 조회.
      *
      * @param keyword  사용자 검색어
-     * @param category 검색 카테고리(내부 type enum에 매핑)
+     * @param type     검색 타입 탭 (NOTICE | COMMUNITY | NEWS ...)
+     * @param category 세부 카테고리 (예: notice-general)
      * @param order    relevance | latest | oldest
      * @param pageable 페이지 정보
      */
     @GetMapping("/detail")
     public ResponseEntity<ApiResponse<Page<SearchResponseDTO>>> searchDetail(
             @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(required = false) String type,
             @RequestParam(required = false) String category,
             @RequestParam(name = "order", defaultValue = "relevance") String order,
             @PageableDefault(size = 10) Pageable pageable
     ) {
         Page<SearchResponseDTO> result =
-                unifiedSearchService.search(keyword, category, order, pageable);
+                unifiedSearchService.search(keyword, type, category, order, pageable);
 
         realtimeKeywordService.recordSearch(keyword);
 
