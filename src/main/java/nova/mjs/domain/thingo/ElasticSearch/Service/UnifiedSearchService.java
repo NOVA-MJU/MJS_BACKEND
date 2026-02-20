@@ -40,14 +40,16 @@ public class UnifiedSearchService {
      */
     public Page<SearchResponseDTO> search(
             String keyword,
+            String type,
             String category,
             String order,
             Pageable pageable
     ) {
-        String normalizedCategory = normalizeCategory(category);
+        String normalizedType = normalizeType(type);
+        String normalizedCategory = normalizeCategory(normalizedType, category);
 
         SearchIntentContext intentContext = searchIntentResolver.resolve(keyword);
-        SearchQueryPlan plan = searchRankingPolicy.plan(intentContext, normalizedCategory, order);
+        SearchQueryPlan plan = searchRankingPolicy.plan(intentContext, normalizedType, normalizedCategory, order);
 
         SearchHits<UnifiedSearchDocument> hits =
                 unifiedSearchQueryRepository.search(plan, pageable);
@@ -85,6 +87,7 @@ public class UnifiedSearchService {
     private SearchQueryPlan withoutIntentExpansion(SearchQueryPlan plan) {
         return new SearchQueryPlan(
                 plan.keyword(),
+                plan.type(),
                 plan.category(),
                 plan.order(),
                 List.of(),
@@ -148,9 +151,32 @@ public class UnifiedSearchService {
         return highlights.get(0);
     }
 
-    /** category 파라미터를 내부 SearchType enum 값으로 정규화. */
-    private String normalizeCategory(String rawCategory) {
-        SearchType parsed = SearchType.from(rawCategory);
-        return parsed == null ? null : parsed.name().toLowerCase(Locale.ROOT);
+    /** type 파라미터를 내부 SearchType enum 값으로 정규화. */
+    private String normalizeType(String rawType) {
+        SearchType parsed = SearchType.from(rawType);
+        return parsed == null ? null : parsed.name();
+    }
+
+    /** category 파라미터 정규화. (도메인별 category 저장 규칙 반영) */
+    private String normalizeCategory(String normalizedType, String rawCategory) {
+        if (rawCategory == null) {
+            return null;
+        }
+
+        String trimmed = rawCategory.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+
+        if (SearchType.NOTICE.name().equals(normalizedType)) {
+            return trimmed.toLowerCase(Locale.ROOT);
+        }
+
+        if (SearchType.NEWS.name().equals(normalizedType)
+                || SearchType.COMMUNITY.name().equals(normalizedType)) {
+            return trimmed.toUpperCase(Locale.ROOT);
+        }
+
+        return trimmed;
     }
 }

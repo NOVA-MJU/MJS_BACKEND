@@ -21,11 +21,13 @@ public class SearchRankingPolicy {
      */
     public SearchQueryPlan plan(
             SearchIntentContext intentContext,
+            String normalizedType,
             String normalizedCategory,
             String order
     ) {
         return new SearchQueryPlan(
                 intentContext.normalizedKeyword(),
+                normalizedType,
                 normalizedCategory,
                 normalizeOrder(order),
                 intentContext.expandedKeywords(),
