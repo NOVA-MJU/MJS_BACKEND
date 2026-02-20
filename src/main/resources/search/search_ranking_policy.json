@@ -1,0 +1,35 @@
+{
+  "expansionTermBoost": 3.2,
+  "autocompleteBoost": 4.0,
+  "noticeTypeBoost": 1.8,
+  "noticeGeneralCategoryBoost": 2.8,
+  "negativeStrategy": "HARD_FILTER",
+  "negativeDownrankBoost": 0.2,
+  "freshnessRules": [
+    {
+      "gte": "now-7d/d",
+      "boost": 1.1
+    },
+    {
+      "gte": "now-30d/d",
+      "boost": 0.6
+    },
+    {
+      "gte": "now-90d/d",
+      "boost": 0.3
+    }
+  ],
+  "popularityRules": [
+    {
+      "field": "likeCount",
+      "gte": 20,
+      "boost": 0.6
+    },
+    {
+      "field": "commentCount",
+      "gte": 10,
+      "boost": 0.8
+    }
+  ],
+  "intentRecencyWindowDays": 60
+}

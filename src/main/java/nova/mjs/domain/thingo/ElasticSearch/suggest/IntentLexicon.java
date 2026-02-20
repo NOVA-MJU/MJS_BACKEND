@@ -211,6 +211,11 @@ public class IntentLexicon {
         return meta;
     }
 
+    /** resolver가 참조할 수 있도록 lexicon entry를 읽기 전용으로 노출한다. */
+    public List<IntentLexiconEntry> entries() {
+        return List.copyOf(entries);
+    }
+
     /* ========================= records ========================= */
 
     public record IntentMatch(IntentLexiconEntry entry, int score) {}
