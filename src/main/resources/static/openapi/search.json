@@ -98,8 +98,8 @@
         "tags": [
           "Search"
         ],
-        "summary": "통합 상세 검색 (카테고리/정렬/페이지네이션)",
-        "description": "키워드 기반 통합 검색 API입니다.\\n\\n- `category`를 지정하면 해당 타입으로만 필터링합니다. (대소문자 무관, 내부적으로 enum으로 정규화)\\n- `order`는 `relevance`(기본), `latest`, `oldest`를 지원합니다.\\n- 페이지네이션은 Spring Pageable 규약(`page`, `size`)을 따르며 기본값은 `page=0`, `size=10`입니다.\\n- `keyword`를 비우면 선택한 category(없으면 전체) 기준의 목록 조회처럼 동작합니다.",
+        "summary": "통합 상세 검색 (type + category 이중 필터/정렬/페이지네이션)",
+        "description": "키워드 기반 통합 검색 API입니다.\\n\\n핵심 포인트\\n- `type`은 상위 탭 필터, `category`는 인덱스 문서의 `category` 컬럼 필터입니다.\\n- `type` + `category`는 AND(교집합)로 동작합니다.\\n- `order`는 `relevance`(기본), `latest`, `oldest`를 지원합니다.\\n- 페이지네이션 기본값은 `page=0`, `size=10`입니다.\\n\\n실제 요청 예시(값 그대로)\\n1) 공지-학사: `/search/detail?keyword=수강&type=NOTICE&category=academic`\\n2) 공지-일반: `/search/detail?keyword=장학&type=NOTICE&category=general`\\n3) 뉴스-보도: `/search/detail?keyword=총학&type=NEWS&category=REPORT`\\n4) 커뮤니티-자유: `/search/detail?keyword=질문&type=COMMUNITY&category=FREE`\\n5) 방송: `/search/detail?keyword=인터뷰&type=BROADCAST` (category 미사용)",
         "parameters": [
           {
             "name": "keyword",
@@ -112,7 +112,7 @@
             "description": "검색어. 공백/미입력 시 match_all 기반으로 조회합니다."
           },
           {
-            "name": "category",
+            "name": "type",
             "in": "query",
             "required": false,
             "schema": {
@@ -128,7 +128,17 @@
                 "BROADCAST"
               ]
             },
-            "description": "검색 범위를 제한할 타입. 예: `NEWS`를 주면 뉴스 문서만 검색합니다."
+            "description": "상위 검색 탭(type) 필터. 대소문자 무관하게 처리되며 내부 enum으로 정규화됩니다. 지원 값: `NOTICE`, `MJU_CALENDAR`, `DEPARTMENT_NOTICE`, `STUDENT_COUNCIL_NOTICE`, `DEPARTMENT_SCHEDULE`, `COMMUNITY`, `NEWS`, `BROADCAST`."
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "general"
+            },
+            "description": "문서의 `category` 컬럼 exact match 필터입니다. 아래 값은 **코드에서 실제 적재되는 값** 기준입니다.\\n\\ntype별 실제 category 적재값\\n- `NOTICE` → `general`, `academic`, `scholarship`, `career`, `activity`, `rule`, `law`\\n  - 근거: Notice 크롤링 레지스트리 key가 그대로 Notice.category로 저장되고, 통합 인덱스로 매핑됨\\n- `NEWS` → `REPORT`, `SOCIETY`\\n  - 근거: News.Category enum name() 값이 인덱스 category로 저장됨\\n- `COMMUNITY` → `FREE`, `NOTICE`\\n  - 근거: CommunityCategory enum name() 값이 인덱스 category로 저장됨\\n- `BROADCAST` → category 값 없음(null, 미적재)\\n- `MJU_CALENDAR` → category 값 없음(null, 미적재)\\n- `DEPARTMENT_SCHEDULE` → category 값 없음(null, 미적재)\\n- `STUDENT_COUNCIL_NOTICE` → category 값 없음(null, 미적재)\\n- `DEPARTMENT_NOTICE` → 현재 통합 검색 단일 타입 매핑 미구현 상태(운영상 미사용)\\n\\n주의사항\\n- category는 내부 정규화 없이 문자열 trim 후 그대로 term filter 됩니다.\\n- 즉 값/대소문자를 실제 적재값과 정확히 맞춰야 합니다."
           },
           {
             "name": "order",
@@ -178,22 +188,72 @@
                   "$ref": "#/components/schemas/ApiResponsePageSearchResult"
                 },
                 "examples": {
-                  "newsFilter": {
-                    "summary": "카테고리 필터 + 기본 페이지 크기(10)",
+                  "typeAndCategoryFilter": {
+                    "summary": "type + category 동시 필터 (size=10 유지)",
                     "value": {
                       "status": "API 요청 성공",
                       "data": {
                         "content": [
                           {
-                            "id": "NEWS:13317",
+                            "id": "NOTICE:13317",
                             "highlightedTitle": "2025학년도 8월 <em>졸업</em> 관련 안내",
                             "highlightedContent": "2025년 8월 <em>졸업</em>예정자 대상 일정 안내...",
                             "date": "2025-05-19T01:39:00",
-                            "link": "https://news.mju.ac.kr/news/articleView.html?idxno=13317",
-                            "category": "REPORT",
-                            "type": "news",
+                            "link": "https://www.mju.ac.kr/mjukr/255/subview.do?...",
+                            "category": "general",
+                            "type": "notice",
                             "imageUrl": "",
                             "score": 33.6482,
+                            "authorName": "",
+                            "likeCount": 0,
+                            "commentCount": 0
+                          }
+                        ],
+                        "pageable": {
+                          "pageNumber": 0,
+                          "pageSize": 10,
+                          "sort": {
+                            "empty": false,
+                            "sorted": true,
+                            "unsorted": false
+                          },
+                          "offset": 0,
+                          "paged": true,
+                          "unpaged": false
+                        },
+                        "last": false,
+                        "totalElements": 42,
+                        "totalPages": 5,
+                        "size": 10,
+                        "number": 0,
+                        "sort": {
+                          "empty": false,
+                          "sorted": true,
+                          "unsorted": false
+                        },
+                        "first": true,
+                        "numberOfElements": 10,
+                        "empty": false
+                      },
+                      "timestamp": "2026-02-20T10:58:19.1800413"
+                    }
+                  },
+                  "typeOnlyFilter": {
+                    "summary": "type만 제한 (category 미지정)",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "content": [
+                          {
+                            "id": "NEWS:12941",
+                            "highlightedTitle": "내년 인문캠 총학 <em>비대위</em>… 후보 불출마로 선거 무산",
+                            "highlightedContent": "...총동아리연합회 비상대책위원회...",
+                            "date": "2024-11-11T01:51:00",
+                            "link": "https://news.mju.ac.kr/news/articleView.html?idxno=12941",
+                            "category": "REPORT",
+                            "type": "news",
+                            "imageUrl": "http://news.mju.ac.kr/news/thumbnail//202411/12941_13881_1514_v150.jpg",
+                            "score": 16.830822,
                             "authorName": "명대신문",
                             "likeCount": 0,
                             "commentCount": 0
@@ -212,8 +272,8 @@
                           "unpaged": false
                         },
                         "last": false,
-                        "totalElements": 57,
-                        "totalPages": 6,
+                        "totalElements": 128,
+                        "totalPages": 13,
                         "size": 10,
                         "number": 0,
                         "sort": {

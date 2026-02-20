@@ -106,10 +106,18 @@ public class UnifiedSearchQueryRepository {
                         }));
                     }
 
+                    if (plan.type() != null) {
+                        boolQuery.filter(filterQuery ->
+                                filterQuery.term(termQuery ->
+                                        termQuery.field("type").value(plan.type())
+                                )
+                        );
+                    }
+
                     if (plan.category() != null) {
                         boolQuery.filter(filterQuery ->
                                 filterQuery.term(termQuery ->
-                                        termQuery.field("type").value(plan.category())
+                                        termQuery.field("category").value(plan.category())
                                 )
                         );
                     }
