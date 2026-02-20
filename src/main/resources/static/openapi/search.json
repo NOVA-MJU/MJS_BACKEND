@@ -99,7 +99,7 @@
           "Search"
         ],
         "summary": "통합 상세 검색 (type + category 이중 필터/정렬/페이지네이션)",
-        "description": "키워드 기반 통합 검색 API입니다.\\n\\n핵심 포인트\\n- `type`은 상위 탭 필터, `category`는 인덱스 문서의 `category` 컬럼 필터입니다.\\n- `type` + `category`는 AND(교집합)로 동작합니다.\\n- `order`는 `relevance`(기본), `latest`, `oldest`를 지원합니다.\\n- 페이지네이션 기본값은 `page=0`, `size=10`입니다.\\n\\n실제 요청 예시(값 그대로)\\n1) 공지-학사: `/search/detail?keyword=수강&type=NOTICE&category=academic`\\n2) 공지-일반: `/search/detail?keyword=장학&type=NOTICE&category=general`\\n3) 뉴스-보도: `/search/detail?keyword=총학&type=NEWS&category=REPORT`\\n4) 커뮤니티-자유: `/search/detail?keyword=질문&type=COMMUNITY&category=FREE`\\n5) 방송: `/search/detail?keyword=인터뷰&type=BROADCAST` (category 미사용)",
+        "description": "키워드 기반 통합 검색 API입니다.\\n\\n동작 규칙\\n- `type`은 상위 탭 필터입니다. (`NOTICE`, `COMMUNITY`, `NEWS` 등)\\n- `category`는 문서의 세부 분류 필터입니다. (`NOTICE`의 경우 `general`, `academic` 등)\\n- `type`과 `category`를 함께 주면 **교집합(AND)** 조건으로 필터링합니다.\\n- `order`는 `relevance`(기본), `latest`, `oldest`를 지원합니다.\\n- 페이지네이션은 Spring Pageable 규약(`page`, `size`)을 따르며 기본값은 `page=0`, `size=10`입니다.\\n- `keyword`를 비우면 필터(`type`/`category`) + 정렬 기준으로 목록 조회처럼 동작합니다.\\n\\n권장 사용 예시\\n1) 전체 통합 검색: `/search/detail?keyword=졸업`\\n2) 탭만 제한: `/search/detail?keyword=졸업&type=NOTICE`\\n3) 탭 + 세부 카테고리 제한: `/search/detail?keyword=졸업&type=NOTICE&category=general`\\n4) 최신순 정렬: `/search/detail?keyword=장학금&type=NEWS&order=latest`\\n5) 페이지 이동: `/search/detail?keyword=기숙사&page=1&size=10`",
         "parameters": [
           {
             "name": "keyword",
@@ -119,10 +119,6 @@
               "type": "string",
               "enum": [
                 "NOTICE",
-                "MJU_CALENDAR",
-                "DEPARTMENT_NOTICE",
-                "STUDENT_COUNCIL_NOTICE",
-                "DEPARTMENT_SCHEDULE",
                 "COMMUNITY",
                 "NEWS",
                 "BROADCAST"
