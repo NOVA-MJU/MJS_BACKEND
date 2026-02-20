@@ -124,7 +124,7 @@
                 "BROADCAST"
               ]
             },
-            "description": "상위 검색 탭(type) 필터. 대소문자 무관하게 처리되며 내부 enum으로 정규화됩니다. 예: `type=NOTICE`"
+            "description": "상위 검색 탭(type) 필터. 대소문자 무관하게 처리되며 내부 enum으로 정규화됩니다. 지원 값: `NOTICE`, `MJU_CALENDAR`, `DEPARTMENT_NOTICE`, `STUDENT_COUNCIL_NOTICE`, `DEPARTMENT_SCHEDULE`, `COMMUNITY`, `NEWS`, `BROADCAST`."
           },
           {
             "name": "category",
@@ -134,7 +134,7 @@
               "type": "string",
               "example": "general"
             },
-            "description": "세부 카테고리 필터. 문서의 `category` 필드와 exact match 됩니다. 예: `category=general`, `category=REPORT`"
+            "description": "문서의 `category` 컬럼 exact match 필터입니다. 아래 값은 **코드에서 실제 적재되는 값** 기준입니다.\\n\\ntype별 실제 category 적재값\\n- `NOTICE` → `general`, `academic`, `scholarship`, `career`, `activity`, `rule`, `law`\\n  - 근거: Notice 크롤링 레지스트리 key가 그대로 Notice.category로 저장되고, 통합 인덱스로 매핑됨\\n- `NEWS` → `REPORT`, `SOCIETY`\\n  - 근거: News.Category enum name() 값이 인덱스 category로 저장됨\\n- `COMMUNITY` → `FREE`, `NOTICE`\\n  - 근거: CommunityCategory enum name() 값이 인덱스 category로 저장됨\\n- `BROADCAST` → category 값 없음(null, 미적재)\\n- `MJU_CALENDAR` → category 값 없음(null, 미적재)\\n- `DEPARTMENT_SCHEDULE` → category 값 없음(null, 미적재)\\n- `STUDENT_COUNCIL_NOTICE` → category 값 없음(null, 미적재)\\n- `DEPARTMENT_NOTICE` → 현재 통합 검색 단일 타입 매핑 미구현 상태(운영상 미사용)\\n\\n주의사항\\n- category는 내부 정규화 없이 문자열 trim 후 그대로 term filter 됩니다.\\n- 즉 값/대소문자를 실제 적재값과 정확히 맞춰야 합니다."
           },
           {
             "name": "order",
