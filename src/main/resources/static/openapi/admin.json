@@ -323,7 +323,7 @@
       "patch": {
         "tags": ["DEPARTMENT_INFO"],
         "summary": "학과(Department) 수정",
-        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n식별 정책:\n- college: 필수\n- departmentName: 선택\n\n요청 바디에 전달된 필드만 수정되며, null인 필드는 기존 값 유지(엔티티 updateAdminInfo 정책).",
+        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n식별 정책:\n- college: 필수\n- departmentName: 선택\n\n요청 바디에 전달된 필드만 수정되며, null인 필드는 기존 값 유지(엔티티 updateAdminInfo 정책). 대상이 없으면 COLLEGE_NOT_FOUND 또는 DEPARTMENT_NOT_FOUND 에러가 반환됩니다.",
         "operationId": "updateDepartment",
         "security": [{ "Authorization": [] }],
         "parameters": [
@@ -339,7 +339,7 @@
             "name": "departmentName",
             "in": "query",
             "required": false,
-            "description": "수정 대상 학과명(선택). 미전달 시 해당 college 단일 레코드 정책은 서비스 구현에 따름.",
+            "description": "수정 대상 학과명(선택). 미전달 시 단과대(학부) 레벨 Department(=departmentName null)를 대상으로 처리합니다.",
             "schema": { "type": "string" },
             "example": "DATA_SCIENCE"
           }
@@ -393,7 +393,7 @@
       "delete": {
         "tags": ["DEPARTMENT_INFO"],
         "summary": "학과(Department) 삭제",
-        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n식별 정책:\n- college: 필수\n- departmentName: 선택\n\n삭제 성공 시 고정 메시지를 반환합니다.",
+        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n식별 정책:\n- college: 필수\n- departmentName: 선택\n\n삭제 성공 시 고정 메시지를 반환합니다. 대상이 없으면 COLLEGE_NOT_FOUND 또는 DEPARTMENT_NOT_FOUND 에러가 반환됩니다.",
         "operationId": "deleteDepartment",
         "security": [{ "Authorization": [] }],
         "parameters": [
@@ -408,6 +408,7 @@
             "name": "departmentName",
             "in": "query",
             "required": false,
+            "description": "삭제 대상 학과명(선택). 미전달 시 단과대(학부) 레벨 Department(=departmentName null)를 대상으로 처리합니다.",
             "schema": { "type": "string" },
             "example": "DATA_SCIENCE"
           }

@@ -2,6 +2,8 @@ package nova.mjs.admin.department.info.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.domain.thingo.department.exception.CollegeNotFoundException;
+import nova.mjs.domain.thingo.department.exception.DepartmentNotFoundException;
 import nova.mjs.domain.thingo.department.dto.DepartmentDTO;
 import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
@@ -107,11 +109,15 @@ public class AdminDepartmentCommandServiceImpl
             College college,
             DepartmentName departmentName
     ) {
+        if (departmentName == null) {
+            return departmentRepository
+                    .findCollegeLevelDepartment(college)
+                    .orElseThrow(CollegeNotFoundException::new);
+        }
+
         return departmentRepository
                 .findByCollegeAndDepartmentName(college, departmentName)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("해당 학과를 찾을 수 없습니다.")
-                );
+                .orElseThrow(DepartmentNotFoundException::new);
     }
 
     /**

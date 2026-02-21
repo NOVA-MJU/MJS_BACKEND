@@ -45,4 +45,13 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     Optional<Department> findByCollegeAndDepartmentNameIsNull(
             College college
     );
+
+    /**
+     * 단과대(학부) 레벨 Department 조회
+     *
+     * - departmentName == null 인 레코드를 의미한다.
+     */
+    default Optional<Department> findCollegeLevelDepartment(College college) {
+        return findByCollegeAndDepartmentNameIsNull(college);
+    }
 }
