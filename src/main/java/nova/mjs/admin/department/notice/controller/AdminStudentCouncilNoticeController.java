@@ -34,16 +34,12 @@ public class AdminStudentCouncilNoticeController {
     @GetMapping("/{noticeUuid}")
     @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminStudentCouncilNoticeDTO.Response>> getDetail(
-            @RequestParam College college,
-            @RequestParam DepartmentName department,
             @PathVariable UUID noticeUuid,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         service.getAdminDepartmentNoticeDetail(
-                                college,
-                                department,
                                 noticeUuid,
                                 userPrincipal
                         )
@@ -76,8 +72,6 @@ public class AdminStudentCouncilNoticeController {
     @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminStudentCouncilNoticeDTO.Response>> update(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @RequestParam College college,
-            @RequestParam DepartmentName department,
             @PathVariable UUID noticeUuid,
             @RequestBody @Valid AdminStudentCouncilNoticeDTO.Request requestDTO
     ) {
@@ -85,8 +79,6 @@ public class AdminStudentCouncilNoticeController {
                 ApiResponse.success(
                         service.updateNotice(
                                 userPrincipal,
-                                college,
-                                department,
                                 noticeUuid,
                                 requestDTO
                         )
@@ -100,12 +92,10 @@ public class AdminStudentCouncilNoticeController {
     @DeleteMapping("/{noticeUuid}")
     @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<String>> delete(
-            @RequestParam College college,
-            @RequestParam DepartmentName department,
             @PathVariable UUID noticeUuid,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        service.deleteNotice(userPrincipal, college, department, noticeUuid);
+        service.deleteNotice(userPrincipal, noticeUuid);
 
         return ResponseEntity.ok(
                 ApiResponse.success("삭제가 성공적으로 완료되었습니다.")

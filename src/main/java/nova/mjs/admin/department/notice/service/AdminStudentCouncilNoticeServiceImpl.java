@@ -47,13 +47,11 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
      * ========================================================== */
     @Override
     public AdminStudentCouncilNoticeDTO.Response getAdminDepartmentNoticeDetail(
-            College college,
-            DepartmentName departmentName,
             UUID noticeUuid,
             UserPrincipal userPrincipal
     ) {
         StudentCouncilNotice notice =
-                validateAdminAndGetNotice(college, departmentName, noticeUuid, userPrincipal);
+                validateAdminAndGetNotice(noticeUuid, userPrincipal);
 
         return AdminStudentCouncilNoticeDTO.Response.fromEntity(notice);
     }
@@ -100,18 +98,17 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
     @Transactional
     public AdminStudentCouncilNoticeDTO.Response updateNotice(
             UserPrincipal userPrincipal,
-            College college,
-            DepartmentName departmentName,
             UUID noticeUuid,
             AdminStudentCouncilNoticeDTO.Request request
     ) {
         StudentCouncilNotice notice =
-                validateAdminAndGetNotice(college, departmentName, noticeUuid, userPrincipal);
+                validateAdminAndGetNotice(noticeUuid, userPrincipal);
         Member member = memberQueryService.getMemberByEmail(userPrincipal.getEmail());
         notice.update(request, member.getNickname());
+        Department department = notice.getDepartment();
 
         log.info("[학과 공지 수정] college={}, department={}, noticeUuid={}",
-                college, departmentName, noticeUuid);
+                department.getCollege(), department.getDepartmentName(), noticeUuid);
 
         return AdminStudentCouncilNoticeDTO.Response.fromEntity(notice);
     }
@@ -130,12 +127,11 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
     @Transactional
     public void deleteNotice(
             UserPrincipal userPrincipal,
-            College college,
-            DepartmentName departmentName,
             UUID noticeUuid
     ) {
         StudentCouncilNotice notice =
-                validateAdminAndGetNotice(college, departmentName, noticeUuid, userPrincipal);
+                validateAdminAndGetNotice(noticeUuid, userPrincipal);
+        Department department = notice.getDepartment();
 
         String folder = departmentNoticePrefix + notice.getUuid() + "/";
         s3Service.deleteFolder(folder);
@@ -143,7 +139,7 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
         studentCouncilNoticeRepository.delete(notice);
 
         log.info("[학과 공지 삭제] college={}, department={}, noticeUuid={}",
-                college, departmentName, noticeUuid);
+                department.getCollege(), department.getDepartmentName(), noticeUuid);
     }
 
     /* ==========================================================
@@ -176,16 +172,25 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
      * 관리자 검증 + 공지 조회
      */
     private StudentCouncilNotice validateAdminAndGetNotice(
-            College college,
-            DepartmentName departmentName,
             UUID noticeUuid,
             UserPrincipal userPrincipal
     ) {
-        Department department =
-                validateAdminAndGetDepartment(userPrincipal, college, departmentName);
-
-        return studentCouncilNoticeRepository
-                .findByDepartmentAndUuid(department, noticeUuid)
+        StudentCouncilNotice notice = studentCouncilNoticeRepository
+                .findByUuid(noticeUuid)
                 .orElseThrow(DepartmentNoticeNotFoundException::new);
+
+        Department department = notice.getDepartment();
+
+        boolean isAdmin = adminQueryService.validateIsAdminOfDepartment(
+                userPrincipal,
+                department.getCollege(),
+                department.getDepartmentName()
+        );
+
+        if (!isAdmin) {
+            throw new DepartmentAdminNotFoundException();
+        }
+
+        return notice;
     }
 }

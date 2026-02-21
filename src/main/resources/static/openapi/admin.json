@@ -544,24 +544,10 @@
       "get": {
         "tags": ["STUDENT_COUNCIL_NOTICE"],
         "summary": "학생회 공지 상세 조회(관리자)",
-        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n- noticeUuid로 공지를 조회하되, 반드시 college + department로 학과 소속 검증을 수행합니다.\n- 소속이 다르면 조회되지 않습니다(서비스 정책에 따라 404/403 처리).",
+        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n- noticeUuid로 공지를 조회합니다.\n- 공지의 소속 학과를 기준으로 관리자 권한을 검증합니다.",
         "operationId": "getStudentCouncilNoticeDetailAdmin",
         "security": [{ "Authorization": [] }],
         "parameters": [
-          {
-            "name": "college",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/CollegeEnum" },
-            "example": "AI_SOFTWARE"
-          },
-          {
-            "name": "department",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string" },
-            "example": "DATA_SCIENCE"
-          },
           {
             "name": "noticeUuid",
             "in": "path",
@@ -600,24 +586,10 @@
       "patch": {
         "tags": ["STUDENT_COUNCIL_NOTICE"],
         "summary": "학생회 공지 수정",
-        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n- noticeUuid + college + department로 대상 공지를 특정합니다.\n- title/content/imageUrls를 갱신합니다.",
+        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n- noticeUuid로 대상 공지를 특정합니다.\n- 공지의 소속 학과를 기준으로 관리자 권한 검증 후 title/content/imageUrls를 갱신합니다.",
         "operationId": "updateStudentCouncilNotice",
         "security": [{ "Authorization": [] }],
         "parameters": [
-          {
-            "name": "college",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/CollegeEnum" },
-            "example": "AI_SOFTWARE"
-          },
-          {
-            "name": "department",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string" },
-            "example": "DATA_SCIENCE"
-          },
           {
             "name": "noticeUuid",
             "in": "path",
@@ -682,24 +654,10 @@
       "delete": {
         "tags": ["STUDENT_COUNCIL_NOTICE"],
         "summary": "학생회 공지 삭제",
-        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n- noticeUuid + college + department로 대상 공지를 특정합니다.\n- 삭제 성공 시 고정 메시지를 반환합니다.",
+        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n- noticeUuid로 대상 공지를 특정합니다.\n- 공지의 소속 학과를 기준으로 관리자 권한 검증 후 삭제합니다.\n- 삭제 성공 시 고정 메시지를 반환합니다.",
         "operationId": "deleteStudentCouncilNotice",
         "security": [{ "Authorization": [] }],
         "parameters": [
-          {
-            "name": "college",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/CollegeEnum" },
-            "example": "AI_SOFTWARE"
-          },
-          {
-            "name": "department",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string" },
-            "example": "DATA_SCIENCE"
-          },
           {
             "name": "noticeUuid",
             "in": "path",

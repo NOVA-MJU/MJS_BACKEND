@@ -17,8 +17,6 @@ public interface AdminStudentCouncilNoticeService {
 
     // 상세 조회
     AdminStudentCouncilNoticeDTO.Response getAdminDepartmentNoticeDetail(
-            College college,
-            DepartmentName departmentName,
             UUID noticeUuid,
             UserPrincipal userPrincipal
     );
@@ -34,8 +32,6 @@ public interface AdminStudentCouncilNoticeService {
     // 수정
     AdminStudentCouncilNoticeDTO.Response updateNotice(
             UserPrincipal userPrincipal,
-            College college,
-            DepartmentName departmentName,
             UUID noticeUuid,
             AdminStudentCouncilNoticeDTO.Request request
     );
@@ -43,8 +39,6 @@ public interface AdminStudentCouncilNoticeService {
     // 삭제
     void deleteNotice(
             UserPrincipal userPrincipal,
-            College college,
-            DepartmentName departmentName,
             UUID noticeUuid
     );
 }
