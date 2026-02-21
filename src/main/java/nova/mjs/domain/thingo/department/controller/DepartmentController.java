@@ -34,7 +34,7 @@ public class DepartmentController {
     @GetMapping("/info")
     public ResponseEntity<ApiResponse<DepartmentDTO.InfoResponse>> getInfo(
             @RequestParam College college,
-            @RequestParam DepartmentName department
+            @RequestParam(required = false) DepartmentName department
     ) {
         DepartmentDTO.InfoResponse dto =
                 departmentInfoQueryService.getDepartmentInfo(college, department);
@@ -49,7 +49,7 @@ public class DepartmentController {
     @GetMapping("/schedules")
     public ResponseEntity<ApiResponse<DepartmentScheduleDTO.Response>> getSchedules(
             @RequestParam College college,
-            @RequestParam DepartmentName department
+            @RequestParam(required = false) DepartmentName department
     ) {
         DepartmentScheduleDTO.Response dto =
                 departmentScheduleService.getSchedule(college, department);
@@ -64,7 +64,7 @@ public class DepartmentController {
     @GetMapping("/student-council/notices")
     public ResponseEntity<ApiResponse<Page<StudentCouncilNoticeDTO.Summary>>> getNotices(
             @RequestParam College college,
-            @RequestParam DepartmentName department,
+            @RequestParam(required = false) DepartmentName department,
             @PageableDefault(page = 0, size = 5) Pageable pageable
     ) {
         return ResponseEntity.ok(

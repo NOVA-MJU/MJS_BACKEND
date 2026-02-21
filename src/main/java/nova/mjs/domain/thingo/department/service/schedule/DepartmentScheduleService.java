@@ -6,6 +6,7 @@ import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.department.entity.DepartmentSchedule;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.exception.CollegeNotFoundException;
 import nova.mjs.domain.thingo.department.exception.DepartmentNotFoundException;
 import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
 import nova.mjs.domain.thingo.department.repository.DepartmentScheduleRepository;
@@ -36,9 +37,17 @@ public class DepartmentScheduleService {
             College college,
             DepartmentName departmentName
     ) {
-        Department department = departmentRepository
-                .findByCollegeAndDepartmentName(college, departmentName)
-                .orElseThrow(DepartmentNotFoundException::new);
+        Department department;
+
+        if (departmentName == null) {
+            department = departmentRepository
+                    .findCollegeLevelDepartment(college)
+                    .orElseThrow(CollegeNotFoundException::new);
+        } else {
+            department = departmentRepository
+                    .findByCollegeAndDepartmentName(college, departmentName)
+                    .orElseThrow(DepartmentNotFoundException::new);
+        }
 
         List<DepartmentSchedule> schedules =
                 scheduleRepository.findByDepartment(department);

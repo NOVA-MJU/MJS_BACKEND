@@ -5,14 +5,13 @@ import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.department.dto.DepartmentDTO;
 import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.exception.CollegeNotFoundException;
 import nova.mjs.domain.thingo.department.exception.DepartmentNotFoundException;
 import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,9 +28,17 @@ public class DepartmentInfoQueryService {
             College college,
             DepartmentName departmentName
     ) {
-        Department department = departmentRepository
-                .findByCollegeAndDepartmentName(college, departmentName)
-                .orElseThrow(DepartmentNotFoundException::new);
+        Department department;
+
+        if (departmentName == null) {
+            department = departmentRepository
+                    .findCollegeLevelDepartment(college)
+                    .orElseThrow(CollegeNotFoundException::new);
+        } else {
+            department = departmentRepository
+                    .findByCollegeAndDepartmentName(college, departmentName)
+                    .orElseThrow(DepartmentNotFoundException::new);
+        }
 
         return DepartmentDTO.InfoResponse.fromEntity(department);
     }

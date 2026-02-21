@@ -6,6 +6,7 @@ import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.department.entity.StudentCouncilNotice;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.exception.CollegeNotFoundException;
 import nova.mjs.domain.thingo.department.exception.DepartmentNotFoundException;
 import nova.mjs.domain.thingo.department.exception.DepartmentNoticeNotFoundException;
 import nova.mjs.domain.thingo.department.repository.StudentCouncilNoticeRepository;
@@ -53,6 +54,12 @@ public class StudentCouncilNoticeQueryServiceImpl implements StudentCouncilNotic
     }
 
     private Department getDepartment(College college, DepartmentName departmentName) {
+        if (departmentName == null) {
+            return departmentRepository
+                    .findCollegeLevelDepartment(college)
+                    .orElseThrow(CollegeNotFoundException::new);
+        }
+
         return departmentRepository
                 .findByCollegeAndDepartmentName(college, departmentName)
                 .orElseThrow(DepartmentNotFoundException::new);
