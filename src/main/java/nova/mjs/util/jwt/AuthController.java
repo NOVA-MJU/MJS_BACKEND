@@ -27,7 +27,7 @@ public class AuthController {
             @CookieValue(value = "refreshToken", required = false) String refreshToken
     ) {
         log.info("토큰 재발급 요청");
-
+        log.info("refreshToken: {}", refreshToken);
         // 쿠키 없음 = 인증 안된 상태
         if (refreshToken == null) {
             log.warn("Reissue 실패: refreshToken 쿠키 없음");
