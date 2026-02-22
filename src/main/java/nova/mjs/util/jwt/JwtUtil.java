@@ -154,21 +154,35 @@ public class JwtUtil {
     }
 
     // Access Token 재발급
+    // Access Token 재발급
     public AuthDTO.TokenResponseDTO reissueToken(String refreshToken) {
-        String token = extractToken(refreshToken);
+
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new TokenNotProvidedException("Refresh Token이 제공되지 않았습니다.");
+        }
+
+        // 🔹 Bearer 강제 제거 (AccessToken과 정책 분리)
+        String token = refreshToken.trim();
+
+        // 혹시 모를 Bearer 접두어 방어적 제거
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
         validateToken(token);
 
         if (!isRefreshToken(token)) {
             throw new NotRefreshTokenException();
         }
 
-        //Refresh Token에서 사용자 ID 및 역할(Role) 추출
         UUID uuid = getUserIdFromToken(token);
         String email = getEmailFromToken(token);
         String role = getClaimFromToken(token, claims -> claims.get("role", String.class));
 
         if (uuid == null || email == null) {
-            throw new RefreshTokenParseFailedException("Refresh Token에서 사용자 정보를 추출할 수 없습니다.");
+            throw new RefreshTokenParseFailedException(
+                    "Refresh Token에서 사용자 정보를 추출할 수 없습니다."
+            );
         }
 
         String newAccessToken = generateAccessToken(uuid, email, role);
