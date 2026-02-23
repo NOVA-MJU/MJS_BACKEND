@@ -330,6 +330,92 @@
         }
       }
     },
+    "/departments/notices": {
+      "get": {
+        "tags": ["Department"],
+        "summary": "학과 공지사항 목록 조회",
+        "description": "College + (optional) DepartmentName 조합으로 학과 공지사항(DepartmentNotice)을 페이징 형태로 조회합니다. department 파라미터를 생략하면 단과대(학부) 레벨 공지를 조회합니다.",
+        "parameters": [
+          {
+            "name": "college",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR","OTHER"] }
+          },
+          {
+            "name": "department",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "학과명. 생략 시 단과대(학부) 레벨로 조회됩니다."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 5 }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "example": "date,desc" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "공지 목록 반환",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "content": [
+                      {
+                        "departmentNoticeUuid": "7b3d9f7a-6b3a-4b7a-9f3f-2c9b0a8f7c11",
+                        "title": "[학과공지] 2026학년도 1학기 개강총회 안내",
+                        "publishedAt": "2026-02-20T10:00:00",
+                        "link": "https://example.mju.ac.kr/notice/123"
+                      },
+                      {
+                        "departmentNoticeUuid": "6c5a1af8-0d2f-4f6a-9a3b-7b3a9c0d2e11",
+                        "title": "[학과공지] 수강신청 변경 안내",
+                        "publishedAt": "2026-02-18T09:30:00",
+                        "link": "https://example.mju.ac.kr/notice/124"
+                      }
+                    ],
+                    "pageable": {
+                      "pageNumber": 0,
+                      "pageSize": 5,
+                      "sort": { "empty": false, "sorted": true, "unsorted": false },
+                      "offset": 0,
+                      "paged": true,
+                      "unpaged": false
+                    },
+                    "last": true,
+                    "totalElements": 2,
+                    "totalPages": 1,
+                    "size": 5,
+                    "number": 0,
+                    "sort": { "empty": false, "sorted": true, "unsorted": false },
+                    "first": true,
+                    "numberOfElements": 2,
+                    "empty": false
+                  },
+                  "timestamp": "2026-02-23T21:30:00.000000"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
 
     "/menus/crawling": {
       "post": {

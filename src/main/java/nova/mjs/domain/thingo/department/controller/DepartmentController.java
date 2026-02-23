@@ -2,11 +2,13 @@ package nova.mjs.domain.thingo.department.controller;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.department.dto.DepartmentDTO;
+import nova.mjs.domain.thingo.department.dto.DepartmentNoticeDTO;
 import nova.mjs.domain.thingo.department.dto.StudentCouncilNoticeDTO;
 import nova.mjs.domain.thingo.department.dto.DepartmentScheduleDTO;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.domain.thingo.department.service.info.DepartmentInfoQueryService;
+import nova.mjs.domain.thingo.department.service.notice.DepartmentNoticeQueryService;
 import nova.mjs.domain.thingo.department.service.notice.StudentCouncilNoticeQueryService;
 import nova.mjs.domain.thingo.department.service.schedule.DepartmentScheduleService;
 import nova.mjs.util.response.ApiResponse;
@@ -26,6 +28,7 @@ public class DepartmentController {
     private final DepartmentInfoQueryService departmentInfoQueryService;
     private final DepartmentScheduleService departmentScheduleService;
     private final StudentCouncilNoticeQueryService studentCouncilNoticeQueryService;
+    private final DepartmentNoticeQueryService departmentNoticeQueryService;
 
     /* ------------------------------------------------------------------
      *  학과 정보 (단건)
@@ -58,7 +61,7 @@ public class DepartmentController {
     }
 
     /* ------------------------------------------------------------------
-     *  공지사항
+     *  학생회 공지사항
      * ------------------------------------------------------------------ */
 
     @GetMapping("/student-council/notices")
@@ -79,7 +82,7 @@ public class DepartmentController {
     }
 
     /* ==========================================================
-     * 공지 상세
+     * 학생회 공지 상세
      *
      * 반드시 학과 정보와 함께 검증
      * ========================================================== */
@@ -91,5 +94,26 @@ public class DepartmentController {
                 studentCouncilNoticeQueryService.getNoticeDetail(
                         noticeUuid)
         ));
+    }
+
+    /* ==========================================================
+     * 학과 공지사항
+     * ========================================================== */
+
+    @GetMapping("/notices")
+    public ResponseEntity<ApiResponse<Page<DepartmentNoticeDTO.Summary>>> getDepartmentNotices(
+            @RequestParam College college,
+            @RequestParam(required = false) DepartmentName department,
+            @PageableDefault(page = 0, size = 5) Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        departmentNoticeQueryService.getDepartmentNoticePage(
+                                college,
+                                department,
+                                pageable
+                        )
+                )
+        );
     }
 }
