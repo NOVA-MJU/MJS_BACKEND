@@ -702,6 +702,286 @@
           }
         }
       }
+    },
+
+    "/admin/departments/schedules": {
+      "post": {
+        "tags": ["DEPARTMENT_SCHEDULE"],
+        "summary": "학과 일정 생성",
+        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n학과 식별은 query 파라미터로 전달합니다:\n- college (필수)\n- department (필수)\n\n요청 본문 정책:\n- title: 필수\n- startDate: 필수\n- endDate: 선택(단, 값이 있으면 startDate보다 빠를 수 없음)",
+        "operationId": "createDepartmentSchedule",
+        "security": [{ "Authorization": [] }],
+        "parameters": [
+          {
+            "name": "college",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/CollegeEnum" },
+            "example": "AI_SOFTWARE"
+          },
+          {
+            "name": "department",
+            "in": "query",
+            "required": true,
+            "description": "학과명 Enum(DepartmentName) 값",
+            "schema": { "type": "string" },
+            "example": "DATA_SCIENCE"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AdminDepartmentScheduleRequest" },
+              "examples": {
+                "create_schedule": {
+                  "summary": "학과 일정 생성 예시",
+                  "value": {
+                    "title": "2학기 개강총회",
+                    "content": "개강총회 및 수강 관련 Q&A를 진행합니다.",
+                    "colorCode": "#4F46E5",
+                    "startDate": "2026-09-02",
+                    "endDate": "2026-09-02"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "일정 생성 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseAdminDepartmentScheduleResponse" },
+                "examples": {
+                  "success": {
+                    "summary": "성공",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "departmentScheduleUuid": "3b2b6365-26ef-4fc2-8b1c-247c7f31d4af",
+                        "title": "2학기 개강총회",
+                        "content": "개강총회 및 수강 관련 Q&A를 진행합니다.",
+                        "colorCode": "#4F46E5",
+                        "startDate": "2026-09-02",
+                        "endDate": "2026-09-02"
+                      },
+                      "timestamp": "2026-02-20T09:00:00"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "유효성 검증 실패 또는 관리자-학과 매핑 불일치",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "invalid_date_range": {
+                    "summary": "종료일 검증 실패",
+                    "value": {
+                      "status": 400,
+                      "error": "INVALID_REQUEST",
+                      "message": "시작일은 종료일보다 늦을 수 없습니다.",
+                      "timestamp": "2026-02-20T09:00:00"
+                    }
+                  },
+                  "admin_department_mismatch": {
+                    "summary": "관리자 소속 학과 불일치",
+                    "value": {
+                      "status": 400,
+                      "error": "ADMIN_ID_MISMATCH_WITH_DEPARTMENT_EXCEPTION",
+                      "message": "[MJS] 등록된 관리자와 담당 학과가 일치하지 않습니다.",
+                      "timestamp": "2026-02-20T09:00:00"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "접근 권한 없음",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "학과를 찾을 수 없음",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/admin/departments/schedules/{scheduleUuid}": {
+      "patch": {
+        "tags": ["DEPARTMENT_SCHEDULE"],
+        "summary": "학과 일정 수정",
+        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n- scheduleUuid로 수정 대상을 특정합니다.\n- query 파라미터 college/department로 학과를 식별합니다.\n- 관리자 권한 검증 및 일정 소속 검증 후 갱신합니다.",
+        "operationId": "updateDepartmentSchedule",
+        "security": [{ "Authorization": [] }],
+        "parameters": [
+          {
+            "name": "scheduleUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "college",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/CollegeEnum" },
+            "example": "AI_SOFTWARE"
+          },
+          {
+            "name": "department",
+            "in": "query",
+            "required": true,
+            "description": "학과명 Enum(DepartmentName) 값",
+            "schema": { "type": "string" },
+            "example": "DATA_SCIENCE"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AdminDepartmentScheduleRequest" },
+              "examples": {
+                "update_schedule": {
+                  "summary": "학과 일정 수정 예시",
+                  "value": {
+                    "title": "2학기 개강총회(장소 변경)",
+                    "content": "행사 장소가 공학관 101호로 변경되었습니다.",
+                    "colorCode": "#16A34A",
+                    "startDate": "2026-09-02",
+                    "endDate": "2026-09-03"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "일정 수정 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseAdminDepartmentScheduleResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "유효성 검증 실패 또는 관리자-학과 매핑 불일치",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "접근 권한 없음",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "학과 또는 일정을 찾을 수 없음",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+
+      "delete": {
+        "tags": ["DEPARTMENT_SCHEDULE"],
+        "summary": "학과 일정 삭제",
+        "description": "ADMIN 또는 OPERATOR 권한으로 호출할 수 있습니다.\n\n- scheduleUuid로 삭제 대상을 특정합니다.\n- query 파라미터 college/department로 학과를 식별합니다.\n- 일정 관련 S3 폴더를 함께 정리한 뒤 일정을 삭제합니다.",
+        "operationId": "deleteDepartmentSchedule",
+        "security": [{ "Authorization": [] }],
+        "parameters": [
+          {
+            "name": "scheduleUuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "college",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/CollegeEnum" },
+            "example": "AI_SOFTWARE"
+          },
+          {
+            "name": "department",
+            "in": "query",
+            "required": true,
+            "description": "학과명 Enum(DepartmentName) 값",
+            "schema": { "type": "string" },
+            "example": "DATA_SCIENCE"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "일정 삭제 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseString" },
+                "examples": {
+                  "success": {
+                    "summary": "성공",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": "삭제 완료",
+                      "timestamp": "2026-02-20T09:00:00"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "관리자-학과 매핑 불일치",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "접근 권한 없음",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "학과 또는 일정을 찾을 수 없음",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -913,6 +1193,61 @@
         "properties": {
           "status": { "type": "string", "example": "API 요청 성공" },
           "data": { "$ref": "#/components/schemas/AdminStudentCouncilNoticeResponse" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["status", "timestamp"]
+      },
+
+      "AdminDepartmentScheduleRequest": {
+        "type": "object",
+        "required": ["title", "startDate"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "일정 제목"
+          },
+          "content": {
+            "type": "string",
+            "nullable": true,
+            "description": "일정 상세 내용"
+          },
+          "colorCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "일정 표시 색상 코드(hex 등)",
+            "example": "#4F46E5"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "일정 시작일"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "일정 종료일(선택, startDate 이상이어야 함)"
+          }
+        }
+      },
+
+      "AdminDepartmentScheduleResponse": {
+        "type": "object",
+        "properties": {
+          "departmentScheduleUuid": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "content": { "type": "string", "nullable": true },
+          "colorCode": { "type": "string", "nullable": true },
+          "startDate": { "type": "string", "format": "date" },
+          "endDate": { "type": "string", "format": "date", "nullable": true }
+        }
+      },
+
+      "ApiResponseAdminDepartmentScheduleResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "API 요청 성공" },
+          "data": { "$ref": "#/components/schemas/AdminDepartmentScheduleResponse" },
           "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["status", "timestamp"]
