@@ -326,78 +326,7 @@
         }
       }
     },
-    "/search/overview": {
-      "get": {
-        "tags": [
-          "Search"
-        ],
-        "summary": "통합 검색 요약 (탭별 상위 5개)",
-        "description": "공지사항, 학사일정, 학과공지, 커뮤니티 등 각 항목에 대해 상위 5개의 검색 결과만 반환합니다.",
-        "parameters": [
-          {
-            "name": "keyword",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "검색 키워드 (필수)"
-          },
-          {
-            "name": "order",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "relevance",
-                "latest",
-                "oldest"
-              ],
-              "default": "relevance"
-            },
-            "description": "정렬 기준 (탭별 Top5 추출 시 적용)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "탭별 검색 결과 요약 반환",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseOverviewMap"
-                },
-                "example": {
-                  "status": "API 요청 성공",
-                  "data": {
-                    "notice": [],
-                    "mjuCalendar": [],
-                    "departmentSchedule": [],
-                    "departmentNotice": [],
-                    "community": [],
-                    "news": [
-                      {
-                        "id": "382",
-                        "highlightedTitle": "내년 인문캠 총학 <em>비대위</em>… 후보 불출마로 선거 무산",
-                        "highlightedContent": "...총동아리연합회 비상대책위원회...",
-                        "date": "2024-11-11T01:51:00",
-                        "link": "https://news.mju.ac.kr/news/articleView.html?idxno=12941",
-                        "category": "REPORT",
-                        "type": "NEWS",
-                        "imageUrl": "http://news.mju.ac.kr/news/thumbnail//202411/12941_13881_1514_v150.jpg",
-                        "score": 16.830822
-                      }
-                    ],
-                    "broadcast": []
-                  },
-                  "timestamp": "2025-07-18T02:48:21.850034"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
+
     "/search/suggest": {
       "get": {
         "tags": [
