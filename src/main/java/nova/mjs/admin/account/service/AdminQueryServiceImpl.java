@@ -6,6 +6,7 @@ import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.domain.thingo.department.exception.DepartmentNotFoundException;
+import nova.mjs.domain.thingo.department.repository.DepartmentAdminRepository;
 import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminQueryServiceImpl implements AdminQueryService {
 
     private final DepartmentRepository departmentRepository;
+    private final DepartmentAdminRepository departmentAdminRepository;
 
     /**
      * 로그인 사용자가 특정 학과의 관리자 여부 검증
@@ -34,12 +36,9 @@ public class AdminQueryServiceImpl implements AdminQueryService {
     ) {
         Department department = getDepartment(college, departmentName);
 
-        if (department.getAdmin() == null) {
-            return false;
-        }
-
-        return department.getAdmin().getEmail()
-                .equals(userPrincipal.getUsername());
+        return departmentAdminRepository.existsByDepartmentAndAdminEmail(
+                department, userPrincipal.getUsername()
+        );
     }
 
     /**
@@ -47,7 +46,8 @@ public class AdminQueryServiceImpl implements AdminQueryService {
      */
     @Override
     public Department getDepartmentByAdminEmail(String emailId) {
-        return departmentRepository.findByAdminEmail(emailId)
+        return departmentAdminRepository.findFirstByAdminEmail(emailId)
+                .map(departmentAdmin -> departmentAdmin.getDepartment())
                 .orElseThrow(DepartmentNotFoundException::new);
     }
 

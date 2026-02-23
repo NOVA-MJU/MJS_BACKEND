@@ -8,10 +8,12 @@ import nova.mjs.admin.account.service.AdminQueryService;
 import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleRequestDTO;
 import nova.mjs.admin.department.schedule.dto.AdminDepartmentScheduleResponseDTO;
 import nova.mjs.admin.department.schedule.exception.DepartmentScheduleNotFoundException;
+import nova.mjs.domain.thingo.department.exception.DepartmentNotFoundException;
 import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.department.entity.DepartmentSchedule;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
+import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
 import nova.mjs.domain.thingo.department.repository.DepartmentScheduleRepository;
 import nova.mjs.util.s3.S3DomainType;
 import nova.mjs.util.s3.S3Service;
@@ -36,6 +38,7 @@ public class AdminDepartmentScheduleService {
 
     private final AdminQueryService adminQueryService;
     private final DepartmentScheduleRepository scheduleRepository;
+    private final DepartmentRepository departmentRepository;
     private final S3Service s3Service;
 
     private final String scheduleImagePrefix =
@@ -133,8 +136,14 @@ public class AdminDepartmentScheduleService {
             throw new AdminIdMismatchWithDepartmentException();
         }
 
-        return adminQueryService.getDepartmentByAdminEmail(
-                userPrincipal.getUsername()
-        );
+        if (departmentName == null) {
+            return departmentRepository
+                    .findByCollegeAndDepartmentNameIsNull(college)
+                    .orElseThrow(DepartmentNotFoundException::new);
+        }
+
+        return departmentRepository
+                .findByCollegeAndDepartmentName(college, departmentName)
+                .orElseThrow(DepartmentNotFoundException::new);
     }
 }

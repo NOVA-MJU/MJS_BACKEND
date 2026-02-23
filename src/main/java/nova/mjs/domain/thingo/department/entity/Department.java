@@ -4,10 +4,14 @@ import jakarta.persistence.*;
 import lombok.*;
 import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.domain.thingo.department.dto.DepartmentDTO;
+import nova.mjs.domain.thingo.department.entity.mapping.DepartmentAdmin;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.util.entity.BaseEntity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -44,14 +48,9 @@ public class Department extends BaseEntity {
     @Column
     private String homepageUrl;
 
-    /**
-     * 학과 담당 관리자
-     * - 학생회 계정 또는 교학팀 계정
-     * - 한 관리자가 여러 학과를 담당할 수 있음
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_member_id")
-    private Member admin;
+    @Builder.Default
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DepartmentAdmin> departmentAdmins = new ArrayList<>();
 
     // 관리자 없이 생성
     public static Department create(DepartmentDTO.CreateRequest request) {
@@ -68,14 +67,16 @@ public class Department extends BaseEntity {
             DepartmentDTO.CreateRequest request,
             Member admin
     ) {
-        return Department.builder()
+        Department department = Department.builder()
                 .college(request.getCollege())
                 .departmentName(request.getDepartmentName())
                 .academicOfficePhone(request.getAcademicOfficePhone())
                 .homepageUrl(request.getHomepageUrl())
                 .instagramUrl(request.getInstagramUrl())
-                .admin(admin)
                 .build();
+
+        department.assignAdmin(admin);
+        return department;
     }
 
     public void updateInfo(AdminDTO.StudentCouncilUpdateDTO request) {
@@ -104,7 +105,14 @@ public class Department extends BaseEntity {
 
     // 관리자 변경
     public void assignAdmin(Member newAdmin) {
-        this.admin = newAdmin;
+        if (!hasAdminEmail(newAdmin.getEmail())) {
+            this.departmentAdmins.add(DepartmentAdmin.create(this, newAdmin));
+        }
+    }
+
+    public boolean hasAdminEmail(String email) {
+        return this.departmentAdmins.stream()
+                .anyMatch(departmentAdmin -> departmentAdmin.getAdmin().getEmail().equals(email));
     }
 
     private <T> T getOrDefault(T newValue, T currentValue) {
