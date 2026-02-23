@@ -5,7 +5,8 @@ import lombok.extern.log4j.Log4j2;
 import nova.mjs.admin.account.DTO.AdminDTO;
 import nova.mjs.admin.department.info.service.AdminDepartmentCommandService;
 import nova.mjs.domain.thingo.department.entity.Department;
-import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
+import nova.mjs.domain.thingo.department.entity.mapping.DepartmentAdmin;
+import nova.mjs.domain.thingo.department.repository.DepartmentAdminRepository;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.exception.MemberNotFoundException;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
@@ -21,8 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AdminCommandServiceImpl implements AdminCommandService {
 
-    private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DepartmentAdminRepository departmentAdminRepository;
     private final MemberQueryService memberQueryService;
     private final AdminDepartmentCommandService adminDepartmentCommandService;
     private final MemberRepository memberRepository;
@@ -79,11 +80,13 @@ public class AdminCommandServiceImpl implements AdminCommandService {
         }
 
         // 3. 연결된 Department 조회 (없을 수 있음)
-        Department department = departmentRepository
-                .findByAdminEmail(member.getEmail())
+        DepartmentAdmin departmentAdmin = departmentAdminRepository
+                .findFirstByAdminEmail(member.getEmail())
                 .orElse(null);
 
-        if (department != null) {
+        Department department = null;
+        if (departmentAdmin != null) {
+            department = departmentAdmin.getDepartment();
             department.updateInfo(request);
         }
 
