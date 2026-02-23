@@ -100,16 +100,12 @@ public class AdminDepartmentCommandServiceImpl
 
         departmentRepository.delete(department);
     }
-
-    /* =========================
-     * 내부 공통 메서드
-     * ========================= */
-
-    private Department findDepartment(
+    @Override
+    public Department findDepartment(
             College college,
             DepartmentName departmentName
     ) {
-        if (departmentName == null) {
+        if (departmentName == null) { // 단과대로 조회
             return departmentRepository
                     .findCollegeLevelDepartment(college)
                     .orElseThrow(CollegeNotFoundException::new);
@@ -119,6 +115,11 @@ public class AdminDepartmentCommandServiceImpl
                 .findByCollegeAndDepartmentName(college, departmentName)
                 .orElseThrow(DepartmentNotFoundException::new);
     }
+
+    /* =========================
+     * 내부 공통 메서드
+     * ========================= */
+
 
     /**
      * 유니크 선검증

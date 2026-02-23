@@ -3,8 +3,10 @@ package nova.mjs.admin.account.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import nova.mjs.admin.account.DTO.AdminDTO;
+import nova.mjs.admin.department.info.service.AdminDepartmentCommandService;
 import nova.mjs.domain.thingo.department.entity.Department;
-import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
+import nova.mjs.domain.thingo.department.entity.mapping.DepartmentAdmin;
+import nova.mjs.domain.thingo.department.repository.DepartmentAdminRepository;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.exception.MemberNotFoundException;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
@@ -20,10 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AdminCommandServiceImpl implements AdminCommandService {
 
-    private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DepartmentAdminRepository departmentAdminRepository;
     private final MemberQueryService memberQueryService;
-    private final AdminQueryService adminQueryService;
+    private final AdminDepartmentCommandService adminDepartmentCommandService;
     private final MemberRepository memberRepository;
 
     /**
@@ -45,6 +47,13 @@ public class AdminCommandServiceImpl implements AdminCommandService {
         // 3. Member 생성
         Member admin = Member.createAdminInit(request, encodedPassword);
         memberRepository.save(admin);
+
+        // 4. 학과 확인
+        Department department = adminDepartmentCommandService.findDepartment(request.getCollege(), request.getDepartmentName());
+
+        // 5. 연관관계 설정 (연관관계의 주인 쪽에서 세팅)
+        department.assignAdmin(admin);
+
 
         return ApiResponse.success("초기 관리자 등록 완료");
     }
@@ -71,11 +80,13 @@ public class AdminCommandServiceImpl implements AdminCommandService {
         }
 
         // 3. 연결된 Department 조회 (없을 수 있음)
-        Department department = departmentRepository
-                .findByAdminEmail(member.getEmail())
+        DepartmentAdmin departmentAdmin = departmentAdminRepository
+                .findFirstByAdminEmail(member.getEmail())
                 .orElse(null);
 
-        if (department != null) {
+        Department department = null;
+        if (departmentAdmin != null) {
+            department = departmentAdmin.getDepartment();
             department.updateInfo(request);
         }
 

@@ -30,6 +30,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true) // 기본은 조회: 크롤링은 트랜잭션 밖에서 수행하고, 저장만 별도 트랜잭션으로 수행한다.
 public class NoticeCrawlingService {
 
+    /**
+     * 수동 운영 데이터 보호 카테고리.
+     *
+     * - 아래 카테고리는 운영자가 DB에 직접 입력/보정하는 경우가 있어
+     *   크롤링 cleanup 대상에서 제외한다.
+     */
+    private static final Set<String> CLEANUP_EXCLUDED_CATEGORIES = Set.of("rule");
+
     private final NoticeRepository noticeRepository;
     private final ApplicationContext applicationContext;
 
@@ -360,6 +368,11 @@ public class NoticeCrawlingService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected void cleanupRecentNotices(String category, LocalDateTime threshold, Set<String> links) {
+        if (CLEANUP_EXCLUDED_CATEGORIES.contains(category)) {
+            log.info("[MJS][NOTICE][CLEANUP] category={} skipped (manual-data protected)", category);
+            return;
+        }
+
         if (links == null || links.isEmpty()) {
             log.warn("[MJS][NOTICE][CLEANUP] category={} skipped (links is empty)", category);
             return;

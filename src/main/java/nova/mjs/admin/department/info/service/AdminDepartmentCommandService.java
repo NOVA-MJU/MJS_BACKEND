@@ -1,6 +1,7 @@
 package nova.mjs.admin.department.info.service;
 
 import nova.mjs.domain.thingo.department.dto.DepartmentDTO;
+import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.util.security.UserPrincipal;
@@ -37,6 +38,11 @@ public interface AdminDepartmentCommandService {
 
     void deleteDepartment(
             UserPrincipal userPrincipal,
+            College college,
+            DepartmentName departmentName
+    );
+
+    Department findDepartment(
             College college,
             DepartmentName departmentName
     );

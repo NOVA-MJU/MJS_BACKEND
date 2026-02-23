@@ -63,4 +63,8 @@ public class SearchController {
 
         return ResponseEntity.ok(ApiResponse.success(result));
     }
+
+    // TODO: 추천검색어 조회
+
+
 }

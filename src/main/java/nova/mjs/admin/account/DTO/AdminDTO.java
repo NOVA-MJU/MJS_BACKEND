@@ -91,11 +91,11 @@ public class AdminDTO {
             return AdminDTO.StudentCouncilResponseDTO.builder()
                     .adminEmail(member.getEmail())
                     .name(member.getName())
-                    .college(department.getCollege())
-                    .departmentName(department.getDepartmentName())
+                    .college(department != null ? department.getCollege() : member.getCollege())
+                    .departmentName(department != null ? department.getDepartmentName() : member.getDepartmentName())
                     .profileImageUrl(member.getProfileImageUrl())
-                    .instagramUrl(department.getInstagramUrl())
-                    .homepageUrl(department.getHomepageUrl())
+                    .instagramUrl(department != null ? department.getInstagramUrl() : null)
+                    .homepageUrl(department != null ? department.getHomepageUrl() : null)
                     .build();
         }
     }
