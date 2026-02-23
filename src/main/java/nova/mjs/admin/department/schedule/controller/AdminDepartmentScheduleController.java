@@ -10,6 +10,7 @@ import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
@@ -22,6 +23,7 @@ public class AdminDepartmentScheduleController {
     private final AdminDepartmentScheduleService service;
 
     @PostMapping
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> create(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam College college,
@@ -36,6 +38,7 @@ public class AdminDepartmentScheduleController {
     }
 
     @PatchMapping("/{scheduleUuid}")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<AdminDepartmentScheduleResponseDTO>> update(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam College college,
@@ -51,6 +54,7 @@ public class AdminDepartmentScheduleController {
     }
 
     @DeleteMapping("/{scheduleUuid}")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or hasRole('OPERATOR'))")
     public ResponseEntity<ApiResponse<String>> delete(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam College college,
