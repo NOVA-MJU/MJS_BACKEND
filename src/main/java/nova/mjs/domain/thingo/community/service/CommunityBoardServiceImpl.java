@@ -60,13 +60,13 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
     @Override
     public Page<CommunityBoardResponse.SummaryDTO> getBoards(Pageable pageable, String email, String communityCategoryRaw) {
 
-        BoardsQueryResult q = loadBoardsQueryResultWithFirstPageAdjustment(pageable, email, communityCategoryRaw);
+        BoardsQueryResult boardQueryResult = loadBoardsQueryResult(pageable, email, communityCategoryRaw);
 
         List<CommunityBoardResponse.SummaryDTO> popularDTOs =
-                toSummaryDTOs(q.popularBoards(), q.likedUuids(), true);
+                toSummaryDTOs(boardQueryResult.popularBoards(), boardQueryResult.likedUuids(), true);
 
         List<CommunityBoardResponse.SummaryDTO> generalDTOs =
-                toSummaryDTOs(q.generalBoardsPage().getContent(), q.likedUuids(), false);
+                toSummaryDTOs(boardQueryResult.generalBoardsPage().getContent(), boardQueryResult.likedUuids(), false);
 
         List<CommunityBoardResponse.SummaryDTO> merged = new ArrayList<>(popularDTOs.size() + generalDTOs.size());
         merged.addAll(popularDTOs);
@@ -88,7 +88,7 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
                         .thenComparing(createdAtCmp)
         );
 
-        long totalElements = q.generalBoardsPage().getTotalElements();
+        long totalElements = boardQueryResult.generalBoardsPage().getTotalElements();
         return new PageImpl<>(merged, pageable, totalElements);
     }
 
@@ -107,7 +107,7 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
      * - 좋아요/댓글 이벤트 시점에 집계 컬럼이 정확히 유지되어야 한다.
      */
     @Transactional(readOnly = true)
-    protected BoardsQueryResult loadBoardsQueryResultWithFirstPageAdjustment(
+    protected BoardsQueryResult loadBoardsQueryResult(
             Pageable pageable,
             String email,
             String communityCategoryRaw
@@ -124,7 +124,13 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
                 .map(CommunityBoard::getUuid)
                 .toList();
 
-        Pageable generalPageable = adjustFirstPageSize(pageable, popularBoards.size());
+        Pageable generalPageable = buildGeneralBoardsPageable(pageable, popularBoards.size());
+
+        // 첫 페이지가 아니면 HOT 블록 자체를 비워서 응답 content에 절대 노출되지 않게 한다.
+        // (정책: HOT 상단 노출은 0페이지에서만 허용)
+        List<CommunityBoard> popularBoardsForResponse = pageable.getPageNumber() == 0
+                ? popularBoards
+                : Collections.emptyList();
 
         Page<CommunityBoard> generalBoardsPage;
         if (categoryFilter == null) {
@@ -145,7 +151,7 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
         Set<UUID> likedUuids = findLikedUuids(email, allUuids);
 
         return new BoardsQueryResult(
-                popularBoards,
+                popularBoardsForResponse,
                 generalBoardsPage,
                 likedUuids,
                 Map.of(),
@@ -164,12 +170,101 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
         }
     }
 
-    private Pageable adjustFirstPageSize(Pageable pageable, int popularCount) {
-        if (pageable.getPageNumber() != 0 || popularCount <= 0) {
-            return pageable;
+    /**
+     * HOT 3개를 0페이지에만 끼워 넣는 정책을 지키기 위해,
+     * 일반글 조회의 offset/limit를 별도로 계산한다.
+     *
+     * 예시(size=10, hotCount=3)
+     * - page=0: 일반글 7개 조회(0~6)
+     * - page=1: 일반글 10개 조회(7~16)
+     * - page=2: 일반글 10개 조회(17~26)
+     */
+    private Pageable buildGeneralBoardsPageable(Pageable requestPageable, int hotBoardCount) {
+        long requestOffset = requestPageable.getOffset();
+        int requestSize = requestPageable.getPageSize();
+
+        // 0페이지에는 HOT가 먼저 차지하므로, 일반글은 남은 칸만 가져온다.
+        if (requestPageable.getPageNumber() == 0) {
+            int firstPageGeneralSize = Math.max(0, requestSize - hotBoardCount);
+            return PageRequest.of(0, firstPageGeneralSize, requestPageable.getSort());
         }
-        int adjustedSize = Math.max(0, pageable.getPageSize() - popularCount);
-        return PageRequest.of(0, adjustedSize, pageable.getSort());
+
+        // 1페이지부터는 HOT 노출이 없으므로, 합성 목록 기준 offset에서 HOT 개수만큼 차감한다.
+        long adjustedGeneralOffset = Math.max(0, requestOffset - hotBoardCount);
+        return new OffsetLimitPageable(adjustedGeneralOffset, requestSize, requestPageable.getSort());
+    }
+
+    /**
+     * PageRequest는 pageNumber 기반이라 "offset=7, size=10" 같은 케이스를 표현할 수 없어서,
+     * HOT/일반글 합성 페이지네이션을 정확히 맞추기 위한 offset 기반 Pageable 구현을 둔다.
+     */
+    private static class OffsetLimitPageable implements Pageable {
+        private final long offset;
+        private final int pageSize;
+        private final Sort sort;
+
+        private OffsetLimitPageable(long offset, int pageSize, Sort sort) {
+            if (offset < 0) {
+                throw new IllegalArgumentException("offset은 0 이상이어야 합니다.");
+            }
+            if (pageSize < 1) {
+                throw new IllegalArgumentException("pageSize는 1 이상이어야 합니다.");
+            }
+            this.offset = offset;
+            this.pageSize = pageSize;
+            this.sort = sort == null ? Sort.unsorted() : sort;
+        }
+
+        @Override
+        public int getPageNumber() {
+            return (int) (offset / pageSize);
+        }
+
+        @Override
+        public int getPageSize() {
+            return pageSize;
+        }
+
+        @Override
+        public long getOffset() {
+            return offset;
+        }
+
+        @Override
+        public Sort getSort() {
+            return sort;
+        }
+
+        @Override
+        public Pageable next() {
+            return new OffsetLimitPageable(offset + pageSize, pageSize, sort);
+        }
+
+        @Override
+        public Pageable previousOrFirst() {
+            if (!hasPrevious()) {
+                return first();
+            }
+            return new OffsetLimitPageable(offset - pageSize, pageSize, sort);
+        }
+
+        @Override
+        public Pageable first() {
+            return new OffsetLimitPageable(0, pageSize, sort);
+        }
+
+        @Override
+        public Pageable withPage(int pageNumber) {
+            if (pageNumber < 0) {
+                throw new IllegalArgumentException("pageNumber는 0 이상이어야 합니다.");
+            }
+            return new OffsetLimitPageable((long) pageNumber * pageSize, pageSize, sort);
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return offset > 0;
+        }
     }
 
     private Set<UUID> findLikedUuids(String email, List<UUID> boardUuids) {
