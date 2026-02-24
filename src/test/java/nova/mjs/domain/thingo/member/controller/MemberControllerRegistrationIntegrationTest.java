@@ -1,11 +1,15 @@
 package nova.mjs.domain.thingo.member.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nova.mjs.domain.thingo.department.entity.enumList.College;
+import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.domain.thingo.member.DTO.MemberDTO;
 import nova.mjs.domain.thingo.member.controller.support.CollegeDepartmentTestData;
 import nova.mjs.domain.thingo.member.controller.support.MemberRegistrationRequestFixture;
 import nova.mjs.domain.thingo.member.service.command.MemberCommandService;
 import nova.mjs.domain.thingo.member.service.query.MemberQueryService;
+import nova.mjs.util.exception.ErrorCode;
+import nova.mjs.util.exception.request.RequestException;
 import nova.mjs.util.security.AuthDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -114,6 +118,25 @@ class MemberControllerRegistrationIntegrationTest {
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(expectedValidationMessage)));
 
         verify(memberCommandService, never()).registerMember(any(MemberDTO.MemberRegistrationRequestDTO.class));
+    }
+
+    @Test
+    @DisplayName("회원가입 API: 단과대-학과 조합이 유효하지 않으면 DEPARTMENT_NOT_FOUND")
+    void registerMember_shouldReturnNotFound_whenDepartmentCollegeCombinationInvalid() throws Exception {
+        MemberDTO.MemberRegistrationRequestDTO request = MemberRegistrationRequestFixture.validRequest(
+                College.HUMANITIES,
+                DepartmentName.ASIA_MIDDLE_EAST_LANGUAGES,
+                9999
+        );
+
+        given(memberCommandService.registerMember(any(MemberDTO.MemberRegistrationRequestDTO.class)))
+                .willThrow(new RequestException(ErrorCode.DEPARTMENT_NOT_FOUND));
+
+        mockMvc.perform(post("/api/v1/members")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("DEPARTMENT_NOT_FOUND"));
     }
 
     private static Stream<Arguments> validCollegeDepartmentPairs() {

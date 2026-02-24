@@ -11,6 +11,7 @@ import nova.mjs.domain.thingo.member.exception.MemberNotFoundException;
 import nova.mjs.domain.thingo.member.exception.PasswordIsInvalidException;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
 import nova.mjs.domain.thingo.member.service.query.MemberQueryService;
+import nova.mjs.domain.thingo.department.repository.DepartmentRepository;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.exception.request.RequestException;
 import nova.mjs.util.jwt.JwtUtil;
@@ -34,6 +35,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
 
     private final MemberQueryService memberQueryService;
     private final MemberRepository memberRepository;
+    private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final JwtUtil jwtUtil;
@@ -70,6 +72,12 @@ public class MemberCommandServiceImpl implements MemberCommandService {
         memberQueryService.validateEmailDuplication(request.getEmail());
         // 학번 중복 확인
         memberQueryService.validateStudentNumberDuplication(request.getStudentNumber());
+
+        // 단과대-학과 유효 조합 확인 (DB 제약조건 에러 이전에 비즈니스 예외로 명확히 차단)
+        if (request.getDepartmentName() != null
+                && !departmentRepository.existsByCollegeAndDepartmentName(request.getCollege(), request.getDepartmentName())) {
+            throw new RequestException(ErrorCode.DEPARTMENT_NOT_FOUND);
+        }
 
         // 회원객체 생성
         Member newMember = Member.create(request, encodedPassword);
