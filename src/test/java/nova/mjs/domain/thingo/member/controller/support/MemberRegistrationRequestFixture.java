@@ -29,7 +29,7 @@ public final class MemberRegistrationRequestFixture {
     }
 
     public static MemberDTO.MemberRegistrationRequestDTO invalidStudentNumberRequest() {
-        return FIXTURE_MONKEY.giveMeBuilder(MemberDTO.MemberRegistrationRequestDTO.class)
+        return baseBuilder()
                 .set("name", "형식오류유저")
                 .set("email", "invalid-student-number@mju.ac.kr")
                 .set("password", "password1234")
@@ -40,5 +40,30 @@ public final class MemberRegistrationRequestFixture {
                 .set("studentNumber", "2024ABCD")
                 .set("profileImageUrl", "https://cdn.example.com/profile/default.png")
                 .sample();
+    }
+
+    public static MemberDTO.MemberRegistrationRequestDTO invalidBlankNameRequest() {
+        return baseBuilder()
+                .set("name", "")
+                .sample();
+    }
+
+    public static MemberDTO.MemberRegistrationRequestDTO invalidNullCollegeRequest() {
+        return baseBuilder()
+                .set("college", null)
+                .sample();
+    }
+
+    private static com.navercorp.fixturemonkey.ArbitraryBuilder<MemberDTO.MemberRegistrationRequestDTO> baseBuilder() {
+        return FIXTURE_MONKEY.giveMeBuilder(MemberDTO.MemberRegistrationRequestDTO.class)
+                .set("name", "기본유저")
+                .set("email", "base-user@mju.ac.kr")
+                .set("password", "password1234")
+                .set("nickname", "기본닉네임")
+                .set("gender", "MALE")
+                .set("departmentName", DepartmentName.BUSINESS_ADMINISTRATION)
+                .set("college", College.BUSINESS)
+                .set("studentNumber", "20240001")
+                .set("profileImageUrl", "https://cdn.example.com/profile/default.png");
     }
 }

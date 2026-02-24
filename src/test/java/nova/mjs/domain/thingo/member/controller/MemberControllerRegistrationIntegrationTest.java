@@ -88,7 +88,27 @@ class MemberControllerRegistrationIntegrationTest {
         mockMvc.perform(post("/api/v1/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("studentNumber")));
+
+        verify(memberCommandService, never()).registerMember(any(MemberDTO.MemberRegistrationRequestDTO.class));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("invalidDtoRequests")
+    @DisplayName("회원가입 API: DTO 제약조건 위반 시 400 및 서비스 미호출")
+    void registerMember_shouldReturnBadRequest_whenDtoConstraintViolated(
+            String testName,
+            MemberDTO.MemberRegistrationRequestDTO request,
+            String expectedField
+    ) throws Exception {
+        mockMvc.perform(post("/api/v1/members")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(expectedField)));
 
         verify(memberCommandService, never()).registerMember(any(MemberDTO.MemberRegistrationRequestDTO.class));
     }
@@ -109,5 +129,12 @@ class MemberControllerRegistrationIntegrationTest {
             case "HONOR" -> "아너칼리지";
             default -> college;
         };
+    }
+
+    private static Stream<Arguments> invalidDtoRequests() {
+        return Stream.of(
+                Arguments.of("이름 공백", MemberRegistrationRequestFixture.invalidBlankNameRequest(), "name"),
+                Arguments.of("단과대 null", MemberRegistrationRequestFixture.invalidNullCollegeRequest(), "college")
+        );
     }
 }
