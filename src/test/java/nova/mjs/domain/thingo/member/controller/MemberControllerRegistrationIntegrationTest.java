@@ -90,7 +90,8 @@ class MemberControllerRegistrationIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("studentNumber")));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("studentNumber")))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("학번은 정확히 8자리 숫자여야 합니다.")));
 
         verify(memberCommandService, never()).registerMember(any(MemberDTO.MemberRegistrationRequestDTO.class));
     }
@@ -101,14 +102,16 @@ class MemberControllerRegistrationIntegrationTest {
     void registerMember_shouldReturnBadRequest_whenDtoConstraintViolated(
             String testName,
             MemberDTO.MemberRegistrationRequestDTO request,
-            String expectedField
+            String expectedField,
+            String expectedValidationMessage
     ) throws Exception {
         mockMvc.perform(post("/api/v1/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(expectedField)));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(expectedField)))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(expectedValidationMessage)));
 
         verify(memberCommandService, never()).registerMember(any(MemberDTO.MemberRegistrationRequestDTO.class));
     }
@@ -133,8 +136,8 @@ class MemberControllerRegistrationIntegrationTest {
 
     private static Stream<Arguments> invalidDtoRequests() {
         return Stream.of(
-                Arguments.of("이름 공백", MemberRegistrationRequestFixture.invalidBlankNameRequest(), "name"),
-                Arguments.of("단과대 null", MemberRegistrationRequestFixture.invalidNullCollegeRequest(), "college")
+                Arguments.of("이름 공백", MemberRegistrationRequestFixture.invalidBlankNameRequest(), "name", "이름은 필수입니다."),
+                Arguments.of("단과대 null", MemberRegistrationRequestFixture.invalidNullCollegeRequest(), "college", "단과대 정보는 필수입니다.")
         );
     }
 }
