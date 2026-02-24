@@ -47,7 +47,7 @@ public class CommunityBoardController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "ALL") String communityCategory,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "ASC") String direction,
+            @RequestParam(defaultValue = "DESC") String direction,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;

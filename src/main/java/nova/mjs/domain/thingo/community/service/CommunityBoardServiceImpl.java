@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Stream;
 
 /**
  * CommunityBoardServiceImpl
@@ -61,32 +60,12 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
     public Page<CommunityBoardResponse.SummaryDTO> getBoards(Pageable pageable, String email, String communityCategoryRaw) {
 
         BoardsQueryResult q = loadBoardsQueryResultWithFirstPageAdjustment(pageable, email, communityCategoryRaw);
+        Set<UUID> popularUuids = q.popularBoards().stream()
+                .map(CommunityBoard::getUuid)
+                .collect(HashSet::new, HashSet::add, HashSet::addAll);
 
-        List<CommunityBoardResponse.SummaryDTO> popularDTOs =
-                toSummaryDTOs(q.popularBoards(), q.likedUuids(), true);
-
-        List<CommunityBoardResponse.SummaryDTO> generalDTOs =
-                toSummaryDTOs(q.generalBoardsPage().getContent(), q.likedUuids(), false);
-
-        List<CommunityBoardResponse.SummaryDTO> merged = new ArrayList<>(popularDTOs.size() + generalDTOs.size());
-        merged.addAll(popularDTOs);
-        merged.addAll(generalDTOs);
-
-        // 정렬: popular 먼저, 일반글은 pageable sort(createdAt) 유지
-        Comparator<CommunityBoardResponse.SummaryDTO> createdAtCmp =
-                Comparator.comparing(CommunityBoardResponse.SummaryDTO::getCreatedAt);
-
-        Sort.Order createdOrder = pageable.getSort().getOrderFor("createdAt");
-        if (createdOrder != null && createdOrder.isDescending()) {
-            createdAtCmp = createdAtCmp.reversed();
-        }
-
-        merged.sort(
-                Comparator.<CommunityBoardResponse.SummaryDTO, Boolean>comparing(CommunityBoardResponse.SummaryDTO::isPopular)
-                        .reversed()
-                        .thenComparing(dto -> dto.isPopular() ? 0 : 1)
-                        .thenComparing(createdAtCmp)
-        );
+        List<CommunityBoardResponse.SummaryDTO> merged =
+                toSummaryDTOs(q.generalBoardsPage().getContent(), q.likedUuids(), popularUuids);
 
         long totalElements = q.generalBoardsPage().getTotalElements();
         return new PageImpl<>(merged, pageable, totalElements);
@@ -120,25 +99,15 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
                 ? communityBoardRepository.findTop3PopularBoards(twoWeeksAgo, PageRequest.of(0, 3))
                 : communityBoardRepository.findTop3PopularBoardsByCategory(twoWeeksAgo, categoryFilter, PageRequest.of(0, 3));
 
-        List<UUID> popularUuids = popularBoards.stream()
-                .map(CommunityBoard::getUuid)
-                .toList();
-
-        Pageable generalPageable = adjustFirstPageSize(pageable, popularBoards.size());
-
         Page<CommunityBoard> generalBoardsPage;
         if (categoryFilter == null) {
-            generalBoardsPage = popularUuids.isEmpty()
-                    ? communityBoardRepository.findAllWithAuthor(generalPageable)
-                    : communityBoardRepository.findAllWithAuthorExcluding(popularUuids, generalPageable);
+            generalBoardsPage = communityBoardRepository.findAllWithAuthor(pageable);
         } else {
-            generalBoardsPage = popularUuids.isEmpty()
-                    ? communityBoardRepository.findAllWithAuthorByCategory(categoryFilter, generalPageable)
-                    : communityBoardRepository.findAllWithAuthorByCategoryExcluding(categoryFilter, popularUuids, generalPageable);
+            generalBoardsPage = communityBoardRepository.findAllWithAuthorByCategory(categoryFilter, pageable);
         }
 
         // liked 여부 조회(로그인 사용자만)
-        List<UUID> allUuids = Stream.concat(popularBoards.stream(), generalBoardsPage.getContent().stream())
+        List<UUID> allUuids = generalBoardsPage.getContent().stream()
                 .map(CommunityBoard::getUuid)
                 .toList();
 
@@ -164,14 +133,6 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
         }
     }
 
-    private Pageable adjustFirstPageSize(Pageable pageable, int popularCount) {
-        if (pageable.getPageNumber() != 0 || popularCount <= 0) {
-            return pageable;
-        }
-        int adjustedSize = Math.max(0, pageable.getPageSize() - popularCount);
-        return PageRequest.of(0, adjustedSize, pageable.getSort());
-    }
-
     private Set<UUID> findLikedUuids(String email, List<UUID> boardUuids) {
         if (email == null || boardUuids.isEmpty()) {
             return Collections.emptySet();
@@ -193,7 +154,7 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
     private List<CommunityBoardResponse.SummaryDTO> toSummaryDTOs(
             List<CommunityBoard> boards,
             Set<UUID> likedUuids,
-            boolean popular
+            Set<UUID> popularUuids
     ) {
         return boards.stream()
                 .map(b -> CommunityBoardResponse.SummaryDTO.fromEntityPreview(
@@ -201,7 +162,7 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
                         b.getLikeCount(),
                         b.getCommentCount(),
                         likedUuids.contains(b.getUuid()),
-                        popular
+                        popularUuids.contains(b.getUuid())
                 ))
                 .toList();
     }
