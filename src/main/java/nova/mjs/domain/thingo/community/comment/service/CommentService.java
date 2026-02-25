@@ -134,11 +134,26 @@ public class CommentService {
         Comment comment = commentRepository.findByUuidAndCommunityBoard_Uuid(commentUuid, boardUuid)
                 .orElseThrow(CommentNotFoundException::new);
 
+        deleteComment(comment, email);
+    }
+
+    @Transactional
+    public void deleteCommentByUuid(UUID commentUuid, String email) {
+        Comment comment = getExistingComment(commentUuid);
+
+        deleteComment(comment, email);
+    }
+
+    private void deleteComment(Comment comment, String email) {
+        UUID boardUuid = comment.getCommunityBoard().getUuid();
+
         if (!Objects.equals(comment.getMember().getEmail(), email)) {
             throw new IllegalArgumentException("본인이 작성한 댓글만 삭제할 수 있습니다.");
         }
 
         int deletedRows = 1;
+        UUID commentUuid = comment.getUuid();
+
         if (comment.getParent() == null) {
             deletedRows += commentRepository.countByParent_Uuid(commentUuid);
         }
