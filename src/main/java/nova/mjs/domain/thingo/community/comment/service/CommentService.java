@@ -130,14 +130,6 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteCommentByUuid(UUID boardUuid, UUID commentUuid, String email) {
-        Comment comment = commentRepository.findByUuidAndCommunityBoard_Uuid(commentUuid, boardUuid)
-                .orElseThrow(CommentNotFoundException::new);
-
-        deleteComment(comment, email);
-    }
-
-    @Transactional
     public void deleteCommentByUuid(UUID commentUuid, String email) {
         Comment comment = getExistingComment(commentUuid);
 
