@@ -567,22 +567,15 @@
         }
       }
     },
-    "/boards/{boardUUID}/comments/{commentUUID}": {
+    "/boards/comments/{commentUUID}": {
       "delete": {
         "tags": ["Comment"],
         "security": [
           { "Authorization": [] }
         ],
         "summary": "댓글 삭제",
-        "description": "로그인된 사용자가 자신의 댓글 또는 대댓글을 삭제합니다. 삭제 시 해당 UUID 댓글이 제거됩니다.",
+        "description": "로그인된 사용자가 자신의 댓글 또는 대댓글을 삭제합니다. 부모 댓글을 삭제하면 하위 대댓글도 함께 삭제됩니다.",
         "parameters": [
-          {
-            "name": "boardUUID",
-            "in": "path",
-            "schema": { "type": "string" },
-            "required": true,
-            "description": "게시글 UUID"
-          },
           {
             "name": "commentUUID",
             "in": "path",
@@ -592,23 +585,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "댓글 삭제 성공",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiSuccessMessage" },
-                "examples": {
-                  "example": {
-                    "summary": "삭제 응답 예시",
-                    "value": {
-                      "status": "API 요청 성공",
-                      "data": "댓글이 삭제되었습니다.",
-                      "timestamp": "2025-03-24T19:07:52.035193"
-                    }
-                  }
-                }
-              }
-            }
+          "204": {
+            "description": "댓글 삭제 성공"
           }
         }
       }

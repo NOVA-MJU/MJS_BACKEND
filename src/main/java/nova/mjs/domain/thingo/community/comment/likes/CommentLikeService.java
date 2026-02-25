@@ -41,10 +41,8 @@ public class CommentLikeService {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
 
-        Comment comment = commentRepository.findByUuid(commentUuid)
+        Comment comment = commentRepository.findByUuidAndCommunityBoard_Uuid(commentUuid, boardUuid)
                 .orElseThrow(CommentNotFoundException::new);
-
-        validateCommentBelongsToBoard(boardUuid, comment);
 
         Optional<CommentLike> existingLike = commentLikeRepository.findByMemberAndComment(member, comment);
 
@@ -64,10 +62,4 @@ public class CommentLikeService {
         return true;
     }
 
-    private void validateCommentBelongsToBoard(UUID boardUuid, Comment comment) {
-        UUID actualBoardUuid = comment.getCommunityBoard().getUuid();
-        if (!boardUuid.equals(actualBoardUuid)) {
-            throw new IllegalArgumentException("댓글이 해당 게시글에 속하지 않습니다.");
-        }
-    }
 }
