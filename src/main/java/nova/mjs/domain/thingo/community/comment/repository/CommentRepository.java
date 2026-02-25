@@ -6,7 +6,6 @@ import nova.mjs.domain.thingo.member.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -22,7 +21,7 @@ import java.util.UUID;
  * - 게시글의 댓글 목록 조회 (페이지네이션 제거)
  * - 댓글 단건 조회(UUID)
  * - 회원 기준 댓글 조회(마이페이지)
- * - 부모 댓글 삭제 시 대댓글까지 함께 삭제(thread delete) + 삭제된 row 수 반환
+ * - 부모 댓글 삭제 시 연관관계(cascade) 기반으로 대댓글/좋아요까지 함께 삭제
  *
  * 설계 원칙
  * - 검색/목록/상세에서 "댓글 수"는 COUNT로 매번 계산하지 않는다.
@@ -30,9 +29,6 @@ import java.util.UUID;
  * - 따라서 countByCommunityBoardUuid, group by count 류는
  *   "조회 API"에서는 사용하지 않도록 서비스에서 제거한다.
  *
- * 주의
- * - deleteThreadByUuid 는 벌크 delete 이므로 영속성 컨텍스트와 불일치 가능.
- *   clearAutomatically/flushAutomatically 로 안전성을 높인다.
  */
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
@@ -47,6 +43,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      * UUID로 댓글 단건 조회
      */
     Optional<Comment> findByUuid(UUID uuid);
+
+    /**
+     * UUID + 게시글 UUID로 댓글 단건 조회
+     * - 요청 경로의 boardUUID/commentUUID 일치성 검증용
+     */
+    Optional<Comment> findByUuidAndCommunityBoard_Uuid(UUID commentUuid, UUID boardUuid);
 
     /**
      * 특정 회원이 댓글을 작성한 게시물 리스트 조회 (중복 방지)
@@ -66,21 +68,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      */
     int countByMember(Member member);
 
-    /**
-     * 부모 댓글 삭제 정책:
-     * - 부모 댓글 UUID를 삭제하면, 해당 부모의 대댓글까지 함께 삭제한다.
-     *
-     * 반환값:
-     * - 실제 삭제된 row 수 (부모 1 + 대댓글 N)
-     *
-     * 사용처:
-     * - 서비스에서 반환값을 delta로 받아 CommunityBoard.commentCount를 delta만큼 감소시킨다.
-     */
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("""
-        delete from Comment c
-        where c.uuid = :uuid
-           or c.parent.uuid = :uuid
-    """)
-    int deleteThreadByUuid(@Param("uuid") UUID uuid);
+    int countByParent_Uuid(UUID parentUuid);
 }

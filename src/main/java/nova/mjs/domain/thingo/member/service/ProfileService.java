@@ -107,7 +107,9 @@ public class ProfileService {
                 .toList();
 
         Set<UUID> likedBoardUuids = new HashSet<>(communityLikeRepository.findCommunityUuidsLikedByMember(me, boardUuids));
-        Set<UUID> likedCommentUuids = new HashSet<>(commentLikeRepository.findCommentUuidsLikedByMember(me, commentUuids));
+        Set<UUID> likedCommentUuids = commentLikeRepository.findByMemberAndComment_UuidIn(me, commentUuids).stream()
+                .map(commentLike -> commentLike.getComment().getUuid())
+                .collect(java.util.stream.Collectors.toSet());
 
         List<CommentWithBoardResponse> dtoList = comments.stream()
                 .map(comment -> {

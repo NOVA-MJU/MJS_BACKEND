@@ -54,9 +54,9 @@ public class CommentService {
             if (me != null) {
                 List<UUID> commentUuids =
                         allComments.stream().map(Comment::getUuid).toList();
-                likedSet = new HashSet<>(
-                        commentLikeRepository.findCommentUuidsLikedByMember(me, commentUuids)
-                );
+                likedSet = commentLikeRepository.findByMemberAndComment_UuidIn(me, commentUuids).stream()
+                        .map(commentLike -> commentLike.getComment().getUuid())
+                        .collect(java.util.stream.Collectors.toSet());
             }
         }
 
@@ -130,19 +130,20 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteCommentByUuid(UUID commentUuid, String email) {
-        Comment comment = getExistingComment(commentUuid);
+    public void deleteCommentByUuid(UUID boardUuid, UUID commentUuid, String email) {
+        Comment comment = commentRepository.findByUuidAndCommunityBoard_Uuid(commentUuid, boardUuid)
+                .orElseThrow(CommentNotFoundException::new);
 
         if (!Objects.equals(comment.getMember().getEmail(), email)) {
             throw new IllegalArgumentException("본인이 작성한 댓글만 삭제할 수 있습니다.");
         }
 
-        UUID boardUuid = comment.getCommunityBoard().getUuid();
-
-        int deletedRows = commentRepository.deleteThreadByUuid(commentUuid);
-        if (deletedRows <= 0) {
-            throw new CommentNotFoundException();
+        int deletedRows = 1;
+        if (comment.getParent() == null) {
+            deletedRows += commentRepository.countByParent_Uuid(commentUuid);
         }
+
+        commentRepository.delete(comment);
 
         communityBoardRepository.decreaseCommentCountBy(boardUuid, deletedRows);
         syncCommentCountToSearch(boardUuid);
