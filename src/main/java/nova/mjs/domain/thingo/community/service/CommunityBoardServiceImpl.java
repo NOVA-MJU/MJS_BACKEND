@@ -402,6 +402,7 @@ public class CommunityBoardServiceImpl implements CommunityBoardService {
                 request.getTitle(),
                 request.getContent(),
                 request.getContentPreview(),
+                request.getCommunityCategory(),
                 request.getPublished()
         );
 

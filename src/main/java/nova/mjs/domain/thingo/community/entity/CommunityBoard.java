@@ -128,6 +128,7 @@ public class CommunityBoard extends BaseEntity {
             String title,
             String content,
             String previewContent,
+            CommunityCategory communityCategory,
             Boolean published
     ) {
         if (title != null) {
@@ -138,6 +139,9 @@ public class CommunityBoard extends BaseEntity {
         }
         if (previewContent != null) {
             this.previewContent = previewContent;
+        }
+        if (communityCategory != null) {
+            this.category = communityCategory;
         }
         if (published != null) {
             updatePublishedState(published);
