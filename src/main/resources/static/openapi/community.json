@@ -296,7 +296,7 @@
           { "Authorization": [] }
         ],
         "summary": "게시글 수정",
-        "description": "제목, 본문, 공개여부, 이미지 목록을 수정합니다. 임시 이미지 URL(prefix로 temp 확인 가능)도 포함할 수 있습니다.",
+        "description": "제목, 본문, 글 카테고리(FREE, NOTICE 두 종류 있음), 공개여부 등을 수정합니다. 임시 이미지 URL(prefix로 temp 확인 가능)도 포함할 수 있습니다.",
         "parameters": [
           {
             "name": "boardUUID",
@@ -318,6 +318,7 @@
                     "title": "수정된 제목",
                     "content": "수정된 본문",
                     "contentPreview": "수정된 본문 한줄소개",
+                    "communityCategory" : "NOTICE",
                     "published": false
                   }
                 }
@@ -806,6 +807,7 @@
           "title": { "type": "string" },
           "content": { "type": "string" },
           "contentPreview": { "type": "string" },
+          "communityCategory": { "type": "string" },
           "published": { "type": "boolean" }
         }
       },
