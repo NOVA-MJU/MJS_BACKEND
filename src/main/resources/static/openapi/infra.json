@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://api.mjsearch.org/api/v1"
+      "url": "https://api.thingo.kr/api/v1"
     }
   ],
   "tags": [
@@ -141,7 +141,7 @@
                     "summary": "정상 응답",
                     "value": {
                       "success": true,
-                      "data": "https://cdn.mjsearch.org/community/4be35d77-4767-4e2d-837a-a2e7f9e9a802/20250723/thumbnail.jpg"
+                      "data": "https://cdn.thingo.kr/community/4be35d77-4767-4e2d-837a-a2e7f9e9a802/20250723/thumbnail.jpg"
                     }
                   }
                 }
@@ -171,7 +171,7 @@
               },
               "example": {
                 "subject": "버그 제보",
-                "content": "<p>다음 이미지를 참고하세요.<br><img src='https://mjsearch.org/static/images/member/profiles/a5fe8971-c436-4794-96d7-8dd29583d16a/0ac4e3ad18749a7029ea8876644c1a2b5bafc07aa31dc5d56a9d7dde8df07a6a.jpeg' /></p>"
+                "content": "<p>다음 이미지를 참고하세요.<br><img src='https://thingo.kr/static/images/member/profiles/a5fe8971-c436-4794-96d7-8dd29583d16a/0ac4e3ad18749a7029ea8876644c1a2b5bafc07aa31dc5d56a9d7dde8df07a6a.jpeg' /></p>"
               }
             }
           }
@@ -253,7 +253,7 @@
           "data": {
             "type": "string",
             "description": "실제 응답 데이터(문자열)",
-            "example": "https://cdn.mjsearch.org/…"
+            "example": "https://cdn.thingo.kr/…"
           }
         },
         "required": ["success", "data"]

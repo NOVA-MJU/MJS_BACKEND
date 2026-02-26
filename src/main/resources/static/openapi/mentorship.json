@@ -9,7 +9,7 @@
   },
   "servers": [
     {
-      "url": "https://api.mjsearch.org/api/v1"
+      "url": "https://api.thingo.kr/api/v1"
     }
   ],
   "tags": [

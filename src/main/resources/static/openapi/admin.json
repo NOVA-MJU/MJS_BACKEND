@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://api.mjsearch.org/api/v1"
+      "url": "https://api.thingo.kr/api/v1"
     }
   ],
   "tags": [
@@ -509,7 +509,7 @@
                         "thumbnailUrl": "https://image.istarbucks.co.kr/upload/banner/wrlsbnr/NSBiPV_20260202153856077.jpg",
                         "imageUrls": [
                           "https://image.istarbucks.co.kr/upload/banner/wrlsbnr/NSBiPV_20260202153856077.jpg",
-                          "https://mjsearch.org/static/image/departments/noti8a081a5424fb7c1b83dab0f0dcb3218df001fd4df5463.png",
+                          "https://thingo.kr/static/image/departments/noti8a081a5424fb7c1b83dab0f0dcb3218df001fd4df5463.png",
                           "https://image.istarbucks.co.kr/upload/banner/wrlsbnr/NSBiPV_20260202153856077.jpg"
                         ]
                       },

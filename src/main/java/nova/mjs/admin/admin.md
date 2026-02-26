@@ -88,7 +88,7 @@ MJS 관리자 페이지는 일반 사용자와 다른 인증 및 권한 체계�
   "password": "newSecurePw1!",
   "college": "AI_SOFTWARE",
   "departmentName": "DATA_SCIENCE",
-  "profileImageUrl": "https://cdn.mjsearch.org/profiles/admin.jpeg",
+  "profileImageUrl": "https://cdn.thingo.kr/profiles/admin.jpeg",
   "slogan": "함께, 바꾸다!",
   "description": "명지대학교 학생들을 위한 대표 조직입니다.",
   "instagramUrl": "https://instagram.com/mju_student_council",
