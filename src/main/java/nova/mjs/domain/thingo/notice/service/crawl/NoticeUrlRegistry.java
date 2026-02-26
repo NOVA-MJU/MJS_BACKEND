@@ -30,7 +30,7 @@ public final class NoticeUrlRegistry {
      */
     public static Map<String, String> departmentNoticeUrls() {
         return Map.of(
-                "law", "col/1299/subview.do"
+//                "law", "col/1299/subview.do"
                 // 이후 학과 추가
         );
     }
