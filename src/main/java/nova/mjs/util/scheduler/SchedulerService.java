@@ -3,6 +3,7 @@ package nova.mjs.util.scheduler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.thingo.broadcast.service.BroadcastService;
+import nova.mjs.domain.thingo.department.service.notice.DepartmentNoticeCrawlingService;
 import nova.mjs.domain.thingo.news.service.NewsService;
 import nova.mjs.domain.thingo.notice.exception.NoticeCrawlingException;
 import nova.mjs.domain.thingo.notice.service.NoticeCrawlingService;
@@ -27,6 +28,7 @@ public class SchedulerService {
     private final WeatherService weatherService;
     private final WeeklyMenuService weeklyMenuService;
     private final NoticeCrawlingService noticeCrawlingService;
+    private final DepartmentNoticeCrawlingService departmentNoticeCrawlingService;
     private final BroadcastService broadcastService;
 
     //날씨 데이터 스케줄링 (매 정각 실행)
@@ -131,6 +133,7 @@ public class SchedulerService {
         CompletableFuture.runAsync(() -> {
             try {
                 noticeCrawlingService.fetchAllNotices();
+                departmentNoticeCrawlingService.crawlAll();
                 log.info("[MJS][Scheduler] Notice crawling completed.");
             } catch (Exception e) {
                 /*
