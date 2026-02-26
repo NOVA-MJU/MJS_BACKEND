@@ -8,6 +8,7 @@ import nova.mjs.domain.thingo.department.dto.DepartmentScheduleDTO;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import nova.mjs.domain.thingo.department.service.info.DepartmentInfoQueryService;
+import nova.mjs.domain.thingo.department.service.notice.DepartmentNoticeCrawlingService;
 import nova.mjs.domain.thingo.department.service.notice.DepartmentNoticeQueryService;
 import nova.mjs.domain.thingo.department.service.notice.StudentCouncilNoticeQueryService;
 import nova.mjs.domain.thingo.department.service.schedule.DepartmentScheduleService;
@@ -29,6 +30,7 @@ public class DepartmentController {
     private final DepartmentScheduleService departmentScheduleService;
     private final StudentCouncilNoticeQueryService studentCouncilNoticeQueryService;
     private final DepartmentNoticeQueryService departmentNoticeQueryService;
+    private final DepartmentNoticeCrawlingService departmentNoticeCrawlingService;
 
     /* ------------------------------------------------------------------
      *  학과 정보 (단건)
@@ -116,4 +118,9 @@ public class DepartmentController {
                 )
         );
     }
+    @PostMapping("/notices/crawl")
+    public ResponseEntity<ApiResponse<DepartmentNoticeCrawlingService.CrawlReport>> crawlDepartmentNotices() {
+        return ResponseEntity.ok(ApiResponse.success(departmentNoticeCrawlingService.crawlAll()));
+    }
+
 }

@@ -13,4 +13,6 @@ public interface DepartmentNoticeRepository extends JpaRepository<DepartmentNoti
             Department department,
             Pageable pageable
     );
+
+    boolean existsByDepartmentAndLink(Department department, String link);
 }
