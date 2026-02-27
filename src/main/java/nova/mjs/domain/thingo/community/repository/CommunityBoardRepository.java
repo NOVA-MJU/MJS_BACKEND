@@ -54,7 +54,7 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
      *
      * - 최근 after 이후 작성(publishedAt >= after)
      * - 공개글(published=true)
-     * - likeCount DESC
+     * - likeCount DESC, createdAt DESC
      * - Pageable로 상위 N개 제한
      *
      * 주의
@@ -66,7 +66,7 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
         FROM CommunityBoard b
         WHERE b.publishedAt >= :after
           AND b.published = true
-        ORDER BY b.likeCount DESC
+        ORDER BY b.likeCount DESC, b.createdAt DESC
     """)
     List<CommunityBoard> findTop3PopularBoards(
             @Param("after") LocalDateTime after,
@@ -79,7 +79,7 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
         WHERE b.publishedAt >= :after
           AND b.published = true
           AND b.category = :category
-        ORDER BY b.likeCount DESC
+        ORDER BY b.likeCount DESC, b.createdAt DESC
     """)
     List<CommunityBoard> findTop3PopularBoardsByCategory(
             @Param("after") LocalDateTime after,

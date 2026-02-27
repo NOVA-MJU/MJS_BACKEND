@@ -29,7 +29,7 @@
       "get": {
         "tags": ["Board"],
         "summary": "게시글 목록 조회 (페이징 + 인기글 포함)",
-        "description": "인기글 상위 일부(popular=true)와 일반 글(popular=false)을 합쳐서 반환합니다. 첫 페이지(page=0)에서는 인기글이 먼저 포함되고, 이후 일반글이 이어집니다. totalElements는 일반글 기준이며 인기글은 total에 포함되지 않습니다. communityCategory가 'ALL'이면 전체 카테고리를 대상으로 조회하며, 그 외에는 해당 카테고리만 조회합니다.",
+        "description": "인기글 상위 3개(popular=true)와 일반 글(popular=false)을 합쳐서 반환합니다. 첫 페이지(page=0)에서는 인기글 3개가 먼저 포함되고, 일반글은 남은 자리(size - 인기글수)만큼 이어집니다. 1페이지 이후에는 인기글 없이 일반글만 조회됩니다. 인기글은 좋아요 수 내림차순(동률 시 createdAt 내림차순)으로 정렬됩니다. totalElements는 일반글 기준이며 인기글은 total에 포함되지 않습니다. communityCategory가 'ALL'이면 전체 카테고리를 대상으로 조회하며, 그 외에는 해당 카테고리만 조회합니다.",
         "parameters": [
           {
             "name": "page",
@@ -41,7 +41,7 @@
             "name": "size",
             "in": "query",
             "schema": { "type": "integer", "default": 10, "minimum": 1 },
-            "description": "한 페이지당 일반 게시글 수 기준 요청 사이즈. page=0에서는 인기글이 먼저 붙고, 일반글은 (size - 인기글수)만 포함됩니다."
+            "description": "한 페이지당 요청되는 최종 노출 개수입니다. page=0에서는 인기글이 먼저 포함되고, 일반글은 (size - 인기글수)만 포함됩니다."
           },
           {
             "name": "communityCategory",
