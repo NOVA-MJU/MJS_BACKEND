@@ -16,4 +16,10 @@ public interface DepartmentNoticeQueryService {
             Pageable pageable
     );
 
+    /**
+     * 학과/단과 공지 크롤링 후 저장(업서트)
+     * - 운영/관리용
+     */
+    void crawlDepartmentNotices(College college, DepartmentName departmentName);
+
 }

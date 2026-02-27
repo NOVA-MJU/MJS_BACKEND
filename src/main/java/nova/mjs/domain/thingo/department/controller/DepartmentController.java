@@ -116,4 +116,13 @@ public class DepartmentController {
                 )
         );
     }
+
+    @PostMapping("/notices/crawl")
+    public ResponseEntity<ApiResponse<Void>> crawlDepartmentNotices(
+            @RequestParam(required = false) College college,
+            @RequestParam(required = false) DepartmentName department
+    ) {
+        departmentNoticeQueryService.crawlDepartmentNotices(college, department);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

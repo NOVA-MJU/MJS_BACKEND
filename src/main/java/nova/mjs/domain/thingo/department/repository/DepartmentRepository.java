@@ -5,6 +5,7 @@ import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
@@ -46,4 +47,6 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     default Optional<Department> findCollegeLevelDepartment(College college) {
         return findByCollegeAndDepartmentNameIsNull(college);
     }
+
+    List<Department> findByCollege(College college);
 }
