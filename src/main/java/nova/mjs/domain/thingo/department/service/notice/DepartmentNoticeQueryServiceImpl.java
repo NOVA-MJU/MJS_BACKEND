@@ -65,28 +65,22 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
     @Transactional
     public void crawlDepartmentNotices(College college, DepartmentName departmentName) {
 
-        // 1) 전 단과대/전 학과 (단과 공지 포함)
         if (college == null && departmentName == null) {
             List<Department> targets = departmentRepository.findAll();
             crawlTargets(targets);
             return;
         }
 
-        // 2) 특정 단과대 전체 (단과 공지 + 소속 학과 전체)
         if (college != null && departmentName == null) {
             List<Department> targets = departmentRepository.findByCollege(college);
             crawlTargets(targets);
             return;
         }
 
-        // 3) 특정 학과
         Department department = getDepartment(college, departmentName);
         crawlOneDepartment(department);
     }
 
-    /**
-     * 다건 크롤링: 하나 실패해도 전체 중단하지 않음
-     */
     private void crawlTargets(List<Department> targets) {
         for (Department d : targets) {
             try {
@@ -98,15 +92,9 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
         }
     }
 
-    /**
-     * 단일 Department(단과 또는 학과) 크롤링
-     * - URL은 DepartmentNoticeUrlMap에서 (college, departmentName)로 찾고,
-     *   없으면 (college, null)로 fallback
-     * - 매핑이 없으면 skip 처리 (전체 크롤링 안정화)
-     */
     private void crawlOneDepartment(Department department) {
         College college = department.getCollege();
-        DepartmentName deptName = department.getDepartmentName(); // null이면 단과
+        DepartmentName deptName = department.getDepartmentName();
 
         Optional<String> urlOpt = DepartmentNoticeUrlMap.get(college, deptName);
         if (urlOpt.isEmpty()) {
@@ -169,14 +157,7 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
     }
 
     /* =========================================================
-     * Parse (공통 파서)
-     *
-     * 시도 순서:
-     *  1) MJU subview/do 계열 게시판(테이블/리스트)
-     *  2) artclList.do 계열
-     *  3) default/php 계열: th 헤더(제목/등록/작성/날짜) 기반 테이블
-     *  4) 블로그(article 기반)
-     *  5) 최후: a + 날짜 패턴 휴리스틱
+     * Parse
      * ========================================================= */
 
     private static final Pattern DATE_PATTERN = Pattern.compile(
@@ -427,17 +408,11 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
     }
 
     /* =========================================================
-     * MJU enc(subview) 변환 지원 (핵심)
+     * MJU enc(subview) 변환 (핵심 수정)
+     * - subview 베이스는 "목록 URL(DepartmentNoticeUrlMap)"에서만 가져온다.
+     *   (예: 영문과는 6923이 base여야 하므로)
      * ========================================================= */
 
-    /**
-     * href를 절대 URL로 만든 뒤,
-     * MJU 게시판의 artclView.do 링크라면 "동일 site/menuId의 subview.do?enc="로 변환한다.
-     *
-     * 예:
-     *  - https://www.mju.ac.kr/bbs/humanities/517/229294/artclView.do
-     *    -> https://www.mju.ac.kr/humanities/517/subview.do?enc=...
-     */
     private String normalizeNoticeUrl(String baseUrl, String href) {
         if (href == null || href.isBlank()) return null;
 
@@ -453,21 +428,19 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             return resolved;
         }
 
-        // artclView.do면 subview(enc)로 변환
+        // artclView면 enc로 변환하되, subview base는 반드시 "listUrl(baseUrl)"에서 가져온다.
         if (isArtclViewUrl(resolved)) {
             try {
-                URI u = URI.create(resolved);
+                String subviewBase = buildSubviewBaseFromListUrl(baseUrl); // ✅ 6923 같은 메뉴ID 유지
 
+                URI u = URI.create(resolved);
                 String rawLink = u.getRawPath();
                 if (u.getRawQuery() != null && !u.getRawQuery().isBlank()) {
                     rawLink += "?" + u.getRawQuery();
                 }
 
-                String subviewBase = buildSubviewBaseFromArtclView(u);
                 return subviewBase + encodeArtclViewToEnc(rawLink);
-
             } catch (Exception e) {
-                // 변환 실패 시 원본 링크 반환(완전 실패 방지)
                 return resolved;
             }
         }
@@ -477,42 +450,23 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
 
     private boolean isArtclViewUrl(String url) {
         if (url == null) return false;
-        String u = url.toLowerCase(Locale.ROOT);
-        return u.contains("/artclview.do");
+        return url.toLowerCase(Locale.ROOT).contains("/artclview.do");
     }
 
     /**
-     * artclView URL에서 site/menuId를 뽑아 subview 베이스를 만든다.
-     *
-     * 패턴:
-     *  /bbs/{site}/{menuId}/.../artclView.do  ->  /{site}/{menuId}/subview.do?enc=
+     * listUrl 예: https://english.mju.ac.kr/english/6923/subview.do
+     * return : https://english.mju.ac.kr/english/6923/subview.do?enc=
      */
-    private String buildSubviewBaseFromArtclView(URI artclViewUri) {
-        String scheme = artclViewUri.getScheme();
-        String host = artclViewUri.getHost();
-        int port = artclViewUri.getPort();
-
-        String path = artclViewUri.getPath();
-        if (path == null) {
-            throw new IllegalArgumentException("artclView path is null");
+    private String buildSubviewBaseFromListUrl(String listUrl) {
+        int idx = listUrl.indexOf("/subview.do");
+        if (idx < 0) {
+            throw new IllegalArgumentException("listUrl is not subview.do: " + listUrl);
         }
-
-        String[] seg = path.split("/");
-
-        // seg[0]="" , seg[1]="bbs", seg[2]=site, seg[3]=menuId ...
-        if (seg.length < 4 || !"bbs".equals(seg[1])) {
-            throw new IllegalArgumentException("not a /bbs/{site}/{menuId}/... pattern: " + path);
-        }
-
-        String site = seg[2];
-        String menuId = seg[3];
-
-        String authority = (port > 0) ? host + ":" + port : host;
-        return scheme + "://" + authority + "/" + site + "/" + menuId + "/subview.do?enc=";
+        return listUrl.substring(0, idx) + "/subview.do?enc=";
     }
 
     /**
-     * 공지 상세 페이지 enc 파라미터 생성 (NoticeCrawlingService와 동일 로직)
+     * enc 생성 로직 (NoticeCrawlingService와 동일)
      */
     private String encodeArtclViewToEnc(String rawLink) {
 
