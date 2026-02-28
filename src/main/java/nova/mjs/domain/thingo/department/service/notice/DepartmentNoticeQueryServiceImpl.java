@@ -41,7 +41,7 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
     private final DepartmentNoticeRepository noticeRepository;
 
     /* =========================================================
-     * 조회 (기존)
+     * 조회
      * ========================================================= */
 
     @Override
@@ -58,7 +58,7 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
     }
 
     /* =========================================================
-     * 크롤링 (요구사항 반영: 전학과/단과 포함)
+     * 크롤링
      * ========================================================= */
 
     @Override
@@ -173,7 +173,7 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
      *
      * 시도 순서:
      *  1) MJU subview/do 계열 게시판(테이블/리스트)
-     *  2) artclList.do 계열(사학과)
+     *  2) artclList.do 계열
      *  3) default/php 계열: th 헤더(제목/등록/작성/날짜) 기반 테이블
      *  4) 블로그(article 기반)
      *  5) 최후: a + 날짜 패턴 휴리스틱
@@ -427,19 +427,20 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
     }
 
     /* =========================================================
-     * MJU enc(subview) 변환 지원
+     * MJU enc(subview) 변환 지원 (핵심)
      * ========================================================= */
-
-    private static final String SUBVIEW_SUFFIX = "/subview.do?enc=";
 
     /**
      * href를 절대 URL로 만든 뒤,
-     * MJU 게시판의 artclView.do 링크라면 subview.do?enc= 로 변환한다.
+     * MJU 게시판의 artclView.do 링크라면 "동일 site/menuId의 subview.do?enc="로 변환한다.
+     *
+     * 예:
+     *  - https://www.mju.ac.kr/bbs/humanities/517/229294/artclView.do
+     *    -> https://www.mju.ac.kr/humanities/517/subview.do?enc=...
      */
     private String normalizeNoticeUrl(String baseUrl, String href) {
         if (href == null || href.isBlank()) return null;
 
-        // 1) 일단 절대 URL로 resolve
         final String resolved;
         try {
             resolved = URI.create(baseUrl).resolve(href).toString();
@@ -447,25 +448,26 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             return null;
         }
 
-        // 2) 이미 subview(enc)면 그대로
+        // 이미 subview(enc)면 그대로
         if (resolved.contains("/subview.do?enc=")) {
             return resolved;
         }
 
-        // 3) artclView.do 계열이면 enc(subview)로 치환
+        // artclView.do면 subview(enc)로 변환
         if (isArtclViewUrl(resolved)) {
-            String subviewBase = buildSubviewBaseFrom(baseUrl);
-
-            // encode 함수가 기대하는 "path + ?query" 형태로 맞춤
             try {
                 URI u = URI.create(resolved);
+
                 String rawLink = u.getRawPath();
                 if (u.getRawQuery() != null && !u.getRawQuery().isBlank()) {
                     rawLink += "?" + u.getRawQuery();
                 }
+
+                String subviewBase = buildSubviewBaseFromArtclView(u);
                 return subviewBase + encodeArtclViewToEnc(rawLink);
+
             } catch (Exception e) {
-                // 실패 시 원본 링크라도 반환 (완전 실패 방지)
+                // 변환 실패 시 원본 링크 반환(완전 실패 방지)
                 return resolved;
             }
         }
@@ -480,42 +482,33 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
     }
 
     /**
-     * listUrl(=baseUrl) 기준으로 subview.do?enc= 베이스를 만든다.
+     * artclView URL에서 site/menuId를 뽑아 subview 베이스를 만든다.
      *
-     * baseUrl 예:
-     * - https://english.mju.ac.kr/english/6923/subview.do?enc=....
-     * - https://www.mju.ac.kr/mjukr/255/subview.do?enc=....
-     *
-     * 반환:
-     * - https://english.mju.ac.kr/english/6923/subview.do?enc=
+     * 패턴:
+     *  /bbs/{site}/{menuId}/.../artclView.do  ->  /{site}/{menuId}/subview.do?enc=
      */
-    private String buildSubviewBaseFrom(String baseUrl) {
-        try {
-            URI u = URI.create(baseUrl);
-            String scheme = u.getScheme();
-            String host = u.getHost();
-            int port = u.getPort();
+    private String buildSubviewBaseFromArtclView(URI artclViewUri) {
+        String scheme = artclViewUri.getScheme();
+        String host = artclViewUri.getHost();
+        int port = artclViewUri.getPort();
 
-            String path = u.getPath();
-            if (path == null) path = "";
-
-            int idx = path.lastIndexOf("/subview.do");
-            if (idx >= 0) {
-                path = path.substring(0, idx);
-            }
-
-            String authority = (port > 0) ? host + ":" + port : host;
-            return scheme + "://" + authority + path + SUBVIEW_SUFFIX;
-
-        } catch (Exception e) {
-            // 최후 fallback
-            int q = baseUrl.indexOf("?");
-            String base = (q >= 0) ? baseUrl.substring(0, q) : baseUrl;
-            if (!base.endsWith("/subview.do")) {
-                return base + "?enc=";
-            }
-            return base + "?enc=";
+        String path = artclViewUri.getPath();
+        if (path == null) {
+            throw new IllegalArgumentException("artclView path is null");
         }
+
+        String[] seg = path.split("/");
+
+        // seg[0]="" , seg[1]="bbs", seg[2]=site, seg[3]=menuId ...
+        if (seg.length < 4 || !"bbs".equals(seg[1])) {
+            throw new IllegalArgumentException("not a /bbs/{site}/{menuId}/... pattern: " + path);
+        }
+
+        String site = seg[2];
+        String menuId = seg[3];
+
+        String authority = (port > 0) ? host + ":" + port : host;
+        return scheme + "://" + authority + "/" + site + "/" + menuId + "/subview.do?enc=";
     }
 
     /**
