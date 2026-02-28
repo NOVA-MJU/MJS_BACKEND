@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -72,7 +74,6 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
 
         // 2) 특정 단과대 전체 (단과 공지 + 소속 학과 전체)
         if (college != null && departmentName == null) {
-            // DepartmentRepository에 findByCollege 필요
             List<Department> targets = departmentRepository.findByCollege(college);
             crawlTargets(targets);
             return;
@@ -269,7 +270,7 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             if (titleA == null) continue;
 
             String title = clean(titleA.text());
-            String link = normalizeUrl(baseUrl, titleA.attr("href"));
+            String link = normalizeNoticeUrl(baseUrl, titleA.attr("href"));
             if (title.isBlank() || link == null) continue;
 
             LocalDate date = null;
@@ -292,7 +293,7 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             String title = clean(a.text());
             if (title.length() < 2) continue;
 
-            String link = normalizeUrl(baseUrl, a.attr("href"));
+            String link = normalizeNoticeUrl(baseUrl, a.attr("href"));
             if (link == null) continue;
 
             if (isClearlyNotNoticeLink(link, title)) continue;
@@ -322,7 +323,7 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             String title = clean(a.text());
             if (title.isBlank()) continue;
 
-            String link = normalizeUrl(baseUrl, a.attr("href"));
+            String link = normalizeNoticeUrl(baseUrl, a.attr("href"));
             if (link == null) continue;
 
             if (isClearlyNotNoticeLink(link, title)) continue;
@@ -344,7 +345,7 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             String title = clean(a.text());
             if (title.isBlank()) continue;
 
-            String link = normalizeUrl(baseUrl, a.attr("href"));
+            String link = normalizeNoticeUrl(baseUrl, a.attr("href"));
             if (link == null) continue;
 
             if (isClearlyNotNoticeLink(link, title)) continue;
@@ -401,15 +402,6 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
         return false;
     }
 
-    private String normalizeUrl(String baseUrl, String href) {
-        if (href == null || href.isBlank()) return null;
-        try {
-            return URI.create(baseUrl).resolve(href).toString();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     private String clean(String s) {
         if (s == null) return "";
         return s.replace("\u00A0", " ").trim().replaceAll("\\s+", " ");
@@ -432,6 +424,118 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
         for (NoticeItem i : list) map.putIfAbsent(i.link(), i);
         List<NoticeItem> out = new ArrayList<>(map.values());
         return out.size() > limit ? out.subList(0, limit) : out;
+    }
+
+    /* =========================================================
+     * MJU enc(subview) 변환 지원
+     * ========================================================= */
+
+    private static final String SUBVIEW_SUFFIX = "/subview.do?enc=";
+
+    /**
+     * href를 절대 URL로 만든 뒤,
+     * MJU 게시판의 artclView.do 링크라면 subview.do?enc= 로 변환한다.
+     */
+    private String normalizeNoticeUrl(String baseUrl, String href) {
+        if (href == null || href.isBlank()) return null;
+
+        // 1) 일단 절대 URL로 resolve
+        final String resolved;
+        try {
+            resolved = URI.create(baseUrl).resolve(href).toString();
+        } catch (Exception e) {
+            return null;
+        }
+
+        // 2) 이미 subview(enc)면 그대로
+        if (resolved.contains("/subview.do?enc=")) {
+            return resolved;
+        }
+
+        // 3) artclView.do 계열이면 enc(subview)로 치환
+        if (isArtclViewUrl(resolved)) {
+            String subviewBase = buildSubviewBaseFrom(baseUrl);
+
+            // encode 함수가 기대하는 "path + ?query" 형태로 맞춤
+            try {
+                URI u = URI.create(resolved);
+                String rawLink = u.getRawPath();
+                if (u.getRawQuery() != null && !u.getRawQuery().isBlank()) {
+                    rawLink += "?" + u.getRawQuery();
+                }
+                return subviewBase + encodeArtclViewToEnc(rawLink);
+            } catch (Exception e) {
+                // 실패 시 원본 링크라도 반환 (완전 실패 방지)
+                return resolved;
+            }
+        }
+
+        return resolved;
+    }
+
+    private boolean isArtclViewUrl(String url) {
+        if (url == null) return false;
+        String u = url.toLowerCase(Locale.ROOT);
+        return u.contains("/artclview.do");
+    }
+
+    /**
+     * listUrl(=baseUrl) 기준으로 subview.do?enc= 베이스를 만든다.
+     *
+     * baseUrl 예:
+     * - https://english.mju.ac.kr/english/6923/subview.do?enc=....
+     * - https://www.mju.ac.kr/mjukr/255/subview.do?enc=....
+     *
+     * 반환:
+     * - https://english.mju.ac.kr/english/6923/subview.do?enc=
+     */
+    private String buildSubviewBaseFrom(String baseUrl) {
+        try {
+            URI u = URI.create(baseUrl);
+            String scheme = u.getScheme();
+            String host = u.getHost();
+            int port = u.getPort();
+
+            String path = u.getPath();
+            if (path == null) path = "";
+
+            int idx = path.lastIndexOf("/subview.do");
+            if (idx >= 0) {
+                path = path.substring(0, idx);
+            }
+
+            String authority = (port > 0) ? host + ":" + port : host;
+            return scheme + "://" + authority + path + SUBVIEW_SUFFIX;
+
+        } catch (Exception e) {
+            // 최후 fallback
+            int q = baseUrl.indexOf("?");
+            String base = (q >= 0) ? baseUrl.substring(0, q) : baseUrl;
+            if (!base.endsWith("/subview.do")) {
+                return base + "?enc=";
+            }
+            return base + "?enc=";
+        }
+    }
+
+    /**
+     * 공지 상세 페이지 enc 파라미터 생성 (NoticeCrawlingService와 동일 로직)
+     */
+    private String encodeArtclViewToEnc(String rawLink) {
+
+        String path = rawLink.split("\\?")[0];
+        if (!path.startsWith("/")) path = "/" + path;
+
+        String query =
+                "?page=1&srchColumn=&srchWrd=&bbsClSeq=&bbsOpenWrdSeq=" +
+                        "&rgsBgndeStr=&rgsEnddeStr=&isViewMine=false&isView=true&password=";
+
+        String full = "fnct1|@@|" + path + query;
+
+        return URLEncoder.encode(
+                Base64.getEncoder().encodeToString(full.getBytes(StandardCharsets.UTF_8)),
+                StandardCharsets.UTF_8
+        );
     }
 
     private record NoticeItem(String title, String link, LocalDate date) {}
