@@ -6,6 +6,8 @@ import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.UUID;
+
 public interface DepartmentNoticeQueryService {
     /**
      * 학과별 공지 목록 조회 (페이지네이션)
@@ -21,5 +23,11 @@ public interface DepartmentNoticeQueryService {
      * - 운영/관리용
      */
     void crawlDepartmentNotices(College college, DepartmentName departmentName);
+
+    void deleteDepartmentNotices(
+            College college,
+            DepartmentName departmentName,
+            UUID noticeUuid
+    );
 
 }

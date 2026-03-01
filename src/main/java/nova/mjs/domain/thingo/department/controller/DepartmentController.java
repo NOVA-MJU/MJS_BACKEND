@@ -117,12 +117,22 @@ public class DepartmentController {
         );
     }
 
-    @PostMapping("/notices/crawl")
-    public ResponseEntity<ApiResponse<Void>> crawlDepartmentNotices(
+    @PostMapping("/notices")
+    public ResponseEntity<ApiResponse<String>> crawlDepartmentNotices(
             @RequestParam(required = false) College college,
             @RequestParam(required = false) DepartmentName department
     ) {
         departmentNoticeQueryService.crawlDepartmentNotices(college, department);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.success("크롤링 완료"));
+    }
+
+    @DeleteMapping("/notices")
+    public ResponseEntity<ApiResponse<String>> deleteDepartmentNotices(
+            @RequestParam(required = false) College college,
+            @RequestParam(required = false) DepartmentName department,
+            @RequestParam(required = false) UUID noticeUuid
+    ) {
+        departmentNoticeQueryService.deleteDepartmentNotices(college, department, noticeUuid);
+        return ResponseEntity.ok(ApiResponse.success("삭제 완료"));
     }
 }

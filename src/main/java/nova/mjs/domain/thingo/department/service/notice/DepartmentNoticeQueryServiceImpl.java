@@ -486,4 +486,61 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
     }
 
     private record NoticeItem(String title, String link, LocalDate date) {}
+
+    // DepartmentNoticeQueryServiceImpl.java
+
+    @Override
+    @Transactional
+    public void deleteDepartmentNotices(College college, DepartmentName departmentName, UUID noticeUuid) {
+
+        // department만 단독으로 오면 모호하므로 차단
+        if (college == null && departmentName != null) {
+            throw new IllegalArgumentException("department 단독 요청은 허용되지 않습니다. college와 함께 주세요.");
+        }
+
+        // 1) 단일 삭제 (noticeUuid 우선)
+        if (noticeUuid != null) {
+            deleteOneNoticeWithOptionalValidation(college, departmentName, noticeUuid);
+            return;
+        }
+
+        // 2) noticeUuid 없으면 "범위 삭제"
+        // 2-1) 파라미터 없음 => 전체 삭제
+        if (college == null && departmentName == null) {
+            noticeRepository.deleteAllInBatch(); // 전체 공지
+            return;
+        }
+
+        // 2-2) college만 => 단과대 전체(단과대 레벨 + 소속 학과 전부)
+        if (college != null && departmentName == null) {
+            List<Department> targets = departmentRepository.findByCollege(college);
+            if (targets.isEmpty()) return;
+
+            noticeRepository.deleteByDepartmentIn(targets);
+            return;
+        }
+
+        // 2-3) college + department => 해당 department 공지 삭제
+        Department dept = getDepartment(college, departmentName);
+        noticeRepository.deleteByDepartment(dept);
+    }
+
+    private void deleteOneNoticeWithOptionalValidation(
+            College college,
+            DepartmentName departmentName,
+            UUID noticeUuid
+    ) {
+        DepartmentNotice notice = noticeRepository.findByDepartmentNoticeUuid(noticeUuid)
+                .orElseThrow(() -> new NoSuchElementException("공지 없음: " + noticeUuid));
+
+        // 검증 옵션: college/department가 들어오면 해당 notice의 department와 매칭되는지 확인
+        if (college != null) {
+            Department expected = getDepartment(college, departmentName); // departmentName null이면 단과대 레벨 Department로 귀결
+            if (!notice.getDepartment().getId().equals(expected.getId())) {
+                throw new IllegalArgumentException("공지-학과 정보가 일치하지 않습니다.");
+            }
+        }
+
+        noticeRepository.delete(notice);
+    }
 }
