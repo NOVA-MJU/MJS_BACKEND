@@ -59,26 +59,64 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
 
     /* =========================================================
      * 크롤링
+     *
+     * 정책:
+     *  - (null, null) : 전체 = 모든 단과대 + 모든 학과
+     *  - (college, null) : 단과대만(소속 학과 X)
+     *  - (college, dept) : 해당 학과만
+     *  - (null, dept) : 금지
      * ========================================================= */
 
     @Override
     @Transactional
     public void crawlDepartmentNotices(College college, DepartmentName departmentName) {
 
+        // department 단독 요청 금지
+        if (college == null && departmentName != null) {
+            throw new IllegalArgumentException("department 단독 요청은 허용되지 않습니다. college와 함께 주세요.");
+        }
+
+        // 1) 전체: 모든 단과대 + 모든 학과
         if (college == null && departmentName == null) {
-            List<Department> targets = departmentRepository.findAll();
-            crawlTargets(targets);
+            crawlAllCollegeLevel();     // 단과대 레벨 공지 전부
+            crawlAllDepartmentLevel();  // 학과 레벨 공지 전부
             return;
         }
 
+        // 2) 단과대만: 단과대 레벨 Department 1개만
         if (college != null && departmentName == null) {
-            List<Department> targets = departmentRepository.findByCollege(college);
-            crawlTargets(targets);
+            Department collegeLevel = departmentRepository
+                    .findCollegeLevelDepartment(college)
+                    .orElseThrow(CollegeNotFoundException::new);
+            crawlOneDepartment(collegeLevel);
             return;
         }
 
+        // 3) 학과만: 해당 학과 Department 1개만
         Department department = getDepartment(college, departmentName);
         crawlOneDepartment(department);
+    }
+
+    private void crawlAllCollegeLevel() {
+        for (College c : College.values()) {
+            try {
+                Department collegeLevel = departmentRepository
+                        .findCollegeLevelDepartment(c)
+                        .orElse(null);
+
+                // DB에 단과대 레벨 레코드가 없는 college는 skip
+                if (collegeLevel == null) continue;
+
+                crawlOneDepartment(collegeLevel);
+            } catch (Exception e) {
+                log.warn("College-level notice crawl failed. college={}, reason={}", c, e.getMessage());
+            }
+        }
+    }
+
+    private void crawlAllDepartmentLevel() {
+        List<Department> targets = departmentRepository.findAllByDepartmentNameIsNotNull();
+        crawlTargets(targets);
     }
 
     private void crawlTargets(List<Department> targets) {
@@ -124,12 +162,14 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             throw new IllegalArgumentException("college는 특정 학과 크롤링/조회 시 필수입니다.");
         }
 
+        // 단과대 레벨
         if (departmentName == null) {
             return departmentRepository
                     .findCollegeLevelDepartment(college)
                     .orElseThrow(CollegeNotFoundException::new);
         }
 
+        // 학과 레벨
         return departmentRepository
                 .findByCollegeAndDepartmentName(college, departmentName)
                 .orElseThrow(DepartmentNotFoundException::new);
@@ -410,7 +450,6 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
     /* =========================================================
      * MJU enc(subview) 변환 (핵심 수정)
      * - subview 베이스는 "목록 URL(DepartmentNoticeUrlMap)"에서만 가져온다.
-     *   (예: 영문과는 6923이 base여야 하므로)
      * ========================================================= */
 
     private String normalizeNoticeUrl(String baseUrl, String href) {
@@ -423,15 +462,13 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             return null;
         }
 
-        // 이미 subview(enc)면 그대로
         if (resolved.contains("/subview.do?enc=")) {
             return resolved;
         }
 
-        // artclView면 enc로 변환하되, subview base는 반드시 "listUrl(baseUrl)"에서 가져온다.
         if (isArtclViewUrl(resolved)) {
             try {
-                String subviewBase = buildSubviewBaseFromListUrl(baseUrl); // ✅ 6923 같은 메뉴ID 유지
+                String subviewBase = buildSubviewBaseFromListUrl(baseUrl);
 
                 URI u = URI.create(resolved);
                 String rawLink = u.getRawPath();
@@ -453,10 +490,6 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
         return url.toLowerCase(Locale.ROOT).contains("/artclview.do");
     }
 
-    /**
-     * listUrl 예: https://english.mju.ac.kr/english/6923/subview.do
-     * return : https://english.mju.ac.kr/english/6923/subview.do?enc=
-     */
     private String buildSubviewBaseFromListUrl(String listUrl) {
         int idx = listUrl.indexOf("/subview.do");
         if (idx < 0) {
@@ -465,11 +498,7 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
         return listUrl.substring(0, idx) + "/subview.do?enc=";
     }
 
-    /**
-     * enc 생성 로직 (NoticeCrawlingService와 동일)
-     */
     private String encodeArtclViewToEnc(String rawLink) {
-
         String path = rawLink.split("\\?")[0];
         if (!path.startsWith("/")) path = "/" + path;
 
@@ -487,40 +516,47 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
 
     private record NoticeItem(String title, String link, LocalDate date) {}
 
-    // DepartmentNoticeQueryServiceImpl.java
+    /* =========================================================
+     * 삭제
+     *
+     * 정책을 크롤링과 동일하게 맞춤:
+     *  - (null, null, null) : 전체 삭제
+     *  - (college, null, null) : 단과대 레벨만 삭제(소속 학과 X)
+     *  - (college, dept, null) : 해당 학과만 삭제
+     *  - noticeUuid 존재 시: 단일 삭제(+ optional 검증)
+     * ========================================================= */
 
     @Override
     @Transactional
     public void deleteDepartmentNotices(College college, DepartmentName departmentName, UUID noticeUuid) {
 
-        // department만 단독으로 오면 모호하므로 차단
         if (college == null && departmentName != null) {
             throw new IllegalArgumentException("department 단독 요청은 허용되지 않습니다. college와 함께 주세요.");
         }
 
-        // 1) 단일 삭제 (noticeUuid 우선)
+        // 1) 단일 삭제
         if (noticeUuid != null) {
             deleteOneNoticeWithOptionalValidation(college, departmentName, noticeUuid);
             return;
         }
 
-        // 2) noticeUuid 없으면 "범위 삭제"
-        // 2-1) 파라미터 없음 => 전체 삭제
+        // 2) 전체 삭제
         if (college == null && departmentName == null) {
-            noticeRepository.deleteAllInBatch(); // 전체 공지
+            noticeRepository.deleteAllInBatch();
             return;
         }
 
-        // 2-2) college만 => 단과대 전체(단과대 레벨 + 소속 학과 전부)
+        // 3) 단과대만 삭제(단과대 레벨 Department 1개만)
         if (college != null && departmentName == null) {
-            List<Department> targets = departmentRepository.findByCollege(college);
-            if (targets.isEmpty()) return;
+            Department collegeLevel = departmentRepository
+                    .findCollegeLevelDepartment(college)
+                    .orElseThrow(CollegeNotFoundException::new);
 
-            noticeRepository.deleteByDepartmentIn(targets);
+            noticeRepository.deleteByDepartment(collegeLevel);
             return;
         }
 
-        // 2-3) college + department => 해당 department 공지 삭제
+        // 4) 학과만 삭제
         Department dept = getDepartment(college, departmentName);
         noticeRepository.deleteByDepartment(dept);
     }
@@ -533,9 +569,9 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
         DepartmentNotice notice = noticeRepository.findByDepartmentNoticeUuid(noticeUuid)
                 .orElseThrow(() -> new NoSuchElementException("공지 없음: " + noticeUuid));
 
-        // 검증 옵션: college/department가 들어오면 해당 notice의 department와 매칭되는지 확인
+        // 옵션 검증: college가 들어오면 해당 notice의 department와 매칭되는지 확인
         if (college != null) {
-            Department expected = getDepartment(college, departmentName); // departmentName null이면 단과대 레벨 Department로 귀결
+            Department expected = getDepartment(college, departmentName);
             if (!notice.getDepartment().getId().equals(expected.getId())) {
                 throw new IllegalArgumentException("공지-학과 정보가 일치하지 않습니다.");
             }
