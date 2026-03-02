@@ -33,6 +33,7 @@ public interface DepartmentNoticeRepository extends JpaRepository<DepartmentNoti
                             n.department.departmentName is null
                             or n.department.departmentName = :departmentName
                           )
+                    order by n.date desc, n.id desc
                     """,
             countQuery = """
                     select count(n)
@@ -49,6 +50,8 @@ public interface DepartmentNoticeRepository extends JpaRepository<DepartmentNoti
             @Param("departmentName") DepartmentName departmentName,
             Pageable pageable
     );
+
+    long countByDepartment(Department department);
 
     /* 크롤링 시 학과 확인*/
     boolean existsByDepartmentAndLink(Department department, String link);
