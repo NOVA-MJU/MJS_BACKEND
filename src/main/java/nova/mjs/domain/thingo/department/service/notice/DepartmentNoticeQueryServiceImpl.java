@@ -50,10 +50,28 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             DepartmentName departmentName,
             Pageable pageable
     ) {
-        Department department = getDepartment(college, departmentName);
+        if (college == null) {
+            throw new IllegalArgumentException("college는 공지 조회 시 필수입니다.");
+        }
+
+        // 단과대 레벨만 조회
+        if (departmentName == null) {
+            Department collegeLevel = departmentRepository
+                    .findCollegeLevelDepartment(college)
+                    .orElseThrow(CollegeNotFoundException::new);
+
+            return noticeRepository
+                    .findByDepartmentOrderByDateDesc(collegeLevel, pageable)
+                    .map(DepartmentNoticeDTO.Summary::fromEntity);
+        }
+
+        // 학과 요청 시: 단과대 공지 + 해당 학과 공지 통합 조회
+        if (!departmentRepository.existsByCollegeAndDepartmentName(college, departmentName)) {
+            throw new DepartmentNotFoundException();
+        }
 
         return noticeRepository
-                .findByDepartmentOrderByDateDesc(department, pageable)
+                .findCollegeAndDepartmentLevelNotices(college, departmentName, pageable)
                 .map(DepartmentNoticeDTO.Summary::fromEntity);
     }
 
