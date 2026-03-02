@@ -50,11 +50,68 @@ public class DepartmentNoticeQueryServiceImpl implements DepartmentNoticeQuerySe
             DepartmentName departmentName,
             Pageable pageable
     ) {
-        Department department = getDepartment(college, departmentName);
+        if (college == null) {
+            throw new IllegalArgumentException("college는 공지 조회 시 필수입니다.");
+        }
 
-        return noticeRepository
-                .findByDepartmentOrderByDateDesc(department, pageable)
-                .map(DepartmentNoticeDTO.Summary::fromEntity);
+        // 단과대 레벨만 조회
+        if (departmentName == null) {
+            Department collegeLevel = departmentRepository
+                    .findCollegeLevelDepartment(college)
+                    .orElseThrow(CollegeNotFoundException::new);
+
+            return noticeRepository
+                    .findByDepartmentOrderByDateDesc(collegeLevel, pageable)
+                    .map(DepartmentNoticeDTO.Summary::fromEntity);
+        }
+
+        // 학과 요청 시: 단과대 공지 + 해당 학과 공지 통합 조회
+        Department collegeLevel = departmentRepository
+                .findCollegeLevelDepartment(college)
+                .orElseThrow(CollegeNotFoundException::new);
+
+        Department department = departmentRepository
+                .findByCollegeAndDepartmentName(college, departmentName)
+                .orElseThrow(DepartmentNotFoundException::new);
+
+        long collegeNoticeCount = noticeRepository.countByDepartment(collegeLevel);
+        long departmentNoticeCount = noticeRepository.countByDepartment(department);
+
+        log.info(
+                "Department notice merged query request. college={}, departmentName={}, collegeDeptId={}, " +
+                        "targetDeptId={}, collegeNoticeCount={}, departmentNoticeCount={}, page={}, size={}",
+                college,
+                departmentName,
+                collegeLevel.getId(),
+                department.getId(),
+                collegeNoticeCount,
+                departmentNoticeCount,
+                pageable.getPageNumber(),
+                pageable.getPageSize()
+        );
+
+        Page<DepartmentNotice> noticePage = noticeRepository
+                .findCollegeAndDepartmentLevelNotices(college, departmentName, pageable);
+
+        log.info(
+                "Department notice merged query result. college={}, departmentName={}, totalElements={}, numberOfElements={}, content={}",
+                college,
+                departmentName,
+                noticePage.getTotalElements(),
+                noticePage.getNumberOfElements(),
+                noticePage.getContent().stream()
+                        .map(n -> String.format(
+                                "{noticeUuid=%s, deptId=%d, deptName=%s, date=%s, link=%s}",
+                                n.getDepartmentNoticeUuid(),
+                                n.getDepartment().getId(),
+                                n.getDepartment().getDepartmentName(),
+                                n.getDate(),
+                                n.getLink()
+                        ))
+                        .toList()
+        );
+
+        return noticePage.map(DepartmentNoticeDTO.Summary::fromEntity);
     }
 
     /* =========================================================
