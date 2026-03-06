@@ -163,6 +163,12 @@ public class AdminStudentCouncilNoticeServiceImpl implements AdminStudentCouncil
             throw new DepartmentAdminNotFoundException();
         }
 
+        if (departmentName == null) {
+            return departmentRepository
+                    .findByCollegeAndDepartmentNameIsNull(college)
+                    .orElseThrow(DepartmentAdminNotFoundException::new);
+        }
+
         return departmentRepository
                 .findByCollegeAndDepartmentName(college, departmentName)
                 .orElseThrow(DepartmentAdminNotFoundException::new);
