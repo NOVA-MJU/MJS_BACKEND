@@ -55,7 +55,7 @@ public class AdminStudentCouncilNoticeController {
     public ResponseEntity<ApiResponse<AdminStudentCouncilNoticeDTO.Response>> create(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam College college,
-            @RequestParam DepartmentName department,
+            @RequestParam(required = false) DepartmentName department,
             @RequestBody AdminStudentCouncilNoticeDTO.Request requestDto
     ) {
         AdminStudentCouncilNoticeDTO.Response created =
