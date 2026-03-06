@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.department.entity.StudentCouncilNotice;
 import nova.mjs.domain.thingo.ElasticSearch.SearchType;
 import nova.mjs.config.elasticsearch.KomoranTokenizerUtil;
@@ -54,10 +55,17 @@ public class StudentCouncilNoticeDocument implements SearchDocument{
                 .id(notice.getUuid().toString())
                 .title(derivedTitle)
                 .content(safeContent)
-                .department(notice.getDepartment().getDepartmentName().getLabel())
+                .department(resolveDepartmentLabel(notice.getDepartment()))
                 .date(notice.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
                 .type(SearchType.STUDENT_COUNCIL_NOTICE.name())
                 .build();
+    }
+
+    private static String resolveDepartmentLabel(Department department) {
+        if (department == null || department.getDepartmentName() == null) {
+            return null;
+        }
+        return department.getDepartmentName().getLabel();
     }
 
 
