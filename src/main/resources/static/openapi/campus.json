@@ -600,6 +600,36 @@
         }
       }
     },
+    "/notices/trending": {
+      "get": {
+        "tags": ["Notice"],
+        "summary": "공지사항 급상승 조회(1일)",
+        "description": "오늘 기준 누적 조회수 증가량(countView) 순서로 급상승 공지를 조회합니다.",
+        "parameters": [
+          {
+            "name": "size",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10, "minimum": 1 },
+            "description": "조회할 최대 공지 수"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "급상승 공지 목록 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrendingNoticeItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
   "/calendar": {
     "get": {
       "tags": ["MJU_Calendar"],
@@ -1143,7 +1173,8 @@
                 "title": { "type": "string" },
                 "date": { "type": "string" },
                 "category": { "type": "string" },
-                "link": { "type": "string", "format": "uri" }
+                "link": { "type": "string", "format": "uri" },
+                "viewCount": { "type": "integer", "description": "공지 조회수" }
               }
             }
           },
@@ -1171,6 +1202,18 @@
           "first": { "type": "boolean" },
           "numberOfElements": { "type": "integer" },
           "empty": { "type": "boolean" }
+        }
+      },
+      "TrendingNoticeItem": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "date": { "type": "string" },
+          "category": { "type": "string" },
+          "link": { "type": "string", "format": "uri" },
+          "viewCount": { "type": "integer" },
+          "countView": { "type": "integer", "description": "오늘 누적 조회수 증가량" },
+          "countViewDate": { "type": "string", "format": "date", "description": "countView 집계 기준일" }
         }
       },
       "NewsItem": {

@@ -7,6 +7,8 @@ import nova.mjs.domain.thingo.notice.dto.NoticeResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/notices")
@@ -35,6 +37,14 @@ public class NoticeController {
     @PostMapping("/crawl/all")
     public void crawlAll() {
         noticeCrawlingService.fetchAllNotices();
+    }
+
+
+    @GetMapping("/trending")
+    public List<NoticeResponseDto.Trending> getDailyTrendingNotices(
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
+        return noticeService.getDailyTrendingNotices(size);
     }
 
     /**

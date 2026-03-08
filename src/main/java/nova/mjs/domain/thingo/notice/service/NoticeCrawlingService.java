@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -134,6 +135,7 @@ public class NoticeCrawlingService {
          * - DB 저장은 마지막에 한 번만 수행하여 트랜잭션 및 flush 횟수를 줄인다.
          */
         List<Notice> toSave = new ArrayList<>(32);
+        Map<String, Integer> viewCountUpdates = new HashMap<>(64);
 
         /*
          * (선택) 최근 1개월 목록 동기화를 위한 링크 수집.
@@ -158,7 +160,7 @@ public class NoticeCrawlingService {
                 /*
                  * row 처리 결과가 stop이면, 현재 카테고리 크롤링을 즉시 종료한다.
                  */
-                stop = processRow(row, category, cutoffYear, recentThreshold, crawledLinksRecent, toSave);
+                stop = processRow(row, category, cutoffYear, recentThreshold, crawledLinksRecent, toSave, viewCountUpdates);
                 if (stop) {
                     break;
                 }
@@ -173,6 +175,10 @@ public class NoticeCrawlingService {
         applicationContext
                 .getBean(NoticeCrawlingService.class)
                 .saveNotices(toSave);
+
+        applicationContext
+                .getBean(NoticeCrawlingService.class)
+                .syncViewCounts(category, viewCountUpdates);
 
         /*
          * (선택) 최근 1개월 범위 동기화(cleanup)
@@ -206,7 +212,8 @@ public class NoticeCrawlingService {
             int cutoffYear,
             LocalDateTime recentThreshold,
             Set<String> crawledLinksRecent,
-            List<Notice> toSave
+            List<Notice> toSave,
+            Map<String, Integer> viewCountUpdates
     ) {
 
         // (1) 목록 페이지에서 최소한의 메타 정보 추출
@@ -270,6 +277,9 @@ public class NoticeCrawlingService {
          * 처리 방식:
          * - 이 row만 스킵하고 다음 row를 계속 처리한다.
          */
+        int crawledViewCount = NoticeCrawlHelper.crawlViewCount(finalUrl);
+        viewCountUpdates.put(finalUrl, crawledViewCount);
+
         if (noticeRepository.existsByCategoryAndLink(category, finalUrl)) {
             return false;
         }
@@ -333,7 +343,8 @@ public class NoticeCrawlingService {
                         content,
                         date,
                         category,
-                        finalUrl
+                        finalUrl,
+                        crawledViewCount
                 )
         );
 
@@ -353,6 +364,19 @@ public class NoticeCrawlingService {
         if (!notices.isEmpty()) {
             noticeRepository.saveAll(notices);
         }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected void syncViewCounts(String category, Map<String, Integer> viewCountUpdates) {
+        if (viewCountUpdates == null || viewCountUpdates.isEmpty()) {
+            return;
+        }
+
+        LocalDate today = LocalDate.now();
+        viewCountUpdates.forEach((link, viewCount) ->
+                noticeRepository.findByCategoryAndLink(category, link)
+                        .ifPresent(notice -> notice.applyCrawledViewCount(viewCount, today))
+        );
     }
 
     /**

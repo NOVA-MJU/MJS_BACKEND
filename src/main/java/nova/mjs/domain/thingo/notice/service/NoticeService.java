@@ -1,7 +1,5 @@
 package nova.mjs.domain.thingo.notice.service;
 
-import java.time.LocalDateTime;
-
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.notice.dto.NoticeResponseDto;
 import nova.mjs.domain.thingo.notice.entity.Notice;
@@ -13,6 +11,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +28,6 @@ public class NoticeService {
             throw new NoticeNotFoundException();
         }
 
-        // category가 null 또는 빈 문자열이면 "all"로 처리
         if (category == null || category.trim().isEmpty()) {
             category = "all";
         }
@@ -35,29 +36,25 @@ public class NoticeService {
 
         Sort.Direction direction = "asc".equalsIgnoreCase(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(
-                Math.max(0, page), // 음수 방어
-                Math.max(1, size), // 최소 1개 보장
+                Math.max(0, page),
+                Math.max(1, size),
                 Sort.by(direction, "date")
         );
-
 
         Page<Notice> notices;
 
         if (year != null) {
-            // 연도 필터 있을 경우
             LocalDateTime startDate = LocalDateTime.of(year, 1, 1, 0, 0);
             LocalDateTime endDate = LocalDateTime.of(year, 12, 31, 23, 59, 59);
 
             notices = isAll
-                    ? noticeRepository.findByDateBetween(startDate, endDate, pageable) // 전체 조회
-                    : noticeRepository.findByCategoryAndDateBetween(category, startDate, endDate, pageable); // 카테고리별 조회
+                    ? noticeRepository.findByDateBetween(startDate, endDate, pageable)
+                    : noticeRepository.findByCategoryAndDateBetween(category, startDate, endDate, pageable);
         } else {
-            // 연도 필터 없을 경우
             notices = isAll
-                    ? noticeRepository.findAll(pageable) // 전체 조회
-                    : noticeRepository.findByCategory(category, pageable); // 카테고리별 조회
+                    ? noticeRepository.findAll(pageable)
+                    : noticeRepository.findByCategory(category, pageable);
         }
-
 
         if (notices.isEmpty()) {
             throw new NoticeNotFoundException();
@@ -65,5 +62,14 @@ public class NoticeService {
 
         return notices.map(NoticeResponseDto.Summary::fromEntity);
 
+    }
+
+    public List<NoticeResponseDto.Trending> getDailyTrendingNotices(int size) {
+        Pageable pageable = PageRequest.of(0, Math.max(1, size));
+
+        return noticeRepository.findTrendingByTodayDelta(LocalDate.now(), pageable)
+                .stream()
+                .map(NoticeResponseDto.Trending::fromEntity)
+                .toList();
     }
 }

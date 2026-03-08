@@ -9,8 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -56,6 +58,17 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
             String title,
             LocalDateTime dateAfter
     );
+
+
+    Optional<Notice> findByCategoryAndLink(String category, String link);
+
+    @Query("""
+        select n
+        from Notice n
+        where n.viewCountDeltaDate = :today
+        order by n.viewCountDeltaToday desc, n.viewCount desc, n.date desc
+    """)
+    List<Notice> findTrendingByTodayDelta(@Param("today") LocalDate today, Pageable pageable);
 
     /**
      * (선택) 최근 범위(예: 1개월) 내에서
