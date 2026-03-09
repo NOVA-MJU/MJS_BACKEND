@@ -25,7 +25,6 @@ public class AdminStudentCouncilNoticeDTO {
         private String title;
         private String content;
 
-
         @Builder.Default
         private List<String> imageUrls = new ArrayList<>();
     }
