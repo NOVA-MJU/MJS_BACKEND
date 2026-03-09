@@ -39,9 +39,9 @@ public class SearchIndexUpdateServiceImpl implements SearchIndexUpdateService {
             return;
         }
 
+
         String unifiedId =
                 unifiedSearchMapper.buildId(SearchType.COMMUNITY.name(), boardUuid.toString());
-
         updateById(UNIFIED_INDEX, unifiedId, partial);
     }
 

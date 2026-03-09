@@ -27,10 +27,22 @@ public class UnifiedSearchDocument {
     private String title;
 
     @Field(type = FieldType.Text)
+    private String titleNormalized;
+
+    @Field(type = FieldType.Text)
     private String content;
+
+    @Field(type = FieldType.Text)
+    private String contentNormalized;
 
     @Field(type = FieldType.Keyword)
     private String category;
+
+    @Field(type = FieldType.Text)
+    private String categoryNormalized;
+
+    @Field(type = FieldType.Text)
+    private String searchTokens;
 
     @Field(type = FieldType.Keyword)
     private String link;

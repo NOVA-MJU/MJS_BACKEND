@@ -28,6 +28,11 @@ public class SearchRankingPolicyStore {
     private static final SearchRankingPolicySnapshot DEFAULT = new SearchRankingPolicySnapshot(
             3.2f,
             4.0f,
+            9.0f,
+            8.0f,
+            6.5f,
+            4.5f,
+            3.5f,
             1.8f,
             2.8f,
             60,
@@ -101,6 +106,11 @@ public class SearchRankingPolicyStore {
 
         float expansionBoost = loaded.expansionTermBoost() <= 0 ? DEFAULT.expansionTermBoost() : loaded.expansionTermBoost();
         float autocompleteBoost = loaded.autocompleteBoost() <= 0 ? DEFAULT.autocompleteBoost() : loaded.autocompleteBoost();
+        float exactTitleMatchBoost = loaded.exactTitleMatchBoost() <= 0 ? DEFAULT.exactTitleMatchBoost() : loaded.exactTitleMatchBoost();
+        float compactTitleMatchBoost = loaded.compactTitleMatchBoost() <= 0 ? DEFAULT.compactTitleMatchBoost() : loaded.compactTitleMatchBoost();
+        float searchTokenMatchBoost = loaded.searchTokenMatchBoost() <= 0 ? DEFAULT.searchTokenMatchBoost() : loaded.searchTokenMatchBoost();
+        float typoFuzzyBoost = loaded.typoFuzzyBoost() <= 0 ? DEFAULT.typoFuzzyBoost() : loaded.typoFuzzyBoost();
+        float categoryMatchBoost = loaded.categoryMatchBoost() <= 0 ? DEFAULT.categoryMatchBoost() : loaded.categoryMatchBoost();
         float noticeTypeBoost = loaded.noticeTypeBoost() <= 0 ? DEFAULT.noticeTypeBoost() : loaded.noticeTypeBoost();
         float noticeGeneralCategoryBoost = loaded.noticeGeneralCategoryBoost() <= 0 ? DEFAULT.noticeGeneralCategoryBoost() : loaded.noticeGeneralCategoryBoost();
         int intentRecencyWindowDays = loaded.intentRecencyWindowDays() <= 0 ? DEFAULT.intentRecencyWindowDays() : loaded.intentRecencyWindowDays();
@@ -124,6 +134,11 @@ public class SearchRankingPolicyStore {
         return new SearchRankingPolicySnapshot(
                 expansionBoost,
                 autocompleteBoost,
+                exactTitleMatchBoost,
+                compactTitleMatchBoost,
+                searchTokenMatchBoost,
+                typoFuzzyBoost,
+                categoryMatchBoost,
                 noticeTypeBoost,
                 noticeGeneralCategoryBoost,
                 intentRecencyWindowDays,
@@ -137,6 +152,11 @@ public class SearchRankingPolicyStore {
     public record SearchRankingPolicySnapshot(
             float expansionTermBoost,
             float autocompleteBoost,
+            float exactTitleMatchBoost,
+            float compactTitleMatchBoost,
+            float searchTokenMatchBoost,
+            float typoFuzzyBoost,
+            float categoryMatchBoost,
             float noticeTypeBoost,
             float noticeGeneralCategoryBoost,
             int intentRecencyWindowDays,
