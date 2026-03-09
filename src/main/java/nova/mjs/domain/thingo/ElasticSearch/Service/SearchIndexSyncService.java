@@ -105,7 +105,8 @@ public class SearchIndexSyncService {
                 noticeRepository.findAll(),
                 noticeContentPreprocessor,
                 NoticeDocument::from,
-                noticeSearchRepository
+                noticeSearchRepository,
+                NoticeDocument.class
         );
 
         // Community (Editor JSON 전처리 필요)
@@ -114,7 +115,8 @@ public class SearchIndexSyncService {
                 communityBoardRepository.findAll(),
                 communityContentPreprocessor,
                 CommunityDocument::from,
-                communitySearchRepository
+                communitySearchRepository,
+                CommunityDocument.class
         );
 
         // 전처리 없는 도메인들
@@ -122,35 +124,40 @@ public class SearchIndexSyncService {
                 "NEWS",
                 newsRepository.findAll(),
                 NewsDocument::from,
-                newsSearchRepository
+                newsSearchRepository,
+                NewsDocument.class
         );
 
         sync(
                 "DEPARTMENT_SCHEDULE",
                 departmentScheduleRepository.findAll(),
                 DepartmentScheduleDocument::from,
-                departmentScheduleSearchRepository
+                departmentScheduleSearchRepository,
+                DepartmentScheduleDocument.class
         );
 
         sync(
                 "STUDENT_COUNCIL_NOTICE",
                 studentCouncilNoticeRepository.findAll(),
                 StudentCouncilNoticeDocument::from,
-                studentCouncilNoticeSearchRepository
+                studentCouncilNoticeSearchRepository,
+                StudentCouncilNoticeDocument.class
         );
 
         sync(
                 "BROADCAST",
                 broadcastRepository.findAll(),
                 BroadcastDocument::from,
-                broadcastSearchRepository
+                broadcastSearchRepository,
+                BroadcastDocument.class
         );
 
         sync(
                 "MJU_CALENDAR",
                 mjuCalendarRepository.findAll(),
                 MjuCalendarDocument::from,
-                mjuCalendarSearchRepository
+                mjuCalendarSearchRepository,
+                MjuCalendarDocument.class
         );
     }
 
@@ -161,8 +168,11 @@ public class SearchIndexSyncService {
             String domainName,
             List<E> entities,
             Function<E, D> mapper,
-            ElasticsearchRepository<D, ?> repository
+            ElasticsearchRepository<D, ?> repository,
+            Class<D> documentClass
     ) {
+        ensureIndex(documentClass, domainName);
+
         List<D> documents = entities.stream()
                 .map(mapper)
                 .toList();
@@ -184,8 +194,11 @@ public class SearchIndexSyncService {
             List<E> entities,
             P preprocessor,
             BiFunction<E, P, D> mapper,
-            ElasticsearchRepository<D, ?> repository
+            ElasticsearchRepository<D, ?> repository,
+            Class<D> documentClass
     ) {
+        ensureIndex(documentClass, domainName);
+
         List<D> documents = entities.stream()
                 .map(entity -> mapper.apply(entity, preprocessor))
                 .toList();
@@ -237,5 +250,16 @@ public class SearchIndexSyncService {
                         .toList();
 
         unifiedSearchRepository.saveAll(unifiedDocuments);
+    }
+
+    private void ensureIndex(Class<?> documentClass, String domainName) {
+        IndexOperations indexOps = elasticsearchOperations.indexOps(documentClass);
+        if (indexOps.exists()) {
+            return;
+        }
+
+        indexOps.create();
+        indexOps.putMapping(indexOps.createMapping());
+        log.info("[SEARCH][INDEX][CREATE][{}] created", domainName);
     }
 }

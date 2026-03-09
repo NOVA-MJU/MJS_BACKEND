@@ -62,3 +62,6 @@ TIME	NNP
 굴렁쇠	NNP
 DEPth	NNP
 네비게이토	NNP
+해외문화탐방	NNP
+전공학문연계	NNP
+전공학문연계해외문화탐방	NNP

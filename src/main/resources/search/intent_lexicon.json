@@ -160,6 +160,16 @@
       "expansions": ["설명회", "세미나", "포럼", "워크숍", "강연"],
       "negativeKeywords": ["개최", "안내"],
       "typeBoost": { "NOTICE": 2 }
+    },
+    {
+      "major": "PROGRAM_EXTERNAL",
+      "minor": "OVERSEAS_CULTURE_EXPLORATION",
+      "intent": "해외문화탐방",
+      "weight": 118,
+      "matchKeywords": ["해외문화탐방", "해외 문화 탐방", "해외탐방", "해외 탐방", "문화탐방", "문화 탐방", "글로벌탐방", "글로벌 탐방"],
+      "expansions": ["해외탐방", "해외 탐방", "문화탐방", "문화 탐방", "글로벌탐방", "글로벌 탐방", "해외연수", "국제탐방"],
+      "negativeKeywords": [],
+      "typeBoost": { "NOTICE": 12, "STUDENT_COUNCIL_NOTICE": 10, "NEWS": 4 }
     }
   ]
 }

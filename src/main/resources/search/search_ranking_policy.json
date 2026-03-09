@@ -1,6 +1,11 @@
 {
   "expansionTermBoost": 3.2,
   "autocompleteBoost": 4.0,
+  "exactTitleMatchBoost": 9.5,
+  "compactTitleMatchBoost": 8.4,
+  "searchTokenMatchBoost": 6.8,
+  "typoFuzzyBoost": 4.2,
+  "categoryMatchBoost": 3.4,
   "noticeTypeBoost": 1.8,
   "noticeGeneralCategoryBoost": 2.8,
   "negativeStrategy": "HARD_FILTER",
