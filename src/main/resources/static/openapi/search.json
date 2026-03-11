@@ -368,6 +368,92 @@
         }
       }
     },
+    "/search/suggest/seasonal": {
+      "get": {
+        "tags": [
+          "Suggest"
+        ],
+        "summary": "시기별 추천 검색어 조회",
+        "description": "월(month)에 따라 화면 고정용 시기 텍스트(개강/시험/종강/방학/인기 검색어)와 추천 검색어 5개를 반환합니다. month를 주지 않으면 서버 현재 월 기준으로 계산합니다. 미운영 월(5월, 11월)은 실시간 인기 검색어를 반환합니다.",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12,
+              "example": 3
+            },
+            "description": "조회 기준 월(1~12). 미입력 시 서버 현재 월 사용"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "시기 텍스트와 추천 검색어 목록 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseSeasonalSuggestionResponse"
+                },
+                "examples": {
+                  "개강": {
+                    "summary": "개강 시기",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "period": "개강",
+                        "keywords": [
+                          "수강신청",
+                          "정정기간",
+                          "수업계획서",
+                          "강의실",
+                          "학사일정"
+                        ]
+                      },
+                      "timestamp": "2026-02-22T10:00:00.000000"
+                    }
+                  },
+                  "미운영_인기검색어": {
+                    "summary": "5월/11월",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": {
+                        "period": "인기 검색어",
+                        "keywords": [
+                          "장학금",
+                          "기숙사",
+                          "중간고사",
+                          "도서관",
+                          "졸업"
+                        ]
+                      },
+                      "timestamp": "2026-05-14T10:00:00.000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 month 파라미터 (1~12 범위 외)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 400,
+                  "message": "month는 1~12 사이여야 합니다.",
+                  "timestamp": "2026-02-22T10:00:00.000000"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/keywords": {
       "post": {
         "tags": [
@@ -538,6 +624,61 @@
             "items": {
               "type": "string"
             }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApiResponseSeasonalSuggestionResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SeasonalSuggestionResponse"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SeasonalSuggestionResponse": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "description": "화면 고정 노출용 시기 텍스트 (개강/시험/종강/방학/인기 검색어)",
+            "example": "개강"
+          },
+          "keywords": {
+            "type": "array",
+            "description": "추천 검색어 목록(최대 5개)",
+            "minItems": 0,
+            "maxItems": 5,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "period",
+          "keywords"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "example": 400
+          },
+          "message": {
+            "type": "string",
+            "example": "month는 1~12 사이여야 합니다."
           },
           "timestamp": {
             "type": "string",
