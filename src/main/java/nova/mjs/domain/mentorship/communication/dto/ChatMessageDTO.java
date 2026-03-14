@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class ChatMessageDTO {
@@ -12,7 +13,6 @@ public class ChatMessageDTO {
     @Getter
     @NoArgsConstructor
     public static class Request {
-
         private UUID chatUuid;
         private UUID senderUuid;
         private String content;
@@ -21,10 +21,27 @@ public class ChatMessageDTO {
     @Getter
     @Builder
     public static class Response {
-
         private UUID chatUuid;
         private UUID senderUuid;
         private String content;
         private LocalDateTime sentAt;
+    }
+
+    @Getter
+    @Builder
+    public static class HistoryResponse {
+        private String messageId;
+        private UUID chatUuid;
+        private UUID senderUuid;
+        private String content;
+        private LocalDateTime sentAt;
+    }
+
+    @Getter
+    @Builder
+    public static class HistoryListResponse {
+        private UUID chatUuid;
+        private int messageCount;
+        private List<HistoryResponse> messages;
     }
 }

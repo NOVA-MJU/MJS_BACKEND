@@ -19,4 +19,15 @@ public class ChatMessage {
     private UUID senderUuid;
     private String content;
     private LocalDateTime sentAt;
+
+    private ChatMessage(UUID chatUuid, UUID senderUuid, String content, LocalDateTime sentAt) {
+        this.chatUuid = chatUuid;
+        this.senderUuid = senderUuid;
+        this.content = content;
+        this.sentAt = sentAt;
+    }
+
+    public static ChatMessage create(UUID chatUuid, UUID senderUuid, String content) {
+        return new ChatMessage(chatUuid, senderUuid, content, LocalDateTime.now());
+    }
 }
