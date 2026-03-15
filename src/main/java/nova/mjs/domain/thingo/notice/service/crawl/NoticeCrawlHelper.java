@@ -6,6 +6,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * 공지 크롤링 기술 로직 전담 Helper
  * - 목록 페이지 크롤링
@@ -18,6 +21,8 @@ import org.jsoup.select.Elements;
 public class NoticeCrawlHelper {
 
     private static final String BASE_URL = "https://www.mju.ac.kr/";
+
+    private static final Pattern VIEW_COUNT_PATTERN = Pattern.compile("조회수\\s*(\\d+)");
 
     /**
      * 공지 목록 페이지 크롤링
@@ -34,6 +39,33 @@ public class NoticeCrawlHelper {
             return doc.select("tr:not(.headline):not(._artclOdd)");
         } catch (Exception e) {
             throw new IllegalStateException("목록 페이지 크롤링 실패: " + fullUrl, e);
+        }
+    }
+
+
+    /**
+     * 공지 상세 페이지 조회수 파싱
+     * @param link 상세 페이지 URL
+     * @return 조회수 (실패 시 0)
+     */
+    public static int crawlViewCount(String link) {
+        try {
+            Document doc = Jsoup.connect(link).get();
+            Element headInfo = doc.selectFirst("div.head_info");
+            if (headInfo == null) {
+                return 0;
+            }
+
+            String text = headInfo.text();
+            Matcher matcher = VIEW_COUNT_PATTERN.matcher(text);
+            if (matcher.find()) {
+                return Integer.parseInt(matcher.group(1));
+            }
+
+            return 0;
+        } catch (Exception e) {
+            log.warn("[MJS] view count crawling failed. link={}", link, e);
+            return 0;
         }
     }
 
