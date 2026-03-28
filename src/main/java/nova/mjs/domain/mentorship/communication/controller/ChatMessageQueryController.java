@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.mentorship.communication.dto.ChatMessageDTO;
 import nova.mjs.domain.mentorship.communication.service.ChatMessageServiceImpl;
 import nova.mjs.util.response.ApiResponse;
+import nova.mjs.util.security.UserPrincipal;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -18,9 +20,15 @@ public class ChatMessageQueryController {
 
     @GetMapping("/{chatUuid}/messages")
     public ResponseEntity<ApiResponse<ChatMessageDTO.HistoryListResponse>> getMessages(
-            @PathVariable UUID chatUuid
+            @PathVariable UUID chatUuid,
+            Authentication authentication
     ) {
-        ChatMessageDTO.HistoryListResponse response = chatMessageService.getMessages(chatUuid);
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        UUID authenticatedUserUuid = userPrincipal.getUuid();
+
+        ChatMessageDTO.HistoryListResponse response =
+                chatMessageService.getMessages(chatUuid, authenticatedUserUuid);
+
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

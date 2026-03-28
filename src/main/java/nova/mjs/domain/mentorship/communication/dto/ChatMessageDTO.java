@@ -14,7 +14,6 @@ public class ChatMessageDTO {
     @NoArgsConstructor
     public static class Request {
         private UUID chatUuid;
-        private UUID senderUuid;
         private String content;
     }
 

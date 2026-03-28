@@ -24,9 +24,9 @@ public class ChatRoomServiceImpl {
 
     @Transactional
     public UUID requestChat(Member requester, Member mentor) {
-        ChatRoom room = ChatRoom.create(requester, mentor);
-        chatRoomRepository.save(room);
-        return room.getChatUuid();
+        ChatRoom chatRoom = ChatRoom.create(requester, mentor);
+        chatRoomRepository.save(chatRoom);
+        return chatRoom.getChatUuid();
     }
 
     @Transactional
@@ -42,8 +42,8 @@ public class ChatRoomServiceImpl {
                 requester,
                 responder,
                 List.of(ChatRoom.ChatStatus.WAITING, ChatRoom.ChatStatus.IN_PROGRESS)
-        ).ifPresent(room -> {
-            throw new IllegalStateException("이미 대기 중이거나 진행 중인 채팅방이 존재합니다. chatUuid=" + room.getChatUuid());
+        ).ifPresent(chatRoom -> {
+            throw new IllegalStateException("이미 대기 중이거나 진행 중인 채팅방이 존재합니다. chatUuid=" + chatRoom.getChatUuid());
         });
 
         ChatRoom chatRoom = ChatRoom.create(requester, responder);
@@ -63,10 +63,10 @@ public class ChatRoomServiceImpl {
             throw new IllegalArgumentException("chatUuid는 필수입니다.");
         }
 
-        ChatRoom room = getByChatUuid(chatUuid);
+        ChatRoom chatRoom = getByChatUuid(chatUuid);
 
         chatMessageRepository.deleteByChatUuid(chatUuid);
-        chatRoomRepository.delete(room);
+        chatRoomRepository.delete(chatRoom);
 
         return ChatRoomDTO.DeleteResponse.builder()
                 .chatUuid(chatUuid)
@@ -107,10 +107,16 @@ public class ChatRoomServiceImpl {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 채팅방입니다. chatUuid=" + chatUuid));
     }
 
+    public void validateParticipant(ChatRoom chatRoom, UUID memberUuid) {
+        if (!chatRoom.isParticipant(memberUuid)) {
+            throw new IllegalArgumentException("해당 채팅방 참여자만 접근할 수 있습니다.");
+        }
+    }
+
     @Transactional
-    public void startChatIfWaiting(ChatRoom room) {
-        if (room.getStatus() == ChatRoom.ChatStatus.WAITING) {
-            room.startChat();
+    public void startChatIfWaiting(ChatRoom chatRoom) {
+        if (chatRoom.getStatus() == ChatRoom.ChatStatus.WAITING) {
+            chatRoom.startChat();
         }
     }
 

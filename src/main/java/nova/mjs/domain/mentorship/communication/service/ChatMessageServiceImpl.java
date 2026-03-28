@@ -21,16 +21,17 @@ public class ChatMessageServiceImpl {
     private final ChatMessageRepository chatMessageRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public void sendMessage(ChatMessageDTO.Request request) {
+    public void sendMessage(ChatMessageDTO.Request request, UUID authenticatedMemberUuid) {
         validate(request);
 
-        ChatRoom room = chatRoomService.getByChatUuid(request.getChatUuid());
-        chatRoomService.startChatIfWaiting(room);
+        ChatRoom chatRoom = chatRoomService.getByChatUuid(request.getChatUuid());
+        chatRoomService.validateParticipant(chatRoom, authenticatedMemberUuid);
+        chatRoomService.startChatIfWaiting(chatRoom);
 
         ChatMessage savedMessage = chatMessageRepository.save(
                 ChatMessage.create(
-                        room.getChatUuid(),
-                        request.getSenderUuid(),
+                        chatRoom.getChatUuid(),
+                        authenticatedMemberUuid,
                         request.getContent().trim()
                 )
         );
@@ -43,19 +44,19 @@ public class ChatMessageServiceImpl {
                 .build();
 
         messagingTemplate.convertAndSend(
-                "/sub/chat/room/" + room.getChatUuid(),
+                "/sub/chat/room/" + chatRoom.getChatUuid(),
                 response
         );
     }
 
     @Transactional(readOnly = true)
-    public ChatMessageDTO.HistoryListResponse getMessages(UUID chatUuid) {
+    public ChatMessageDTO.HistoryListResponse getMessages(UUID chatUuid, UUID authenticatedMemberUuid) {
         if (chatUuid == null) {
             throw new IllegalArgumentException("chatUuid는 필수입니다.");
         }
 
-        // 채팅방 존재 여부 검증
-        chatRoomService.getByChatUuid(chatUuid);
+        ChatRoom chatRoom = chatRoomService.getByChatUuid(chatUuid);
+        chatRoomService.validateParticipant(chatRoom, authenticatedMemberUuid);
 
         List<ChatMessageDTO.HistoryResponse> messages = chatMessageRepository
                 .findByChatUuidOrderBySentAtAsc(chatUuid)
@@ -82,9 +83,6 @@ public class ChatMessageServiceImpl {
         }
         if (request.getChatUuid() == null) {
             throw new IllegalArgumentException("chatUuid는 필수입니다.");
-        }
-        if (request.getSenderUuid() == null) {
-            throw new IllegalArgumentException("senderUuid는 필수입니다.");
         }
         if (request.getContent() == null || request.getContent().trim().isEmpty()) {
             throw new IllegalArgumentException("메시지 내용은 비어 있을 수 없습니다.");

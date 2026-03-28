@@ -64,4 +64,15 @@ public class ChatRoom extends BaseEntity {
         }
         this.status = ChatStatus.COMPLETED;
     }
+
+    public boolean isParticipant(UUID memberUuid) {
+        if (memberUuid == null) {
+            return false;
+        }
+
+        boolean isRequester = requester != null && requester.getUuid().equals(memberUuid);
+        boolean isResponder = responder != null && responder.getUuid().equals(memberUuid);
+
+        return isRequester || isResponder;
+    }
 }
