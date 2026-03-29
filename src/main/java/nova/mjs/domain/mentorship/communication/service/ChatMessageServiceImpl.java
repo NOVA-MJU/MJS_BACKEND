@@ -2,13 +2,15 @@ package nova.mjs.domain.mentorship.communication.service;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.mentorship.communication.dto.ChatMessageDTO;
-import nova.mjs.domain.mentorship.communication.entity.ChatMessage;
 import nova.mjs.domain.mentorship.communication.entity.ChatRoom;
+import nova.mjs.domain.mentorship.communication.event.ChatMessageEvent;
+import nova.mjs.domain.mentorship.communication.redis.ChatRedisStreamProducer;
 import nova.mjs.domain.mentorship.communication.repository.ChatMessageRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +21,7 @@ public class ChatMessageServiceImpl {
 
     private final ChatRoomServiceImpl chatRoomService;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatRedisStreamProducer chatRedisStreamProducer;
     private final SimpMessagingTemplate messagingTemplate;
 
     public void sendMessage(ChatMessageDTO.Request request, UUID authenticatedMemberUuid) {
@@ -28,19 +31,25 @@ public class ChatMessageServiceImpl {
         chatRoomService.validateParticipant(chatRoom, authenticatedMemberUuid);
         chatRoomService.startChatIfWaiting(chatRoom);
 
-        ChatMessage savedMessage = chatMessageRepository.save(
-                ChatMessage.create(
-                        chatRoom.getChatUuid(),
-                        authenticatedMemberUuid,
-                        request.getContent().trim()
-                )
-        );
+        LocalDateTime sentAt = LocalDateTime.now();
+        String messageId = UUID.randomUUID().toString();
+
+        ChatMessageEvent event = ChatMessageEvent.builder()
+                .messageId(messageId)
+                .chatUuid(chatRoom.getChatUuid())
+                .senderUuid(authenticatedMemberUuid)
+                .content(request.getContent().trim())
+                .sentAt(sentAt)
+                .build();
+
+        // enqueue 성공한 경우에만 브로드캐스트
+        chatRedisStreamProducer.enqueue(event);
 
         ChatMessageDTO.Response response = ChatMessageDTO.Response.builder()
-                .chatUuid(savedMessage.getChatUuid())
-                .senderUuid(savedMessage.getSenderUuid())
-                .content(savedMessage.getContent())
-                .sentAt(savedMessage.getSentAt())
+                .chatUuid(event.getChatUuid())
+                .senderUuid(event.getSenderUuid())
+                .content(event.getContent())
+                .sentAt(event.getSentAt())
                 .build();
 
         messagingTemplate.convertAndSend(
