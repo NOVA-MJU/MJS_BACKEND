@@ -1,5 +1,6 @@
 package nova.mjs.domain.thingo.search.service;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.thingo.ElasticSearch.Document.BroadcastDocument;
@@ -22,6 +23,10 @@ import nova.mjs.domain.thingo.notice.repository.NoticeRepository;
 import nova.mjs.domain.thingo.search.entity.UnifiedSearchIndex;
 import nova.mjs.domain.thingo.search.mapper.PgUnifiedSearchMapper;
 import nova.mjs.domain.thingo.search.repository.UnifiedSearchIndexRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,7 +54,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class PgSearchIndexSyncService {
 
-    private static final int BATCH_SIZE = 1000;
+    private static final int BATCH_SIZE = 200;
 
     private final NoticeRepository noticeRepository;
     private final NewsRepository newsRepository;
@@ -64,6 +69,7 @@ public class PgSearchIndexSyncService {
 
     private final UnifiedSearchIndexRepository repository;
     private final PgUnifiedSearchMapper mapper;
+    private final EntityManager entityManager;
 
     /**
      * search_vector / title_vector 만 재생성한다(truncate/재토큰화 없음).
@@ -89,16 +95,26 @@ public class PgSearchIndexSyncService {
 
         repository.truncate();
 
-        List<UnifiedSearchIndex> desired = collectAll();
-        for (int i = 0; i < desired.size(); i += BATCH_SIZE) {
-            int end = Math.min(i + BATCH_SIZE, desired.size());
-            repository.saveAll(desired.subList(i, end));
-        }
+        Set<String> seenLinks = new HashSet<>();
+        SyncStats stats = new SyncStats();
+
+        insertSource("NOTICE", noticeRepository,
+                e -> NoticeDocument.from(e, noticeContentPreprocessor), seenLinks, stats);
+        insertSource("COMMUNITY", communityBoardRepository,
+                e -> CommunityDocument.from(e, communityContentPreprocessor), seenLinks, stats);
+        insertSource("NEWS", newsRepository, NewsDocument::from, seenLinks, stats);
+        insertSource("DEPARTMENT_SCHEDULE", departmentScheduleRepository,
+                DepartmentScheduleDocument::from, seenLinks, stats);
+        insertSource("STUDENT_COUNCIL_NOTICE", studentCouncilNoticeRepository,
+                StudentCouncilNoticeDocument::from, seenLinks, stats);
+        insertSource("BROADCAST", broadcastRepository, BroadcastDocument::from, seenLinks, stats);
+        insertSource("MJU_CALENDAR", mjuCalendarRepository, MjuCalendarDocument::from, seenLinks, stats);
 
         // 트리거 의존 제거: 삽입 후 search_vector/title_vector 를 직접 재생성한다(트리거 누락 안전망).
         repository.rebuildVectors();
 
-        log.info("[PgSearch][SYNC] end. indexed={}", desired.size());
+        log.info("[PgSearch][SYNC] end. indexed={}, dedup_skipped={}, conversion_failed={}",
+                stats.inserted, stats.dedupSkipped, stats.conversionFailed);
     }
 
     /**
@@ -113,133 +129,198 @@ public class PgSearchIndexSyncService {
     public void reconcile() {
         log.info("[PgSearch][RECONCILE] start");
 
-        // 1) 소스 기준 "원하는 상태" 구성 (id -> 문서)
-        Map<String, UnifiedSearchIndex> desired = new HashMap<>();
-        for (UnifiedSearchIndex doc : collectAll()) {
-            desired.put(doc.getId(), doc);
-        }
+        Set<String> seenLinks = new HashSet<>();
+        Set<String> desiredIds = new HashSet<>();
+        ReconcileStats stats = new ReconcileStats();
 
-        int updated = 0;
-        int deactivated = 0;
-        int unchanged = 0;
+        reconcileSource("NOTICE", noticeRepository,
+                e -> NoticeDocument.from(e, noticeContentPreprocessor), seenLinks, desiredIds, stats);
+        reconcileSource("COMMUNITY", communityBoardRepository,
+                e -> CommunityDocument.from(e, communityContentPreprocessor), seenLinks, desiredIds, stats);
+        reconcileSource("NEWS", newsRepository, NewsDocument::from, seenLinks, desiredIds, stats);
+        reconcileSource("DEPARTMENT_SCHEDULE", departmentScheduleRepository,
+                DepartmentScheduleDocument::from, seenLinks, desiredIds, stats);
+        reconcileSource("STUDENT_COUNCIL_NOTICE", studentCouncilNoticeRepository,
+                StudentCouncilNoticeDocument::from, seenLinks, desiredIds, stats);
+        reconcileSource("BROADCAST", broadcastRepository,
+                BroadcastDocument::from, seenLinks, desiredIds, stats);
+        reconcileSource("MJU_CALENDAR", mjuCalendarRepository,
+                MjuCalendarDocument::from, seenLinks, desiredIds, stats);
 
-        // 2) 기존 인덱스를 순회하며 변경분 갱신 + 사라진 건 비활성.
-        //    처리한 id 는 desired 에서 제거 → 남은 것이 신규 문서.
-        for (UnifiedSearchIndex existing : repository.findAll()) {
-            UnifiedSearchIndex want = desired.remove(existing.getId());
-            if (want == null) {
-                if (Boolean.TRUE.equals(existing.getActive())) {
-                    existing.deactivate();
-                    deactivated++;
-                }
-                continue;
-            }
-            if (existing.differsFrom(want)) {
-                existing.updateFrom(want);
-                updated++;
-            } else {
-                unchanged++;
-            }
-        }
-
-        // 3) 인덱스에 없던 신규 문서 저장.
-        int inserted = desired.size();
-        if (!desired.isEmpty()) {
-            List<UnifiedSearchIndex> news = new ArrayList<>(desired.values());
-            for (int i = 0; i < news.size(); i += BATCH_SIZE) {
-                int end = Math.min(i + BATCH_SIZE, news.size());
-                repository.saveAll(news.subList(i, end));
-            }
-        }
+        deactivateMissing(desiredIds, stats);
 
         // 트리거 의존 제거: 변경/삽입분의 search_vector/title_vector 를 직접 재생성한다(트리거 누락 안전망).
         repository.rebuildVectors();
 
         log.info("[PgSearch][RECONCILE] end. new={}, updated={}, deactivated={}, unchanged={}",
-                inserted, updated, deactivated, unchanged);
+                stats.inserted, stats.updated, stats.deactivated, stats.unchanged);
     }
 
-    /**
-     * 모든 도메인 소스를 인덱스 문서로 변환해 모은다(link 중복 제거).
-     *
-     * 동일 link 중복 차단: 원본 공지가 여러 게시판에 동시 게재되면 notice 테이블엔
-     * 서로 다른 row(originalId 다름)이지만 link 는 같다. 검색 중복 노출을 여기서 막는다.
-     */
-    private List<UnifiedSearchIndex> collectAll() {
-        Set<String> seenLinks = new HashSet<>();
-        List<UnifiedSearchIndex> out = new ArrayList<>();
+    private <E, ID> void insertSource(String domain,
+                                      JpaRepository<E, ID> sourceRepository,
+                                      Function<E, ? extends SearchDocument> toDocument,
+                                      Set<String> seenLinks,
+                                      SyncStats totalStats) {
+        int pageNumber = 0;
+        SourceStats sourceStats = new SourceStats();
+        boolean hasNext;
 
-        collect(out, "NOTICE",
-                noticeRepository.findAll(),
-                e -> NoticeDocument.from(e, noticeContentPreprocessor),
-                seenLinks);
+        do {
+            Page<E> page = sourceRepository.findAll(PageRequest.of(
+                    pageNumber, BATCH_SIZE, Sort.by(Sort.Direction.ASC, "id")));
+            hasNext = page.hasNext();
 
-        collect(out, "COMMUNITY",
-                communityBoardRepository.findAll(),
-                e -> CommunityDocument.from(e, communityContentPreprocessor),
-                seenLinks);
+            List<UnifiedSearchIndex> batch = convertPage(
+                    domain, page.getContent(), toDocument, seenLinks, sourceStats);
+            if (!batch.isEmpty()) {
+                repository.saveAll(batch);
+                repository.flush();
+                entityManager.clear();
+            }
 
-        collect(out, "NEWS",
-                newsRepository.findAll(),
-                NewsDocument::from,
-                seenLinks);
+            totalStats.inserted += batch.size();
+            pageNumber++;
+        } while (hasNext);
 
-        collect(out, "DEPARTMENT_SCHEDULE",
-                departmentScheduleRepository.findAll(),
-                DepartmentScheduleDocument::from,
-                seenLinks);
-
-        collect(out, "STUDENT_COUNCIL_NOTICE",
-                studentCouncilNoticeRepository.findAll(),
-                StudentCouncilNoticeDocument::from,
-                seenLinks);
-
-        collect(out, "BROADCAST",
-                broadcastRepository.findAll(),
-                BroadcastDocument::from,
-                seenLinks);
-
-        collect(out, "MJU_CALENDAR",
-                mjuCalendarRepository.findAll(),
-                MjuCalendarDocument::from,
-                seenLinks);
-
-        return out;
+        totalStats.dedupSkipped += sourceStats.dedupSkipped;
+        totalStats.conversionFailed += sourceStats.conversionFailed;
+        logSourceStats(domain, sourceStats);
     }
 
-    private <E> void collect(List<UnifiedSearchIndex> out,
-                             String domain,
-                             List<E> entities,
-                             Function<E, ? extends SearchDocument> toDocument,
-                             Set<String> seenLinks) {
-        if (entities == null || entities.isEmpty()) {
-            log.info("[PgSearch][COLLECT][{}] empty", domain);
-            return;
+    private <E, ID> void reconcileSource(String domain,
+                                         JpaRepository<E, ID> sourceRepository,
+                                         Function<E, ? extends SearchDocument> toDocument,
+                                         Set<String> seenLinks,
+                                         Set<String> desiredIds,
+                                         ReconcileStats totalStats) {
+        int pageNumber = 0;
+        SourceStats sourceStats = new SourceStats();
+        boolean hasNext;
+
+        do {
+            Page<E> page = sourceRepository.findAll(PageRequest.of(
+                    pageNumber, BATCH_SIZE, Sort.by(Sort.Direction.ASC, "id")));
+            hasNext = page.hasNext();
+
+            List<UnifiedSearchIndex> desiredBatch = convertPage(
+                    domain, page.getContent(), toDocument, seenLinks, sourceStats);
+            if (!desiredBatch.isEmpty()) {
+                reconcileBatch(desiredBatch, desiredIds, totalStats);
+                repository.flush();
+                entityManager.clear();
+            }
+            pageNumber++;
+        } while (hasNext);
+
+        logSourceStats(domain, sourceStats);
+    }
+
+    private void reconcileBatch(List<UnifiedSearchIndex> desiredBatch,
+                                Set<String> desiredIds,
+                                ReconcileStats stats) {
+        Map<String, UnifiedSearchIndex> existingById = new HashMap<>();
+        List<String> batchIds = desiredBatch.stream()
+                .map(UnifiedSearchIndex::getId)
+                .toList();
+
+        repository.findAllById(batchIds)
+                .forEach(existing -> existingById.put(existing.getId(), existing));
+
+        List<UnifiedSearchIndex> toSave = new ArrayList<>();
+        for (UnifiedSearchIndex desired : desiredBatch) {
+            desiredIds.add(desired.getId());
+            UnifiedSearchIndex existing = existingById.get(desired.getId());
+            if (existing == null) {
+                toSave.add(desired);
+                stats.inserted++;
+            } else if (existing.differsFrom(desired)) {
+                existing.updateFrom(desired);
+                toSave.add(existing);
+                stats.updated++;
+            } else {
+                stats.unchanged++;
+            }
         }
 
-        int added = 0;
-        int skipped = 0;
+        if (!toSave.isEmpty()) {
+            repository.saveAll(toSave);
+        }
+    }
+
+    private void deactivateMissing(Set<String> desiredIds, ReconcileStats stats) {
+        int pageNumber = 0;
+        boolean hasNext;
+
+        do {
+            Page<UnifiedSearchIndex> page = repository.findAll(PageRequest.of(
+                    pageNumber, BATCH_SIZE, Sort.by(Sort.Direction.ASC, "id")));
+            hasNext = page.hasNext();
+
+            for (UnifiedSearchIndex existing : page.getContent()) {
+                if (!desiredIds.contains(existing.getId()) && Boolean.TRUE.equals(existing.getActive())) {
+                    existing.deactivate();
+                    stats.deactivated++;
+                }
+            }
+
+            repository.flush();
+            entityManager.clear();
+            pageNumber++;
+        } while (hasNext);
+    }
+
+    private <E> List<UnifiedSearchIndex> convertPage(String domain,
+                                                      List<E> entities,
+                                                      Function<E, ? extends SearchDocument> toDocument,
+                                                      Set<String> seenLinks,
+                                                      SourceStats stats) {
+        List<UnifiedSearchIndex> out = new ArrayList<>(entities.size());
         for (E entity : entities) {
             SearchDocument doc;
             try {
                 doc = toDocument.apply(entity);
             } catch (Exception e) {
                 log.warn("[PgSearch][COLLECT][{}] doc convert failed", domain, e);
+                stats.conversionFailed++;
                 continue;
             }
-            if (doc == null) continue;
+            if (doc == null) {
+                continue;
+            }
 
-            // link 가 있는 경우에만 dedupe. null/blank link 는 dedupe 대상에서 제외(구분 불가).
             String link = doc.getLink();
             if (link != null && !link.isBlank() && !seenLinks.add(link)) {
-                skipped++;
+                stats.dedupSkipped++;
                 continue;
             }
 
             out.add(mapper.from(doc));
-            added++;
+            stats.converted++;
         }
+        return out;
+    }
 
-        log.info("[PgSearch][COLLECT][{}] added={} dedup_skipped={}", domain, added, skipped);
+    private void logSourceStats(String domain, SourceStats stats) {
+        log.info("[PgSearch][COLLECT][{}] added={} dedup_skipped={} conversion_failed={}",
+                domain, stats.converted, stats.dedupSkipped, stats.conversionFailed);
+    }
+
+    private static final class SourceStats {
+        private int converted;
+        private int dedupSkipped;
+        private int conversionFailed;
+    }
+
+    private static final class SyncStats {
+        private int inserted;
+        private int dedupSkipped;
+        private int conversionFailed;
+    }
+
+    private static final class ReconcileStats {
+        private int inserted;
+        private int updated;
+        private int deactivated;
+        private int unchanged;
     }
 }
