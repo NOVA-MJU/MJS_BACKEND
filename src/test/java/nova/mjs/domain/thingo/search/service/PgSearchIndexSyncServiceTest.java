@@ -1,0 +1,87 @@
+package nova.mjs.domain.thingo.search.service;
+
+import jakarta.persistence.EntityManager;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.community.CommunityContentPreprocessor;
+import nova.mjs.domain.thingo.ElasticSearch.indexing.Preprocessor.notice.NoticeContentPreprocessor;
+import nova.mjs.domain.thingo.broadcast.repository.BroadcastRepository;
+import nova.mjs.domain.thingo.calendar.repository.MjuCalendarRepository;
+import nova.mjs.domain.thingo.community.repository.CommunityBoardRepository;
+import nova.mjs.domain.thingo.department.repository.DepartmentScheduleRepository;
+import nova.mjs.domain.thingo.department.repository.StudentCouncilNoticeRepository;
+import nova.mjs.domain.thingo.news.repository.NewsRepository;
+import nova.mjs.domain.thingo.notice.repository.NoticeRepository;
+import nova.mjs.domain.thingo.search.entity.UnifiedSearchIndex;
+import nova.mjs.domain.thingo.search.mapper.PgUnifiedSearchMapper;
+import nova.mjs.domain.thingo.search.repository.UnifiedSearchIndexRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class PgSearchIndexSyncServiceTest {
+
+    @Mock private NoticeRepository noticeRepository;
+    @Mock private NewsRepository newsRepository;
+    @Mock private CommunityBoardRepository communityBoardRepository;
+    @Mock private DepartmentScheduleRepository departmentScheduleRepository;
+    @Mock private StudentCouncilNoticeRepository studentCouncilNoticeRepository;
+    @Mock private BroadcastRepository broadcastRepository;
+    @Mock private MjuCalendarRepository mjuCalendarRepository;
+    @Mock private NoticeContentPreprocessor noticeContentPreprocessor;
+    @Mock private CommunityContentPreprocessor communityContentPreprocessor;
+    @Mock private UnifiedSearchIndexRepository repository;
+    @Mock private PgUnifiedSearchMapper mapper;
+    @Mock private EntityManager entityManager;
+
+    @InjectMocks
+    private PgSearchIndexSyncService service;
+
+    @BeforeEach
+    void setUpEmptySourcePages() {
+        when(noticeRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        when(newsRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        when(communityBoardRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        when(departmentScheduleRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        when(studentCouncilNoticeRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        when(broadcastRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        when(mjuCalendarRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+    }
+
+    @Test
+    @DisplayName("reconcile은 전체 findAll 대신 제한된 페이지로 읽고 누락 문서를 비활성화한다")
+    void reconcileUsesBoundedPagesAndDeactivatesMissingDocuments() {
+        UnifiedSearchIndex stale = UnifiedSearchIndex.of(
+                "NOTICE:1", "1", "NOTICE", "NOTICE", "title", "content",
+                null, null, null, 0, 0, 0.0, null, null, "tokens", "title tokens");
+        when(repository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(stale)));
+
+        service.reconcile();
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(noticeRepository).findAll(pageableCaptor.capture());
+        assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(200);
+        assertThat(pageableCaptor.getValue().getSort().getOrderFor("id")).isNotNull();
+        assertThat(pageableCaptor.getValue().getSort().getOrderFor("id").isAscending()).isTrue();
+        assertThat(stale.getActive()).isFalse();
+        verify(repository, never()).findAll();
+        verify(repository).rebuildVectors();
+        verify(entityManager).clear();
+    }
+}
