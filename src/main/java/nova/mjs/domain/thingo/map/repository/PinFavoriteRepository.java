@@ -18,6 +18,9 @@ public interface PinFavoriteRepository extends JpaRepository<PinFavorite, Long> 
     /** 마이 즐겨찾기 리스트 - 회원의 즐겨찾기 전체 */
     List<PinFavorite> findByMember(Member member);
 
+    /** 마이페이지 집계용 - 회원의 명지도 즐겨찾기 수 */
+    long countByMember(Member member);
+
     /** 목록 정렬용 - 회원이 즐겨찾기한 핀 ID 집합 (즐겨찾기 마킹/상단 정렬에 사용) */
     @Query("select pf.pin.id from PinFavorite pf where pf.member = :member")
     List<Long> findFavoritePinIds(@Param("member") Member member);

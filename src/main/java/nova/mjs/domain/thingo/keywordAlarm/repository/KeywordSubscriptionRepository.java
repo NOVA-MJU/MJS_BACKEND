@@ -21,6 +21,9 @@ public interface KeywordSubscriptionRepository
     @EntityGraph(attributePaths = "categories")
     List<KeywordSubscription> findByMemberOrderByIdDesc(Member member);
 
+    /** 마이페이지 집계용 - 활성/비활성을 포함한 키워드 알림 설정 수 */
+    long countByMember(Member member);
+
     /** 소유권 검증 + 수정/삭제용 - id 와 회원으로 동시 조회 */
     @EntityGraph(attributePaths = "categories")
     Optional<KeywordSubscription> findByIdAndMember(Long id, Member member);

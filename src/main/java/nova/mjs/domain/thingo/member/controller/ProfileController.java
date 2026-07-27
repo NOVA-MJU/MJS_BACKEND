@@ -63,7 +63,7 @@ public class ProfileController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-// 4. 작성글, 댓글, 찜 갯수
+// 4. 마이페이지 나의 활동 전체 집계
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<ProfileCountResponse>> getMyProfileSummary(

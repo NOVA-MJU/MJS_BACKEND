@@ -20,6 +20,9 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     /** 내가 차단한 목록 (최근 차단순) */
     List<Block> findAllByBlockerOrderByCreatedAtDesc(Member blocker);
 
+    /** 마이페이지 집계용 - 내가 차단한 사용자 수 */
+    long countByBlocker(Member blocker);
+
     /** 내가 차단한 사용자들의 member id */
     @Query("select b.blocked.id from Block b where b.blocker.id = :memberId")
     List<Long> findBlockedMemberIds(@Param("memberId") Long memberId);

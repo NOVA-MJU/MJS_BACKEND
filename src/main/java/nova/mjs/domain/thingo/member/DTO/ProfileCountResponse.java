@@ -10,4 +10,7 @@ public class ProfileCountResponse {
     private int postCount;
     private int commentCount;
     private int likedPostCount;
+    private long mapFavoriteCount;
+    private long keywordAlarmCount;
+    private long blockedUserCount;
 }
