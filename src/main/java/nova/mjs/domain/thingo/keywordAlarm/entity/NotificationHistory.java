@@ -94,7 +94,25 @@ public class NotificationHistory extends BaseEntity {
                 .build();
     }
 
+    /**
+     * 게시판/명지도 활동 알림 생성.
+     * 기존 테이블의 NOT NULL 제약을 유지하기 위해 키워드 구독 id와 키워드는 중립값을 저장하고,
+     * 응답 DTO에서는 활동 알림의 keyword를 null로 노출한다.
+     */
+    public static NotificationHistory ofActivity(Member member, String notificationKey,
+                                                 String title, String link, String type) {
+        return of(member, 0L, "", notificationKey, title, link, type);
+    }
+
     public void markAsRead() {
         this.read = true;
+    }
+
+    /** 집계형 좋아요 알림을 최신 상태로 갱신한다. 새 활동이므로 다시 미읽음 처리한다. */
+    public void refresh(String title, String link) {
+        this.title = title;
+        this.link = link;
+        this.read = false;
+        this.sentAt = Instant.now();
     }
 }

@@ -2,8 +2,8 @@
   "openapi": "3.0.1",
   "info": {
     "title": "MJU 커뮤니티 API",
-    "version": "v1.0.0",
-    "description": "게시글, 댓글, 대댓글, 좋아요 기능을 지원하는 커뮤니티 API 명세서입니다."
+    "version": "v1.1.0",
+    "description": "게시글, 댓글, 대댓글, 좋아요와 게시글 작성자 대상 인앱 활동 알림을 지원하는 커뮤니티 API 명세서입니다."
   },
   "servers": [
     {
@@ -484,7 +484,7 @@
           { "Authorization": [] }
         ],
         "summary": "댓글 생성",
-        "description": "게시글에 새 댓글을 작성합니다. 로그인된 사용자만 작성 가능하며, 작성 이력과 `liked`, `likeCount`는 초기값입니다.",
+        "description": "게시글에 새 댓글을 작성합니다. 로그인된 사용자만 작성 가능하며, 작성 이력과 `liked`, `likeCount`는 초기값입니다. 작성자가 본인이 아니면 게시글 작성자에게 COMMUNITY_COMMENT 인앱 알림을 적재합니다.",
         "parameters": [
           {
             "name": "boardUUID",
@@ -545,7 +545,7 @@
           { "Authorization": [] }
         ],
         "summary": "대댓글 생성",
-        "description": "특정 댓글에 대댓글을 작성합니다. 로그인된 사용자만 작성 가능하며, 생성된 대댓글은 해당 부모 댓글의 `replies` 목록에 포함됩니다.",
+        "description": "특정 댓글에 대댓글을 작성합니다. 로그인된 사용자만 작성 가능하며, 생성된 대댓글은 해당 부모 댓글의 `replies` 목록에 포함됩니다. 작성자가 본인이 아니면 게시글 작성자에게 COMMUNITY_COMMENT 인앱 알림을 적재합니다.",
         "parameters": [
           {
             "name": "boardUUID",
@@ -637,7 +637,7 @@
           { "Authorization": [] }
         ],
         "summary": "게시글 좋아요 토글",
-        "description": "게시글에 좋아요를 추가하거나, 이미 좋아요가 되어 있으면 취소합니다.",
+        "description": "게시글에 좋아요를 추가하거나, 이미 좋아요가 되어 있으면 취소합니다. 좋아요 추가 시 게시글 작성자에게 COMMUNITY_LIKE 인앱 알림을 적재합니다. 본인이 자기 글을 좋아한 경우에는 알림을 만들지 않으며, 같은 게시글의 좋아요는 알림 1건으로 집계됩니다.",
         "parameters": [
           {
             "name": "boardUUID",

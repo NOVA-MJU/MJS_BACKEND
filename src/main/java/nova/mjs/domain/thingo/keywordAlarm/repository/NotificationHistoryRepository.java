@@ -13,9 +13,23 @@ import java.util.Optional;
 
 public interface NotificationHistoryRepository extends JpaRepository<NotificationHistory, Long> {
 
-    Page<NotificationHistory> findByMemberOrderBySentAtDesc(Member member, Pageable pageable);
+    /**
+     * 알림 화면 정렬 규칙: 미읽음 최신순 -> 읽음 최신순.
+     * 같은 시각에 생성된 경우에도 순서가 흔들리지 않도록 id를 마지막 정렬 키로 사용한다.
+     */
+    @Query("""
+        select n
+        from NotificationHistory n
+        where n.member = :member
+        order by n.read asc, n.sentAt desc, n.id desc
+    """)
+    Page<NotificationHistory> findInbox(@Param("member") Member member, Pageable pageable);
 
     Optional<NotificationHistory> findByIdAndMember(Long id, Member member);
+
+    Optional<NotificationHistory> findByMemberAndSearchIndexId(Member member, String searchIndexId);
+
+    long countByMemberAndReadFalse(Member member);
 
     /** 읽지 않은 알림 일괄 읽음 처리, 변경 건수 반환 */
     @Modifying(clearAutomatically = true)

@@ -3,6 +3,7 @@ package nova.mjs.domain.thingo.review.service.like;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.service.query.MemberQueryService;
+import nova.mjs.domain.thingo.keywordAlarm.service.ActivityNotificationService;
 import nova.mjs.domain.thingo.review.dto.ReviewDTO;
 import nova.mjs.domain.thingo.review.entity.Review;
 import nova.mjs.domain.thingo.review.entity.ReviewLike;
@@ -27,6 +28,7 @@ public class ReviewLikeService {
     private final ReviewRepository reviewRepository;
     private final ReviewLikeRepository reviewLikeRepository;
     private final MemberQueryService memberQueryService;
+    private final ActivityNotificationService activityNotificationService;
 
     /**
      * 좋아요 토글. 없으면 추가(+1), 있으면 취소(-1). 결과 상태와 최신 좋아요 수 반환.
@@ -52,6 +54,14 @@ public class ReviewLikeService {
         }
 
         int likeCount = reviewRepository.findLikeCount(reviewUuid);
+        if (liked) {
+            var latestActors = reviewLikeRepository.findTop2ByReviewOrderByIdDesc(review)
+                    .stream()
+                    .map(ReviewLike::getMember)
+                    .toList();
+            activityNotificationService.notifyReviewLike(
+                    review, member, latestActors, likeCount);
+        }
         return ReviewDTO.Response.LikeResult.builder()
                 .liked(liked)
                 .likeCount(likeCount)

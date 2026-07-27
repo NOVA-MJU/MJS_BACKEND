@@ -13,6 +13,7 @@ import nova.mjs.domain.thingo.community.comment.repository.CommentRepository;
 import nova.mjs.domain.thingo.community.entity.CommunityBoard;
 import nova.mjs.domain.thingo.community.exception.CommunityNotFoundException;
 import nova.mjs.domain.thingo.community.repository.CommunityBoardRepository;
+import nova.mjs.domain.thingo.keywordAlarm.service.ActivityNotificationService;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.exception.MemberNotFoundException;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
@@ -37,6 +38,7 @@ public class CommentService {
     private final BlockQueryService blockQueryService;
     private final ReportQueryService reportQueryService;
     private final ProfanityFilter profanityFilter;
+    private final ActivityNotificationService activityNotificationService;
 
     public List<CommentResponseDto.CommentSummaryDto> getCommentsByBoard(
             UUID boardUuid,
@@ -115,6 +117,8 @@ public class CommentService {
 
         communityBoardRepository.increaseCommentCount(boardUuid);
         syncCommentCountToSearch(boardUuid);
+        activityNotificationService.notifyCommunityComment(
+                board, member, saved.getUuid(), saved.getContent());
 
         log.debug(
                 "댓글 작성 성공. boardUuid={}, commentUuid={}, writer={}",
@@ -146,6 +150,8 @@ public class CommentService {
         UUID boardUuid = parent.getCommunityBoard().getUuid();
         communityBoardRepository.increaseCommentCount(boardUuid);
         syncCommentCountToSearch(boardUuid);
+        activityNotificationService.notifyCommunityComment(
+                parent.getCommunityBoard(), member, saved.getUuid(), saved.getContent());
 
         log.debug(
                 "대댓글 작성 성공. boardUuid={}, parentUuid={}, replyUuid={}, writer={}",

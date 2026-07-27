@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "MJU 명지도 리뷰 API",
-    "version": "v1.0.0",
+    "version": "v1.1.0",
     "description": "명지도 장소(PLACE) 리뷰 기능. 키워드 태그 + 본문 + 사진/영상 후기, 좋아요 토글, 영상 프리사인 업로드, 신고/차단/자동숨김 연동을 다룹니다.\n\n공통 응답 래퍼: { \"status\": \"API 요청 성공\", \"data\": <값>, \"timestamp\": \"...\" }\n오류 응답: { \"status\": <int>, \"error\": <코드>, \"message\": <메시지> }\n\n조회(목록/상세/미디어/키워드)는 비로그인 허용(로그인 시 isLiked/isMine 부가). 작성/삭제/좋아요/프리사인은 로그인 필요. 운영자 검토 API는 OPERATOR 권한 필요."
   },
   "servers": [
@@ -10,7 +10,7 @@
   ],
   "tags": [
     { "name": "Review", "description": "리뷰 작성/조회/삭제" },
-    { "name": "ReviewLike", "description": "리뷰 좋아요 토글(알림 없음)" },
+    { "name": "ReviewLike", "description": "리뷰 좋아요 토글 + 작성자 인앱 알림" },
     { "name": "ReviewMeta", "description": "미디어 스트립 / 키워드 카탈로그" },
     { "name": "ReviewUpload", "description": "영상 프리사인 직접 업로드" },
     { "name": "ReviewModeration", "description": "신고 자동 숨김 리뷰 운영자 검토(OPERATOR)" }
@@ -154,7 +154,7 @@
       "post": {
         "tags": ["ReviewLike"],
         "summary": "좋아요 토글",
-        "description": "좋아요가 없으면 추가(+1, liked=true), 있으면 취소(-1, liked=false). 알림은 발송하지 않습니다(정책: 알림은 학교 공식 정보 전용).",
+        "description": "좋아요가 없으면 추가(+1, liked=true), 있으면 취소(-1, liked=false). 좋아요 추가 시 리뷰 작성자에게 REVIEW_LIKE 인앱 알림을 적재합니다. 본인이 자기 리뷰를 좋아한 경우에는 알림을 만들지 않으며, 같은 리뷰의 좋아요는 알림 1건으로 집계됩니다. FCM 푸시는 별도입니다.",
         "security": [ { "bearerAuth": [] } ],
         "parameters": [ { "name": "reviewUuid", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
         "responses": {

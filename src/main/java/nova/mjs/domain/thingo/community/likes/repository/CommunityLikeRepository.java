@@ -21,6 +21,8 @@ public interface CommunityLikeRepository extends JpaRepository<CommunityLike, Lo
     // 회원과 게시글을 기준으로 좋아요 여부 확인
     Optional<CommunityLike> findByMemberAndCommunityBoard(Member member, CommunityBoard communityBoard);
 
+    List<CommunityLike> findTop2ByCommunityBoardOrderByIdDesc(CommunityBoard communityBoard);
+
     // 특정 게시글의 좋아요 개수 조회
     @Query("SELECT COUNT(likeCommunity) FROM CommunityLike likeCommunity WHERE likeCommunity.communityBoard.uuid = :boardUUID")
     int countByCommunityBoardUuid(@Param("boardUUID") UUID boardUUID);

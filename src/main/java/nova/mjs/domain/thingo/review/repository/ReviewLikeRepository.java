@@ -21,6 +21,8 @@ public interface ReviewLikeRepository extends JpaRepository<ReviewLike, Long> {
 
     Optional<ReviewLike> findByMemberAndReview(Member member, Review review);
 
+    List<ReviewLike> findTop2ByReviewOrderByIdDesc(Review review);
+
     boolean existsByMemberAndReview(Member member, Review review);
 
     /** 주어진 리뷰 uuid 집합 중 해당 회원이 좋아요한 uuid만 반환(목록 isLiked 계산용) */

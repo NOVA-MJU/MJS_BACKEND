@@ -138,34 +138,60 @@ DELETE /api/v1/device-tokens?fcmToken=<토큰>
 
 ## 8. 알림함 (받은 알림 목록)
 
+메인 화면의 알림 아이콘 빨간 점만 판단할 때는 목록 대신 아래 경량 API를 호출한다.
+
+```
+GET /api/v1/notifications/unread-status
+```
+
+응답 `data`:
+
+```json
+{
+  "unreadCount": 3,
+  "hasUnread": true
+}
+```
+
+`hasUnread=true`면 빨간 점을 표시하고, `false`면 숨긴다. 로그인 직후나 메인 화면
+진입 시 호출하며 알림 상세 화면에서는 아래 목록 API의 동일 필드를 사용한다.
+
 ```
 GET /api/v1/notifications?page=0&size=20
 ```
 
-`data` 는 Spring `Page`(`content`, `totalElements`, `totalPages` …). `content` 한 건:
+`data.content`는 **미읽음 최신순 → 읽음 최신순**으로 정렬된다.
+`data.unreadCount`는 페이지와 무관한 전체 미읽음 수이고, `data.hasUnread`로
+화면의 `모두 읽음` 버튼 활성화 여부를 바로 판단할 수 있다.
 
 | 필드 | 타입 | 설명 |
 | --- | --- | --- |
 | `id` | number | 알림 id |
-| `matchedKeyword` | string | 걸린 키워드(학식은 `"학식"`) |
-| `type` | string | `NOTICE` / `MJU_CALENDAR` / `COMMUNITY` / `WEEKLY_MENU` |
+| `matchedKeyword` | string | 기존 클라이언트 호환용 걸린 키워드 |
+| `keyword` | string\|null | 키워드 알림에만 노출(학식 방송형은 `null`) |
+| `type` | string | 키워드/학식: `NOTICE` / `MJU_CALENDAR` / `COMMUNITY` / `WEEKLY_MENU`, 활동: `COMMUNITY_LIKE` / `COMMUNITY_COMMENT` / `REVIEW_LIKE` |
+| `categoryCode` | string | `NOTICE` / `MJU_CALENDAR` / `COMMUNITY` / `CAFETERIA` |
+| `category` | string | 화면 표시용 `공지사항` / `학사일정` / `게시판` / `학식` |
 | `title` | string | 글 제목(학식은 안내 문구) |
 | `link` | string\|null | 원문 링크 |
 | `read` | boolean | 읽음 여부 |
-| `sentAt` | date-time | 발송 시각 |
+| `sentAt` | date-time | 기존 클라이언트 호환용 ISO-8601 발송 시각 |
+| `timestamp` | number | Unix epoch milliseconds. 상대/절대 표기는 프론트에서 계산 |
 
 ## 9. 알림 읽음 처리
 
 ```
-PATCH /api/v1/notifications/{id}/read     # 단건
-PATCH /api/v1/notifications/read-all       # 전체 (data = 읽음 처리된 개수)
+PATCH /api/v1/notifications/{id}/read     # 단건 (갱신된 read=true 알림 반환)
+PATCH /api/v1/notifications/read-all      # 전체 (updatedCount, unreadCount=0, hasUnread=false)
 ```
 
 ---
 
 ## 동작 메모 (헷갈리기 쉬운 부분)
 
-- **언제 푸시가 가나**: 콘텐츠가 **처음 올라올 때만**(수정/좋아요로는 재알림 안 함).
+- **키워드 푸시 시점**: 콘텐츠가 **처음 올라올 때만** 발송한다(수정으로는 재알림 안 함).
+- **활동 인앱 알림**: 내 게시글 좋아요/댓글, 내 명지도 리뷰 좋아요가 알림함에 쌓인다. 본인 활동은 제외한다.
+- **좋아요 집계**: 같은 게시글/리뷰의 좋아요는 알림 1건을 최신 인원·개수로 갱신하고 다시 미읽음 처리한다.
 - **중복 방지**: 한 글이 한 사람의 키워드 여러 개에 걸려도 **알림은 1건**.
 - **학식**: 크롤링은 같은 주를 여러 번 돌리지만, **메뉴 내용이 실제 바뀐 경우에만** 1건 발송.
 - **푸시 안 와도 알림함은 쌓임**: 기기 토큰이 없거나 FCM 미설정이어도 `GET /notifications` 에는 기록된다.

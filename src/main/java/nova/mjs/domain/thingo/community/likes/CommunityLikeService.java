@@ -8,6 +8,7 @@ import nova.mjs.domain.thingo.community.exception.CommunityNotFoundException;
 import nova.mjs.domain.thingo.community.likes.entity.CommunityLike;
 import nova.mjs.domain.thingo.community.likes.repository.CommunityLikeRepository;
 import nova.mjs.domain.thingo.community.repository.CommunityBoardRepository;
+import nova.mjs.domain.thingo.keywordAlarm.service.ActivityNotificationService;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.exception.MemberNotFoundException;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
@@ -35,6 +36,7 @@ public class CommunityLikeService {
     private final MemberRepository memberRepository;
     private final CommunityBoardRepository communityBoardRepository;
     private final SearchIndexUpdateService searchIndexUpdateService;
+    private final ActivityNotificationService activityNotificationService;
 
     @Transactional
     public boolean toggleLike(UUID boardUuid, String email) {
@@ -68,6 +70,16 @@ public class CommunityLikeService {
         // 3) 최신 likeCount 조회 후 ES 반영 (동기화용 쿼리는 유지하는 편이 안전)
         int newLikeCount = communityBoardRepository.findLikeCount(boardUuid);
         searchIndexUpdateService.updateCommunityCounts(boardUuid, newLikeCount, null);
+
+        if (liked) {
+            var latestActors = communityLikeRepository
+                    .findTop2ByCommunityBoardOrderByIdDesc(board)
+                    .stream()
+                    .map(CommunityLike::getMember)
+                    .toList();
+            activityNotificationService.notifyCommunityLike(
+                    board, member, latestActors, newLikeCount);
+        }
 
         log.debug("좋아요 토글 완료. boardUuid={}, memberEmail={}, liked={}, likeCount={}",
                 boardUuid, email, liked, newLikeCount);
