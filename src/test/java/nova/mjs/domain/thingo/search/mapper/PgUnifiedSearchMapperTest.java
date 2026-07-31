@@ -2,6 +2,8 @@ package nova.mjs.domain.thingo.search.mapper;
 
 import nova.mjs.domain.thingo.ElasticSearch.Document.SearchDocument;
 import nova.mjs.domain.thingo.search.indexing.DeadlineExtractor;
+import nova.mjs.domain.thingo.semantic.NoticeSemanticClassifier;
+import nova.mjs.domain.thingo.semantic.TopicCatalog;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -13,7 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PgUnifiedSearchMapperTest {
 
-    private final PgUnifiedSearchMapper mapper = new PgUnifiedSearchMapper(new DeadlineExtractor());
+    private final PgUnifiedSearchMapper mapper = new PgUnifiedSearchMapper(
+            new DeadlineExtractor(), new NoticeSemanticClassifier(new TopicCatalog()));
 
     @Test
     void buildId_returns_type_colon_originalId() {

@@ -5,6 +5,7 @@ import nova.mjs.config.elasticsearch.KomoranTokenizerUtil;
 import nova.mjs.domain.thingo.ElasticSearch.Document.SearchDocument;
 import nova.mjs.domain.thingo.search.entity.UnifiedSearchIndex;
 import nova.mjs.domain.thingo.search.indexing.DeadlineExtractor;
+import nova.mjs.domain.thingo.semantic.NoticeSemanticClassifier;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -35,6 +36,7 @@ public class PgUnifiedSearchMapper {
     private static final String CALENDAR_ROUTING_MARKER = " 학사일정 학사일정표 학교일정";
 
     private final DeadlineExtractor deadlineExtractor;
+    private final NoticeSemanticClassifier semanticClassifier;
 
     public String buildId(SearchDocument doc) {
         return buildId(doc.getType(), doc.getId());
@@ -62,7 +64,7 @@ public class PgUnifiedSearchMapper {
         double popularity = computePopularity(doc.getLikeCount(), doc.getCommentCount(), doc.getInstant());
         Instant validUntil = resolveValidUntil(doc, content);
 
-        return UnifiedSearchIndex.of(
+        UnifiedSearchIndex index = UnifiedSearchIndex.of(
                 buildId(doc),
                 doc.getId(),
                 doc.getType(),
@@ -80,6 +82,8 @@ public class PgUnifiedSearchMapper {
                 tokens,
                 titleTokens
         );
+        index.applySemanticMetadata(semanticClassifier.classify(title, content, validUntil));
+        return index;
     }
 
     /**

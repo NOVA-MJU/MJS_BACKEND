@@ -8,8 +8,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import nova.mjs.domain.thingo.semantic.NoticeSemanticMetadata;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -90,6 +94,34 @@ public class UnifiedSearchIndex {
      */
     @Column(name = "title_tokens", columnDefinition = "TEXT")
     private String titleTokens;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "topic_ids", columnDefinition = "jsonb")
+    private List<String> topicIds = List.of();
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "direct_topic_ids", columnDefinition = "jsonb")
+    private List<String> directTopicIds = List.of();
+
+    @Column(name = "event_type", length = 32)
+    private String eventType;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "audiences", columnDefinition = "jsonb")
+    private List<String> audiences = List.of();
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "campuses", columnDefinition = "jsonb")
+    private List<String> campuses = List.of();
+
+    @Column(name = "classification_version")
+    private Integer classificationVersion;
+
+    @Column(name = "classification_source", length = 16)
+    private String classificationSource;
+
+    @Column(name = "classification_confidence")
+    private Double classificationConfidence;
 
     /**
      * DB 트리거가 자동 갱신.
@@ -201,6 +233,25 @@ public class UnifiedSearchIndex {
         this.indexedAt = Instant.now();
         this.searchTokens = source.searchTokens;
         this.titleTokens = source.titleTokens;
+        this.topicIds = source.topicIds;
+        this.directTopicIds = source.directTopicIds;
+        this.eventType = source.eventType;
+        this.audiences = source.audiences;
+        this.campuses = source.campuses;
+        this.classificationVersion = source.classificationVersion;
+        this.classificationSource = source.classificationSource;
+        this.classificationConfidence = source.classificationConfidence;
+    }
+
+    public void applySemanticMetadata(NoticeSemanticMetadata metadata) {
+        this.directTopicIds = metadata.directTopicIds().stream().sorted().toList();
+        this.topicIds = metadata.expandedTopicIds().stream().sorted().toList();
+        this.eventType = metadata.eventType().name();
+        this.audiences = metadata.audiences().stream().map(Enum::name).sorted().toList();
+        this.campuses = metadata.campuses().stream().map(Enum::name).sorted().toList();
+        this.classificationVersion = metadata.classificationVersion();
+        this.classificationSource = metadata.classificationSource().name();
+        this.classificationConfidence = metadata.classificationConfidence();
     }
 
     public void deactivate() {
@@ -244,6 +295,14 @@ public class UnifiedSearchIndex {
                 || !Objects.equals(this.popularity, other.popularity)
                 || !Objects.equals(this.searchTokens, other.searchTokens)
                 || !Objects.equals(this.titleTokens, other.titleTokens)
+                || !Objects.equals(this.topicIds, other.topicIds)
+                || !Objects.equals(this.directTopicIds, other.directTopicIds)
+                || !Objects.equals(this.eventType, other.eventType)
+                || !Objects.equals(this.audiences, other.audiences)
+                || !Objects.equals(this.campuses, other.campuses)
+                || !Objects.equals(this.classificationVersion, other.classificationVersion)
+                || !Objects.equals(this.classificationSource, other.classificationSource)
+                || !Objects.equals(this.classificationConfidence, other.classificationConfidence)
                 || !Objects.equals(this.active, other.active);
     }
 }

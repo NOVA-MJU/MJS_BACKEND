@@ -1,0 +1,87 @@
+package nova.mjs.domain.thingo.search.query;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import nova.mjs.domain.thingo.semantic.TopicCatalog;
+import nova.mjs.domain.thingo.semantic.NoticeEventType;
+import nova.mjs.domain.thingo.semantic.SearchIntent;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class SearchQueryInterpreterTest {
+
+    private SearchQueryInterpreter interpreter;
+
+    @BeforeEach
+    void setUp() {
+        interpreter = new SearchQueryInterpreter(new TopicCatalog());
+    }
+
+    @Test
+    @DisplayName("약어는 표준 개념을 후보 필수 조건으로 만든다")
+    void abbreviation_becomes_required_concept() {
+        SearchQueryPlan plan = interpreter.interpret("국취 신청 언제까지야");
+
+        assertThat(plan.topicIds()).containsExactly("NATIONAL_EMPLOYMENT_SUPPORT");
+        assertThat(plan.matchTsQuery()).contains("국민취업지원제도", "국민취업지원", "국취");
+        assertThat(plan.matchTsQuery()).doesNotContain("신청");
+        assertThat(plan.rankTsQuery()).contains("신청");
+        assertThat(plan.rankTsQuery()).doesNotContain("언제까지야");
+        assertThat(plan.coverageTsQuery()).contains("& (신청)");
+        assertThat(plan.eventType()).isEqualTo(NoticeEventType.APPLICATION);
+        assertThat(plan.searchIntent()).isEqualTo(SearchIntent.APPLICATION_PERIOD);
+    }
+
+    @Test
+    @DisplayName("중간점 표현은 휴학·복학 대안 개념으로 해석한다")
+    void middle_dot_expression_becomes_alternatives() {
+        List<String> variants = List.of("휴·복학", "휴ㆍ복학", "휴・복학", "휴/복학", "휴학 복학");
+
+        for (String variant : variants) {
+            SearchQueryPlan plan = interpreter.interpret(variant + " 신청");
+            assertThat(plan.topicIds()).contains("LEAVE_RETURN");
+            assertThat(plan.matchTsQuery()).contains("휴학", "복학", "|");
+            assertThat(plan.coverageTsQuery()).contains("신청");
+        }
+    }
+
+    @Test
+    @DisplayName("괄호 축약 표현은 신입학·편입학 대안 개념으로 해석한다")
+    void parenthesized_expression_becomes_alternatives() {
+        SearchQueryPlan plan = interpreter.interpret("신(편)입 장학금");
+
+        assertThat(plan.topicIds()).containsExactly("NEW_TRANSFER_ADMISSION");
+        assertThat(plan.matchTsQuery()).contains("신입학", "편입학", "신편입");
+        assertThat(plan.matchTsQuery()).doesNotContain("(신입 |", " | 편입 |");
+        assertThat(plan.rankTsQuery()).contains("장학금");
+        assertThat(plan.coverageTsQuery()).contains("& (장학금)");
+    }
+
+    @Test
+    @DisplayName("등록되지 않은 일반 검색어는 기존 Komoran OR/AND 계획을 유지한다")
+    void ordinary_query_keeps_existing_behavior() {
+        SearchQueryPlan plan = interpreter.interpret("도서관 좌석");
+
+        assertThat(plan.hasTopic()).isFalse();
+        assertThat(plan.matchTsQuery()).contains("도서관", "좌석", "|");
+        assertThat(plan.rankTsQuery()).isEqualTo(plan.matchTsQuery());
+        assertThat(plan.coverageTsQuery()).contains("도서관", "좌석", "&");
+    }
+
+    @Test
+    @DisplayName("취업지원 약어들을 각각의 표준 개념으로 해석한다")
+    void employment_abbreviations_resolve() {
+        assertConcept("졸특", "GRADUATE_CAREER");
+        assertConcept("대플 상담", "UNIVERSITY_JOB_PLUS_CENTER");
+        assertConcept("재맞고 신청", "STUDENT_CUSTOM_EMPLOYMENT_SERVICE");
+        assertConcept("취준 프로그램", "JOB_PREPARATION");
+    }
+
+    private void assertConcept(String query, String expectedConceptId) {
+        assertThat(interpreter.interpret(query).topicIds()).contains(expectedConceptId);
+    }
+}

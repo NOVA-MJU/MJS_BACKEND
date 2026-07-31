@@ -20,6 +20,14 @@ CREATE TABLE IF NOT EXISTS unified_search_index (
     indexed_at      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     search_tokens   TEXT,
     title_tokens    TEXT,
+    topic_ids       JSONB                    NOT NULL DEFAULT '[]'::jsonb,
+    direct_topic_ids JSONB                   NOT NULL DEFAULT '[]'::jsonb,
+    event_type      VARCHAR(32),
+    audiences       JSONB                    NOT NULL DEFAULT '[]'::jsonb,
+    campuses        JSONB                    NOT NULL DEFAULT '[]'::jsonb,
+    classification_version INTEGER,
+    classification_source VARCHAR(16),
+    classification_confidence DOUBLE PRECISION,
     search_vector   TSVECTOR,
     title_vector    TSVECTOR
 );

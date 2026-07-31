@@ -19,6 +19,28 @@ ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS title_vector TSVECTOR;
 -- 제목 Komoran 분해 토큰 컬럼(애플리케이션이 채움, 트리거가 title_vector 생성에 사용).
 ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS title_tokens TEXT;
 
+-- 공지 의미 분류 메타데이터. 기존 검색 API 응답과 무관한 내부 인덱스 필드다.
+ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS topic_ids JSONB;
+ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS direct_topic_ids JSONB;
+ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS event_type VARCHAR(32);
+ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS audiences JSONB;
+ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS campuses JSONB;
+ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS classification_version INTEGER;
+ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS classification_source VARCHAR(16);
+ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS classification_confidence DOUBLE PRECISION;
+
+ALTER TABLE unified_search_index ALTER COLUMN topic_ids SET DEFAULT '[]'::jsonb;
+ALTER TABLE unified_search_index ALTER COLUMN direct_topic_ids SET DEFAULT '[]'::jsonb;
+ALTER TABLE unified_search_index ALTER COLUMN audiences SET DEFAULT '[]'::jsonb;
+ALTER TABLE unified_search_index ALTER COLUMN campuses SET DEFAULT '[]'::jsonb;
+UPDATE unified_search_index SET topic_ids = '[]'::jsonb WHERE topic_ids IS NULL;
+UPDATE unified_search_index SET direct_topic_ids = '[]'::jsonb WHERE direct_topic_ids IS NULL;
+UPDATE unified_search_index SET audiences = '[]'::jsonb WHERE audiences IS NULL;
+UPDATE unified_search_index SET campuses = '[]'::jsonb WHERE campuses IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_usi_topic_ids
+    ON unified_search_index USING GIN (topic_ids);
+
 CREATE INDEX IF NOT EXISTS idx_usi_search_vector
     ON unified_search_index USING GIN (search_vector);
 

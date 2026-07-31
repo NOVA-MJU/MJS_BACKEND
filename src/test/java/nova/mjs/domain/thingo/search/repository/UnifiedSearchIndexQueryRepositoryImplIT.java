@@ -33,6 +33,9 @@ import nova.mjs.domain.thingo.ElasticSearch.indexing.publisher.SearchIndexPublis
 import nova.mjs.domain.thingo.search.indexing.PgUnifiedSearchIndexListener;
 import nova.mjs.domain.thingo.search.indexing.DeadlineExtractor;
 import nova.mjs.domain.thingo.search.mapper.PgUnifiedSearchMapper;
+import nova.mjs.domain.thingo.search.query.SearchQueryInterpreter;
+import nova.mjs.domain.thingo.semantic.TopicCatalog;
+import nova.mjs.domain.thingo.semantic.NoticeSemanticClassifier;
 import nova.mjs.config.elasticsearch.KomoranTokenizerUtil;
 
 import java.time.Instant;
@@ -61,7 +64,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestPropertySource(properties = "spring.main.allow-bean-definition-overriding=true")
 @Import({UnifiedSearchIndexQueryRepositoryImpl.class, PgUnifiedSearchIndexListener.class,
-        PgUnifiedSearchMapper.class, DeadlineExtractor.class})
+        PgUnifiedSearchMapper.class, DeadlineExtractor.class,
+        TopicCatalog.class, NoticeSemanticClassifier.class, SearchQueryInterpreter.class})
 class UnifiedSearchIndexQueryRepositoryImplIT {
 
     @Container
@@ -267,6 +271,47 @@ class UnifiedSearchIndexQueryRepositoryImplIT {
         assertThat(page.getTotalElements()).isEqualTo(2);
         assertThat(page.getContent().get(0).type()).isEqualTo("NOTICE");
         assertThat(page.getContent().get(1).type()).isEqualTo("NEWS");
+    }
+
+    @Test
+    @DisplayName("국취 약어는 일반 신청 공지를 제외하고 국민취업지원제도 공지를 찾는다")
+    void abbreviation_requires_resolved_concept() {
+        Instant now = Instant.now();
+        repository.save(build("NOTICE", "general", "최신 프로그램 신청 안내", "누구나 신청할 수 있습니다",
+                "최신 프로그램 신청 안내", now, now.plus(10, ChronoUnit.DAYS)));
+        repository.save(build("NOTICE", "career", "국민취업지원제도 신청 안내", "국민취업지원 신청 기간",
+                "국민취업지원제도 국민취업지원 신청", now.minus(10, ChronoUnit.DAYS),
+                now.plus(5, ChronoUnit.DAYS)));
+        repository.flush();
+
+        Page<SearchResultRow> page = repository.search(
+                "국취 신청 언제까지야", null, null, "relevance", null, 0.0d, PageRequest.of(0, 10));
+
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getContent().get(0).title()).contains("국민취업지원제도");
+    }
+
+    @Test
+    @DisplayName("중간점과 괄호 축약은 표준 학사 개념으로 검색된다")
+    void special_expressions_match_academic_concepts() {
+        Instant now = Instant.now();
+        repository.save(build("NOTICE", "academic", "휴학 및 복학 신청 안내", "휴학 복학 신청 기간",
+                "휴학 복학 신청", now, null));
+        repository.save(build("NOTICE", "academic", "신입학 및 편입학 안내", "신입 편입 모집",
+                "신입학 편입학 신입 편입", now, null));
+        repository.save(build("NOTICE", "general", "일반 행사 신청", "일반 신청",
+                "일반 행사 신청", now, null));
+        repository.flush();
+
+        Page<SearchResultRow> leaveReturn = repository.search(
+                "휴·복학 신청", null, null, "relevance", null, 0.0d, PageRequest.of(0, 10));
+        Page<SearchResultRow> admission = repository.search(
+                "신(편)입", null, null, "relevance", null, 0.0d, PageRequest.of(0, 10));
+
+        assertThat(leaveReturn.getContent()).extracting(SearchResultRow::title)
+                .containsExactly("휴학 및 복학 신청 안내");
+        assertThat(admission.getContent()).extracting(SearchResultRow::title)
+                .containsExactly("신입학 및 편입학 안내");
     }
 
     @Test

@@ -3,8 +3,9 @@ package nova.mjs.domain.thingo.search.repository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
-import nova.mjs.config.elasticsearch.KomoranTokenizerUtil;
 import nova.mjs.domain.thingo.search.dto.SearchResultRow;
+import nova.mjs.domain.thingo.search.query.SearchQueryInterpreter;
+import nova.mjs.domain.thingo.search.query.SearchQueryPlan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -107,6 +108,12 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
     @PersistenceContext
     private EntityManager em;
 
+    private final SearchQueryInterpreter queryInterpreter;
+
+    public UnifiedSearchIndexQueryRepositoryImpl(SearchQueryInterpreter queryInterpreter) {
+        this.queryInterpreter = queryInterpreter;
+    }
+
     @Override
     public Page<SearchResultRow> search(String keyword,
                                         String type,
@@ -120,18 +127,21 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         boolean hasHot = hotPattern != null && !hotPattern.isBlank() && hotBoost > 0d;
         String resolvedOrder = resolveOrder(order, hasKeyword);
 
-        // 검색어를 색인과 동일한 Komoran 기준으로 토큰화해 OR(`|`) tsquery 로 만든다.
-        // 복합어 분해 + 다어절 OR 매칭으로 recall 확보, 정밀도는 ts_rank + 제목 부스트로 보정.
-        String tsQuery = hasKeyword ? KomoranTokenizerUtil.buildTsQuery(keyword) : "";
-        boolean hasTsQuery = !tsQuery.isBlank();
-
-        // 모든 토큰을 포함하는 문서에 가산점을 주기 위한 AND 쿼리(coverage boost).
-        String tsQueryAnd = hasKeyword ? KomoranTokenizerUtil.buildTsQueryAnd(keyword) : "";
-        boolean hasTsQueryAnd = !tsQueryAnd.isBlank();
+        // 원문을 바로 OR 검색하지 않고 후보(match)·랭킹(rank)·커버리지(coverage) 계획으로 분리한다.
+        // 등록된 약어/특수 표현은 표준 개념이 후보의 필수 조건이 되고, 일반 검색은 기존 Komoran OR 전략을 유지한다.
+        SearchQueryPlan queryPlan = hasKeyword
+                ? queryInterpreter.interpret(keyword)
+                : new SearchQueryPlan("", "", "", "", List.of());
+        String matchTsQuery = queryPlan.matchTsQuery();
+        String rankTsQuery = queryPlan.rankTsQuery();
+        String coverageTsQuery = queryPlan.coverageTsQuery();
+        boolean hasMatchTsQuery = !matchTsQuery.isBlank();
+        boolean hasRankTsQuery = !rankTsQuery.isBlank();
+        boolean hasCoverageTsQuery = !coverageTsQuery.isBlank();
 
         // 키워드가 있으나 의미 토큰이 전혀 없으면(자모/기호 노이즈) 매칭 대상이 없다.
         // DB 조회 없이 빈 결과를 즉시 반환한다(노이즈 입력이 느린 trigram 스캔을 타지 않도록).
-        if (hasKeyword && !hasTsQuery) {
+        if (hasKeyword && !hasMatchTsQuery) {
             return new PageImpl<>(java.util.List.of(), pageable, 0L);
         }
 
@@ -143,8 +153,8 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
             where.append(" AND category = :category ");
         }
         if (hasKeyword) {
-            // 토큰화된 검색어로 tsvector FTS 매칭 (idx_usi_search_vector GIN, seq scan 없음).
-            where.append(" AND search_vector @@ to_tsquery('simple', :tsQuery) ");
+            // 핵심 개념이 인식되면 해당 개념 그룹이 필수 후보 조건이 된다.
+            where.append(" AND search_vector @@ to_tsquery('simple', :matchTsQuery) ");
         }
 
         String hotBoostExpr = hasHot
@@ -164,13 +174,13 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         // 랭킹에서는 제거한다.
         // 제목이 모든 토큰을 포함하면 강한 가산점(본문에만 co-occur 하는 문서보다 우선).
         // 제목 매칭은 미리 저장된 title_vector 를 사용한다(행마다 to_tsvector(title) 재파싱 제거).
-        String coverageBoost = hasTsQueryAnd
-                ? " + CASE WHEN title_vector @@ to_tsquery('simple', :tsQueryAnd) "
+        String coverageBoost = hasCoverageTsQuery
+                ? " + CASE WHEN title_vector @@ to_tsquery('simple', :coverageTsQuery) "
                 + "        THEN 0.4 ELSE 0 END "
                 : " ";
-        String ftsScore = hasTsQuery
-                ? " ts_rank(search_vector, to_tsquery('simple', :tsQuery)) * 0.6 "
-                + " + CASE WHEN title_vector @@ to_tsquery('simple', :tsQuery) "
+        String ftsScore = hasRankTsQuery
+                ? " ts_rank(search_vector, to_tsquery('simple', :rankTsQuery)) * 0.6 "
+                + " + CASE WHEN title_vector @@ to_tsquery('simple', :matchTsQuery) "
                 + "        THEN 0.25 ELSE 0 END "
                 + coverageBoost
                 : " 0.0 ";
@@ -190,8 +200,8 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         // 제목은 항상 전체를 반환한다(HighlightAll=TRUE). 키워드가 제목에 없으면(본문/토큰 매칭)
         // MaxFragments 방식은 제목을 짧은 앞부분 조각으로 잘라버린다("[교외근로" 처럼).
         // 제목은 짧으므로 전체를 보여주고 매칭 구간만 <em> 표시한다.
-        String headlineTitle = hasTsQuery
-                ? " ts_headline('simple', coalesce(title,''), to_tsquery('simple', :tsQuery), "
+        String headlineTitle = hasRankTsQuery
+                ? " ts_headline('simple', coalesce(title,''), to_tsquery('simple', :rankTsQuery), "
                 + " 'StartSel=<em>,StopSel=</em>,HighlightAll=TRUE') "
                 : " title ";
 
@@ -200,8 +210,8 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         // - MinWords=12: 너무 짧은 조각(한두 단어) 방지 → 문장처럼 읽힘.
         // - MaxWords=28: 조각당 상한(카드에서 과도하게 길어지지 않게, 최종 줄수는 프론트가 clamp).
         // - 키워드가 본문에 없으면(제목/토큰 매칭) 앞부분을 리드 문구로 반환.
-        String headlineContent = hasTsQuery
-                ? " ts_headline('simple', coalesce(content,''), to_tsquery('simple', :tsQuery), "
+        String headlineContent = hasRankTsQuery
+                ? " ts_headline('simple', coalesce(content,''), to_tsquery('simple', :rankTsQuery), "
                 + " 'StartSel=<em>,StopSel=</em>,MaxFragments=2,MinWords=12,MaxWords=28,FragmentDelimiter= ... ') "
                 : " content ";
 
@@ -228,12 +238,15 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         Query selectQuery = em.createNativeQuery(selectSql);
         Query countQuery = em.createNativeQuery(countSql);
 
-        bindParams(selectQuery, tsQuery, hasTsQuery, type, category);
-        bindParams(countQuery, tsQuery, hasTsQuery, type, category);
+        bindMatchParams(selectQuery, matchTsQuery, hasMatchTsQuery, type, category);
+        bindMatchParams(countQuery, matchTsQuery, hasMatchTsQuery, type, category);
 
-        // :tsQueryAnd 는 SELECT 점수식에만 존재한다(WHERE/count 에는 없음) -> selectQuery 에만 바인딩.
-        if (hasTsQueryAnd) {
-            selectQuery.setParameter("tsQueryAnd", tsQueryAnd);
+        // 랭킹/커버리지 쿼리는 SELECT 점수식과 headline 에만 존재한다.
+        if (hasRankTsQuery) {
+            selectQuery.setParameter("rankTsQuery", rankTsQuery);
+        }
+        if (hasCoverageTsQuery) {
+            selectQuery.setParameter("coverageTsQuery", coverageTsQuery);
         }
 
         if (hasHot) {
@@ -285,15 +298,19 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
                 .toList();
     }
 
-    private void bindParams(Query q, String tsQuery, boolean hasTsQuery, String type, String category) {
+    private void bindMatchParams(Query q,
+                                 String matchTsQuery,
+                                 boolean hasMatchTsQuery,
+                                 String type,
+                                 String category) {
         if (type != null && !type.isBlank()) {
             q.setParameter("type", type);
         }
         if (category != null && !category.isBlank()) {
             q.setParameter("category", category);
         }
-        if (hasTsQuery) {
-            q.setParameter("tsQuery", tsQuery);
+        if (hasMatchTsQuery) {
+            q.setParameter("matchTsQuery", matchTsQuery);
         }
     }
 
