@@ -16,6 +16,7 @@ import nova.mjs.domain.thingo.map.service.PinFavoriteService;
 import nova.mjs.domain.thingo.ElasticSearch.indexing.publisher.SearchIndexPublisher;
 import nova.mjs.domain.thingo.map.support.CampusArea;
 import nova.mjs.domain.thingo.map.support.DistanceCalculator;
+import nova.mjs.domain.thingo.map.support.MapRecommendationRanker;
 import nova.mjs.domain.thingo.map.support.OperatingStatusResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -73,6 +74,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         MapPinService.class,
         PinFavoriteService.class,
         DistanceCalculator.class,
+        MapRecommendationRanker.class,
         OperatingStatusResolver.class,
         CampusArea.class,
         // 검색 기능의 JPA 엔티티 리스너(StudentCouncilNoticeEntityListener 등)가 이 빈을 요구한다.

@@ -13,12 +13,14 @@ import nova.mjs.domain.thingo.map.repository.PinFavoriteRepository;
 import nova.mjs.domain.thingo.map.repository.PinRepository;
 import nova.mjs.domain.thingo.map.support.CampusArea;
 import nova.mjs.domain.thingo.map.support.DistanceCalculator;
+import nova.mjs.domain.thingo.map.support.MapRecommendationRanker;
 import nova.mjs.domain.thingo.map.support.OperatingStatusResolver;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -47,6 +49,7 @@ public class MapPinService {
     private final PinFavoriteRepository pinFavoriteRepository;
     private final MemberRepository memberRepository;
     private final DistanceCalculator distanceCalculator;
+    private final MapRecommendationRanker mapRecommendationRanker;
     private final OperatingStatusResolver operatingStatusResolver;
 
     /**
@@ -77,6 +80,11 @@ public class MapPinService {
      */
     public List<PinSummaryResponse> getPinsByCategory(String categoryCode, Double userLat, Double userLng,
                                                       int page, int size, String email) {
+        return getPinsByCategory(categoryCode, userLat, userLng, page, size, email, null);
+    }
+
+    public List<PinSummaryResponse> getPinsByCategory(String categoryCode, Double userLat, Double userLng,
+                                                      int page, int size, String email, String recommendationSeed) {
         Category category = categoryRepository.findByCode(categoryCode)
                 .orElseThrow(CategoryNotFoundException::new);
 
@@ -96,9 +104,25 @@ public class MapPinService {
         Set<Long> favoriteIds = favoritePinIds(resolveMember(email));
         LocalDateTime now = LocalDateTime.now(KST);
 
+        if (isDaedongCategory(categoryCode)) {
+            String viewerSeed = recommendationSeed != null && !recommendationSeed.isBlank()
+                    ? recommendationSeed
+                    : email != null ? email : "anonymous";
+            List<Pin> recommended = mapRecommendationRanker.rank(
+                    pins, categoryCode, viewerSeed, LocalDate.now(KST));
+            List<PinSummaryResponse> summaries = recommended.stream()
+                    .map(pin -> toSummary(pin, favoriteIds, userLat, userLng, now))
+                    .toList();
+            return paginate(summaries, page, size);
+        }
+
         // 즐겨찾기 먼저 → 가까운 순으로 정렬한 뒤 페이지로 자른다
         List<PinSummaryResponse> sorted = toSortedSummaries(pins, favoriteIds, userLat, userLng, now);
         return paginate(sorted, page, size);
+    }
+
+    private boolean isDaedongCategory(String categoryCode) {
+        return "daedong".equals(categoryCode) || categoryCode.startsWith("daedong-");
     }
 
     /**

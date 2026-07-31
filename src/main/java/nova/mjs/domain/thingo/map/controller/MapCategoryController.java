@@ -42,6 +42,7 @@ public class MapCategoryController {
      * @param lng  사용자 현재 경도
      * @param page 0부터 시작하는 페이지 번호
      * @param size 페이지 크기
+     * @param seed 대동명지도 추천 순서를 세션 동안 고정할 선택 seed
      */
     @GetMapping("/categories/{code}/pins")
     public ApiResponse<List<PinSummaryResponse>> getPinsByCategory(
@@ -50,10 +51,11 @@ public class MapCategoryController {
             @RequestParam(value = "lng", required = false) Double lng,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "seed", required = false) String seed,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
         log.info("[명지도 칩 목록] code={}, lat={}, lng={}, page={}, email={}", code, lat, lng, page, email);
-        return ApiResponse.success(mapPinService.getPinsByCategory(code, lat, lng, page, size, email));
+        return ApiResponse.success(mapPinService.getPinsByCategory(code, lat, lng, page, size, email, seed));
     }
 }
