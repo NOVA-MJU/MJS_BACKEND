@@ -81,6 +81,15 @@ class SearchQueryInterpreterTest {
         assertConcept("취준 프로그램", "JOB_PREPARATION");
     }
 
+    @Test
+    @DisplayName("졸업 검색은 학위수여식과 졸업식을 후보에 포함한다")
+    void graduationSearchIncludesDegreeCeremonyTerms() {
+        SearchQueryPlan plan = interpreter.interpret("졸업");
+
+        assertThat(plan.topicIds()).containsExactly("GRADUATION");
+        assertThat(plan.matchTsQuery()).contains("졸업", "학위수여식", "졸업식");
+    }
+
     private void assertConcept(String query, String expectedConceptId) {
         assertThat(interpreter.interpret(query).topicIds()).contains(expectedConceptId);
     }

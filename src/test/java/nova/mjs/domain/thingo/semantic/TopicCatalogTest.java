@@ -61,6 +61,14 @@ class TopicCatalogTest {
                 .containsExactly("GRADUATION_DEFERRAL");
     }
 
+    @Test
+    @DisplayName("졸업 자동완성에 학위수여식 Topic을 포함한다")
+    void graduationAutocompleteIncludesDegreeCeremony() {
+        assertThat(catalog.autocomplete("졸업", 20, false))
+                .extracting(TopicDefinition::topicId)
+                .contains("GRADUATION", "DEGREE_CEREMONY");
+    }
+
     private void assertSameTopic(String left, String right, String topicId) {
         assertThat(topicIds(left)).containsExactly(topicId);
         assertThat(topicIds(right)).containsExactly(topicId);

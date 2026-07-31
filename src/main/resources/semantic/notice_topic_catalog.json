@@ -9,7 +9,7 @@
       "searchable": true,
       "subscribable": true,
       "enabled": true,
-      "searchTerms": ["졸업"]
+      "searchTerms": ["졸업", "학위수여식", "졸업식"]
     },
     {
       "topicId": "GRADUATION_REQUIREMENTS",
@@ -331,6 +331,7 @@
     {"topicId": "GRADUATION_DEFERRAL", "alias": "학사학위취득유예", "priority": 100},
     {"topicId": "EARLY_GRADUATION", "alias": "조기졸업", "priority": 100},
     {"topicId": "DEGREE_CEREMONY", "alias": "학위수여식", "priority": 100},
+    {"topicId": "DEGREE_CEREMONY", "alias": "졸업식", "priority": 100},
     {"topicId": "GRADUATE_CAREER", "alias": "졸특", "priority": 120},
     {"topicId": "GRADUATE_CAREER", "alias": "졸업생 특화", "priority": 100},
     {"topicId": "GRADUATE_CAREER", "alias": "졸업생 취업지원", "priority": 100},
