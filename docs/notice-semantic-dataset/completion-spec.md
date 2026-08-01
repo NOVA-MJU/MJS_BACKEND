@@ -24,6 +24,15 @@ Catalog: v3 / Topic 34개 / 별칭 122개
 GET /api/v1/alarm-topics/autocomplete?query=졸업&limit=8
 ```
 
+Topic 추천 칩:
+
+```http
+GET /api/v1/alarm-topics/recommended
+```
+
+추천 응답은 짧은 화면 표시어와 실제 저장할 `topicId`를 함께 반환한다. 예를 들어 `해외`는
+`GLOBAL_PROGRAM`, `졸업`은 `GRADUATION`으로 연결되어 한 단어 추천도 전체 하위 범위를 포함한다.
+
 Topic 선택 구독:
 
 ```json
@@ -45,6 +54,7 @@ Topic 선택 구독:
 - 공지의 직접 Topic과 부모 포함 Topic, Event Type, Audience, Campus 저장
 - 기존 공지 일괄 재분류 서비스
 - Topic 자동완성 API
+- `수강신청·휴복학·기숙사·졸업·국가근로·해외` Topic 추천 API
 - 기존 구독 모델의 선택적 `topicId` 저장 및 응답
 - 신규 공지의 Topic 계층 구독 매칭, 회원·공지 단위 중복 방지, 기존 FCM 발송 연결
 - 자유 키워드 API와 데이터의 하위 호환

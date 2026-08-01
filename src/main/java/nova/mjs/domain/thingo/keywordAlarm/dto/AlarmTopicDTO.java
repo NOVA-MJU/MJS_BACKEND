@@ -18,4 +18,17 @@ public class AlarmTopicDTO {
 
     public record AutocompleteResponse(String query, List<Item> items) {
     }
+
+    /** 화면에는 짧은 keyword를 표시하고, 등록 시에는 topicId를 함께 전송한다. */
+    public record RecommendedItem(
+            String keyword,
+            String topicId,
+            String displayName,
+            String description,
+            String type
+    ) {
+    }
+
+    public record RecommendedResponse(List<RecommendedItem> items) {
+    }
 }

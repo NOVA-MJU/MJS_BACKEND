@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "MJU 통합 알림 API",
-    "version": "v1.3.0",
+    "version": "v1.4.0",
     "description": "# 🔔 키워드 알림과 Topic 탐색 API\n\n기존 자유 키워드 알림을 유지하면서 자동완성에서 선택한 표준 `topicId` 구독을 함께 지원합니다. `topicId`를 선택하면 신규 글의 공지 Topic 계층으로, 생략하면 기존 제목 접두 키워드 방식으로 매칭합니다.\n\n## 사용 흐름\n1. 앱에서 알림 권한 허용 후 FCM 토큰 발급\n2. `POST /device-tokens`로 기기 등록\n3. `GET /alarm-topics/autocomplete?query=졸업&limit=8`로 표준 Topic 후보 표시\n4. `POST /keyword-alarms`에 키워드, 선택한 `topicId`, 카테고리 등록\n5. 신규 글을 분류하고 Topic 계층 또는 자유 키워드로 매칭해 FCM 발송 및 알림함 저장\n6. `GET /notifications`로 알림함 조회\n\n`GROUP` Topic은 모든 활성 하위 Topic을 포함합니다. 자동완성 항목을 선택하지 않으면 `topicId`를 생략할 수 있습니다. 키워드는 공백 제외 1~5글자이며 기존 요청은 그대로 호환됩니다."
   },
   "servers": [
@@ -304,6 +304,38 @@
         }
       }
     },
+    "/alarm-topics/recommended": {
+      "get": {
+        "tags": ["AlarmTopic"],
+        "summary": "Topic 기반 추천 알림 칩",
+        "description": "로그인 불필요. 화면에는 짧은 keyword를 표시하고 등록할 때 topicId를 함께 보냅니다. 해외는 GLOBAL_PROGRAM으로 연결되어 WELL, WEST, 교환학생, 해외파견 등 모든 하위 범위를 포함합니다.",
+        "responses": {
+          "200": {
+            "description": "추천 Topic 목록",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_AlarmTopicRecommended" },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "items": [
+                      {
+                        "keyword": "해외",
+                        "topicId": "GLOBAL_PROGRAM",
+                        "displayName": "해외·국제 프로그램",
+                        "description": "해외 일경험, 취업, 파견학업, 단기연수 및 봉사 프로그램 전체",
+                        "type": "GROUP"
+                      }
+                    ]
+                  },
+                  "timestamp": "2026-08-01T14:30:00"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/notifications/{id}/read": {
       "patch": {
         "tags": ["Notification"],
@@ -542,6 +574,35 @@
         "properties": {
           "status": { "type": "string", "example": "API 요청 성공" },
           "data": { "$ref": "#/components/schemas/AlarmTopicAutocomplete" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AlarmTopicRecommendedItem": {
+        "type": "object",
+        "required": ["keyword", "topicId", "displayName", "description", "type"],
+        "properties": {
+          "keyword": { "type": "string", "example": "해외" },
+          "topicId": { "type": "string", "example": "GLOBAL_PROGRAM" },
+          "displayName": { "type": "string", "example": "해외·국제 프로그램" },
+          "description": { "type": "string", "example": "해외 프로그램 전체" },
+          "type": { "$ref": "#/components/schemas/AlarmTopicType" }
+        }
+      },
+      "AlarmTopicRecommended": {
+        "type": "object",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AlarmTopicRecommendedItem" }
+          }
+        }
+      },
+      "ApiSuccess_AlarmTopicRecommended": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "API 요청 성공" },
+          "data": { "$ref": "#/components/schemas/AlarmTopicRecommended" },
           "timestamp": { "type": "string", "format": "date-time" }
         }
       },

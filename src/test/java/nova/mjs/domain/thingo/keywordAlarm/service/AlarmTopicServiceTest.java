@@ -75,4 +75,32 @@ class AlarmTopicServiceTest {
                         "OVERSEAS_EXPLORATION", "GLOBAL_STARTUP_PROGRAM",
                         "SHORT_TERM_OVERSEAS_TRAINING", "OVERSEAS_VOLUNTEERING");
     }
+
+    @Test
+    @DisplayName("추천 칩은 짧은 표시어와 실제 구독 Topic ID를 함께 반환한다")
+    void returnsTopicAwareRecommendations() {
+        var response = service.recommended();
+
+        assertThat(response.items())
+                .extracting(item -> item.keyword() + ":" + item.topicId())
+                .containsExactly(
+                        "수강신청:COURSE_REGISTRATION",
+                        "휴·복학:LEAVE_RETURN",
+                        "기숙사:DORMITORY",
+                        "졸업:GRADUATION",
+                        "국가근로:NATIONAL_WORK_STUDY",
+                        "해외:GLOBAL_PROGRAM"
+                );
+
+        var global = response.items().stream()
+                .filter(item -> item.topicId().equals("GLOBAL_PROGRAM"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(global.keyword()).isEqualTo("해외");
+        assertThat(global.type()).isEqualTo("GROUP");
+        assertThat(service.inclusiveTopicIds(global.topicId()))
+                .contains("WELL_PROGRAM", "WEST_PROGRAM", "EXCHANGE_VISITING_STUDENT",
+                        "OVERSEAS_EXPLORATION", "SHORT_TERM_OVERSEAS_TRAINING",
+                        "OVERSEAS_VOLUNTEERING");
+    }
 }

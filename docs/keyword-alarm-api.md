@@ -121,7 +121,37 @@ DELETE /api/v1/keyword-alarms/{id}
 
 ---
 
-## 5. 추천 키워드 (로그인 불필요, 고정값)
+## 5. Topic 추천 칩 (신규 UI 권장)
+
+```http
+GET /api/v1/alarm-topics/recommended
+```
+
+```json
+{
+  "items": [
+    {
+      "keyword": "해외",
+      "topicId": "GLOBAL_PROGRAM",
+      "displayName": "해외·국제 프로그램",
+      "description": "해외 일경험, 취업, 파견학업, 단기연수 및 봉사 프로그램 전체",
+      "type": "GROUP"
+    }
+  ]
+}
+```
+
+화면에는 `keyword`를 표시하고, 사용자가 칩을 누르면 `keyword`와 `topicId`를 함께 등록 요청에 보낸다.
+`해외`는 일반 문자열이 아니라 `GLOBAL_PROGRAM`으로 저장되므로 WELL, WEST, 교환학생, 해외파견,
+해외탐방, 연수, 봉사 등이 모두 포함된다.
+
+현재 추천 순서:
+
+```text
+수강신청, 휴·복학, 기숙사, 졸업, 국가근로, 해외
+```
+
+## 5-1. 기존 추천 키워드 (레거시 호환)
 
 ```
 GET /api/v1/keyword-alarms/recommended
@@ -130,6 +160,8 @@ GET /api/v1/keyword-alarms/recommended
 ```json
 ["수강신청", "기숙사", "졸업", "국가근로", "해외탐방", "해외봉사"]
 ```
+
+이 API는 문자열만 반환하므로 기존 앱 호환용이다. 새 UI는 Topic 추천 API를 사용한다.
 
 ---
 

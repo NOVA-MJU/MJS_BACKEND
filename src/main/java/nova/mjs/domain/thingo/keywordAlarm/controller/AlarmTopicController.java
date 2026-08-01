@@ -23,4 +23,10 @@ public class AlarmTopicController {
             @RequestParam(name = "limit", defaultValue = "8") int limit) {
         return ApiResponse.success(alarmTopicService.autocomplete(query, limit));
     }
+
+    /** 추천 칩 표시와 등록에 필요한 짧은 문구 + 표준 Topic ID를 함께 반환한다. */
+    @GetMapping("/recommended")
+    public ApiResponse<AlarmTopicDTO.RecommendedResponse> recommended() {
+        return ApiResponse.success(alarmTopicService.recommended());
+    }
 }
