@@ -6,11 +6,13 @@ import nova.mjs.domain.thingo.keywordAlarm.dto.KeywordSubscriptionDTO;
 import nova.mjs.domain.thingo.keywordAlarm.entity.AlarmCategory;
 import nova.mjs.domain.thingo.keywordAlarm.entity.KeywordSubscription;
 import nova.mjs.domain.thingo.keywordAlarm.exception.DuplicateKeywordException;
+import nova.mjs.domain.thingo.keywordAlarm.exception.InvalidAlarmTopicException;
 import nova.mjs.domain.thingo.keywordAlarm.exception.KeywordSubscriptionNotFoundException;
 import nova.mjs.domain.thingo.keywordAlarm.repository.KeywordSubscriptionRepository;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.exception.MemberNotFoundException;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
+import nova.mjs.domain.thingo.semantic.TopicCatalog;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,10 +33,11 @@ public class KeywordSubscriptionService {
 
     /** 화면 6번 추천 키워드(고정값). 운영 변경 여지를 위해 API 로 노출한다. */
     private static final List<String> RECOMMENDED_KEYWORDS =
-            List.of("중간고사", "기말고사", "해외탐방", "해외봉사", "수강신청", "졸업유예");
+            List.of("수강신청", "기숙사", "졸업", "국가근로", "해외탐방", "해외봉사");
 
     private final KeywordSubscriptionRepository keywordSubscriptionRepository;
     private final MemberRepository memberRepository;
+    private final TopicCatalog topicCatalog;
 
     /**
      * 키워드 알림을 등록한다.
@@ -49,6 +52,7 @@ public class KeywordSubscriptionService {
 
         // 2. 키워드 정규화(앞뒤 공백 제거). @Pattern 으로 내부 공백은 이미 차단됨.
         String keyword = request.getKeyword().trim();
+        String topicId = validateTopicId(request.getTopicId());
         Set<AlarmCategory> categories = request.getCategories();
 
         // 3. 같은 키워드 중복 등록 차단
@@ -58,8 +62,9 @@ public class KeywordSubscriptionService {
 
         // 4. 저장
         KeywordSubscription saved = keywordSubscriptionRepository.save(
-                KeywordSubscription.of(member, keyword, categories));
-        log.info("키워드 알림 등록 완료 - email={}, keyword={}, categories={}", email, keyword, categories);
+                KeywordSubscription.of(member, keyword, topicId, categories));
+        log.info("키워드 알림 등록 완료 - email={}, keyword={}, topicId={}, categories={}",
+                email, keyword, topicId, categories);
 
         return KeywordSubscriptionDTO.Response.Detail.from(saved);
     }
@@ -91,6 +96,7 @@ public class KeywordSubscriptionService {
 
         // 2. 키워드 정규화(앞뒤 공백 제거). @Pattern 으로 내부 공백은 이미 차단됨.
         String keyword = request.getKeyword().trim();
+        String topicId = validateTopicId(request.getTopicId());
 
         // 3. 키워드가 바뀌는 경우에만 (member, keyword) 중복 재검사(자기 자신은 그대로 통과)
         if (!keyword.equals(subscription.getKeyword())
@@ -100,9 +106,10 @@ public class KeywordSubscriptionService {
 
         // 4. 키워드 + 카테고리 교체
         subscription.changeKeyword(keyword);
+        subscription.changeTopicId(topicId);
         subscription.updateCategories(request.getCategories());
-        log.info("키워드 알림 수정 - email={}, id={}, keyword={}, categories={}",
-                email, subscriptionId, keyword, request.getCategories());
+        log.info("키워드 알림 수정 - email={}, id={}, keyword={}, topicId={}, categories={}",
+                email, subscriptionId, keyword, topicId, request.getCategories());
 
         return KeywordSubscriptionDTO.Response.Detail.from(subscription);
     }
@@ -153,5 +160,17 @@ public class KeywordSubscriptionService {
     private KeywordSubscription findOwnedSubscription(Long subscriptionId, Member member) {
         return keywordSubscriptionRepository.findByIdAndMember(subscriptionId, member)
                 .orElseThrow(KeywordSubscriptionNotFoundException::new);
+    }
+
+    private String validateTopicId(String topicId) {
+        if (topicId == null || topicId.isBlank()) {
+            return null;
+        }
+        String normalized = topicId.trim();
+        var topic = topicCatalog.find(normalized).orElseThrow(InvalidAlarmTopicException::new);
+        if (!topic.enabled() || !topic.subscribable()) {
+            throw new InvalidAlarmTopicException();
+        }
+        return normalized;
     }
 }

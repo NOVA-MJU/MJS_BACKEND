@@ -2,8 +2,8 @@
   "openapi": "3.0.1",
   "info": {
     "title": "MJU 통합 알림 API",
-    "version": "v1.2.0",
-    "description": "# 🔔 키워드 알림과 Topic 탐색 API\n\n기존 자유 키워드 알림의 요청·응답 계약은 그대로 유지합니다. 관심 키워드를 등록하면 새 글 제목과 매칭해 푸시를 발송합니다.\n\n추가된 `GET /alarm-topics/autocomplete`는 게시글이 아니라 공통 Topic Catalog의 구독 가능한 표준 주제를 반환합니다. 이 API는 향후 topicId 기반 구독을 위한 탐색 경계이며, 현재 자유 키워드 구독 저장·발송 정책을 교체하지 않습니다.\n\n## 기존 키워드 알림 흐름\n1. 앱에서 알림 권한 허용 후 FCM 토큰 발급\n2. `POST /device-tokens`로 기기 등록\n3. `POST /keyword-alarms`로 관심 키워드와 카테고리 등록\n4. 신규 글 제목과 키워드를 매칭해 FCM 발송 및 알림함 저장\n5. `GET /notifications`로 알림함 조회\n\n## Topic 탐색\n- `GET /alarm-topics/autocomplete?query=졸업&limit=8`\n- 로그인 불필요\n- 선택 기준은 입력 문자열이 아니라 응답의 `topicId`\n- `GROUP`은 활성 하위 Topic을 포함하는 상위 주제, `TOPIC`은 개별 주제\n- Topic 구독 저장과 신규 공지 Topic 매칭은 후속 API로 분리\n\n## 기존 API 유의사항\n- 키워드는 공백 제외 1~5글자\n- `장학` 등록 시 `장학금 신청 안내`처럼 제목 접두 매칭\n- 토큰 등록은 멱등\n- `recommended`와 `alarm-topics/autocomplete`를 제외한 기존 알림 API는 JWT 필요"
+    "version": "v1.3.0",
+    "description": "# 🔔 키워드 알림과 Topic 탐색 API\n\n기존 자유 키워드 알림을 유지하면서 자동완성에서 선택한 표준 `topicId` 구독을 함께 지원합니다. `topicId`를 선택하면 신규 글의 공지 Topic 계층으로, 생략하면 기존 제목 접두 키워드 방식으로 매칭합니다.\n\n## 사용 흐름\n1. 앱에서 알림 권한 허용 후 FCM 토큰 발급\n2. `POST /device-tokens`로 기기 등록\n3. `GET /alarm-topics/autocomplete?query=졸업&limit=8`로 표준 Topic 후보 표시\n4. `POST /keyword-alarms`에 키워드, 선택한 `topicId`, 카테고리 등록\n5. 신규 글을 분류하고 Topic 계층 또는 자유 키워드로 매칭해 FCM 발송 및 알림함 저장\n6. `GET /notifications`로 알림함 조회\n\n`GROUP` Topic은 모든 활성 하위 Topic을 포함합니다. 자동완성 항목을 선택하지 않으면 `topicId`를 생략할 수 있습니다. 키워드는 공백 제외 1~5글자이며 기존 요청은 그대로 호환됩니다."
   },
   "servers": [
     { "url": "https://api.thingo.kr/api/v1" }
@@ -19,14 +19,14 @@
       "post": {
         "tags": ["KeywordAlarm"],
         "summary": "키워드 등록",
-        "description": "공백 제외 1~5글자 키워드 + 카테고리(1개 이상)를 등록한다. 제목 접두 매칭('장학'→'장학금'도 잡힘).",
+        "description": "키워드 + 선택적 topicId + 카테고리를 등록한다. topicId가 있으면 공지 Topic 계층, 없으면 기존 제목 접두 방식으로 매칭한다.",
         "security": [ { "Authorization": [] } ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/CreateKeywordRequest" },
-              "example": { "keyword": "장학", "categories": ["NOTICE", "MJU_CALENDAR"] }
+              "example": { "keyword": "졸업", "topicId": "GRADUATION", "categories": ["NOTICE"] }
             }
           }
         },
@@ -58,7 +58,7 @@
       "patch": {
         "tags": ["KeywordAlarm"],
         "summary": "키워드/카테고리 수정",
-        "description": "키워드 + 카테고리를 함께 전체 교체한다(둘 다 필수). 키워드를 바꾸는 경우 (내 계정 안에서) 중복이면 400. 매칭은 INSERT-only 라 바뀐 키워드는 이후 새 글부터 적용되고 과거 글에는 소급되지 않는다.",
+        "description": "키워드, 선택적 topicId, 카테고리를 함께 교체한다. 바뀐 설정은 이후 새 글부터 적용되고 과거 글에는 소급되지 않는다.",
         "security": [ { "Authorization": [] } ],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }
@@ -68,7 +68,7 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/UpdateKeywordRequest" },
-              "example": { "keyword": "장학금", "categories": ["NOTICE", "COMMUNITY"] }
+              "example": { "keyword": "졸업", "topicId": "GRADUATION", "categories": ["NOTICE"] }
             }
           }
         },
@@ -151,7 +151,7 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiSuccess_StringList" },
-                "example": { "status": "API 요청 성공", "data": ["중간고사", "기말고사", "해외탐방", "해외봉사", "수강신청", "졸업유예"], "timestamp": "2026-06-30T19:40:00" }
+                "example": { "status": "API 요청 성공", "data": ["수강신청", "기숙사", "졸업", "국가근로", "해외탐방", "해외봉사"], "timestamp": "2026-08-01T12:00:00" }
               }
             }
           }
@@ -250,7 +250,7 @@
       "get": {
         "tags": ["AlarmTopic"],
         "summary": "알림 Topic 자동완성",
-        "description": "로그인 불필요. 게시글 검색 결과가 아니라 구독 가능한 표준 Topic을 반환합니다. 입력 문자열을 직접 구독 키로 저장하지 말고 사용자가 선택한 topicId를 사용합니다. 현재는 Topic 탐색 API만 제공하며 기존 자유 키워드 구독 API는 변경되지 않습니다.",
+        "description": "로그인 불필요. 게시글 검색 결과가 아니라 구독 가능한 표준 Topic을 반환합니다. 사용자가 항목을 선택하면 응답의 topicId를 키워드 등록 요청에 함께 보냅니다.",
         "parameters": [
           {
             "name": "query",
@@ -374,6 +374,14 @@
             "description": "공백 제외 1~5글자",
             "example": "장학"
           },
+          "topicId": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 64,
+            "pattern": "^[A-Z0-9_]+$",
+            "description": "자동완성 항목 선택 시 응답의 topicId. 미선택이면 생략",
+            "example": "GRADUATION"
+          },
           "categories": {
             "type": "array",
             "minItems": 1,
@@ -393,6 +401,14 @@
             "pattern": "^\\S+$",
             "description": "공백 제외 1~5글자",
             "example": "장학금"
+          },
+          "topicId": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 64,
+            "pattern": "^[A-Z0-9_]+$",
+            "description": "자동완성 항목 선택 시 응답의 topicId. 자유 키워드로 바꾸려면 생략",
+            "example": "GRADUATION"
           },
           "categories": {
             "type": "array",
@@ -425,6 +441,7 @@
         "properties": {
           "id": { "type": "integer", "format": "int64", "example": 12 },
           "keyword": { "type": "string", "example": "장학" },
+          "topicId": { "type": "string", "nullable": true, "description": "표준 Topic 구독 ID. 자유 키워드 구독이면 null", "example": "GRADUATION" },
           "categories": { "type": "array", "items": { "$ref": "#/components/schemas/AlarmCategory" } },
           "enabled": { "type": "boolean", "description": "알림 on/off (false 면 발송 제외, 구독은 유지)", "example": true },
           "createdAt": { "type": "string", "format": "date-time", "example": "2026-06-30T19:40:00" }

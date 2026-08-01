@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface KeywordSubscriptionRepository
         extends JpaRepository<KeywordSubscription, Long>, KeywordSubscriptionQueryRepository {
@@ -33,4 +34,13 @@ public interface KeywordSubscriptionRepository
             + "join fetch ks.member "
             + "join ks.categories c where c = :category and ks.enabled = true")
     List<KeywordSubscription> findByCategoryWithMember(@Param("category") AlarmCategory category);
+
+    /** 분류된 공지 Topic과 일치하는 표준 Topic 구독 조회. 부모 Topic은 공지의 확장 Topic에 포함된다. */
+    @Query("select distinct new nova.mjs.domain.thingo.keywordAlarm.repository.KeywordMatch("
+            + "ks.id, ks.member.id, ks.keyword, ks.topicId) from KeywordSubscription ks "
+            + "join ks.categories c where c = :category and ks.enabled = true "
+            + "and ks.topicId in :topicIds")
+    List<KeywordMatch> findMatchingTopicSubscriptions(
+            @Param("category") AlarmCategory category,
+            @Param("topicIds") Set<String> topicIds);
 }

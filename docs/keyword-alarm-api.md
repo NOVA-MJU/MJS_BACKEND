@@ -1,7 +1,7 @@
 # 키워드 알림 API (06-2-3 키워드 알림 설정)
 
-내가 등록한 키워드가 들어간 **새 글이 올라오면 푸시(FCM)로 알려주는** 기능이다.
-공지사항/학사일정/게시판은 **키워드로 매칭**하고, 학식은 **새 메뉴가 뜨면 구독자 전원에게 방송**한다.
+내가 등록한 키워드 또는 자동완성에서 선택한 표준 Topic에 맞는 **새 글이 올라오면 푸시(FCM)로 알려주는** 기능이다.
+Topic을 선택하면 공지 분류 계층으로, 선택하지 않으면 기존 제목 키워드 방식으로 매칭한다.
 
 > 모든 응답은 공통 래퍼로 감싼다: `{ "status": "...", "data": <실제값>, "timestamp": "..." }`
 > 추천 키워드를 빼면 전부 **로그인 필요**(헤더 `Authorization: Bearer <accessToken>`).
@@ -12,9 +12,10 @@
 
 1. 로그인 → accessToken 확보
 2. 앱이 FCM 토큰 발급 → `POST /api/v1/device-tokens` 로 등록 (이게 있어야 푸시가 감)
-3. 사용자가 키워드 등록 → `POST /api/v1/keyword-alarms`
-4. 새 글/학식이 올라오면 서버가 알아서 매칭 → 푸시 발송
-5. 앱에서 `GET /api/v1/notifications` 로 알림함 표시, 누르면 읽음 처리
+3. 입력 중 `GET /api/v1/alarm-topics/autocomplete`로 표준 Topic 후보 표시
+4. 사용자가 키워드와 선택한 `topicId` 등록 → `POST /api/v1/keyword-alarms`
+5. 새 글/학식이 올라오면 서버가 알아서 매칭 → 푸시 발송
+6. 앱에서 `GET /api/v1/notifications` 로 알림함 표시, 누르면 읽음 처리
 
 ---
 
@@ -31,7 +32,16 @@
 | --- | --- |
 | `ANDROID` / `IOS` / `WEB` | 토큰이 발급된 기기 종류 |
 
-> 매칭은 **제목 기준 + 접두 일치**다. 예: `장학` 등록 → `장학금`, `장학생` 제목도 잡힌다.
+> `topicId`가 없으면 **제목 기준 + 접두 일치**다. `topicId`가 있으면 분류된 Topic 계층으로 매칭한다.
+
+## 0. 알림 Topic 자동완성
+
+```http
+GET /api/v1/alarm-topics/autocomplete?query=졸업&limit=8
+```
+
+응답의 `topicId`를 저장 요청에 사용한다. `type=GROUP`인 항목은 활성 하위 Topic 전체를 포함한다.
+사용자가 후보를 선택하지 않으면 `topicId`를 보내지 않고 자유 키워드로 등록할 수 있다.
 
 ---
 
@@ -44,14 +54,16 @@ POST /api/v1/keyword-alarms
 요청 본문:
 ```json
 {
-  "keyword": "장학",
-  "categories": ["NOTICE", "MJU_CALENDAR"]
+  "keyword": "졸업",
+  "topicId": "GRADUATION",
+  "categories": ["NOTICE"]
 }
 ```
 
 | 필드 | 타입 | 규칙 |
 | --- | --- | --- |
 | `keyword` | string | **공백 제외 1~5글자** (띄어쓰기 불가) |
+| `topicId` | string/null | 자동완성 항목을 선택한 경우 응답의 ID, 미선택 시 생략 |
 | `categories` | string[] | 위 카테고리 값, **1개 이상** |
 
 검증 실패 시 `400` + 메시지 `"올바른 형식의 키워드를 입력해 주세요."`
@@ -61,8 +73,10 @@ POST /api/v1/keyword-alarms
 ```json
 {
   "id": 12,
-  "keyword": "장학",
-  "categories": ["NOTICE", "MJU_CALENDAR"],
+  "keyword": "졸업",
+  "topicId": "GRADUATION",
+  "categories": ["NOTICE"],
+  "enabled": true,
   "createdAt": "2026-06-30T19:40:00"
 }
 ```
@@ -86,7 +100,11 @@ PATCH /api/v1/keyword-alarms/{id}
 ```
 
 ```json
-{ "categories": ["NOTICE"] }
+{
+  "keyword": "졸업",
+  "topicId": "GRADUATION",
+  "categories": ["NOTICE"]
+}
 ```
 
 응답은 수정된 구독 객체. 남의 구독이면 `404` `"키워드 알림 구독을 찾을 수 없습니다."`
@@ -110,7 +128,7 @@ GET /api/v1/keyword-alarms/recommended
 ```
 
 ```json
-["중간고사", "기말고사", "해외탐방", "해외봉사", "수강신청", "졸업유예"]
+["수강신청", "기숙사", "졸업", "국가근로", "해외탐방", "해외봉사"]
 ```
 
 ---

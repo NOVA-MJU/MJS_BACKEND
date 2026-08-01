@@ -1,0 +1,30 @@
+{"caseId":"alias-001","input":"졸특","expectedDirectTopicIds":["GRADUATE_CAREER"],"note":"독립 축약어"}
+{"caseId":"alias-002","input":"[졸특/국취/K-디지털]","expectedDirectTopicIds":["GRADUATE_CAREER","NATIONAL_EMPLOYMENT_SUPPORT"],"note":"슬래시 복합 말머리"}
+{"caseId":"alias-003","input":"국취","expectedDirectTopicIds":["NATIONAL_EMPLOYMENT_SUPPORT"],"note":"독립 축약어"}
+{"caseId":"alias-004","input":"대플","expectedDirectTopicIds":["UNIVERSITY_JOB_PLUS_CENTER"],"note":"독립 축약어"}
+{"caseId":"alias-005","input":"재맞고","expectedDirectTopicIds":["STUDENT_CUSTOM_EMPLOYMENT_SERVICE"],"note":"공식 축약어"}
+{"caseId":"alias-006","input":"재.맞.고","expectedDirectTopicIds":["STUDENT_CUSTOM_EMPLOYMENT_SERVICE"],"note":"점 구분 축약어"}
+{"caseId":"alias-007","input":"재 맞 고","expectedDirectTopicIds":["STUDENT_CUSTOM_EMPLOYMENT_SERVICE"],"note":"공백 구분 축약어"}
+{"caseId":"alias-008","input":"취준","expectedDirectTopicIds":["JOB_PREPARATION"],"note":"취업 준비 축약어"}
+{"caseId":"alias-009","input":"휴학","expectedDirectTopicIds":["LEAVE_RETURN"],"note":"단일 학적 표현"}
+{"caseId":"alias-010","input":"복학","expectedDirectTopicIds":["LEAVE_RETURN"],"note":"단일 학적 표현"}
+{"caseId":"alias-011","input":"휴복학","expectedDirectTopicIds":["LEAVE_RETURN"],"note":"결합 표현"}
+{"caseId":"alias-012","input":"휴·복학","expectedDirectTopicIds":["LEAVE_RETURN"],"note":"가운뎃점"}
+{"caseId":"alias-013","input":"휴/복학","expectedDirectTopicIds":["LEAVE_RETURN"],"note":"슬래시"}
+{"caseId":"alias-014","input":"휴ㆍ복학","expectedDirectTopicIds":["LEAVE_RETURN"],"note":"아래아점"}
+{"caseId":"alias-015","input":"휴․복학","expectedDirectTopicIds":["LEAVE_RETURN"],"note":"one dot leader"}
+{"caseId":"alias-016","input":"신입학","expectedDirectTopicIds":["NEW_TRANSFER_ADMISSION"],"note":"신입학"}
+{"caseId":"alias-017","input":"편입학","expectedDirectTopicIds":["NEW_TRANSFER_ADMISSION"],"note":"편입학"}
+{"caseId":"alias-018","input":"신편입","expectedDirectTopicIds":["NEW_TRANSFER_ADMISSION"],"note":"결합 표현"}
+{"caseId":"alias-019","input":"신(편)입","expectedDirectTopicIds":["NEW_TRANSFER_ADMISSION"],"note":"괄호 표현"}
+{"caseId":"alias-020","input":"신·편입학","expectedDirectTopicIds":["NEW_TRANSFER_ADMISSION"],"note":"가운뎃점 표현"}
+{"caseId":"alias-021","input":"진로취업","expectedDirectTopicIds":["EMPLOYMENT_SUPPORT"],"note":"결합 표현"}
+{"caseId":"alias-022","input":"진로·취업","expectedDirectTopicIds":["EMPLOYMENT_SUPPORT"],"note":"가운뎃점 표현"}
+{"caseId":"alias-023","input":"진로/취업","expectedDirectTopicIds":["EMPLOYMENT_SUPPORT"],"note":"슬래시 표현"}
+{"caseId":"alias-024","input":"학위취득유예","expectedDirectTopicIds":["GRADUATION_DEFERRAL"],"note":"정식 명칭"}
+{"caseId":"alias-025","input":"학사학위 취득 유예","expectedDirectTopicIds":["GRADUATION_DEFERRAL"],"note":"공백 변형"}
+{"caseId":"alias-026","input":"졸업유예","expectedDirectTopicIds":["GRADUATION_DEFERRAL"],"note":"통용 명칭"}
+{"caseId":"alias-027","input":"졸업연주","expectedDirectTopicIds":["GRADUATION_ART_EVENT"],"note":"부모 졸업보다 하위 Topic 우선"}
+{"caseId":"alias-028","input":"졸업생 취업지원","expectedDirectTopicIds":["GRADUATE_CAREER"],"note":"부모 졸업보다 하위 Topic 우선"}
+{"caseId":"alias-029","input":"졸","expectedDirectTopicIds":[],"note":"한 글자 표현은 확장 금지"}
+{"caseId":"alias-030","input":"졸/취업","expectedDirectTopicIds":[],"note":"등록되지 않은 한 글자 축약을 전역 확장하지 않음"}

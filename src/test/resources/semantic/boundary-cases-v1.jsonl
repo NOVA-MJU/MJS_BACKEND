@@ -1,0 +1,15 @@
+{"caseId":"boundary-001","title":"졸업요건 및 졸업사정 결과 조회 안내","content":"","expectedDirectTopicIds":["GRADUATION_REQUIREMENTS"],"expectedEventType":"RESULT","note":"졸업 일반 부모가 아니라 하위 Topic"}
+{"caseId":"boundary-002","title":"보컬뮤직전공 졸업연주회 안내","content":"","expectedDirectTopicIds":["GRADUATION_ART_EVENT"],"expectedEventType":"INFORMATION","note":"졸업요건과 구분"}
+{"caseId":"boundary-003","title":"2026년 상반기 찾아가는 해외취업설명회 참여자 모집","content":"대상은 재학생, 졸업생 및 지역청년 구직자입니다.","expectedDirectTopicIds":["GLOBAL_EMPLOYMENT"],"expectedEventType":"RECRUITMENT","note":"졸업생은 대상일 뿐 졸업 Topic이 아니며 직접 주제는 해외취업"}
+{"caseId":"boundary-004","title":"인문진로취업지원팀 기간제 전담직원 채용 공고","content":"대학혁신지원사업 운영 인력을 채용합니다.","expectedDirectTopicIds":[],"expectedEventType":"RECRUITMENT","note":"부서명의 취업을 학생 취업지원으로 오인하지 않음"}
+{"caseId":"boundary-005","title":"전산정보원 시스템 장애 복구 안내","content":"통합로그인 접속 장애가 복구되었습니다.","expectedDirectTopicIds":[],"expectedEventType":"INFORMATION","note":"SYSTEM_SERVICE Topic은 현재 Catalog gap"}
+{"caseId":"boundary-006","title":"장애학생지원센터 장애인식개선교육 안내","content":"재학생 대상 법정필수교육입니다.","expectedDirectTopicIds":[],"expectedEventType":"INFORMATION","note":"시스템 장애와 구분"}
+{"caseId":"boundary-007","title":"2026년 2학기 국가장학금 1차 신청 안내","content":"한국장학재단 국가장학금 신청을 안내합니다.","expectedDirectTopicIds":[],"expectedEventType":"APPLICATION","note":"국가근로가 아니며 SCHOLARSHIP Topic은 Catalog gap"}
+{"caseId":"boundary-008","title":"국가근로장학생 교내근로 희망근로지 신청 안내","content":"국가근로장학을 신청한 학생이 대상입니다.","expectedDirectTopicIds":["NATIONAL_WORK_STUDY"],"expectedEventType":"APPLICATION","note":"국가장학금과 구분"}
+{"caseId":"boundary-009","title":"기업 신입사원 채용 공고","content":"2026년 신입사원을 모집합니다.","expectedDirectTopicIds":[],"expectedEventType":"RECRUITMENT","note":"신입학 Topic이 아님"}
+{"caseId":"boundary-010","title":"신입생 학번 조회 안내","content":"신입학 학생의 학번 확인 방법을 안내합니다.","expectedDirectTopicIds":["NEW_TRANSFER_ADMISSION"],"expectedEventType":"INFORMATION","note":"입학 절차와 직접 연결"}
+{"caseId":"boundary-011","title":"프로그램 참여자 모집 기간 연장 안내","content":"기존 신청 마감을 일주일 연장합니다.","expectedDirectTopicIds":[],"expectedEventType":"EXTENSION","note":"모집보다 연장이 핵심 상태"}
+{"caseId":"boundary-012","title":"프로그램 참여자 선발결과 안내","content":"최종 선발자 명단을 안내합니다.","expectedDirectTopicIds":[],"expectedEventType":"RESULT","note":"모집과 결과 구분"}
+{"caseId":"boundary-013","title":"조기졸업 신청 취소 안내","content":"기존 조기졸업 신청 절차를 취소합니다.","expectedDirectTopicIds":["EARLY_GRADUATION"],"expectedEventType":"CANCELLATION","note":"신청보다 취소가 핵심 상태"}
+{"caseId":"boundary-014","title":"학점교류 신청 안내","content":"관련 공지: 졸업유예 신청 안내 링크를 참고하십시오.","expectedDirectTopicIds":[],"expectedEventType":"APPLICATION","note":"인용 링크의 졸업유예를 Topic으로 추가하지 않음"}
+{"caseId":"boundary-015","title":"졸/취업 관련 상담 안내","content":"약식 표기만으로 졸업 Topic을 확정하지 않습니다.","expectedDirectTopicIds":[],"expectedEventType":"INFORMATION","note":"한 글자 축약의 전역 확장 금지"}

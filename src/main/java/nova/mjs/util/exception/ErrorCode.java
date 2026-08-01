@@ -110,6 +110,7 @@ public enum ErrorCode {
     // 키워드 알림 관련 에러 (K)
     KEYWORD_INVALID(HttpStatus.BAD_REQUEST, "KEYWORD_INVALID", "[MJS] 올바른 형식의 키워드를 입력해 주세요."),
     KEYWORD_CATEGORY_REQUIRED(HttpStatus.BAD_REQUEST, "KEYWORD_CATEGORY_REQUIRED", "[MJS] 알림 카테고리를 1개 이상 선택해 주세요."),
+    ALARM_TOPIC_INVALID(HttpStatus.BAD_REQUEST, "ALARM_TOPIC_INVALID", "[MJS] 유효하지 않은 알림 Topic입니다."),
     DUPLICATE_KEYWORD(HttpStatus.BAD_REQUEST, "DUPLICATE_KEYWORD", "[MJS] 이미 등록된 키워드입니다."),
     KEYWORD_SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_SUBSCRIPTION_NOT_FOUND", "[MJS] 키워드 알림 구독을 찾을 수 없습니다."),
     NOTIFICATION_HISTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_HISTORY_NOT_FOUND", "[MJS] 알림 내역을 찾을 수 없습니다."),

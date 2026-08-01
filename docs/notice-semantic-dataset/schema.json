@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thingo.kr/schema/notice-semantic-dataset-v1.json",
+  "title": "Notice semantic gold record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "datasetVersion", "topicCatalogVersion", "noticeId", "title", "content",
+    "publishedAt", "directTopicIds", "expandedTopicIds", "eventType",
+    "audiences", "campuses", "deadline", "classificationSource",
+    "classificationConfidence", "evidence", "reviewStatus", "sourceGroupId"
+  ],
+  "properties": {
+    "datasetVersion": { "type": "integer", "minimum": 1 },
+    "topicCatalogVersion": { "type": "integer", "minimum": 1 },
+    "classificationRuleVersion": { "type": "integer", "minimum": 1 },
+    "noticeId": { "type": "string", "minLength": 1 },
+    "originalId": { "type": ["string", "null"] },
+    "title": { "type": "string", "minLength": 1 },
+    "content": { "type": "string" },
+    "contentMode": { "enum": ["FULL", "EVIDENCE_EXCERPT"] },
+    "category": { "type": ["string", "null"] },
+    "authorDepartment": { "type": ["string", "null"] },
+    "publishedAt": { "type": "string", "format": "date-time" },
+    "originalLink": { "type": ["string", "null"] },
+    "directTopicIds": {
+      "type": "array", "uniqueItems": true, "items": { "type": "string" }
+    },
+    "expandedTopicIds": {
+      "type": "array", "uniqueItems": true, "items": { "type": "string" }
+    },
+    "eventType": {
+      "enum": ["APPLICATION", "RECRUITMENT", "CHANGE", "ADDITION", "EXTENSION",
+        "RESULT", "CANCELLATION", "SUSPENSION", "INFORMATION", "UNKNOWN"]
+    },
+    "audiences": {
+      "type": "array", "uniqueItems": true,
+      "items": { "enum": ["ALL", "ENROLLED_STUDENT", "NEW_STUDENT", "TRANSFER_STUDENT",
+        "GRADUATION_CANDIDATE", "GRADUATE"] }
+    },
+    "campuses": {
+      "type": "array", "uniqueItems": true,
+      "items": { "enum": ["ALL", "SEOUL", "YONGIN"] }
+    },
+    "deadline": { "type": ["string", "null"], "format": "date-time" },
+    "classificationSource": { "enum": ["RULE", "MODEL", "MANUAL"] },
+    "classificationConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["field", "source", "text"],
+        "properties": {
+          "field": { "type": "string" },
+          "source": { "enum": ["TITLE", "CONTENT", "CATEGORY", "AUTHOR_DEPARTMENT"] },
+          "text": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "reviewStatus": { "enum": ["AUTO_DRAFT", "NEEDS_REVIEW", "REVIEWED", "ADJUDICATED"] },
+    "labeler": { "type": ["string", "null"] },
+    "reviewer": { "type": ["string", "null"] },
+    "labeledAt": { "type": ["string", "null"], "format": "date-time" },
+    "reviewNotes": { "type": ["string", "null"] },
+    "sourceGroupId": { "type": "string", "minLength": 1 },
+    "contentSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "split": { "enum": ["UNASSIGNED", "TRAIN", "VALIDATION", "TEST", "TIME_HOLDOUT"] }
+  }
+}

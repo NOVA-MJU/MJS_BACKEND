@@ -156,6 +156,24 @@ class KeywordSubscriptionRepositoryIT {
     }
 
     @Test
+    @DisplayName("표준 Topic 구독은 Topic ID로만 매칭하고 자유 키워드 쿼리와 중복되지 않는다")
+    void should_match_topic_subscription_only_by_topic_id() {
+        Member member = 영속회원("topic@mju.ac.kr");
+        repository.saveAndFlush(KeywordSubscription.of(
+                member, "졸업", "GRADUATION", Set.of(AlarmCategory.NOTICE)));
+        String docTokens = KomoranTokenizerUtil.buildSearchTokens("졸업 안내", null, "");
+
+        assertThat(repository.findMatchingSubscriptions("NOTICE", docTokens)).isEmpty();
+        assertThat(repository.findMatchingTopicSubscriptions(
+                AlarmCategory.NOTICE, Set.of("GRADUATION", "GRADUATION_DEFERRAL")))
+                .singleElement()
+                .satisfies(match -> {
+                    assertThat(match.keyword()).isEqualTo("졸업");
+                    assertThat(match.topicId()).isEqualTo("GRADUATION");
+                });
+    }
+
+    @Test
     @DisplayName("카테고리 게이트: NOTICE 구독은 COMMUNITY 문서와 매칭되지 않는다")
     void should_not_match_other_category() {
         // given

@@ -11,6 +11,8 @@ import nova.mjs.domain.thingo.keywordAlarm.repository.NotificationHistoryReposit
 import nova.mjs.domain.thingo.keywordAlarm.service.fcm.FcmDispatch;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
+import nova.mjs.domain.thingo.semantic.NoticeSemanticClassifier;
+import nova.mjs.domain.thingo.semantic.TopicCatalog;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +47,8 @@ class KeywordMatchingServiceTest {
 
     private KeywordMatchingService service() {
         return new KeywordMatchingService(keywordSubscriptionRepository, notificationHistoryRepository,
-                deviceTokenRepository, memberRepository, keywordRedisTemplate);
+                deviceTokenRepository, memberRepository, keywordRedisTemplate,
+                new NoticeSemanticClassifier(new TopicCatalog()));
     }
 
     private SearchDocument doc(String id, String type, String title, String content) {
@@ -132,5 +135,34 @@ class KeywordMatchingServiceTest {
 
         assertThat(result).isEmpty();
         verify(notificationHistoryRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @DisplayName("상위 Topic 구독은 하위 Topic으로 분류된 신규 공지와 매칭한다")
+    void should_match_parent_topic_subscription() {
+        given(keywordSubscriptionRepository.findMatchingSubscriptions(eq("NOTICE"), anyString()))
+                .willReturn(List.of());
+        given(keywordSubscriptionRepository.findMatchingTopicSubscriptions(
+                eq(nova.mjs.domain.thingo.keywordAlarm.entity.AlarmCategory.NOTICE), any()))
+                .willReturn(List.of(new KeywordMatch(20L, 1L, "졸업", "GRADUATION")));
+        given(keywordRedisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.setIfAbsent(anyString(), eq("1"), any(Duration.class))).willReturn(true);
+
+        Member member = Member.builder().id(1L).email("u@mju.ac.kr").build();
+        given(memberRepository.getReferenceById(1L)).willReturn(member);
+        given(notificationHistoryRepository.saveAndFlush(any(NotificationHistory.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+        given(deviceTokenRepository.findByMember(member))
+                .willReturn(List.of(DeviceToken.of(member, "tok-1", DevicePlatform.ANDROID)));
+
+        List<FcmDispatch> result = service().matchAndCollect(
+                doc("200", "NOTICE", "학사학위취득유예 신청 안내", ""));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).title()).isEqualTo("졸업");
+        verify(keywordSubscriptionRepository).findMatchingTopicSubscriptions(
+                eq(nova.mjs.domain.thingo.keywordAlarm.entity.AlarmCategory.NOTICE),
+                org.mockito.ArgumentMatchers.argThat(ids ->
+                        ids.contains("GRADUATION") && ids.contains("GRADUATION_DEFERRAL")));
     }
 }

@@ -44,6 +44,13 @@ public class KeywordSubscription extends BaseEntity {
     private String keyword;
 
     /**
+     * 자동완성에서 선택한 표준 Topic. null이면 기존 자유 키워드 구독으로 동작한다.
+     * Topic 구독은 공지 분류 결과의 계층을 사용하므로 상위 Topic 선택 시 하위 Topic까지 포함한다.
+     */
+    @Column(name = "topic_id", length = 64)
+    private String topicId;
+
+    /**
      * 알림 on/off. false 면 발송 경로(키워드 매칭/학식 방송)에서 제외된다(구독은 유지).
      * 기존 row 는 ddl-auto 가 default true 로 채운다.
      */
@@ -67,16 +74,23 @@ public class KeywordSubscription extends BaseEntity {
     private Set<AlarmCategory> categories = new LinkedHashSet<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private KeywordSubscription(Member member, String keyword, Set<AlarmCategory> categories) {
+    private KeywordSubscription(Member member, String keyword, String topicId, Set<AlarmCategory> categories) {
         this.member = member;
         this.keyword = keyword;
+        this.topicId = topicId;
         this.categories = new LinkedHashSet<>(categories);
     }
 
     public static KeywordSubscription of(Member member, String keyword, Set<AlarmCategory> categories) {
+        return of(member, keyword, null, categories);
+    }
+
+    public static KeywordSubscription of(
+            Member member, String keyword, String topicId, Set<AlarmCategory> categories) {
         return KeywordSubscription.builder()
                 .member(member)
                 .keyword(keyword)
+                .topicId(topicId)
                 .categories(categories)
                 .build();
     }
@@ -93,6 +107,10 @@ public class KeywordSubscription extends BaseEntity {
      */
     public void changeKeyword(String keyword) {
         this.keyword = keyword;
+    }
+
+    public void changeTopicId(String topicId) {
+        this.topicId = topicId;
     }
 
     /**

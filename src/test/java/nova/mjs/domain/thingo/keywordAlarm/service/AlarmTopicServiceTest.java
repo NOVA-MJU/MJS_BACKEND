@@ -54,7 +54,8 @@ class AlarmTopicServiceTest {
         assertThat(response.items())
                 .extracting(item -> item.topicId())
                 .contains("GLOBAL_PROGRAM", "GLOBAL_WORK_EXPERIENCE", "GLOBAL_EMPLOYMENT",
-                        "STUDY_ABROAD", "SHORT_TERM_OVERSEAS_TRAINING", "OVERSEAS_VOLUNTEERING");
+                        "STUDY_ABROAD", "OVERSEAS_EXPLORATION", "GLOBAL_STARTUP_PROGRAM",
+                        "SHORT_TERM_OVERSEAS_TRAINING", "OVERSEAS_VOLUNTEERING");
 
         assertThat(service.autocomplete("WELL", 8).items())
                 .extracting(item -> item.topicId())
@@ -71,6 +72,7 @@ class AlarmTopicServiceTest {
                 .contains("GLOBAL_PROGRAM", "WELL_PROGRAM", "WEST_PROGRAM", "WSP_PROGRAM",
                         "K_MOVE_PROGRAM", "EXCHANGE_VISITING_STUDENT", "DUAL_DEGREE_PROGRAM",
                         "SAF_PROGRAM", "ERASMUS_PLUS_PROGRAM", "STUDY_ABROAD_SCHOLARSHIP",
+                        "OVERSEAS_EXPLORATION", "GLOBAL_STARTUP_PROGRAM",
                         "SHORT_TERM_OVERSEAS_TRAINING", "OVERSEAS_VOLUNTEERING");
     }
 }

@@ -29,6 +29,11 @@ ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS classification_version
 ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS classification_source VARCHAR(16);
 ALTER TABLE unified_search_index ADD COLUMN IF NOT EXISTS classification_confidence DOUBLE PRECISION;
 
+-- 자동완성에서 선택한 표준 Topic 구독. null이면 기존 자유 키워드 구독이다.
+ALTER TABLE keyword_subscription ADD COLUMN IF NOT EXISTS topic_id VARCHAR(64);
+CREATE INDEX IF NOT EXISTS idx_keyword_subscription_topic
+    ON keyword_subscription(topic_id) WHERE topic_id IS NOT NULL AND enabled = true;
+
 ALTER TABLE unified_search_index ALTER COLUMN topic_ids SET DEFAULT '[]'::jsonb;
 ALTER TABLE unified_search_index ALTER COLUMN direct_topic_ids SET DEFAULT '[]'::jsonb;
 ALTER TABLE unified_search_index ALTER COLUMN audiences SET DEFAULT '[]'::jsonb;

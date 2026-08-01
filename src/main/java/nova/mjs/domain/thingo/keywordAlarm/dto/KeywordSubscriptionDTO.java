@@ -33,6 +33,11 @@ public class KeywordSubscriptionDTO {
             @Pattern(regexp = "^\\S+$", message = "올바른 형식의 키워드를 입력해 주세요.") // 공백 제외
             private String keyword;
 
+            /** 자동완성 항목을 선택한 경우 함께 전송한다. 직접 입력이면 생략한다. */
+            @Size(max = 64, message = "유효하지 않은 알림 Topic입니다.")
+            @Pattern(regexp = "^[A-Z0-9_]+$", message = "유효하지 않은 알림 Topic입니다.")
+            private String topicId;
+
             @NotEmpty(message = "알림 카테고리를 1개 이상 선택해 주세요.")
             private Set<AlarmCategory> categories;
         }
@@ -46,6 +51,10 @@ public class KeywordSubscriptionDTO {
             @Size(min = 1, max = 5, message = "올바른 형식의 키워드를 입력해 주세요.")
             @Pattern(regexp = "^\\S+$", message = "올바른 형식의 키워드를 입력해 주세요.") // 공백 제외
             private String keyword;
+
+            @Size(max = 64, message = "유효하지 않은 알림 Topic입니다.")
+            @Pattern(regexp = "^[A-Z0-9_]+$", message = "유효하지 않은 알림 Topic입니다.")
+            private String topicId;
 
             @NotEmpty(message = "알림 카테고리를 1개 이상 선택해 주세요.")
             private Set<AlarmCategory> categories;
@@ -68,6 +77,7 @@ public class KeywordSubscriptionDTO {
         public static class Detail {
             private final Long id;
             private final String keyword;
+            private final String topicId;
             private final Set<AlarmCategory> categories;
             private final boolean enabled;
             private final LocalDateTime createdAt;
@@ -76,6 +86,7 @@ public class KeywordSubscriptionDTO {
                 return Detail.builder()
                         .id(subscription.getId())
                         .keyword(subscription.getKeyword())
+                        .topicId(subscription.getTopicId())
                         .categories(new LinkedHashSet<>(subscription.getCategories()))
                         .enabled(subscription.isEnabled())
                         .createdAt(subscription.getCreatedAt())

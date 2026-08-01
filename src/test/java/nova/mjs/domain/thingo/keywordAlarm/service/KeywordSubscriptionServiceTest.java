@@ -9,6 +9,8 @@ import nova.mjs.domain.thingo.keywordAlarm.repository.KeywordSubscriptionReposit
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.exception.MemberNotFoundException;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
+import nova.mjs.domain.thingo.semantic.TopicCatalog;
+import nova.mjs.domain.thingo.semantic.TopicDefinition;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +39,9 @@ class KeywordSubscriptionServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
+    @Mock
+    private TopicCatalog topicCatalog;
+
     @InjectMocks
     private KeywordSubscriptionService keywordSubscriptionService;
 
@@ -53,8 +58,14 @@ class KeywordSubscriptionServiceTest {
     }
 
     private KeywordSubscriptionDTO.Request.Create createRequest(String keyword, Set<AlarmCategory> categories) {
+        return createRequest(keyword, null, categories);
+    }
+
+    private KeywordSubscriptionDTO.Request.Create createRequest(
+            String keyword, String topicId, Set<AlarmCategory> categories) {
         KeywordSubscriptionDTO.Request.Create request = new KeywordSubscriptionDTO.Request.Create();
         ReflectionTestUtils.setField(request, "keyword", keyword);
+        ReflectionTestUtils.setField(request, "topicId", topicId);
         ReflectionTestUtils.setField(request, "categories", categories);
         return request;
     }
@@ -226,6 +237,24 @@ class KeywordSubscriptionServiceTest {
 
         // then
         assertThat(recommended)
-                .containsExactly("중간고사", "기말고사", "해외탐방", "해외봉사", "수강신청", "졸업유예");
+                .containsExactly("수강신청", "기숙사", "졸업", "국가근로", "해외탐방", "해외봉사");
+    }
+
+    @Test
+    @DisplayName("자동완성에서 선택한 Topic ID를 키워드와 함께 저장한다")
+    void should_save_topic_id_when_autocomplete_selected() {
+        Member member = 회원();
+        given(memberRepository.findByEmail(EMAIL)).willReturn(Optional.of(member));
+        given(keywordSubscriptionRepository.existsByMemberAndKeyword(member, "졸업")).willReturn(false);
+        given(topicCatalog.find("GRADUATION")).willReturn(Optional.of(new TopicDefinition(
+                "GRADUATION", null, "졸업 전체", "졸업 관련 공지 전체",
+                true, true, true, List.of("졸업"))));
+        given(keywordSubscriptionRepository.save(org.mockito.ArgumentMatchers.any(KeywordSubscription.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        KeywordSubscriptionDTO.Response.Detail result = keywordSubscriptionService.create(
+                EMAIL, createRequest("졸업", "GRADUATION", Set.of(AlarmCategory.NOTICE)));
+
+        assertThat(result.getTopicId()).isEqualTo("GRADUATION");
     }
 }

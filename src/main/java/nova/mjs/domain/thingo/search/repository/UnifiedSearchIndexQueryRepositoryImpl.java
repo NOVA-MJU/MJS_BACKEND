@@ -6,6 +6,7 @@ import jakarta.persistence.Query;
 import nova.mjs.domain.thingo.search.dto.SearchResultRow;
 import nova.mjs.domain.thingo.search.query.SearchQueryInterpreter;
 import nova.mjs.domain.thingo.search.query.SearchQueryPlan;
+import nova.mjs.domain.thingo.semantic.TopicCatalog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -110,8 +111,9 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
 
     private final SearchQueryInterpreter queryInterpreter;
 
-    public UnifiedSearchIndexQueryRepositoryImpl(SearchQueryInterpreter queryInterpreter) {
-        this.queryInterpreter = queryInterpreter;
+    public UnifiedSearchIndexQueryRepositoryImpl() {
+        // Spring Data JPA slice에서도 동일한 불변 Catalog를 사용해 저장소를 독립적으로 생성할 수 있게 한다.
+        this.queryInterpreter = new SearchQueryInterpreter(new TopicCatalog());
     }
 
     @Override

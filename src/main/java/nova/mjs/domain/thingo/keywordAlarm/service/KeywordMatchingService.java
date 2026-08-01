@@ -13,6 +13,8 @@ import nova.mjs.domain.thingo.keywordAlarm.repository.NotificationHistoryReposit
 import nova.mjs.domain.thingo.keywordAlarm.service.fcm.FcmDispatch;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
+import nova.mjs.domain.thingo.semantic.NoticeSemanticClassifier;
+import nova.mjs.domain.thingo.semantic.NoticeSemanticMetadata;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 키워드 매칭 파이프라인.
@@ -46,17 +49,20 @@ public class KeywordMatchingService {
     private final DeviceTokenRepository deviceTokenRepository;
     private final MemberRepository memberRepository;
     private final RedisTemplate<String, String> keywordRedisTemplate;
+    private final NoticeSemanticClassifier noticeSemanticClassifier;
 
     public KeywordMatchingService(KeywordSubscriptionRepository keywordSubscriptionRepository,
                                   NotificationHistoryRepository notificationHistoryRepository,
                                   DeviceTokenRepository deviceTokenRepository,
                                   MemberRepository memberRepository,
-                                  @Qualifier("keywordRedisTemplate") RedisTemplate<String, String> keywordRedisTemplate) {
+                                  @Qualifier("keywordRedisTemplate") RedisTemplate<String, String> keywordRedisTemplate,
+                                  NoticeSemanticClassifier noticeSemanticClassifier) {
         this.keywordSubscriptionRepository = keywordSubscriptionRepository;
         this.notificationHistoryRepository = notificationHistoryRepository;
         this.deviceTokenRepository = deviceTokenRepository;
         this.memberRepository = memberRepository;
         this.keywordRedisTemplate = keywordRedisTemplate;
+        this.noticeSemanticClassifier = noticeSemanticClassifier;
     }
 
     /**
@@ -76,15 +82,19 @@ public class KeywordMatchingService {
 
         // 2. 제목만 토큰화(정확도 우선). 본문은 매칭에서 제외 -> "그 글의 주제"일 때만 알림.
         String docTokens = KomoranTokenizerUtil.buildSearchTokens(doc.getTitle());
-        if (docTokens == null || docTokens.isBlank()) {
-            return List.of();
-        }
 
-        // 3. 카테고리 + 키워드(접두 FTS) 매칭 구독 조회
+        // 3. 자유 키워드는 제목 토큰, 표준 Topic은 공지 의미 분류 계층으로 매칭한다.
         long startedAt = System.currentTimeMillis();
         String searchIndexId = buildSearchIndexId(doc.getType(), doc.getId());
-        List<KeywordMatch> matches =
-                keywordSubscriptionRepository.findMatchingSubscriptions(category.name(), docTokens);
+        List<KeywordMatch> matches = new ArrayList<>(
+                keywordSubscriptionRepository.findMatchingSubscriptions(category.name(), docTokens));
+        NoticeSemanticMetadata semantics = noticeSemanticClassifier.classify(
+                doc.getTitle(), doc.getContent(), null);
+        Set<String> expandedTopicIds = semantics.expandedTopicIds();
+        if (!expandedTopicIds.isEmpty()) {
+            matches.addAll(keywordSubscriptionRepository.findMatchingTopicSubscriptions(
+                    category, expandedTopicIds));
+        }
         long elapsed = System.currentTimeMillis() - startedAt;
         // 관측 장치: 구독 폭증 시 매칭이 느려지는지 감시(임계 초과면 인덱싱 개선 착수 신호)
         if (elapsed > 200L) {
