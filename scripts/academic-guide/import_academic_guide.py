@@ -14,6 +14,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+import pdfplumber
 from pypdf import PdfReader
 
 
@@ -183,10 +184,336 @@ ALIASES = {
 ALIASES.update(DEPARTMENT_ALIASES)
 
 
+ACADEMIC_REQUIREMENT_TABLES = (
+    ("graduation_2009_2014", 2009, 2014, tuple(range(23, 29))),
+    ("graduation_2015_2017", 2015, 2017, (35,)),
+    ("graduation_2018_2024", 2018, 2024, tuple(range(41, 45))),
+    ("graduation_2025_plus", 2025, None, tuple(range(49, 52))),
+)
+
+TABLE_COLLEGE_ALIASES = {
+    "인문대학": ("인문",),
+    "사회과학대학": ("사회과학", "사회"),
+    "미디어·휴먼라이프대학": ("미디어·휴먼라이프", "미디어휴먼라이프"),
+    "경영대학": ("경영",),
+    "인공지능·소프트웨어융합대학": ("인공지능·소프트웨어융합", "인공지능소프트웨어융합"),
+    "미래융합대학": ("미래융합",),
+    "화학·생명과학대학": ("화학·생명과학", "화학생명과학", "자연과학"),
+    "스마트시스템공과대학": ("스마트시스템공과",),
+    "반도체·ICT대학": ("반도체·ICT", "반도체ICT"),
+    "스포츠예술대학": ("스포츠·예술", "스포츠예술", "예술체육"),
+    "건축대학": ("건축",),
+}
+
+
 def normalize_text(value: str) -> str:
     value = value.replace("\u00a0", " ").replace("\x00", "")
     lines = [re.sub(r"[ \t]+", " ", line).strip() for line in value.splitlines()]
     return "\n".join(line for line in lines if line)
+
+
+def normalize_table_cell(value: str | None) -> str:
+    return re.sub(r"\s+", " ", value or "").strip()
+
+
+def normalize_lookup(value: str) -> str:
+    return re.sub(r"[^0-9A-Za-z가-힣]", "", value).lower()
+
+
+def canonical_table_college(value: str) -> str | None:
+    normalized = normalize_lookup(value).removesuffix("대학")
+    if not normalized:
+        return None
+    for college, aliases in TABLE_COLLEGE_ALIASES.items():
+        for alias in (college, *aliases):
+            candidate = normalize_lookup(alias).removesuffix("대학")
+            if candidate and (candidate in normalized or normalized in candidate):
+                return college
+    return None
+
+
+def normalize_credit(value: str) -> str:
+    compact = re.sub(r"\s+", "", value)
+    return compact.replace("~", "~")
+
+
+def is_requirement_table(table: list[list[str | None]]) -> bool:
+    if not table:
+        return False
+    header = " ".join(normalize_table_cell(cell) for cell in table[0])
+    return (
+        any(label in header for label in ("학부(과)", "학부, 학과, 전공", "학부,학과,전공"))
+        and any(label in header for label in ("교과목", "교 과 목", "학문기초교양"))
+    )
+
+
+def append_requirement_record(
+    records: list[dict],
+    *,
+    college: str,
+    department: str,
+    courses: str,
+    credits: str,
+    notes: str,
+    document_page: int,
+) -> dict:
+    record = {
+        "college": college,
+        "department": department,
+        "courses": courses,
+        "credits": normalize_credit(credits),
+        "notes": notes,
+        "documentPage": document_page,
+    }
+    records.append(record)
+    return record
+
+
+def extract_flat_requirement_rows(
+    tables_by_page: list[tuple[int, list[list[str | None]]]],
+) -> list[dict]:
+    """2009~2024 표의 병합 셀을 학부(과) 단위 행으로 복원한다."""
+    records: list[dict] = []
+    current: dict | None = None
+    current_college = ""
+    last_credit_by_college: dict[str, str] = {}
+
+    for pdf_page, table in tables_by_page:
+        has_header = is_requirement_table(table)
+        header_text = " ".join(normalize_table_cell(cell) for cell in table[0]) if table else ""
+        if not has_header and ("영 역" in header_text or "영역" in header_text or current is None):
+            continue
+        selection_credit_layout = "선택구분" in header_text
+        for raw_row in table[1:] if has_header else table:
+            row = [normalize_table_cell(cell) for cell in raw_row]
+            if len(row) < 5:
+                continue
+            college_cell = row[0]
+            department = row[1]
+            courses = " ".join(cell for cell in row[2:-2] if cell).strip()
+            credits = row[-1] if selection_credit_layout else row[-2]
+            notes = "" if selection_credit_layout else row[-1]
+
+            if college_cell:
+                current_college = canonical_table_college(college_cell) or current_college
+            if selection_credit_layout:
+                if credits:
+                    last_credit_by_college[current_college] = normalize_credit(credits)
+                elif department:
+                    credits = last_credit_by_college.get(current_college, "")
+            if department:
+                current = append_requirement_record(
+                    records,
+                    college=current_college,
+                    department=department,
+                    courses=courses,
+                    credits=credits,
+                    notes=notes,
+                    document_page=pdf_page - 2,
+                )
+                continue
+            if current is None:
+                continue
+            if courses:
+                current["courses"] = " ".join(filter(None, (current["courses"], courses)))
+            if credits and not current["credits"]:
+                current["credits"] = normalize_credit(credits)
+            if notes:
+                current["notes"] = " ".join(filter(None, (current["notes"], notes)))
+
+    return records
+
+
+def extract_hierarchical_requirement_rows(
+    tables_by_page: list[tuple[int, list[list[str | None]]]],
+) -> list[dict]:
+    """2025학번 이후 표의 학부-전공 병합 셀과 공통 교과목 셀을 펼친다."""
+    records: list[dict] = []
+    current_college = ""
+    current_courses = ""
+    current_credits = ""
+    current_notes = ""
+    hierarchy: list[str] = []
+    current: dict | None = None
+
+    for pdf_page, table in tables_by_page:
+        if not is_requirement_table(table):
+            continue
+        width = len(table[0])
+        hierarchy = [""] * max(1, width - 4)
+        for raw_row in table[1:]:
+            row = [normalize_table_cell(cell) for cell in raw_row]
+            if len(row) < 5:
+                continue
+            college_cell = row[0]
+            department_cells = row[1:-3]
+            courses = row[-3]
+            credits = row[-2]
+            notes = row[-1]
+
+            if college_cell:
+                current_college = canonical_table_college(college_cell) or current_college
+            changed = False
+            for index, value in enumerate(department_cells):
+                if value:
+                    hierarchy[index] = value
+                    for trailing in range(index + 1, len(hierarchy)):
+                        hierarchy[trailing] = ""
+                    changed = True
+            if courses:
+                current_courses = courses
+                current_credits = normalize_credit(credits)
+                current_notes = notes
+            else:
+                if credits:
+                    current_credits = normalize_credit(credits)
+                if notes:
+                    current_notes = notes
+
+            department = " ".join(value for value in hierarchy if value).strip()
+            if changed and department:
+                current = append_requirement_record(
+                    records,
+                    college=current_college,
+                    department=department,
+                    courses=current_courses,
+                    credits=current_credits,
+                    notes=current_notes,
+                    document_page=pdf_page - 2,
+                )
+            elif current is not None and courses:
+                current["courses"] = " ".join(filter(None, (current["courses"], courses)))
+
+    # pdfplumber는 세로 병합된 교과목 셀을 첫 학과 행에만 반환한다. 같은 대학에서
+    # 교과목·학점이 비어 있는 뒤쪽 학과 행에는 직전 공통 규칙을 전파한다.
+    last_by_college: dict[str, tuple[str, str, str]] = {}
+    for record in records:
+        college = record["college"]
+        if record["courses"]:
+            last_by_college[college] = (record["courses"], record["credits"], record["notes"])
+        elif college in last_by_college:
+            record["courses"], record["credits"], record["notes"] = last_by_college[college]
+    return records
+
+
+def record_matches_department(record: dict, department: str) -> bool:
+    label = normalize_lookup(record["department"])
+    return any(
+        normalize_lookup(source_name) in label
+        for source_name in department_source_names(department)
+        if normalize_lookup(source_name)
+    )
+
+
+def generic_record_for_college(record: dict, college: str) -> bool:
+    label = normalize_lookup(record["department"])
+    return record["college"] == college and any(
+        generic in label for generic in ("전학과", "전학부과", "전학부")
+    )
+
+
+def build_structured_requirement_documents(input_path: Path) -> list[dict]:
+    """PDF 표를 학과 x 입학 학번 구간의 결정적 검색 문서로 변환한다."""
+    documents: list[dict] = []
+    with pdfplumber.open(input_path) as pdf:
+        records_by_year: dict[int, list[dict]] = {}
+        for section_code, year_from, year_to, pdf_pages in ACADEMIC_REQUIREMENT_TABLES:
+            tables_by_page = [
+                (pdf_page, table)
+                for pdf_page in pdf_pages
+                for table in pdf.pages[pdf_page - 1].extract_tables()
+            ]
+            records = (
+                extract_hierarchical_requirement_rows(tables_by_page)
+                if year_from == 2025
+                else extract_flat_requirement_rows(tables_by_page)
+            )
+            records_by_year[year_from] = records
+
+        for section_code, year_from, year_to, _ in ACADEMIC_REQUIREMENT_TABLES:
+            records = records_by_year[year_from]
+            section = next(item for item in SECTIONS if item.code == section_code)
+
+            for department in DEPARTMENTS:
+                colleges = DEPARTMENT_COLLEGES.get(department, ())
+                matches = [record for record in records if record_matches_department(record, department)]
+                if not matches:
+                    matches = [
+                        record
+                        for record in records
+                        if any(generic_record_for_college(record, college) for college in colleges)
+                    ]
+                if not matches and year_from == 2015 and any(
+                    college in {"스마트시스템공과대학", "반도체·ICT대학"} for college in colleges
+                ):
+                    # 원문 33쪽은 두 단과대학에 대해 "2018학년도 이후 입학생
+                    # 학문기초교양 학점 및 교과목 참조"라고 명시한다.
+                    matches = [
+                        record
+                        for record in records_by_year[2018]
+                        if record_matches_department(record, department)
+                    ]
+                matches = [record for record in matches if record["courses"]]
+                if not matches:
+                    continue
+
+                unique: list[dict] = []
+                seen: set[tuple[str, str, str]] = set()
+                for record in matches:
+                    key = (record["department"], record["courses"], record["credits"])
+                    if key not in seen:
+                        seen.add(key)
+                        unique.append(record)
+
+                aliases = ALIASES.get(department, ())
+                alias_label = f" ({' '.join(aliases)})" if aliases else ""
+                course_parts = []
+                credit_parts = []
+                note_parts = []
+                for record in unique:
+                    prefix = f"{record['department']}: " if len(unique) > 1 else ""
+                    course_parts.append(prefix + record["courses"])
+                    if record["credits"]:
+                        credit_parts.append(prefix + record["credits"] + "학점")
+                    if record["notes"]:
+                        note_parts.append(prefix + record["notes"])
+
+                college_text = ", ".join(colleges)
+                pages = sorted({record["documentPage"] for record in unique})
+                page_text = ", ".join(f"{page}쪽" for page in pages)
+                department_number = DEPARTMENT_SEQUENCE[department]
+                documents.append({
+                    "id": f"2026-2:req:d{department_number:02d}:y{year_from}",
+                    "kind": "structured_department_rule",
+                    "title": (
+                        f"{department}{alias_label} | {section.title} "
+                        "학문기초교양(학기교) 학점·과목 원문"
+                    ),
+                    "section": section_code,
+                    "category": "academic_course_rule",
+                    "pdfPage": pages[0] + 2,
+                    "documentPage": pages[0],
+                    "admissionYearFrom": year_from,
+                    "admissionYearTo": year_to,
+                    "colleges": list(colleges),
+                    "departments": [department],
+                    "keywords": list(dict.fromkeys([
+                        department, *aliases, *colleges, "학문기초교양", "학기교",
+                        "필요 학점", "지정 과목", "수강신청 공지 첨부",
+                    ])),
+                    "content": "\n".join(filter(None, (
+                        f"학과·전공: {department}",
+                        f"소속 단과대학: {college_text}",
+                        f"적용 학번: {section.title}",
+                        f"필요 학점: {'; '.join(credit_parts) if credit_parts else '원문 표 확인'}",
+                        f"지정 과목: {'; '.join(course_parts)}",
+                        f"비고: {'; '.join(note_parts)}" if note_parts else "",
+                        f"근거: 2026-2학기 학사안내문 {page_text}",
+                    ))),
+                    "sourceUrl": f"{SOURCE_URL}#guide-page-{pages[0]}-department-{department_number:02d}",
+                })
+
+    return documents
 
 
 def section_for(document_page: int) -> Section:
@@ -568,6 +895,7 @@ def main() -> None:
     reader = PdfReader(input_path)
 
     documents = curated_documents()
+    documents.extend(build_structured_requirement_documents(input_path))
     for index, page in enumerate(reader.pages, start=1):
         if index <= 2:
             continue
@@ -578,7 +906,6 @@ def main() -> None:
         if text:
             page_document = build_page_document(index, text)
             documents.append(page_document)
-            documents.extend(build_department_rule_documents(page_document, text))
 
     payload = {
         "version": 1,

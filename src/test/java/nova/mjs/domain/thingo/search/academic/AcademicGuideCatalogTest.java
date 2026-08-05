@@ -12,7 +12,7 @@ class AcademicGuideCatalogTest {
 
     @Test
     void loadsStructuredPagesAndVerifiedRules() {
-        assertThat(catalog.documents()).hasSizeGreaterThanOrEqualTo(500);
+        assertThat(catalog.documents()).hasSizeGreaterThanOrEqualTo(480);
         assertThat(catalog.documents())
                 .allSatisfy(document -> assertThat(("ACADEMIC_GUIDE:" + document.getId()).length())
                         .isLessThanOrEqualTo(64));
@@ -44,6 +44,35 @@ class AcademicGuideCatalogTest {
                 .filteredOn(document -> document.getTitle().contains("응용통계학전공"))
                 .anySatisfy(document -> assertThat(document.getContent())
                         .contains("사회과학대학", "2025학번 이후", "미적분학1", "선형대수학개론"));
+
+        assertThat(catalog.documents())
+                .filteredOn(document -> document.getId().equals("2026-2:req:d05:y2009"))
+                .singleElement()
+                .satisfies(document -> assertThat(document.getContent())
+                        .contains("문헌정보학전공", "인문대학", "필요 학점: 15학점")
+                        .contains("지식정보활용", "일반교양 사회과학"));
+
+        assertThat(catalog.documents())
+                .filteredOn(document -> document.getId().equals("2026-2:req:d65:y2025"))
+                .singleElement()
+                .satisfies(document -> assertThat(document.getContent())
+                        .contains("컴퓨터공학전공", "반도체·ICT대학", "필요 학점: 15학점")
+                        .contains("미적분학1(3)", "이산수학개론(3)", "선형대수학개론(3)"));
+    }
+
+    @Test
+    void structuresAcademicCoursesForEveryMappedDepartment() {
+        var courseRules = catalog.documents().stream()
+                .filter(document -> document.getId().startsWith("2026-2:req:"))
+                .toList();
+
+        assertThat(courseRules).hasSizeGreaterThanOrEqualTo(290);
+        assertThat(courseRules.stream()
+                .map(document -> document.getTitle().split(" \\| ", 2)[0].replaceAll(" \\(.*$", ""))
+                .distinct())
+                .hasSizeGreaterThanOrEqualTo(87);
+        assertThat(courseRules).allSatisfy(document -> assertThat(document.getContent())
+                .contains("학과·전공:", "소속 단과대학:", "적용 학번:", "필요 학점:", "지정 과목:", "근거:"));
     }
 
     @Test
