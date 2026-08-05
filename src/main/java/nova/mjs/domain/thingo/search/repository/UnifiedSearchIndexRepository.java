@@ -37,6 +37,22 @@ public interface UnifiedSearchIndexRepository
             """, nativeQuery = true)
     void rebuildVectors();
 
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = "DELETE FROM unified_search_index WHERE type = ?1", nativeQuery = true)
+    int deleteAllByType(String type);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = """
+            UPDATE unified_search_index SET
+              search_vector = to_tsvector('simple', coalesce(search_tokens,''))
+                           || to_tsvector('simple', coalesce(title,''))
+                           || to_tsvector('simple', coalesce(content,'')),
+              title_vector  = to_tsvector('simple', coalesce(title_tokens,''))
+                           || to_tsvector('simple', coalesce(title,''))
+            WHERE type = ?1
+            """, nativeQuery = true)
+    void rebuildVectorsByType(String type);
+
     /** 동일 link 중복 collapse 용. 같은 원문 링크를 가진 모든 행(활성/비활성 포함). */
     List<UnifiedSearchIndex> findByLink(String link);
 }

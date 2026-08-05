@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,14 +59,14 @@ class PgSearchIndexSyncServiceTest {
 
     @BeforeEach
     void setUpEmptySourcePages() {
-        when(noticeRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
-        when(newsRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
-        when(communityBoardRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
-        when(departmentScheduleRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
-        when(studentCouncilNoticeRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
-        when(broadcastRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
-        when(mjuCalendarRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
-        when(academicGuideCatalog.documents()).thenReturn(List.of());
+        lenient().when(noticeRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        lenient().when(newsRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        lenient().when(communityBoardRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        lenient().when(departmentScheduleRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        lenient().when(studentCouncilNoticeRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        lenient().when(broadcastRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        lenient().when(mjuCalendarRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        lenient().when(academicGuideCatalog.documents()).thenReturn(List.of());
     }
 
     @Test
@@ -126,5 +127,33 @@ class PgSearchIndexSyncServiceTest {
         verify(repository).truncate();
         verify(repository).saveAll(argThat(values -> values.iterator().next().getType().equals("ACADEMIC_GUIDE")));
         verify(repository).rebuildVectors();
+    }
+
+    @Test
+    @DisplayName("학사안내 전용 동기화는 다른 게시판을 읽지 않고 학사 문서만 교체한다")
+    void syncAcademicGuidesOnlyReplacesAcademicDocuments() {
+        AcademicGuideCatalog.AcademicGuideDocument guide =
+                new AcademicGuideCatalog.AcademicGuideDocument(
+                        "2026-2:rule:test",
+                        "미휴 학기교 학번별 안내",
+                        "2025학번 이후 12학점",
+                        "academic_rule",
+                        "https://example.com/guide#47",
+                        Instant.parse("2026-08-04T00:00:00Z"));
+        UnifiedSearchIndex index = UnifiedSearchIndex.of(
+                "ACADEMIC_GUIDE:2026-2:rule:test",
+                guide.id(), guide.getType(), guide.category(), guide.title(), guide.content(),
+                "명지대학교", guide.link(), null, null, null, 0.0, guide.instant(), null,
+                "학기교", "학기교");
+        when(academicGuideCatalog.documents()).thenReturn(List.of(guide));
+        when(mapper.from(guide)).thenReturn(index);
+
+        service.syncAcademicGuides();
+
+        verify(repository).deleteAllByType("ACADEMIC_GUIDE");
+        verify(repository).saveAll(argThat(values -> values.iterator().next().getType().equals("ACADEMIC_GUIDE")));
+        verify(repository).rebuildVectorsByType("ACADEMIC_GUIDE");
+        verify(repository, never()).truncate();
+        verify(noticeRepository, never()).findAll(any(Pageable.class));
     }
 }

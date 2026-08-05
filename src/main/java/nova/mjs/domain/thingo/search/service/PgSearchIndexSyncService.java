@@ -191,6 +191,21 @@ public class PgSearchIndexSyncService {
         logSourceStats(domain, sourceStats);
     }
 
+    /** 게시판 전체를 건드리지 않고 배포 산출물의 학사안내 문서만 원자적으로 교체한다. */
+    @Transactional
+    public void syncAcademicGuides() {
+        log.info("[PgSearch][ACADEMIC_SYNC] start");
+
+        int deleted = repository.deleteAllByType("ACADEMIC_GUIDE");
+        SyncStats stats = new SyncStats();
+        insertStaticAcademicGuides(new HashSet<>(), stats);
+        repository.rebuildVectorsByType("ACADEMIC_GUIDE");
+
+        log.info(
+                "[PgSearch][ACADEMIC_SYNC] end. deleted={}, indexed={}, dedup_skipped={}, conversion_failed={}",
+                deleted, stats.inserted, stats.dedupSkipped, stats.conversionFailed);
+    }
+
     private void insertStaticAcademicGuides(Set<String> seenLinks, SyncStats totalStats) {
         SourceStats sourceStats = new SourceStats();
         List<UnifiedSearchIndex> batch = convertPage(

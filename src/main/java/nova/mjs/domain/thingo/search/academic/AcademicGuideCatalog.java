@@ -22,6 +22,7 @@ public class AcademicGuideCatalog {
 
     private static final String RESOURCE_PATH = "academic/academic_guide_2026_2.json";
     private static final String TYPE = "ACADEMIC_GUIDE";
+    private static final int INDEX_ID_MAX_LENGTH = 64;
 
     private final List<AcademicGuideDocument> documents;
 
@@ -78,6 +79,11 @@ public class AcademicGuideCatalog {
                                         Instant instant) implements SearchDocument {
 
         private static AcademicGuideDocument from(CatalogEntry entry, Instant publishedAt) {
+            String indexId = TYPE + ":" + entry.id();
+            if (indexId.length() > INDEX_ID_MAX_LENGTH) {
+                throw new IllegalStateException(
+                        "Academic guide index id exceeds " + INDEX_ID_MAX_LENGTH + " chars: " + indexId);
+            }
             String metadata = List.of(
                             formatYear(entry.admissionYearFrom(), entry.admissionYearTo()),
                             formatList("단과대", entry.colleges()),

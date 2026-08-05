@@ -14,6 +14,9 @@ class AcademicGuideCatalogTest {
     void loadsStructuredPagesAndVerifiedRules() {
         assertThat(catalog.documents()).hasSizeGreaterThanOrEqualTo(190);
         assertThat(catalog.documents())
+                .allSatisfy(document -> assertThat(("ACADEMIC_GUIDE:" + document.getId()).length())
+                        .isLessThanOrEqualTo(64));
+        assertThat(catalog.documents())
                 .anySatisfy(document -> {
                     assertThat(document.getId()).isEqualTo(
                             "2026-2:rule:2025-media-human-academic-foundation");
@@ -29,7 +32,7 @@ class AcademicGuideCatalogTest {
     void exposesMediaHumanAcademicFoundationRulesByAdmissionYear() {
         assertThat(catalog.documents())
                 .filteredOn(document -> document.getId().equals(
-                        "2026-2:rule:media-human-academic-foundation-by-admission-year"))
+                        "2026-2:rule:media-human-by-year"))
                 .singleElement()
                 .satisfies(document -> {
                     assertThat(document.getTitle()).contains("미휴 학기교", "학번별 필요 학점");

@@ -278,7 +278,7 @@ def curated_documents() -> list[dict]:
         *department_mapping_documents,
         {
             **base,
-            "id": "2026-2:rule:media-human-academic-foundation-by-admission-year",
+            "id": "2026-2:rule:media-human-by-year",
             "title": "미휴 학기교 | 학번별 필요 학점·지정 과목",
             "section": "graduation_requirements",
             "pdfPage": 24,
