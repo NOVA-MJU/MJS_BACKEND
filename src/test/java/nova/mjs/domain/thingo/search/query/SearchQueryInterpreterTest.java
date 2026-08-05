@@ -93,4 +93,21 @@ class SearchQueryInterpreterTest {
     private void assertConcept(String query, String expectedConceptId) {
         assertThat(interpreter.interpret(query).topicIds()).contains(expectedConceptId);
     }
+
+    @Test
+    @DisplayName("해외 단독 검색은 해외·국제 프로그램 전체 토픽으로 해석한다")
+    void broadOverseasQueryResolvesGlobalProgram() {
+        SearchQueryPlan plan = interpreter.interpret("해외 공고 알려줘");
+
+        assertThat(plan.topicIds()).containsExactly("GLOBAL_PROGRAM");
+    }
+
+    @Test
+    @DisplayName("구체적인 해외 검색은 세부 토픽을 유지한다")
+    void specificOverseasQueryKeepsSpecificTopic() {
+        SearchQueryPlan plan = interpreter.interpret("해외 인턴");
+
+        assertThat(plan.topicIds()).contains("GLOBAL_WORK_EXPERIENCE");
+        assertThat(plan.topicIds()).doesNotContain("GLOBAL_PROGRAM");
+    }
 }

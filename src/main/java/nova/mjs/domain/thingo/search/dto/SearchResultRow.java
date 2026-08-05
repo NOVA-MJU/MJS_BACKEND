@@ -1,6 +1,7 @@
 package nova.mjs.domain.thingo.search.dto;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * 통합 검색 native query 결과 행.
@@ -22,6 +23,8 @@ public record SearchResultRow(
         Integer likeCount,
         Integer commentCount,
         Instant date,
+        List<String> topicIds,
+        List<String> directTopicIds,
         Double score
 ) {
 }

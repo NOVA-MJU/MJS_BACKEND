@@ -98,6 +98,9 @@ class UnifiedSearchIndexQueryRepositoryImplIT {
     @Autowired
     PgUnifiedSearchIndexListener listener;
 
+    @Autowired
+    NoticeSemanticClassifier semanticClassifier;
+
     @BeforeEach
     void clean() {
         repository.deleteAll();
@@ -312,6 +315,38 @@ class UnifiedSearchIndexQueryRepositoryImplIT {
                 .containsExactly("휴학 및 복학 신청 안내");
         assertThat(admission.getContent()).extracting(SearchResultRow::title)
                 .containsExactly("신입학 및 편입학 안내");
+    }
+
+    @Test
+    @DisplayName("해외 검색은 문자 일치가 없어도 해외 프로그램 하위 토픽을 함께 반환한다")
+    void broadOverseasSearchUsesTopicHierarchy() {
+        Instant now = Instant.now();
+        UnifiedSearchIndex internship = build(
+                "NOTICE", "career", "2026 WELL 호주 일경험 참가자 모집", "현지 기업 실무 경험",
+                "well 호주 일경험 참가자 모집", now, null);
+        internship.applySemanticMetadata(semanticClassifier.classify(
+                internship.getTitle(), internship.getContent(), internship.getValidUntil()));
+
+        UnifiedSearchIndex volunteering = build(
+                "NOTICE", "activity", "하계 해외봉사단 참가자 선발", "봉사단 파견 안내",
+                "하계 해외봉사단 참가자 선발", now.minus(1, ChronoUnit.DAYS), null);
+        volunteering.applySemanticMetadata(semanticClassifier.classify(
+                volunteering.getTitle(), volunteering.getContent(), volunteering.getValidUntil()));
+
+        repository.save(internship);
+        repository.save(volunteering);
+        repository.save(row("NOTICE", "교내 도서관 운영 안내", "열람실 이용", now));
+        repository.flush();
+
+        Page<SearchResultRow> page = repository.search(
+                "해외", null, null, "relevance", null, 0.0d, PageRequest.of(0, 10));
+
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent()).allSatisfy(row ->
+                assertThat(row.topicIds()).contains("GLOBAL_PROGRAM"));
+        assertThat(page.getContent()).extracting(SearchResultRow::directTopicIds)
+                .anySatisfy(ids -> assertThat(ids).containsAnyOf("WELL_PROGRAM", "GLOBAL_WORK_EXPERIENCE"))
+                .anySatisfy(ids -> assertThat(ids).contains("OVERSEAS_VOLUNTEERING"));
     }
 
     @Test

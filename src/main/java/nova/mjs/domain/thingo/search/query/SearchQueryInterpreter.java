@@ -40,6 +40,7 @@ public class SearchQueryInterpreter {
         List<ResolvedTopic> topics = topicCatalog.resolve(original).stream()
                 .filter(match -> match.topic().searchable())
                 .toList();
+        topics = resolveBroadGlobalProgram(original, topics);
 
         if (topics.isEmpty()) {
             return new SearchQueryPlan(original, defaultOr, defaultOr, defaultAnd, List.of(),
@@ -84,6 +85,28 @@ public class SearchQueryInterpreter {
                 eventType,
                 searchIntent
         );
+    }
+
+    /**
+     * "해외"는 공고 분류 alias로 사용하면 일반 해외 기사까지 과분류될 수 있으므로
+     * 검색 질의에서만 상위 GLOBAL_PROGRAM 토픽으로 해석한다. 구체 토픽이 이미
+     * 해석된 경우에는 해외인턴, 교환학생, 해외봉사 등의 세부 토픽을 유지한다.
+     */
+    private List<ResolvedTopic> resolveBroadGlobalProgram(String original,
+                                                          List<ResolvedTopic> resolvedTopics) {
+        if (!resolvedTopics.isEmpty()) {
+            return resolvedTopics;
+        }
+
+        String key = SemanticTextNormalizer.lookupKey(original);
+        if (!key.contains("해외")) {
+            return resolvedTopics;
+        }
+
+        return topicCatalog.find("GLOBAL_PROGRAM")
+                .filter(topic -> topic.enabled() && topic.searchable())
+                .map(topic -> List.of(new ResolvedTopic(topic, "해외", 60)))
+                .orElse(resolvedTopics);
     }
 
     private SearchIntent detectSearchIntent(String query) {

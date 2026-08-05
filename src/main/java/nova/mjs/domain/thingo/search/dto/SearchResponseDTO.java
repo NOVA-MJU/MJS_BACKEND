@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * PostgreSQL 통합 검색 응답 DTO.
@@ -43,4 +44,10 @@ public class SearchResponseDTO {
     private String authorName;
     private Integer likeCount;
     private Integer commentCount;
+
+    /** 검색·요약 계층에서 활용하는 상위 토픽을 포함한 의미 분류 결과 */
+    private List<String> topicIds;
+
+    /** 공고가 직접 분류된 가장 구체적인 토픽 */
+    private List<String> directTopicIds;
 }

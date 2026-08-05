@@ -1,5 +1,7 @@
 package nova.mjs.domain.thingo.search.repository;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -35,6 +37,9 @@ import java.util.Objects;
  */
 @Repository
 public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndexQueryRepository {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
 
     private static final String ORDER_RELEVANCE = "relevance";
     private static final String ORDER_LATEST = "latest";
@@ -140,10 +145,12 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         boolean hasMatchTsQuery = !matchTsQuery.isBlank();
         boolean hasRankTsQuery = !rankTsQuery.isBlank();
         boolean hasCoverageTsQuery = !coverageTsQuery.isBlank();
+        List<String> topicIds = queryPlan.topicIds() == null ? List.of() : queryPlan.topicIds();
+        boolean hasTopicIds = !topicIds.isEmpty();
 
         // 키워드가 있으나 의미 토큰이 전혀 없으면(자모/기호 노이즈) 매칭 대상이 없다.
         // DB 조회 없이 빈 결과를 즉시 반환한다(노이즈 입력이 느린 trigram 스캔을 타지 않도록).
-        if (hasKeyword && !hasMatchTsQuery) {
+        if (hasKeyword && !hasMatchTsQuery && !hasTopicIds) {
             return new PageImpl<>(java.util.List.of(), pageable, 0L);
         }
 
@@ -156,8 +163,20 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         }
         if (hasKeyword) {
             // 핵심 개념이 인식되면 해당 개념 그룹이 필수 후보 조건이 된다.
-            where.append(" AND search_vector @@ to_tsquery('simple', :matchTsQuery) ");
+            List<String> candidateConditions = new ArrayList<>();
+            if (hasMatchTsQuery) {
+                candidateConditions.add("search_vector @@ to_tsquery('simple', :matchTsQuery)");
+            }
+            for (int i = 0; i < topicIds.size(); i++) {
+                candidateConditions.add("topic_ids @> CAST(:topicId" + i + " AS jsonb)");
+            }
+            where.append(" AND (").append(String.join(" OR ", candidateConditions)).append(") ");
         }
+
+        String topicMatchExpr = buildTopicMatchExpression(topicIds);
+        String topicBoostExpr = hasTopicIds
+                ? " + CASE WHEN " + topicMatchExpr + " THEN 0.65 ELSE 0 END "
+                : " ";
 
         String hotBoostExpr = hasHot
                 ? " + CASE WHEN coalesce(title,'') ~* :hotPattern THEN :hotBoost ELSE 0 END "
@@ -191,6 +210,7 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
                 ? " ( " + ftsScore
                 + "  + coalesce(popularity, 0) * 0.0001 "
                 + weightExpr
+                + topicBoostExpr
                 + hotBoostExpr
                 + VALIDITY_WEIGHT_EXPR
                 + RECENCY_WEIGHT_EXPR
@@ -229,6 +249,7 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
                         + " content, "
                         + headlineContent + " AS highlighted_content, "
                         + " author_name, link, image_url, like_count, comment_count, date, "
+                        + " CAST(topic_ids AS text), CAST(direct_topic_ids AS text), "
                         + scoreExpr + " AS score "
                         + " FROM unified_search_index "
                         + where
@@ -240,8 +261,8 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         Query selectQuery = em.createNativeQuery(selectSql);
         Query countQuery = em.createNativeQuery(countSql);
 
-        bindMatchParams(selectQuery, matchTsQuery, hasMatchTsQuery, type, category);
-        bindMatchParams(countQuery, matchTsQuery, hasMatchTsQuery, type, category);
+        bindMatchParams(selectQuery, matchTsQuery, hasMatchTsQuery, type, category, topicIds);
+        bindMatchParams(countQuery, matchTsQuery, hasMatchTsQuery, type, category, topicIds);
 
         // 랭킹/커버리지 쿼리는 SELECT 점수식과 headline 에만 존재한다.
         if (hasRankTsQuery) {
@@ -304,7 +325,8 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
                                  String matchTsQuery,
                                  boolean hasMatchTsQuery,
                                  String type,
-                                 String category) {
+                                 String category,
+                                 List<String> topicIds) {
         if (type != null && !type.isBlank()) {
             q.setParameter("type", type);
         }
@@ -314,6 +336,17 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         if (hasMatchTsQuery) {
             q.setParameter("matchTsQuery", matchTsQuery);
         }
+        for (int i = 0; i < topicIds.size(); i++) {
+            q.setParameter("topicId" + i, "[\"" + topicIds.get(i) + "\"]");
+        }
+    }
+
+    private String buildTopicMatchExpression(List<String> topicIds) {
+        List<String> conditions = new ArrayList<>();
+        for (int i = 0; i < topicIds.size(); i++) {
+            conditions.add("topic_ids @> CAST(:topicId" + i + " AS jsonb)");
+        }
+        return conditions.isEmpty() ? "FALSE" : "(" + String.join(" OR ", conditions) + ")";
     }
 
     private String resolveOrder(String order, boolean hasKeyword) {
@@ -343,8 +376,19 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
                 asInt(r[11]),
                 asInt(r[12]),
                 asInstant(r[13]),
-                asDouble(r[14])
+                asStringList(r[14]),
+                asStringList(r[15]),
+                asDouble(r[16])
         );
+    }
+
+    private List<String> asStringList(Object value) {
+        if (value == null) return List.of();
+        try {
+            return OBJECT_MAPPER.readValue(value.toString(), STRING_LIST_TYPE);
+        } catch (Exception ignored) {
+            return List.of();
+        }
     }
 
     private String asString(Object v) {

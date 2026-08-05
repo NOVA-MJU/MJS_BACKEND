@@ -92,6 +92,8 @@ public class PgUnifiedSearchService {
                 .authorName(r.authorName())
                 .likeCount(r.likeCount())
                 .commentCount(r.commentCount())
+                .topicIds(r.topicIds())
+                .directTopicIds(r.directTopicIds())
                 .build();
     }
 
