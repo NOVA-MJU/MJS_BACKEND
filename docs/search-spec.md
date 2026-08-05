@@ -18,6 +18,7 @@ ES 폴더의 Controller/Document 구조와 API 계약은 동일하게 유지하�
 |------|------|------------|
 | NOTICE | 공지사항 | `notice` |
 | MJU_CALENDAR | 학사일정 | `mjuCalendar` |
+| ACADEMIC_GUIDE | 학사제도·졸업·수강 안내 | 구조화된 학사안내문 리소스 |
 | DEPARTMENT_NOTICE | 학과 공지 | `departmentNotice` |
 | STUDENT_COUNCIL_NOTICE | 총학 공지 | `studentCouncilNotice` |
 | DEPARTMENT_SCHEDULE | 학과 일정 | `departmentSchedule` |
@@ -200,7 +201,7 @@ ES `SearchController`, `SuggestController`와 **동일한 경로/파라미터/�
 ## 10. 수용 기준 (Acceptance Criteria)
 
 1. ES Controller와 동일한 요청/응답 스키마로 동작한다.
-2. 8개 `SearchType` 모두 인덱싱·검색된다.
+2. 9개 `SearchType` 모두 인덱싱·검색된다.
 3. `order` 3종 정렬이 동작한다.
 4. `keyword`가 비어 있을 때 최신순 전체 결과를 반환한다.
 5. 도메인 엔티티 변경 시 `EntityIndexEvent`를 통해 `unified_search_index`가 갱신된다.

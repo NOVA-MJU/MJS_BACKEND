@@ -21,6 +21,7 @@ import nova.mjs.domain.thingo.department.repository.StudentCouncilNoticeReposito
 import nova.mjs.domain.thingo.news.repository.NewsRepository;
 import nova.mjs.domain.thingo.notice.repository.NoticeRepository;
 import nova.mjs.domain.thingo.search.entity.UnifiedSearchIndex;
+import nova.mjs.domain.thingo.search.academic.AcademicGuideCatalog;
 import nova.mjs.domain.thingo.search.mapper.PgUnifiedSearchMapper;
 import nova.mjs.domain.thingo.search.repository.UnifiedSearchIndexRepository;
 import org.springframework.data.domain.Page;
@@ -63,6 +64,7 @@ public class PgSearchIndexSyncService {
     private final StudentCouncilNoticeRepository studentCouncilNoticeRepository;
     private final BroadcastRepository broadcastRepository;
     private final MjuCalendarRepository mjuCalendarRepository;
+    private final AcademicGuideCatalog academicGuideCatalog;
 
     private final NoticeContentPreprocessor noticeContentPreprocessor;
     private final CommunityContentPreprocessor communityContentPreprocessor;
@@ -109,6 +111,7 @@ public class PgSearchIndexSyncService {
                 StudentCouncilNoticeDocument::from, seenLinks, stats);
         insertSource("BROADCAST", broadcastRepository, BroadcastDocument::from, seenLinks, stats);
         insertSource("MJU_CALENDAR", mjuCalendarRepository, MjuCalendarDocument::from, seenLinks, stats);
+        insertStaticAcademicGuides(seenLinks, stats);
 
         // 트리거 의존 제거: 삽입 후 search_vector/title_vector 를 직접 재생성한다(트리거 누락 안전망).
         repository.rebuildVectors();
@@ -146,6 +149,7 @@ public class PgSearchIndexSyncService {
                 BroadcastDocument::from, seenLinks, desiredIds, stats);
         reconcileSource("MJU_CALENDAR", mjuCalendarRepository,
                 MjuCalendarDocument::from, seenLinks, desiredIds, stats);
+        reconcileStaticAcademicGuides(seenLinks, desiredIds, stats);
 
         deactivateMissing(desiredIds, stats);
 
@@ -187,6 +191,25 @@ public class PgSearchIndexSyncService {
         logSourceStats(domain, sourceStats);
     }
 
+    private void insertStaticAcademicGuides(Set<String> seenLinks, SyncStats totalStats) {
+        SourceStats sourceStats = new SourceStats();
+        List<UnifiedSearchIndex> batch = convertPage(
+                "ACADEMIC_GUIDE",
+                academicGuideCatalog.documents(),
+                Function.identity(),
+                seenLinks,
+                sourceStats);
+        if (!batch.isEmpty()) {
+            repository.saveAll(batch);
+            repository.flush();
+            entityManager.clear();
+        }
+        totalStats.inserted += batch.size();
+        totalStats.dedupSkipped += sourceStats.dedupSkipped;
+        totalStats.conversionFailed += sourceStats.conversionFailed;
+        logSourceStats("ACADEMIC_GUIDE", sourceStats);
+    }
+
     private <E, ID> void reconcileSource(String domain,
                                          JpaRepository<E, ID> sourceRepository,
                                          Function<E, ? extends SearchDocument> toDocument,
@@ -213,6 +236,24 @@ public class PgSearchIndexSyncService {
         } while (hasNext);
 
         logSourceStats(domain, sourceStats);
+    }
+
+    private void reconcileStaticAcademicGuides(Set<String> seenLinks,
+                                                Set<String> desiredIds,
+                                                ReconcileStats totalStats) {
+        SourceStats sourceStats = new SourceStats();
+        List<UnifiedSearchIndex> desiredBatch = convertPage(
+                "ACADEMIC_GUIDE",
+                academicGuideCatalog.documents(),
+                Function.identity(),
+                seenLinks,
+                sourceStats);
+        if (!desiredBatch.isEmpty()) {
+            reconcileBatch(desiredBatch, desiredIds, totalStats);
+            repository.flush();
+            entityManager.clear();
+        }
+        logSourceStats("ACADEMIC_GUIDE", sourceStats);
     }
 
     private void reconcileBatch(List<UnifiedSearchIndex> desiredBatch,

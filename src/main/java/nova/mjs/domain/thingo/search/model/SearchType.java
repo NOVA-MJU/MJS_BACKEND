@@ -13,6 +13,7 @@ public enum SearchType {
 
     NOTICE,
     MJU_CALENDAR,
+    ACADEMIC_GUIDE,
     DEPARTMENT_NOTICE,
     STUDENT_COUNCIL_NOTICE,
     DEPARTMENT_SCHEDULE,
@@ -24,6 +25,7 @@ public enum SearchType {
         return List.of(
                 NOTICE,
                 MJU_CALENDAR,
+                ACADEMIC_GUIDE,
                 DEPARTMENT_NOTICE,
                 STUDENT_COUNCIL_NOTICE,
                 DEPARTMENT_SCHEDULE,

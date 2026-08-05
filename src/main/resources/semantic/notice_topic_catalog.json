@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "topics": [
     {
       "topicId": "GRADUATION",
@@ -340,6 +340,76 @@
       "subscribable": true,
       "enabled": true,
       "searchTerms": ["해외봉사", "국외봉사", "KOICA봉사단"]
+    },
+    {
+      "topicId": "ACADEMIC_REQUIREMENTS",
+      "parentTopicId": null,
+      "displayName": "학사·졸업요건",
+      "description": "입학연도·단과대·학과에 따라 달라지는 졸업 및 교과 이수요건",
+      "searchable": true,
+      "subscribable": false,
+      "enabled": true,
+      "searchTerms": ["학사안내", "졸업요건", "졸업학점"]
+    },
+    {
+      "topicId": "ACADEMIC_FOUNDATION_GENERAL_EDUCATION",
+      "parentTopicId": "ACADEMIC_REQUIREMENTS",
+      "displayName": "학문기초교양",
+      "description": "단과대·학과 및 입학연도별 학문기초교양 이수요건",
+      "searchable": true,
+      "subscribable": false,
+      "enabled": true,
+      "searchTerms": ["학문기초교양", "학기교", "기초교양"]
+    },
+    {
+      "topicId": "MULTIPLE_MAJOR",
+      "parentTopicId": "ACADEMIC_REQUIREMENTS",
+      "displayName": "복수전공·다전공",
+      "description": "복수전공 및 다전공의 교과·학점 이수요건",
+      "searchable": true,
+      "subscribable": false,
+      "enabled": true,
+      "searchTerms": ["복수전공", "복전", "다전공"]
+    },
+    {
+      "topicId": "MEDIA_HUMAN_LIFE_COLLEGE",
+      "parentTopicId": null,
+      "displayName": "미디어·휴먼라이프대학",
+      "description": "미디어·휴먼라이프대학 및 소속 학과",
+      "searchable": true,
+      "subscribable": false,
+      "enabled": true,
+      "searchTerms": ["미디어휴먼라이프대학", "미디어휴먼라이프", "미휴"]
+    },
+    {
+      "topicId": "SOCIAL_SCIENCE_COLLEGE",
+      "parentTopicId": null,
+      "displayName": "사회과학대학",
+      "description": "사회과학대학 및 소속 학과",
+      "searchable": true,
+      "subscribable": false,
+      "enabled": true,
+      "searchTerms": ["사회과학대학", "사회대"]
+    },
+    {
+      "topicId": "POLITICAL_SCIENCE_DEPARTMENT",
+      "parentTopicId": "SOCIAL_SCIENCE_COLLEGE",
+      "displayName": "정치외교학전공",
+      "description": "정치외교학전공",
+      "searchable": true,
+      "subscribable": false,
+      "enabled": true,
+      "searchTerms": ["정치외교학전공", "정치외교", "정외"]
+    },
+    {
+      "topicId": "LAW_DEPARTMENT",
+      "parentTopicId": "SOCIAL_SCIENCE_COLLEGE",
+      "displayName": "법학과",
+      "description": "법학과",
+      "searchable": true,
+      "subscribable": false,
+      "enabled": true,
+      "searchTerms": ["법학과", "법학"]
     }
   ],
   "aliases": [
@@ -358,12 +428,33 @@
     {"topicId": "GRADUATION_ART_EVENT", "alias": "졸업연주", "priority": 100},
     {"topicId": "GRADUATION_ART_EVENT", "alias": "졸업작품", "priority": 100},
     {"topicId": "COURSE_REGISTRATION", "alias": "수강신청", "priority": 100},
+    {"topicId": "ACADEMIC_REQUIREMENTS", "alias": "학사안내", "priority": 100},
+    {"topicId": "ACADEMIC_REQUIREMENTS", "alias": "졸업학점", "priority": 110},
+    {"topicId": "ACADEMIC_FOUNDATION_GENERAL_EDUCATION", "alias": "학문기초교양", "priority": 120},
+    {"topicId": "ACADEMIC_FOUNDATION_GENERAL_EDUCATION", "alias": "학기교", "priority": 130},
+    {"topicId": "ACADEMIC_FOUNDATION_GENERAL_EDUCATION", "alias": "기초교양", "priority": 100},
+    {"topicId": "MULTIPLE_MAJOR", "alias": "복수전공", "priority": 110},
+    {"topicId": "MULTIPLE_MAJOR", "alias": "복전", "priority": 130},
+    {"topicId": "MULTIPLE_MAJOR", "alias": "다전공", "priority": 110},
+    {"topicId": "MEDIA_HUMAN_LIFE_COLLEGE", "alias": "미디어·휴먼라이프대학", "priority": 120},
+    {"topicId": "MEDIA_HUMAN_LIFE_COLLEGE", "alias": "미디어휴먼라이프대학", "priority": 120},
+    {"topicId": "MEDIA_HUMAN_LIFE_COLLEGE", "alias": "미휴", "priority": 130},
+    {"topicId": "MEDIA_HUMAN_LIFE_COLLEGE", "alias": "미휴대", "priority": 130},
+    {"topicId": "SOCIAL_SCIENCE_COLLEGE", "alias": "사회과학대학", "priority": 120},
+    {"topicId": "SOCIAL_SCIENCE_COLLEGE", "alias": "사회대", "priority": 120},
+    {"topicId": "POLITICAL_SCIENCE_DEPARTMENT", "alias": "정치외교학전공", "priority": 120},
+    {"topicId": "POLITICAL_SCIENCE_DEPARTMENT", "alias": "정치외교", "priority": 110},
+    {"topicId": "POLITICAL_SCIENCE_DEPARTMENT", "alias": "정외", "priority": 130},
+    {"topicId": "LAW_DEPARTMENT", "alias": "법학과", "priority": 120},
+    {"topicId": "LAW_DEPARTMENT", "alias": "법학", "priority": 100},
     {"topicId": "LEAVE_RETURN", "alias": "휴학", "priority": 90},
     {"topicId": "LEAVE_RETURN", "alias": "복학", "priority": 90},
     {"topicId": "LEAVE_RETURN", "alias": "휴·복학", "priority": 120},
     {"topicId": "LEAVE_RETURN", "alias": "휴/복학", "priority": 120},
     {"topicId": "NEW_TRANSFER_ADMISSION", "alias": "신입학", "priority": 100},
     {"topicId": "NEW_TRANSFER_ADMISSION", "alias": "편입학", "priority": 100},
+    {"topicId": "NEW_TRANSFER_ADMISSION", "alias": "신입생 학번", "priority": 130},
+    {"topicId": "NEW_TRANSFER_ADMISSION", "alias": "편입생 학번", "priority": 130},
     {"topicId": "NEW_TRANSFER_ADMISSION", "alias": "신(편)입", "priority": 120},
     {"topicId": "NEW_TRANSFER_ADMISSION", "alias": "신·편입학", "priority": 120},
     {"topicId": "EMPLOYMENT_SUPPORT", "alias": "진로·취업", "priority": 90},

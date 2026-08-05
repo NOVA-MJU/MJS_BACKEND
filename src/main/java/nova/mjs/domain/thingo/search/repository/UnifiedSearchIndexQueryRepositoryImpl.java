@@ -59,6 +59,7 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
             " CASE category "
                     + "  WHEN 'general' THEN 0.10 "
                     + "  WHEN 'academic' THEN 0.09 "
+                    + "  WHEN 'academic_rule' THEN 0.09 "
                     + "  WHEN 'rule' THEN 0.08 "
                     + "  WHEN 'career' THEN 0.03 "
                     + "  WHEN 'scholarship' THEN 0.02 "
@@ -102,6 +103,7 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
     private static final String TYPE_WEIGHT_EXPR =
             " CASE type "
                     + "  WHEN 'MJU_CALENDAR' THEN 0.15 "
+                    + "  WHEN 'ACADEMIC_GUIDE' THEN 0.14 "
                     + "  WHEN 'NOTICE' THEN 0.10 "
                     + "  WHEN 'DEPARTMENT_SCHEDULE' THEN 0.06 "
                     + "  WHEN 'STUDENT_COUNCIL_NOTICE' THEN 0.05 "

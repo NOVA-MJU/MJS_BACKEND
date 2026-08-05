@@ -110,4 +110,30 @@ class SearchQueryInterpreterTest {
         assertThat(plan.topicIds()).contains("GLOBAL_WORK_EXPERIENCE");
         assertThat(plan.topicIds()).doesNotContain("GLOBAL_PROGRAM");
     }
+
+    @Test
+    @DisplayName("학과·단과대 약어와 학기교를 서로 다른 필수 개념으로 해석한다")
+    void academicAbbreviationsBecomeIndependentRequiredConcepts() {
+        SearchQueryPlan plan = interpreter.interpret("미휴 학기교");
+
+        assertThat(plan.topicIds()).containsExactlyInAnyOrder(
+                "MEDIA_HUMAN_LIFE_COLLEGE",
+                "ACADEMIC_FOUNDATION_GENERAL_EDUCATION");
+        assertThat(plan.matchTsQuery()).contains("미디어휴먼라이프대학", "미휴");
+        assertThat(plan.matchTsQuery()).contains("학문기초교양", "학기교");
+        assertThat(plan.matchTsQuery()).contains(" & ");
+    }
+
+    @Test
+    @DisplayName("정외·법학 복전 학기교 질의를 세 학사 조건으로 분리한다")
+    void multipleMajorAcademicFoundationQueryKeepsAllFacets() {
+        SearchQueryPlan plan = interpreter.interpret("정외 법학 복전 학기교");
+
+        assertThat(plan.topicIds()).contains(
+                "POLITICAL_SCIENCE_DEPARTMENT",
+                "LAW_DEPARTMENT",
+                "MULTIPLE_MAJOR",
+                "ACADEMIC_FOUNDATION_GENERAL_EDUCATION");
+        assertThat(plan.matchTsQuery()).contains("정치외교학전공", "법학과", "복수전공", "학문기초교양");
+    }
 }

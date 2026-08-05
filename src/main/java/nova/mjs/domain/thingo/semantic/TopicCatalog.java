@@ -194,7 +194,53 @@ public class TopicCatalog {
                     "(?i)(?<![A-Za-z0-9])" + Pattern.quote(alias) + "(?![A-Za-z0-9])");
             return acronym.matcher(rawText == null ? "" : rawText).find();
         }
-        return inputKey.contains(aliasKey);
+        boolean aliasContainsSeparator = alias.codePoints()
+                .anyMatch(codePoint -> !Character.isLetterOrDigit(codePoint));
+        if (aliasContainsSeparator) {
+            return inputKey.contains(aliasKey);
+        }
+
+        // 공백을 제거한 전체 문자열에서는 "미휴 학기교" 경계에 "휴학"이 우연히
+        // 만들어진다. 구분자 없는 별칭은 한 어절 안에서만 찾아 교차 경계 오탐을 막는다.
+        String safeRawText = rawText == null ? "" : rawText;
+        List<String> tokenKeys = Pattern.compile("[\\p{L}\\p{N}]+")
+                .matcher(safeRawText)
+                .results()
+                .map(match -> SemanticTextNormalizer.lookupKey(match.group()))
+                .filter(tokenKey -> !tokenKey.isBlank())
+                .toList();
+        if (tokenKeys.stream().anyMatch(tokenKey -> tokenKey.contains(aliasKey))) {
+            return true;
+        }
+        return matchesAcrossMeaningfulTokenBoundaries(tokenKeys, aliasKey);
+    }
+
+    /**
+     * "수강 신청"→"수강신청"처럼 양쪽 어절이 두 글자 이상 기여할 때만
+     * 공백을 넘어선 결합을 허용한다. "미휴 학기교"→"휴학"처럼 경계마다
+     * 한 글자만 우연히 이어지는 경우는 거부한다.
+     */
+    private boolean matchesAcrossMeaningfulTokenBoundaries(List<String> tokenKeys, String aliasKey) {
+        String joined = String.join("", tokenKeys);
+        for (int start = joined.indexOf(aliasKey); start >= 0; start = joined.indexOf(aliasKey, start + 1)) {
+            int end = start + aliasKey.length();
+            int tokenStart = 0;
+            int contributingTokens = 0;
+            int minimumContribution = Integer.MAX_VALUE;
+            for (String token : tokenKeys) {
+                int tokenEnd = tokenStart + token.length();
+                int overlap = Math.max(0, Math.min(end, tokenEnd) - Math.max(start, tokenStart));
+                if (overlap > 0) {
+                    contributingTokens++;
+                    minimumContribution = Math.min(minimumContribution, overlap);
+                }
+                tokenStart = tokenEnd;
+            }
+            if (contributingTokens >= 2 && minimumContribution >= 2) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private CatalogFile load() {

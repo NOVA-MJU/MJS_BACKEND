@@ -11,6 +11,7 @@ import nova.mjs.domain.thingo.department.repository.StudentCouncilNoticeReposito
 import nova.mjs.domain.thingo.news.repository.NewsRepository;
 import nova.mjs.domain.thingo.notice.repository.NoticeRepository;
 import nova.mjs.domain.thingo.search.entity.UnifiedSearchIndex;
+import nova.mjs.domain.thingo.search.academic.AcademicGuideCatalog;
 import nova.mjs.domain.thingo.search.mapper.PgUnifiedSearchMapper;
 import nova.mjs.domain.thingo.search.repository.UnifiedSearchIndexRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,9 +27,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,6 +46,7 @@ class PgSearchIndexSyncServiceTest {
     @Mock private StudentCouncilNoticeRepository studentCouncilNoticeRepository;
     @Mock private BroadcastRepository broadcastRepository;
     @Mock private MjuCalendarRepository mjuCalendarRepository;
+    @Mock private AcademicGuideCatalog academicGuideCatalog;
     @Mock private NoticeContentPreprocessor noticeContentPreprocessor;
     @Mock private CommunityContentPreprocessor communityContentPreprocessor;
     @Mock private UnifiedSearchIndexRepository repository;
@@ -61,6 +65,7 @@ class PgSearchIndexSyncServiceTest {
         when(studentCouncilNoticeRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
         when(broadcastRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
         when(mjuCalendarRepository.findAll(any(Pageable.class))).thenReturn(Page.empty());
+        when(academicGuideCatalog.documents()).thenReturn(List.of());
     }
 
     @Test
@@ -83,5 +88,43 @@ class PgSearchIndexSyncServiceTest {
         verify(repository, never()).findAll();
         verify(repository).rebuildVectors();
         verify(entityManager).clear();
+    }
+
+    @Test
+    @DisplayName("전체 동기화는 게시판과 분리된 학사안내 문서를 통합 인덱스에 포함한다")
+    void syncAllIncludesStaticAcademicGuideDocuments() {
+        AcademicGuideCatalog.AcademicGuideDocument guide =
+                new AcademicGuideCatalog.AcademicGuideDocument(
+                        "2026-2:rule:test",
+                        "미휴 학기교 12학점",
+                        "적용 학번: 2025학번 이후",
+                        "academic_rule",
+                        "https://example.com/guide#47",
+                        Instant.parse("2026-08-04T00:00:00Z"));
+        UnifiedSearchIndex index = UnifiedSearchIndex.of(
+                "ACADEMIC_GUIDE:2026-2:rule:test",
+                guide.id(),
+                guide.getType(),
+                guide.category(),
+                guide.title(),
+                guide.content(),
+                "명지대학교",
+                guide.link(),
+                null,
+                null,
+                null,
+                0.0,
+                guide.instant(),
+                null,
+                "학기교",
+                "학기교");
+        when(academicGuideCatalog.documents()).thenReturn(List.of(guide));
+        when(mapper.from(guide)).thenReturn(index);
+
+        service.syncAll();
+
+        verify(repository).truncate();
+        verify(repository).saveAll(argThat(values -> values.iterator().next().getType().equals("ACADEMIC_GUIDE")));
+        verify(repository).rebuildVectors();
     }
 }

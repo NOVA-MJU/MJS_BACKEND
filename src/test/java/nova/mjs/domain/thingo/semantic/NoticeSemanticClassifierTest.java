@@ -32,7 +32,7 @@ class NoticeSemanticClassifierTest {
         assertThat(result.eventType()).isEqualTo(NoticeEventType.APPLICATION);
         assertThat(result.audiences()).contains(NoticeAudience.GRADUATION_CANDIDATE);
         assertThat(result.deadline()).isEqualTo(deadline);
-        assertThat(result.classificationVersion()).isEqualTo(3);
+        assertThat(result.classificationVersion()).isEqualTo(4);
         assertThat(result.classificationSource()).isEqualTo(ClassificationSource.RULE);
         assertThat(result.classificationConfidence()).isEqualTo(0.95d);
     }
