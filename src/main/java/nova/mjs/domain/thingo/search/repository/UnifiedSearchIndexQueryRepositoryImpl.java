@@ -53,12 +53,13 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
      *   소수만 찾는데도 최신성에 밀려 상단을 점령했다. recency 를 tie-breaker 로 약화한 만큼(아래)
      *   카테고리 격차를 키워 "일반/학사 > 장학/취업/활동"이 실제 순위에 드러나게 한다.
      * - rule(학칙)은 기한 없는 evergreen 문서라 academic 급(0.08)으로 우대(과거 0.00 → 묻힘 방지).
-     * - keyword 매칭 점수(ts_rank*0.6 + 제목부스트 0.25~0.65)가 dominant 하도록 boost(<=0.12) 유지.
+     * - 수강신청 공지 첨부 학사안내 원문(academic_source)은 사용자가 기준 파일을 즉시 열 수 있도록
+     *   단일 기준 문서에만 0.80을 부여한다. 나머지 카테고리 boost는 0.11 이하로 유지한다.
      */
     private static final String CATEGORY_WEIGHT_EXPR =
             " CASE category "
                     + "  WHEN 'general' THEN 0.10 "
-                    + "  WHEN 'academic_source' THEN 0.12 "
+                    + "  WHEN 'academic_source' THEN 0.80 "
                     + "  WHEN 'academic_course_rule' THEN 0.11 "
                     + "  WHEN 'academic' THEN 0.09 "
                     + "  WHEN 'academic_rule' THEN 0.09 "

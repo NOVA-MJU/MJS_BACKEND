@@ -286,6 +286,7 @@ def build_department_rule_documents(page_document: dict, text: str) -> list[dict
         snippet_start = max(0, position - 220)
         snippet_end = min(len(text), max(position + 700, min(next_position + 120, position + 1_800)))
         aliases = ALIASES.get(department, ())
+        alias_label = f" ({'·'.join(aliases)})" if aliases else ""
         colleges = DEPARTMENT_COLLEGES.get(department, ())
         department_number = DEPARTMENT_SEQUENCE[department]
         document_page = page_document["documentPage"]
@@ -294,7 +295,7 @@ def build_department_rule_documents(page_document: dict, text: str) -> list[dict
             "id": f"2026-2:dept:p{document_page:03d}:d{department_number:02d}",
             "kind": "derived_department_rule",
             "title": (
-                f"{department} | {section_for(document_page).title} "
+                f"{department}{alias_label} | {section_for(document_page).title} "
                 "학문기초교양(학기교) 학점·과목 원문"
             ),
             "section": page_document["section"],
