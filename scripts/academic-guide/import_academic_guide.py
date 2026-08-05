@@ -126,6 +126,13 @@ DEPARTMENTS = tuple(dict.fromkeys(
     for departments in COLLEGE_DEPARTMENTS.values()
     for department in departments
 ))
+DEPARTMENT_SEQUENCE = {department: index for index, department in enumerate(DEPARTMENTS, start=1)}
+DEPARTMENT_COLLEGES = {
+    department: tuple(
+        college for college, departments in COLLEGE_DEPARTMENTS.items() if department in departments
+    )
+    for department in DEPARTMENTS
+}
 
 DEPARTMENT_ALIASES = {
     "국어국문학전공": ("국문", "국문과"), "영어영문학전공": ("영문", "영문과"),
@@ -145,6 +152,17 @@ DEPARTMENT_ALIASES = {
     "식품영양학전공": ("식영", "식품영양"), "컴퓨터공학전공": ("컴공", "컴퓨터공학"),
     "정보통신공학전공": ("정통", "정보통신"), "산업경영공학과": ("산경", "산업경영"),
     "건축학전공": ("건축", "건축학과"), "공간디자인학과": ("공디", "공간디자인"),
+}
+
+DEPARTMENT_HISTORICAL_NAMES = {
+    "미술사·역사학전공": ("미술사학과", "사학과"),
+    "융합바이오학부": ("생명과학정보학부",),
+    "환경시스템공학전공": ("환경에너지공학과", "환경생명공학과"),
+    "건설환경공학전공": ("토목환경공학과",),
+    "스마트모빌리티공학전공": ("교통공학과",),
+    "스포츠학부": ("체육학부",),
+    "전통건축전공": ("전통건축학전공",),
+    "공연예술학부": ("영화뮤지컬학부", "문화예술학부"),
 }
 
 ALIASES = {
@@ -179,6 +197,32 @@ def detected_values(text: str, candidates: tuple[str, ...]) -> list[str]:
     return [candidate for candidate in candidates if candidate in text]
 
 
+def department_source_names(department: str) -> tuple[str, ...]:
+    names = [department, *DEPARTMENT_HISTORICAL_NAMES.get(department, ())]
+    if department.endswith("전공"):
+        names.append(department[:-2] + "과")
+    if department.endswith("학부"):
+        names.append(department[:-2] + "학과")
+    return tuple(dict.fromkeys(names))
+
+
+def detected_departments(text: str) -> list[str]:
+    return [
+        department
+        for department in DEPARTMENTS
+        if any(source_name in text for source_name in department_source_names(department))
+    ]
+
+
+def department_occurrence(text: str, department: str) -> tuple[int, str] | None:
+    occurrences = [
+        (text.find(source_name), source_name)
+        for source_name in department_source_names(department)
+        if text.find(source_name) >= 0
+    ]
+    return min(occurrences) if occurrences else None
+
+
 def page_title(section: Section, document_page: int, text: str) -> str:
     qualifiers: list[str] = []
     if "학문기초교양" in text:
@@ -195,7 +239,7 @@ def build_page_document(pdf_page: int, text: str) -> dict:
     document_page = max(0, pdf_page - 2)
     section = section_for(document_page)
     colleges = detected_values(text, COLLEGES)
-    departments = detected_values(text, DEPARTMENTS)
+    departments = detected_departments(text)
     keywords = list(dict.fromkeys((*section.keywords, *sum((ALIASES.get(value, ()) for value in colleges + departments), ()))))
     if "학문기초교양" in text:
         keywords.extend(["학문기초교양", "학기교"])
@@ -218,6 +262,65 @@ def build_page_document(pdf_page: int, text: str) -> dict:
         "content": text,
         "sourceUrl": f"{SOURCE_URL}#guide-page-{document_page}",
     }
+
+
+def build_department_rule_documents(page_document: dict, text: str) -> list[dict]:
+    """졸업요건 표를 학과 단위의 짧은 근거 문서로 분할한다."""
+    if not str(page_document["section"]).startswith("graduation_"):
+        return []
+
+    departments = page_document.get("departments") or []
+    occurrences = sorted(
+        (occurrence[0], department, occurrence[1])
+        for department in departments
+        if (occurrence := department_occurrence(text, department)) is not None
+    )
+    documents: list[dict] = []
+
+    for position_index, (position, department, matched_name) in enumerate(occurrences):
+        next_position = (
+            occurrences[position_index + 1][0]
+            if position_index + 1 < len(occurrences)
+            else len(text)
+        )
+        snippet_start = max(0, position - 220)
+        snippet_end = min(len(text), max(position + 700, min(next_position + 120, position + 1_800)))
+        aliases = ALIASES.get(department, ())
+        colleges = DEPARTMENT_COLLEGES.get(department, ())
+        department_number = DEPARTMENT_SEQUENCE[department]
+        document_page = page_document["documentPage"]
+
+        documents.append({
+            "id": f"2026-2:dept:p{document_page:03d}:d{department_number:02d}",
+            "kind": "derived_department_rule",
+            "title": (
+                f"{department} | {section_for(document_page).title} "
+                "학문기초교양(학기교) 학점·과목 원문"
+            ),
+            "section": page_document["section"],
+            "category": "academic_course_rule",
+            "pdfPage": page_document["pdfPage"],
+            "documentPage": document_page,
+            "admissionYearFrom": page_document["admissionYearFrom"],
+            "admissionYearTo": page_document["admissionYearTo"],
+            "colleges": list(colleges),
+            "departments": [department],
+            "keywords": list(dict.fromkeys([
+                department, *aliases, *colleges,
+                "학문기초교양", "학기교", "필요 학점", "지정 과목", "수강신청 공지 첨부",
+            ])),
+            "content": (
+                f"학과·전공: {department} | 소속 단과대학: {', '.join(colleges)} | "
+                f"적용 학번: {section_for(document_page).title}\n"
+                f"원문 표기: {matched_name} | 학사안내문 {document_page}쪽 원문 발췌:\n"
+                f"{text[snippet_start:snippet_end]}"
+            ),
+            "sourceUrl": (
+                f"{SOURCE_URL}#guide-page-{document_page}-department-{department_number:02d}"
+            ),
+        })
+
+    return documents
 
 
 def curated_documents() -> list[dict]:
@@ -260,6 +363,32 @@ def curated_documents() -> list[dict]:
         for index, (college, departments) in enumerate(COLLEGE_DEPARTMENTS.items(), start=1)
     ]
     return [
+        {
+            **base,
+            "id": "2026-2:source:course-registration-guide",
+            "title": "2026-2학기 수강신청 공지 첨부 학사안내문(v1.6) | 학기교·학과별 졸업요건",
+            "section": "academic_guide_source",
+            "category": "academic_source",
+            "pdfPage": 1,
+            "documentPage": 1,
+            "sourceUrl": SOURCE_URL,
+            "admissionYearFrom": None,
+            "admissionYearTo": None,
+            "colleges": list(COLLEGE_DEPARTMENTS),
+            "departments": list(DEPARTMENTS),
+            "keywords": list(dict.fromkeys([
+                "2026-2학기 학사안내문", "수강신청", "수강신청 공지", "강의시간표 안내문",
+                "학문기초교양", "학기교", "졸업요건", "학번별 이수학점", "지정 과목",
+                *(alias for aliases in ALIASES.values() for alias in aliases),
+            ])),
+            "content": (
+                "이 자료는 2026학년도 2학기 수강신청 공지에 첨부된 학사안내문(v1.6) 원문이다. "
+                "학과·전공의 소속 단과대학, 입학 학번 구간별 학문기초교양(학기교) 필요 학점과 "
+                "지정 과목, 졸업 최소 이수학점, 복수전공·다전공 조건 및 수강신청 관련 안내를 포함한다. "
+                "검색 결과에서는 이 원문을 기준 자료로 사용하고, 학과를 소속 단과대학에 연결한 뒤 "
+                "본인의 입학 학번에 해당하는 표에서 실제 이수 과목을 확인한다."
+            ),
+        },
         {
             **base,
             "id": "2026-2:rule:find-requirements",
@@ -444,7 +573,9 @@ def main() -> None:
             break
         text = normalize_text(page.extract_text() or "")
         if text:
-            documents.append(build_page_document(index, text))
+            page_document = build_page_document(index, text)
+            documents.append(page_document)
+            documents.extend(build_department_rule_documents(page_document, text))
 
     payload = {
         "version": 1,

@@ -12,7 +12,7 @@ class AcademicGuideCatalogTest {
 
     @Test
     void loadsStructuredPagesAndVerifiedRules() {
-        assertThat(catalog.documents()).hasSizeGreaterThanOrEqualTo(190);
+        assertThat(catalog.documents()).hasSizeGreaterThanOrEqualTo(500);
         assertThat(catalog.documents())
                 .allSatisfy(document -> assertThat(("ACADEMIC_GUIDE:" + document.getId()).length())
                         .isLessThanOrEqualTo(64));
@@ -26,6 +26,24 @@ class AcademicGuideCatalogTest {
                             .contains("적용 학번: 2025학번 이후", "학사안내문 47쪽");
                     assertThat(document.getLink()).endsWith("#guide-page-47-media-human-life");
                 });
+    }
+
+    @Test
+    void exposesCourseRegistrationSourceAndDepartmentCourseRows() {
+        assertThat(catalog.documents())
+                .filteredOn(document -> document.getId().equals(
+                        "2026-2:source:course-registration-guide"))
+                .singleElement()
+                .satisfies(document -> {
+                    assertThat(document.getTitle()).contains("수강신청 공지 첨부 학사안내문", "학기교");
+                    assertThat(document.getLink()).isEqualTo(
+                            "https://bangmok.mju.ac.kr/bbs/mjukr/1725/233916/artclView.do");
+                });
+
+        assertThat(catalog.documents())
+                .filteredOn(document -> document.getTitle().contains("응용통계학전공"))
+                .anySatisfy(document -> assertThat(document.getContent())
+                        .contains("사회과학대학", "2025학번 이후", "미적분학1", "선형대수학개론"));
     }
 
     @Test

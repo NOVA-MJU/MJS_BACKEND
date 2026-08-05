@@ -28,6 +28,7 @@ public class PgUnifiedSearchService {
 
     private static final int REALTIME_TOP_K = 10;
     private static final double REALTIME_HOT_BOOST = 0.05d;
+    private static final int ACADEMIC_SOURCE_CONTENT_LIMIT = 6_000;
     private static final Pattern HOT_KEYWORD_SAFE = Pattern.compile("^[\\p{IsHangul}A-Za-z0-9]{2,20}$");
 
     private final UnifiedSearchIndexRepository repository;
@@ -83,6 +84,7 @@ public class PgUnifiedSearchService {
                 .id(r.id())
                 .highlightedTitle(coalesce(r.highlightedTitle(), r.title()))
                 .highlightedContent(coalesce(r.highlightedContent(), r.content()))
+                .content(academicSourceContent(r))
                 .date(r.date())
                 .link(r.link())
                 .category(r.category())
@@ -95,6 +97,15 @@ public class PgUnifiedSearchService {
                 .topicIds(r.topicIds())
                 .directTopicIds(r.directTopicIds())
                 .build();
+    }
+
+    private String academicSourceContent(SearchResultRow row) {
+        if (!"ACADEMIC_GUIDE".equalsIgnoreCase(row.type()) || row.content() == null) {
+            return null;
+        }
+        return row.content().length() <= ACADEMIC_SOURCE_CONTENT_LIMIT
+                ? row.content()
+                : row.content().substring(0, ACADEMIC_SOURCE_CONTENT_LIMIT);
     }
 
     private String normalizeType(String rawType) {

@@ -62,13 +62,13 @@ jobs:
       - name: 📁 Ensure remote libs dir
         run: |
           ssh -o StrictHostKeyChecking=no "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}" \
-            "mkdir -p /home/ubuntu/MJS_BACKEND/build/libs"
+            "mkdir -p /home/ubuntu/MJS_BACKEND/build/libs /home/ubuntu/MJS_BACKEND/.deploy"
 
       # 완성된 jar 1개만 전송(소스/그래들 캐시 안 보냄)
       - name: 📤 Upload jar to EC2
         run: |
           scp -o StrictHostKeyChecking=no "${{ steps.jar.outputs.path }}" \
-            "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}":/home/ubuntu/MJS_BACKEND/build/libs/MJS_BACKEND-0.0.1-SNAPSHOT.jar
+            "${{ secrets.EC2_USER }}"@"${{ secrets.EC2_HOST }}":/home/ubuntu/MJS_BACKEND/.deploy/MJS_BACKEND-0.0.1-SNAPSHOT.jar
 
       # 원격 배포 스크립트 생성: EC2 에서는 빌드 안 함. 재시작 + 헬스체크만.
       - name: 📝 Create remote restart script
@@ -82,6 +82,7 @@ jobs:
           SERVICE_NAME="MJS_BACKEND"
           APP_PORT="8080"
           JAR_PATH="${APP_DIR}/build/libs/MJS_BACKEND-0.0.1-SNAPSHOT.jar"
+          STAGED_JAR_PATH="${APP_DIR}/.deploy/MJS_BACKEND-0.0.1-SNAPSHOT.jar"
           MAX_WAIT="${MAX_WAIT:-60}"
 
           log(){ printf "\n[%(%F %T)T] %s\n" -1 "$*"; }
@@ -90,7 +91,7 @@ jobs:
           log "who=$(whoami) host=$(hostname)"
 
           # 러너가 올린 jar 확인(EC2 에서 빌드하지 않음)
-          test -f "${JAR_PATH}" || { log "❌ JAR 미존재(scp 실패?)"; exit 1; }
+          test -f "${STAGED_JAR_PATH}" || { log "❌ 배포 JAR 미존재(scp 실패?)"; exit 1; }
 
           cd "${APP_DIR}"
 
@@ -107,9 +108,12 @@ jobs:
           # Spring 용 env(필수)
           echo "REDIS_PASSWORD=${REDIS_PASSWORD}" | sudo tee /home/ubuntu/.env > /dev/null
 
-          # Spring 만 재시작(Docker 건드리지 않음)
+          # The running JVM lazily reads classes from its JAR. Never overwrite that
+          # file in place: stop first, then atomically promote the staged artifact.
           sudo systemctl daemon-reload || true
-          sudo systemctl restart "${SERVICE_NAME}"
+          sudo systemctl stop "${SERVICE_NAME}"
+          mv -f "${STAGED_JAR_PATH}" "${JAR_PATH}"
+          sudo systemctl start "${SERVICE_NAME}"
 
           # 헬스체크
           alive(){ systemctl is-active --quiet "${SERVICE_NAME}"; }

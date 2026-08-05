@@ -31,6 +31,9 @@ public class SearchResponseDTO {
     private String highlightedTitle;
     private String highlightedContent;
 
+    /** AI 검증용 원문. 일반 검색 응답 크기를 유지하기 위해 학사안내 자료에만 제공한다. */
+    private String content;
+
     private Instant date;
 
     private String link;
