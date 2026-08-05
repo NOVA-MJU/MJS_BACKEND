@@ -213,7 +213,15 @@ def normalize_text(value: str) -> str:
 
 
 def normalize_table_cell(value: str | None) -> str:
-    return re.sub(r"\s+", " ", value or "").strip()
+    text = (value or "").replace("\r", "")
+    # PDF 셀 안에서 한 단어가 줄 끝에 걸린 경우(예: "인\n문콘텐츠",
+    # "경제학원\n론")만 붙인다. 과목 사이 줄바꿈은 앞 문자가 ')'라 유지된다.
+    text = re.sub(
+        r"(?<=[0-9A-Za-z가-힣])[^\S\n]*\n[^\S\n]*(?=[0-9A-Za-z가-힣])",
+        "",
+        text,
+    )
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def normalize_lookup(value: str) -> str:

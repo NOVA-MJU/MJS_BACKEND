@@ -53,6 +53,13 @@ class AcademicGuideCatalogTest {
                         .contains("지식정보활용", "일반교양 사회과학"));
 
         assertThat(catalog.documents())
+                .filteredOn(document -> document.getId().equals("2026-2:req:d05:y2025"))
+                .singleElement()
+                .satisfies(document -> assertThat(document.getContent())
+                        .contains("인문콘텐츠의이해(3)", "영미문화콘텐츠의세계(3)")
+                        .doesNotContain("인 문콘텐츠", "콘텐츠의세 계"));
+
+        assertThat(catalog.documents())
                 .filteredOn(document -> document.getId().equals("2026-2:req:d65:y2025"))
                 .singleElement()
                 .satisfies(document -> assertThat(document.getContent())
