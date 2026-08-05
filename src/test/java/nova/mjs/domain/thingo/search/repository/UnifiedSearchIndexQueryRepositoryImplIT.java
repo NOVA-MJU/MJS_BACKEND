@@ -336,6 +336,8 @@ class UnifiedSearchIndexQueryRepositoryImplIT {
         repository.save(internship);
         repository.save(volunteering);
         repository.save(row("NOTICE", "교내 도서관 운영 안내", "열람실 이용", now));
+        repository.save(row(
+                "NOTICE", "국제교류 프로그램 운영 안내", "외국인 학생의 국내 교류 행사", now));
         repository.flush();
 
         Page<SearchResultRow> page = repository.search(

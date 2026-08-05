@@ -147,6 +147,10 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         boolean hasCoverageTsQuery = !coverageTsQuery.isBlank();
         List<String> topicIds = queryPlan.topicIds() == null ? List.of() : queryPlan.topicIds();
         boolean hasTopicIds = !topicIds.isEmpty();
+        boolean isBroadGlobalProgramQuery = hasKeyword
+                && topicIds.size() == 1
+                && "GLOBAL_PROGRAM".equals(topicIds.get(0))
+                && keyword.contains("해외");
 
         // 키워드가 있으나 의미 토큰이 전혀 없으면(자모/기호 노이즈) 매칭 대상이 없다.
         // DB 조회 없이 빈 결과를 즉시 반환한다(노이즈 입력이 느린 trigram 스캔을 타지 않도록).
@@ -164,7 +168,7 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         if (hasKeyword) {
             // 핵심 개념이 인식되면 해당 개념 그룹이 필수 후보 조건이 된다.
             List<String> candidateConditions = new ArrayList<>();
-            if (hasMatchTsQuery) {
+            if (hasMatchTsQuery && !isBroadGlobalProgramQuery) {
                 candidateConditions.add("search_vector @@ to_tsquery('simple', :matchTsQuery)");
             }
             for (int i = 0; i < topicIds.size(); i++) {
@@ -262,7 +266,14 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         Query countQuery = em.createNativeQuery(countSql);
 
         bindMatchParams(selectQuery, matchTsQuery, hasMatchTsQuery, type, category, topicIds);
-        bindMatchParams(countQuery, matchTsQuery, hasMatchTsQuery, type, category, topicIds);
+        bindMatchParams(
+                countQuery,
+                matchTsQuery,
+                hasMatchTsQuery && !isBroadGlobalProgramQuery,
+                type,
+                category,
+                topicIds
+        );
 
         // 랭킹/커버리지 쿼리는 SELECT 점수식과 headline 에만 존재한다.
         if (hasRankTsQuery) {

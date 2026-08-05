@@ -17,7 +17,11 @@ import java.util.Set;
 public class NoticeSemanticClassifier {
 
     private static final int BODY_EVIDENCE_LIMIT = 1_200;
-    private static final int BODY_ALIAS_MIN_PRIORITY = 100;
+    /**
+     * 본문에는 다른 프로그램의 예시·참고 문구가 자주 섞인다. 제목에 토픽 근거가 없을 때는
+     * K-Move 같은 고유 프로그램명 수준(130)만 보조 근거로 허용한다.
+     */
+    private static final int BODY_ALIAS_MIN_PRIORITY = 130;
 
     private final TopicCatalog topicCatalog;
 
