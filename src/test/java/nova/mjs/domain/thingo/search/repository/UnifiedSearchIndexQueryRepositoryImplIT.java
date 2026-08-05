@@ -277,6 +277,29 @@ class UnifiedSearchIndexQueryRepositoryImplIT {
     }
 
     @Test
+    @DisplayName("공지사항 타입 검색은 구조화 학사안내문을 포함하고 원본 안내문을 우선한다")
+    void notice_search_group_includes_academic_guides() {
+        Instant date = Instant.now().minus(1, ChronoUnit.DAYS);
+        repository.save(build("NOTICE", "academic", "학사안내문 공지", "수강신청 안내",
+                "학사안내문 수강신청", date, null));
+        repository.save(build("ACADEMIC_GUIDE", "academic_source",
+                "수강신청 공지 첨부 학사안내문", "학과별 학기교와 졸업요건",
+                "학사안내문 수강신청 학기교 졸업요건", date, null));
+        repository.flush();
+
+        Page<SearchResultRow> page = repository.search(
+                null, "NOTICE", null, "relevance", null, 0.0d, PageRequest.of(0, 10));
+
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent())
+                .extracting(SearchResultRow::type)
+                .containsOnly("NOTICE");
+        assertThat(page.getContent())
+                .extracting(SearchResultRow::category)
+                .containsExactly("academic_source", "academic");
+    }
+
+    @Test
     @DisplayName("국취 약어는 일반 신청 공지를 제외하고 국민취업지원제도 공지를 찾는다")
     void abbreviation_requires_resolved_concept() {
         Instant now = Instant.now();
