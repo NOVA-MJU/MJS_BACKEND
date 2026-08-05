@@ -117,6 +117,16 @@ class KomoranTokenizerUtilTsQueryTest {
     }
 
     @Test
+    @DisplayName("학과 과목표 제목의 짧은 약칭을 독립 토큰으로 보존한다")
+    void should_preserveDepartmentAlias_when_buildTitleTokens() {
+        String title = "디지털미디어학부 (디미 디지털미디어) | 학문기초교양(학기교) 과목 원문";
+
+        String titleTokens = KomoranTokenizerUtil.buildTitleTokens(title);
+
+        assertThat(titleTokens.split("\\s+")).contains("디미");
+    }
+
+    @Test
     @DisplayName("빈/노이즈 입력의 제목 토큰은 빈 문자열")
     void should_returnEmptyTitleTokens_when_blankOrNoise() {
         // given & when & then

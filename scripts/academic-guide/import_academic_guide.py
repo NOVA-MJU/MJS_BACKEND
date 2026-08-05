@@ -286,7 +286,9 @@ def build_department_rule_documents(page_document: dict, text: str) -> list[dict
         snippet_start = max(0, position - 220)
         snippet_end = min(len(text), max(position + 700, min(next_position + 120, position + 1_800)))
         aliases = ALIASES.get(department, ())
-        alias_label = f" ({'·'.join(aliases)})" if aliases else ""
+        # Keep aliases space-delimited so title tokenization preserves short forms
+        # such as "디미", "응통", and "컴공" as standalone lexemes.
+        alias_label = f" ({' '.join(aliases)})" if aliases else ""
         colleges = DEPARTMENT_COLLEGES.get(department, ())
         department_number = DEPARTMENT_SEQUENCE[department]
         document_page = page_document["documentPage"]
