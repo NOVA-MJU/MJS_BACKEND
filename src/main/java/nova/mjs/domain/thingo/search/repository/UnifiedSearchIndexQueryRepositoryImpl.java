@@ -141,7 +141,6 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
 
         boolean hasKeyword = keyword != null && !keyword.isBlank();
         boolean hasHot = hotPattern != null && !hotPattern.isBlank() && hotBoost > 0d;
-        boolean isNoticeSearchGroup = type != null && "NOTICE".equalsIgnoreCase(type.trim());
         String resolvedOrder = resolveOrder(order, hasKeyword);
 
         // 원문을 바로 OR 검색하지 않고 후보(match)·랭킹(rank)·커버리지(coverage) 계획으로 분리한다.
@@ -169,11 +168,7 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         }
 
         StringBuilder where = new StringBuilder(" WHERE active = TRUE ");
-        if (isNoticeSearchGroup) {
-            // 사용자 화면의 '공지사항'은 원문 공지와 그 첨부물을 구조화한 학사안내문을
-            // 하나의 검색 그룹으로 보여준다. 실제 응답 type은 그대로 보존한다.
-            where.append(" AND type IN ('NOTICE', 'ACADEMIC_GUIDE') ");
-        } else if (type != null && !type.isBlank()) {
+        if (type != null && !type.isBlank()) {
             where.append(" AND type = :type ");
         }
         if (category != null && !category.isBlank()) {
@@ -261,14 +256,8 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
             default -> " ORDER BY score DESC, date DESC NULLS LAST ";
         };
 
-        // 현재 공지사항 UI는 응답 type=NOTICE만 렌더링한다. 검색 인덱스의 원본 타입은
-        // ACADEMIC_GUIDE로 유지하되, NOTICE 검색 그룹의 응답만 호환 타입으로 변환한다.
-        String responseTypeExpr = isNoticeSearchGroup
-                ? " CASE WHEN type = 'ACADEMIC_GUIDE' THEN 'NOTICE' ELSE type END "
-                : " type ";
-
         String selectSql =
-                "SELECT id, original_id, " + responseTypeExpr + " AS type, category, title, "
+                "SELECT id, original_id, type, category, title, "
                         + headlineTitle + " AS highlighted_title, "
                         + " content, "
                         + headlineContent + " AS highlighted_content, "
@@ -285,13 +274,12 @@ public class UnifiedSearchIndexQueryRepositoryImpl implements UnifiedSearchIndex
         Query selectQuery = em.createNativeQuery(selectSql);
         Query countQuery = em.createNativeQuery(countSql);
 
-        String boundType = isNoticeSearchGroup ? null : type;
-        bindMatchParams(selectQuery, matchTsQuery, hasMatchTsQuery, boundType, category, topicIds);
+        bindMatchParams(selectQuery, matchTsQuery, hasMatchTsQuery, type, category, topicIds);
         bindMatchParams(
                 countQuery,
                 matchTsQuery,
                 hasMatchTsQuery && !isBroadGlobalProgramQuery,
-                boundType,
+                type,
                 category,
                 topicIds
         );
