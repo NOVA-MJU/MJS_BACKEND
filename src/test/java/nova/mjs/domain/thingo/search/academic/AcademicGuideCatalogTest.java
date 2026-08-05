@@ -45,7 +45,15 @@ class AcademicGuideCatalogTest {
 
     @Test
     void mapsDepartmentsToTheirCollegeForAcademicFoundationSearch() {
-        assertThat(catalog.documents())
+        var mappings = catalog.documents().stream()
+                .filter(document -> document.getId().startsWith("2026-2:map:college-departments:"))
+                .toList();
+
+        assertThat(mappings).hasSize(13);
+        assertThat(mappings)
+                .extracting(AcademicGuideCatalog.AcademicGuideDocument::getLink)
+                .doesNotHaveDuplicates();
+        assertThat(mappings)
                 .filteredOn(document -> document.getId().startsWith("2026-2:map:college-departments:"))
                 .extracting(AcademicGuideCatalog.AcademicGuideDocument::getContent)
                 .anySatisfy(content -> assertThat(content).contains("문헌정보학전공", "인문대학", "문정"))

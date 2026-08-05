@@ -233,7 +233,12 @@ def curated_documents() -> list[dict]:
             "section": "department_college_mapping",
             "pdfPage": COLLEGE_MAPPING_SOURCE_PAGE[college] + 2,
             "documentPage": COLLEGE_MAPPING_SOURCE_PAGE[college],
-            "sourceUrl": f"{SOURCE_URL}#guide-page-{COLLEGE_MAPPING_SOURCE_PAGE[college]}-department-map",
+            # Several colleges share the same source page. Keep the fragment unique so
+            # link-based notice deduplication does not collapse distinct college rules.
+            "sourceUrl": (
+                f"{SOURCE_URL}#guide-page-{COLLEGE_MAPPING_SOURCE_PAGE[college]}"
+                f"-department-map-{index:02d}"
+            ),
             "admissionYearFrom": None,
             "admissionYearTo": None,
             "colleges": [college],
