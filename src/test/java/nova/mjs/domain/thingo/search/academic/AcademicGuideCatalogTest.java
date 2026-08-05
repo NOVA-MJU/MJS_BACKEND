@@ -67,6 +67,9 @@ class AcademicGuideCatalogTest {
                 .toList();
 
         assertThat(courseRules).hasSizeGreaterThanOrEqualTo(290);
+        assertThat(courseRules)
+                .extracting(AcademicGuideCatalog.AcademicGuideDocument::getLink)
+                .doesNotHaveDuplicates();
         assertThat(courseRules.stream()
                 .map(document -> document.getTitle().split(" \\| ", 2)[0].replaceAll(" \\(.*$", ""))
                 .distinct())

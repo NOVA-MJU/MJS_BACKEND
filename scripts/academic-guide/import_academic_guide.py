@@ -510,7 +510,10 @@ def build_structured_requirement_documents(input_path: Path) -> list[dict]:
                         f"비고: {'; '.join(note_parts)}" if note_parts else "",
                         f"근거: 2026-2학기 학사안내문 {page_text}",
                     ))),
-                    "sourceUrl": f"{SOURCE_URL}#guide-page-{pages[0]}-department-{department_number:02d}",
+                    "sourceUrl": (
+                        f"{SOURCE_URL}#guide-page-{pages[0]}-department-{department_number:02d}"
+                        f"-cohort-{year_from}"
+                    ),
                 })
 
     return documents
