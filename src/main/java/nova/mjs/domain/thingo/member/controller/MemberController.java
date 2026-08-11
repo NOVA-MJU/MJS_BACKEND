@@ -142,7 +142,8 @@ public class MemberController {
     @GetMapping("/recovery/email")
     public ResponseEntity<ApiResponse<String>> sendRecoveryEmail(@RequestParam String email) {
         memberQueryService.validateEmailDomain(email);
-        return ResponseEntity.ok(ApiResponse.success(emailService.sendVerificationEmail(email)));
+        memberQueryService.getMemberByEmail(email);
+        return ResponseEntity.ok(ApiResponse.success("가입된 이메일입니다."));
     }
 
     @PostMapping("/recovery/email")

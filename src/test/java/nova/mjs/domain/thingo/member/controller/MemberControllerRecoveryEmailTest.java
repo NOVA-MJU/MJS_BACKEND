@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,17 +35,17 @@ class MemberControllerRecoveryEmailTest {
     }
 
     @Test
-    void getRecoveryEmailSendsVerificationEmail() {
+    void getRecoveryEmailOnlyChecksRegisteredMember() {
         String email = "kimgusqls1@mju.ac.kr";
-        when(emailService.sendVerificationEmail(email)).thenReturn("인증 코드가 이메일로 발송되었습니다.");
 
         ResponseEntity<ApiResponse<String>> response = controller.sendRecoveryEmail(email);
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getData()).isEqualTo("인증 코드가 이메일로 발송되었습니다.");
+        assertThat(response.getBody().getData()).isEqualTo("가입된 이메일입니다.");
         verify(memberQueryService).validateEmailDomain(email);
-        verify(emailService).sendVerificationEmail(email);
+        verify(memberQueryService).getMemberByEmail(email);
+        verify(emailService, never()).sendVerificationEmail(email);
     }
 
     @Test
