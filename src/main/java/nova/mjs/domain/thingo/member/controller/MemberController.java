@@ -3,6 +3,7 @@ package nova.mjs.domain.thingo.member.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.thingo.member.DTO.MemberDTO;
+import nova.mjs.domain.thingo.member.email.EmailService;
 import nova.mjs.domain.thingo.member.email.EmailVerificationRequestDto;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.service.command.MemberCommandService;
@@ -29,6 +30,7 @@ public class MemberController {
 
     private final MemberQueryService memberQueryService;
     private final MemberCommandService memberCommandService;
+    private final EmailService emailService;
 
     // 1. GET 페이지네이션
     @GetMapping
@@ -133,6 +135,23 @@ public class MemberController {
 
     // == RECOVERY - 회원 정보 찾기 == //
     // 비밀번호 찾기
+    /**
+     * 비밀번호 찾기 인증 메일 발송.
+     * GET은 기존 프론트엔드 호환용이며, POST는 요청 본문을 사용하는 표준 API다.
+     */
+    @GetMapping("/recovery/email")
+    public ResponseEntity<ApiResponse<String>> sendRecoveryEmail(@RequestParam String email) {
+        memberQueryService.validateEmailDomain(email);
+        return ResponseEntity.ok(ApiResponse.success(emailService.sendVerificationEmail(email)));
+    }
+
+    @PostMapping("/recovery/email")
+    public ResponseEntity<ApiResponse<String>> sendRecoveryEmail(
+            @Validated @RequestBody EmailVerificationRequestDto request) {
+        memberQueryService.validateEmailDomain(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success(emailService.sendVerificationEmail(request.getEmail())));
+    }
+
     /**
      * 1단계: 이메일 보내기 - EMAIL CONTROLLER 에서 진행
      * 2단계: 코드 검증 성공 시 내부 플래그 세팅
