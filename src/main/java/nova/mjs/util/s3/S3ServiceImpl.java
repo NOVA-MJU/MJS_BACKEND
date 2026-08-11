@@ -88,7 +88,7 @@ public class S3ServiceImpl implements S3Service {
     }
 
     /**
-     * 프리사인 PUT URL 발급. Content-Type 허용 목록/용량 검증 후
+     * 사진·영상 프리사인 PUT URL 발급. Content-Type 허용 목록/용량 검증 후
      * {prefix}{uuid}{ext} 키로 5분짜리 PUT URL을 만든다. 서버는 바이트를 거치지 않는다.
      */
     @Override

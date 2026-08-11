@@ -100,12 +100,24 @@ test.describe('리뷰 인증 차단', () => {
   });
 });
 
-test.describe('영상 프리사인 발급(인증)', () => {
-  test('유효 요청 - 200 + uploadUrl/fileUrl', async ({ request }) => {
+test.describe('리뷰 사진·영상 프리사인 발급(인증)', () => {
+  test('영상 유효 요청 - 200 + uploadUrl/fileUrl', async ({ request }) => {
     test.skip(!accessToken, 'THINGO_E2E_EMAIL/PASSWORD 미설정');
     const res = await request.post('/api/v1/s3/presign', {
       headers: authHeaders(),
       data: { domain: 'REVIEW_MEDIA', contentType: 'video/mp4', fileSize: 1024 * 1024 },
+    });
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(body.data.uploadUrl).toContain('http');
+    expect(body.data.fileUrl).toContain('/static/images/reviews/');
+  });
+
+  test('사진 유효 요청 - 200 + uploadUrl/fileUrl', async ({ request }) => {
+    test.skip(!accessToken, 'THINGO_E2E_EMAIL/PASSWORD 미설정');
+    const res = await request.post('/api/v1/s3/presign', {
+      headers: authHeaders(),
+      data: { domain: 'REVIEW_MEDIA', contentType: 'image/jpeg', fileSize: 512 * 1024 },
     });
     expect(res.status()).toBe(200);
     const body = await res.json();

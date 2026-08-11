@@ -217,6 +217,20 @@ class ReviewQueryServiceImplTest {
         var foodGroup = catalog.getGroups().stream()
                 .filter(g -> g.getGroup().equals("FOOD_PRICE")).findFirst().orElseThrow();
         assertThat(foodGroup.getKeywords()).hasSize(6);
+        assertThat(foodGroup.getKeywords())
+                .extracting(ReviewDTO.Response.KeywordTag::getCode)
+                .containsExactly("TASTY", "REVISIT", "VALUE", "GENEROUS", "FRESH", "NOT_BAD");
+
+        var tasty = foodGroup.getKeywords().get(0);
+        assertThat(tasty.getLabel()).isEqualTo("맛있음");
+        assertThat(tasty.getEmoji()).isEqualTo("🤤");
+
+        var moodGroup = catalog.getGroups().stream()
+                .filter(g -> g.getGroup().equals("MOOD")).findFirst().orElseThrow();
+        var etcGroup = catalog.getGroups().stream()
+                .filter(g -> g.getGroup().equals("ETC")).findFirst().orElseThrow();
+        assertThat(moodGroup.getKeywords()).hasSize(6);
+        assertThat(etcGroup.getKeywords()).hasSize(6);
     }
 
     @Test

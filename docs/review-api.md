@@ -93,7 +93,7 @@
 | POST | `/api/v1/reviews/{reviewUuid}/like` | 필수 | 좋아요 토글 |
 | GET | `/api/v1/reviews/media?pinId=&limit=` | 선택 | 사진·영상 스트립 |
 | GET | `/api/v1/reviews/keywords?pinId=` | 선택 | 키워드 카탈로그 |
-| POST | `/api/v1/s3/presign` | 필수 | 영상 프리사인 발급 |
+| POST | `/api/v1/s3/presign` | 필수 | 리뷰 사진·영상 프리사인 발급 |
 | GET | `/api/v1/reviews/moderation/hidden` | OPERATOR | 숨김 리뷰 목록 |
 | PATCH | `/api/v1/reviews/moderation/{reviewUuid}/restore` | OPERATOR | 숨김 해제 |
 
@@ -299,25 +299,21 @@ GET /api/v1/reviews/keywords?pinId=123
 
 ## 10. 미디어 업로드 절차
 
-리뷰 작성 요청에는 **이미 업로드된 URL**만 담습니다. 업로드는 별도로 먼저 진행합니다.
+리뷰 작성 요청에는 **이미 업로드된 URL**만 담습니다. 사진과 영상 모두 프리사인 URL을 발급받아 S3에 직접 업로드하며, 앱 서버는 파일 바이트를 거치지 않습니다.
 
-### 이미지 (소용량) — 서버 업로드
-```
-POST /api/v1/s3/upload?domain=REVIEW_MEDIA
-Content-Type: multipart/form-data
-form field: file=<이미지파일>
-```
-응답 `data`는 CloudFront URL 문자열. 이 URL을 `media[].url`(`mediaType: "IMAGE"`)로 사용.
-
-### 영상 (대용량) — 프리사인 직접 업로드
-서버로 영상 바이트를 보내지 않고 **S3에 직접** 올립니다.
+등록 전 미리보기의 삭제 버튼은 프론트 로컬 목록에서 선택 파일을 제거하는 동작입니다. 삭제된 파일은 업로드하지 않으며 별도 백엔드 삭제 API를 호출하지 않습니다. 프론트는 리뷰 등록 시점에 최종적으로 남아 있는 파일만 아래 절차로 업로드합니다.
 
 **1단계**: 프리사인 발급
 ```
 POST /api/v1/s3/presign        (로그인 필요)
 ```
+영상 요청:
 ```json
 { "domain": "REVIEW_MEDIA", "contentType": "video/mp4", "fileSize": 12582912 }
+```
+사진 요청:
+```json
+{ "domain": "REVIEW_MEDIA", "contentType": "image/jpeg", "fileSize": 524288 }
 ```
 응답:
 ```json
@@ -328,14 +324,21 @@ POST /api/v1/s3/presign        (로그인 필요)
 }
 ```
 
-**2단계**: 반환된 `uploadUrl`로 영상 바이트를 직접 PUT
+**2단계**: 반환된 `uploadUrl`로 사진·영상 바이트를 직접 PUT
 ```
 PUT <uploadUrl>
 Content-Type: video/mp4        (발급 시 보낸 contentType과 동일하게)
-body: <영상 바이너리>
+body: <파일 바이너리>
 ```
 
-**3단계**: 리뷰 작성 요청 `media[]`에 `{ "url": fileUrl, "mediaType": "VIDEO" }` 포함.
+**3단계**: 리뷰 작성 요청 `media[]`에 `fileUrl`과 실제 파일 종류를 포함합니다.
+```json
+{ "url": "<fileUrl>", "mediaType": "IMAGE" }
+```
+또는
+```json
+{ "url": "<fileUrl>", "mediaType": "VIDEO" }
+```
 
 허용 형식 / 제한:
 | 항목 | 값 |
@@ -346,7 +349,7 @@ body: <영상 바이너리>
 | 잘못된 형식 | 400 `S3_PRESIGN_UNSUPPORTED_TYPE` |
 | 용량 초과/0 이하 | 400 `S3_PRESIGN_SIZE_EXCEEDED` |
 
-권장(프론트): 영상은 30초 이내로 유도, 목록/스트립에는 **첫 프레임 포스터 이미지**를 함께 올려 표시하면 로딩이 가볍습니다(포스터는 이미지 업로드 경로 사용).
+권장(프론트): 영상은 30초 이내로 유도하고, 목록/스트립에는 **첫 프레임 포스터 이미지**를 함께 올려 표시하면 로딩이 가볍습니다.
 
 ---
 
@@ -388,7 +391,7 @@ body: <영상 바이너리>
 - 리뷰당 **1~5개** 선택(필수).
 - `NONE_APPROPRIATE`는 **단독**으로만 선택 가능(다른 키워드와 조합 불가). 저장은 되지만 화면 태그로는 렌더하지 않습니다.
 - 비F&B 장소에서는 `fbOnly` 키워드(음식/가격 6개 + `ADULT_MEAL`)를 선택할 수 없습니다.
-- `emoji`는 서버가 참고용으로 함께 내려줍니다. 프론트가 자체 아이콘을 써도 됩니다.
+- 리뷰 DB에는 `code`만 저장합니다. `label`과 `emoji`는 enum에 있는 키워드 카탈로그 응답용 메타데이터이며 리뷰별로 중복 저장하지 않습니다.
 
 ---
 

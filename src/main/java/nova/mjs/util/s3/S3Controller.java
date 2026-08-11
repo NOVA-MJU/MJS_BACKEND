@@ -41,7 +41,7 @@ public class S3Controller {
     }
 
     /**
-     * 프리사인 PUT URL 발급(영상 등 대용량 직접 업로드).
+     * 프리사인 PUT URL 발급(리뷰 사진·영상 직접 업로드).
      * 클라이언트는 uploadUrl로 S3에 직접 PUT하고, fileUrl을 리뷰 작성 요청에 담는다.
      */
     @PostMapping("/presign")

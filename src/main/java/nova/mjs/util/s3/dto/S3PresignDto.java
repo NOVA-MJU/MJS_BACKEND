@@ -9,7 +9,8 @@ import nova.mjs.util.s3.S3DomainType;
 
 /**
  * 프리사인 PUT 업로드 요청/응답 DTO.
- * 클라이언트는 uploadUrl로 S3에 직접 PUT하고, fileUrl을 서버 저장용으로 사용한다.
+ * 클라이언트는 리뷰 사진·영상을 uploadUrl로 S3에 직접 PUT하고,
+ * fileUrl을 리뷰 작성 요청의 미디어 URL로 사용한다.
  */
 public class S3PresignDto {
 
