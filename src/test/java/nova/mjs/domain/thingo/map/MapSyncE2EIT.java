@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import nova.mjs.domain.thingo.map.dto.BuildingDetailResponse;
 import nova.mjs.domain.thingo.map.dto.MapSyncDTO;
+import nova.mjs.domain.thingo.map.dto.MapMarkerResponse;
 import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
 import nova.mjs.domain.thingo.map.dto.PlaceDetailResponse;
 import nova.mjs.domain.thingo.map.entity.Pin;
@@ -179,13 +180,21 @@ class MapSyncE2EIT {
         List<PinSummaryResponse> buildingPins = mapPinService.getPinsByCategory("building", null, null, 0, 20, null);
         assertThat(buildingPins).extracting(PinSummaryResponse::getName).containsExactly("종합관");
 
-        // 같은 건물의 내부 프린터 2개는 지도에서 종합관 대표 핀 1개로 합쳐진다.
+        // 목록에서는 같은 건물의 프린터도 개별 시설로 모두 유지한다.
         List<PinSummaryResponse> printerPins = mapPinService.getPinsByCategory("printer", null, null, 0, 20, null);
-        assertThat(printerPins).hasSize(1);
-        assertThat(printerPins.get(0).getType()).isEqualTo("BUILDING");
-        assertThat(printerPins.get(0).getName()).isEqualTo("종합관");
-        assertThat(printerPins.get(0).getLatitude()).isEqualTo(37.5803);
-        assertThat(printerPins.get(0).getLongitude()).isEqualTo(126.9223);
+        assertThat(printerPins).hasSize(2);
+        assertThat(printerPins).extracting(PinSummaryResponse::getName)
+                .containsExactlyInAnyOrder("무한프린터", "컬러프린터");
+        assertThat(printerPins).allSatisfy(pin -> assertThat(pin.getType()).isEqualTo("PLACE"));
+
+        // 지도에서는 같은 건물의 프린터 2개를 종합관 대표 마커 하나로 묶는다.
+        List<MapMarkerResponse> printerMarkers = mapPinService.getMarkersByCategory("printer");
+        assertThat(printerMarkers).hasSize(1);
+        assertThat(printerMarkers.get(0).getType()).isEqualTo("BUILDING");
+        assertThat(printerMarkers.get(0).getTitle()).isEqualTo("프린터 2개");
+        assertThat(printerMarkers.get(0).getLocation()).isEqualTo("종합관");
+        assertThat(printerMarkers.get(0).getCount()).isEqualTo(2);
+        assertThat(printerMarkers.get(0).isGrouped()).isTrue();
 
         // 4) 건물 상세 - 운영시간 2건, 카테고리 탭에 프린터, 층 2개(F1에 무한프린터)
         Pin building = pinRepository.findByCode("b-main").orElseThrow();

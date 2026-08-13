@@ -3,6 +3,7 @@ package nova.mjs.domain.thingo.map.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
+import nova.mjs.domain.thingo.map.dto.MapMarkerResponse;
 import nova.mjs.domain.thingo.map.service.MapPinService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
@@ -57,5 +58,13 @@ public class MapCategoryController {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
         log.info("[명지도 칩 목록] code={}, lat={}, lng={}, page={}, email={}", code, lat, lng, page, email);
         return ApiResponse.success(mapPinService.getPinsByCategory(code, lat, lng, page, size, email, seed));
+    }
+
+    /** 지도 마커 전용 조회. 내부 시설은 건물별 대표 마커 하나로 묶는다. */
+    @GetMapping("/categories/{code}/markers")
+    public ApiResponse<List<MapMarkerResponse>> getMarkersByCategory(
+            @PathVariable("code") String code
+    ) {
+        return ApiResponse.success(mapPinService.getMarkersByCategory(code));
     }
 }

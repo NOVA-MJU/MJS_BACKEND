@@ -3,6 +3,7 @@ package nova.mjs.domain.thingo.map.service;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.map.dto.BuildingDetailResponse;
 import nova.mjs.domain.thingo.map.dto.MapOperatingHourLine;
+import nova.mjs.domain.thingo.map.dto.MapMarkerResponse;
 import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
 import nova.mjs.domain.thingo.map.dto.PlaceDetailResponse;
 import nova.mjs.domain.thingo.map.entity.*;
@@ -116,13 +117,8 @@ public class MapPinService {
             return paginate(summaries, page, size);
         }
 
-        // 내부 시설은 실제 독립 좌표가 없으므로 같은 건물에 여러 개가 있어도
-        // 지도에는 부모 건물 대표 핀 하나만 노출한다. 외부 장소는 그대로 유지한다.
-        List<Pin> representativePins = collapseInternalPlacesByBuilding(pins);
-
         // 즐겨찾기 먼저 → 가까운 순으로 정렬한 뒤 페이지로 자른다
-        List<PinSummaryResponse> sorted = toSortedSummaries(
-                representativePins, favoriteIds, userLat, userLng, now);
+        List<PinSummaryResponse> sorted = toSortedSummaries(pins, favoriteIds, userLat, userLng, now);
         return paginate(sorted, page, size);
     }
 
@@ -131,16 +127,38 @@ public class MapPinService {
     }
 
     /**
-     * 건물 내부 장소를 부모 건물 핀으로 치환하고 건물 ID 기준으로 중복 제거한다.
-     * 독립 좌표를 가진 외부 장소와 원래 건물 핀은 그대로 유지한다.
+     * 카테고리의 지도 마커 조회. 목록은 개별 시설을 유지하되 지도에서는 내부 시설만
+     * 부모 건물별 대표 마커 하나로 묶는다.
      */
-    private List<Pin> collapseInternalPlacesByBuilding(List<Pin> pins) {
-        Map<Long, Pin> representatives = new LinkedHashMap<>();
-        for (Pin pin : pins) {
-            Pin representative = pin.isInsideBuilding() ? pin.getParentBuilding() : pin;
-            representatives.putIfAbsent(representative.getId(), representative);
+    public List<MapMarkerResponse> getMarkersByCategory(String categoryCode) {
+        Category category = categoryRepository.findByCode(categoryCode)
+                .orElseThrow(CategoryNotFoundException::new);
+        if (category.getResultType() == CategoryResultType.BUS) {
+            return List.of();
         }
-        return new ArrayList<>(representatives.values());
+
+        List<String> categoryCodes = new ArrayList<>();
+        categoryCodes.add(category.getCode());
+        categoryRepository.findByParentOrderByDisplayOrderAsc(category)
+                .forEach(child -> categoryCodes.add(child.getCode()));
+        List<Pin> pins = pinRepository.findByCategoryCodeIn(categoryCodes);
+
+        Map<Long, List<Pin>> internalByBuilding = pins.stream()
+                .filter(Pin::isInsideBuilding)
+                .collect(Collectors.groupingBy(
+                        pin -> pin.getParentBuilding().getId(), LinkedHashMap::new, Collectors.toList()));
+
+        List<MapMarkerResponse> markers = new ArrayList<>();
+        internalByBuilding.values().forEach(group -> {
+            Pin building = group.get(0).getParentBuilding();
+            markers.add(MapMarkerResponse.grouped(
+                    building, category.getCode(), category.getLabel(), category.getIconKey(), group.size()));
+        });
+        pins.stream()
+                .filter(pin -> !pin.isInsideBuilding())
+                .map(MapMarkerResponse::single)
+                .forEach(markers::add);
+        return markers;
     }
 
     /**
