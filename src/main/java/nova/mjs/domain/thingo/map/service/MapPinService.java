@@ -116,13 +116,31 @@ public class MapPinService {
             return paginate(summaries, page, size);
         }
 
+        // 내부 시설은 실제 독립 좌표가 없으므로 같은 건물에 여러 개가 있어도
+        // 지도에는 부모 건물 대표 핀 하나만 노출한다. 외부 장소는 그대로 유지한다.
+        List<Pin> representativePins = collapseInternalPlacesByBuilding(pins);
+
         // 즐겨찾기 먼저 → 가까운 순으로 정렬한 뒤 페이지로 자른다
-        List<PinSummaryResponse> sorted = toSortedSummaries(pins, favoriteIds, userLat, userLng, now);
+        List<PinSummaryResponse> sorted = toSortedSummaries(
+                representativePins, favoriteIds, userLat, userLng, now);
         return paginate(sorted, page, size);
     }
 
     private boolean isDaedongCategory(String categoryCode) {
         return "daedong".equals(categoryCode) || categoryCode.startsWith("daedong-");
+    }
+
+    /**
+     * 건물 내부 장소를 부모 건물 핀으로 치환하고 건물 ID 기준으로 중복 제거한다.
+     * 독립 좌표를 가진 외부 장소와 원래 건물 핀은 그대로 유지한다.
+     */
+    private List<Pin> collapseInternalPlacesByBuilding(List<Pin> pins) {
+        Map<Long, Pin> representatives = new LinkedHashMap<>();
+        for (Pin pin : pins) {
+            Pin representative = pin.isInsideBuilding() ? pin.getParentBuilding() : pin;
+            representatives.putIfAbsent(representative.getId(), representative);
+        }
+        return new ArrayList<>(representatives.values());
     }
 
     /**

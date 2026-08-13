@@ -128,7 +128,8 @@ class MapSyncE2EIT {
               ],
               "places": [
                 {"code":"p-happy","categoryCode":"korean","name":"행복식당","latitude":37.5805,"longitude":126.9230,"address":"서울 서대문구 거북골로 34","infoText":"현금만"},
-                {"code":"p-printer","categoryCode":"printer","name":"무한프린터","parentBuildingCode":"b-main","floorLabel":"F1","infoText":"흑백 50원"}
+                {"code":"p-printer","categoryCode":"printer","name":"무한프린터","parentBuildingCode":"b-main","floorLabel":"F1","infoText":"흑백 50원"},
+                {"code":"p-printer-2","categoryCode":"printer","name":"컬러프린터","parentBuildingCode":"b-main","floorLabel":"F2","infoText":"컬러 300원"}
               ],
               "operatingHours": [
                 {"buildingCode":"b-main","dayOfWeek":"MONDAY","openTime":"09:00","closeTime":"18:00"},
@@ -156,7 +157,7 @@ class MapSyncE2EIT {
         assertThat(result.getCategories()).isEqualTo(4);
         assertThat(result.getBuildings()).isEqualTo(1);
         assertThat(result.getFloors()).isEqualTo(2);
-        assertThat(result.getPlaces()).isEqualTo(2);
+        assertThat(result.getPlaces()).isEqualTo(3);
         assertThat(result.getOperatingHours()).isEqualTo(2);
 
         // 1) 건물 목록 - 종합관 1개, 강의실코드 노출, GPS 없으니 거리 null
@@ -177,6 +178,14 @@ class MapSyncE2EIT {
         // 3) 칩 클릭(건물) - BUILDING_LIST → 종합관
         List<PinSummaryResponse> buildingPins = mapPinService.getPinsByCategory("building", null, null, 0, 20, null);
         assertThat(buildingPins).extracting(PinSummaryResponse::getName).containsExactly("종합관");
+
+        // 같은 건물의 내부 프린터 2개는 지도에서 종합관 대표 핀 1개로 합쳐진다.
+        List<PinSummaryResponse> printerPins = mapPinService.getPinsByCategory("printer", null, null, 0, 20, null);
+        assertThat(printerPins).hasSize(1);
+        assertThat(printerPins.get(0).getType()).isEqualTo("BUILDING");
+        assertThat(printerPins.get(0).getName()).isEqualTo("종합관");
+        assertThat(printerPins.get(0).getLatitude()).isEqualTo(37.5803);
+        assertThat(printerPins.get(0).getLongitude()).isEqualTo(126.9223);
 
         // 4) 건물 상세 - 운영시간 2건, 카테고리 탭에 프린터, 층 2개(F1에 무한프린터)
         Pin building = pinRepository.findByCode("b-main").orElseThrow();
