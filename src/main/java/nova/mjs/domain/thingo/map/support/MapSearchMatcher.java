@@ -50,6 +50,11 @@ public class MapSearchMatcher {
      * @param query         사용자 입력 검색어
      */
     public double score(String name, String categoryLabel, String query) {
+        return score(name, categoryLabel, null, query);
+    }
+
+    /** 이름·카테고리와 실제 실내 코드까지 비교한다. 정확한 호실 코드가 최우선이다. */
+    public double score(String name, String categoryLabel, String indoorCode, String query) {
         if (query == null || query.isBlank()) {
             return 0.0;
         }
@@ -71,6 +76,18 @@ public class MapSearchMatcher {
         String normalizedQuery = normalize(query);
         if (normalizedQuery.isEmpty()) {
             return 0.0;
+        }
+        String normalizedIndoorCode = normalize(indoorCode);
+        if (!normalizedIndoorCode.isEmpty()) {
+            if (normalizedIndoorCode.equals(normalizedQuery)) {
+                return 120.0;
+            }
+            if (normalizedIndoorCode.startsWith(normalizedQuery)) {
+                return 80.0;
+            }
+            if (normalizedIndoorCode.contains(normalizedQuery)) {
+                return 50.0;
+            }
         }
         String normalizedName = normalize(name);
 

@@ -24,6 +24,8 @@ public class MapSuggestResponse {
     private final String categoryCode;
     /** 카드 아이콘 키 (카테고리 아이콘) */
     private final String iconKey;
+    /** 실제 호실/요소 코드 (예: S1353). 없으면 null */
+    private final String indoorCode;
 
     public static MapSuggestResponse from(Pin pin) {
         return MapSuggestResponse.builder()
@@ -32,6 +34,7 @@ public class MapSuggestResponse {
                 .type(pin.getType().name())
                 .categoryCode(pin.getCategory().getCode())
                 .iconKey(pin.getCategory().getIconKey())
+                .indoorCode(pin.getIndoorCode())
                 .build();
     }
 }
