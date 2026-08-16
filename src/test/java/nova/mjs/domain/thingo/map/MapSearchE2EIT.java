@@ -298,6 +298,8 @@ class MapSearchE2EIT {
         assertThat(room.getId()).isNotNull();
         assertThat(room.getType()).isEqualTo("FLOOR_MAP");
         assertThat(room.getName()).isEqualTo("강의실 S1353");
+        assertThat(room.getLatitude()).isEqualTo(37.5803);
+        assertThat(room.getLongitude()).isEqualTo(126.9223);
         assertThat(room.getLink())
                 .contains("/maps/floor?buildingId=", "floorLabel=F3", "target=p-s1353")
                 .doesNotContain("pinId=", "xPercent", "yPercent");
@@ -339,6 +341,10 @@ class MapSearchE2EIT {
         assertThat(results).hasSize(2);
         assertThat(results).extracting(PinSummaryResponse::getType)
                 .containsOnly("FLOOR_MAP");
+        assertThat(results).allSatisfy(result -> {
+            assertThat(result.getLatitude()).isEqualTo(37.5803);
+            assertThat(result.getLongitude()).isEqualTo(126.9223);
+        });
         assertThat(results).extracting(PinSummaryResponse::getLink)
                 .containsExactlyInAnyOrder(
                         floorMapLink(results, "p-restroom-f1-east"),
