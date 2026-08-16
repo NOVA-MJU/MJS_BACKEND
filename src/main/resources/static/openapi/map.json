@@ -222,7 +222,7 @@
         "tags": ["명지도 - 검색"],
         "summary": "명지도 검색 (건물/장소)",
         "operationId": "searchMap",
-        "description": "명지도 전용 검색입니다. 응답 최상단 `resultType`은 배열 전체의 화면 종류를 나타내며 한 응답 안에서 섞이지 않습니다.\n\n### 분기 우선순위\n1. 정확한 실내 title/호실 코드: `FLOOR_MAP` — `{id,name,link}` 한 건\n2. 등록된 명지도 라벨 정확 일치: `LABEL` — 기존 `/map/categories/{code}/pins`와 동일한 목록\n3. 그 외: `GENERAL` — 기존 건물/장소 검색 목록\n\n`카페`, `프린터`, `대동명지도`처럼 라벨과 정확히 일치하면 장소명 검색 결과가 있어도 `LABEL`을 우선합니다.\n\n### 검색 품질\n- 일반 검색은 공백/기호 무시, 부분 일치, 초성, 오타 허용을 지원합니다.\n- `FLOOR_MAP`은 정확 일치만 허용합니다.\n\n### 페이지네이션\n- `LABEL`과 `GENERAL`은 `page`/`size`를 사용합니다. `FLOOR_MAP`은 첫 페이지에 한 건만 반환합니다.",
+        "description": "기존 명지도 검색 응답(status/data/timestamp)을 유지하며, 화면 이동 방식은 data의 각 항목 type으로 판단합니다. 최상단 resultType은 사용하지 않습니다.\n\n### 항목별 type\n- BUILDING: 학교 건물. 기존 건물 상세/지도 흐름을 유지합니다.\n- PLACE: 외부 일반 장소. 기존 외부 지도 흐름을 유지합니다.\n- FLOOR_MAP: 학교 건물 내부 장소. link로 층별안내도를 엽니다.\n\n한 목록에 PLACE와 FLOOR_MAP이 함께 올 수 있습니다. 예를 들어 프린터 라벨 검색 시 교내 프린터는 FLOOR_MAP, 교외 프린터는 PLACE입니다.\n\n### 검색 동작\n1. S1353처럼 실내 호실 코드가 정확히 일치하고 결과가 하나면 FLOOR_MAP 항목 한 건을 반환합니다.\n2. 화장실처럼 같은 이름의 내부 장소가 여러 개면 FLOOR_MAP 항목 목록을 반환하고 사용자가 선택한 항목의 link로 이동합니다.\n3. 프린터처럼 등록 라벨과 정확히 일치하면 기존 라벨 목록을 반환하되, 각 항목의 내부/외부 여부에 따라 FLOOR_MAP 또는 PLACE가 됩니다.\n4. 그 외 건물/장소 검색은 기존 응답 필드와 동작을 유지합니다.\n\n### 내부 장소 판별 및 SVG 연결 계약\n- parentBuildingCode와 floorLabel이 모두 있는 장소를 내부 장소로 판별합니다.\n- 내부 장소의 고유 Pin.code를 층별안내도 target으로 사용합니다. 같은 층의 화장실/프린터가 여러 개여도 target이 겹치지 않아야 합니다.\n- SVG 요소의 data-target 값은 반드시 해당 Pin.code와 같아야 합니다. indoorCode는 S1353 같은 사용자 검색용 코드이며 라우팅 식별자로 사용하지 않습니다.\n\n### 검색 품질 및 페이지네이션\n- 일반 검색은 공백/기호 무시, 부분 일치, 초성, 오타 허용을 지원합니다. 실내 호실 코드 단독 이동은 정확 일치만 허용합니다.\n- 목록 결과는 page/size를 사용합니다. 정확히 일치한 실내 호실 한 건은 첫 페이지에만 반환합니다.",
         "parameters": [
           { "name": "keyword", "in": "query", "required": true, "description": "검색어 (건물/장소명 또는 카테고리명, 초성/오타 허용). 비면 빈 목록", "schema": { "type": "string", "example": "투썸" } },
           { "name": "lat", "in": "query", "required": false, "description": "사용자 현재 위도 (프론트 GPS). 없으면 거리 미계산", "schema": { "type": "number", "format": "double", "example": 37.5802 } },
@@ -233,56 +233,48 @@
         ],
         "responses": {
           "200": {
-            "description": "검색 결과. resultType에 따라 data 항목 스키마가 결정됩니다.",
+            "description": "검색 결과. 기존 공통 응답 형태를 유지하며 각 data 항목의 type으로 화면을 분기합니다.",
             "content": {
               "application/json": {
                 "schema": {
-                  "oneOf": [
-                    { "$ref": "#/components/schemas/FloorMapSearchResponse" },
-                    { "$ref": "#/components/schemas/LabelMapSearchResponse" },
-                    { "$ref": "#/components/schemas/GeneralMapSearchResponse" }
-                  ],
-                  "discriminator": {
-                    "propertyName": "resultType",
-                    "mapping": {
-                      "FLOOR_MAP": "#/components/schemas/FloorMapSearchResponse",
-                      "LABEL": "#/components/schemas/LabelMapSearchResponse",
-                      "GENERAL": "#/components/schemas/GeneralMapSearchResponse"
-                    }
-                  }
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/PinSummary" } },
+                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-08-17T12:30:00" }
+                  },
+                  "required": ["status", "data", "timestamp"]
                 },
                 "examples": {
-                  "FLOOR_MAP": {
-                    "summary": "정확한 호실 코드 검색",
+                  "exactIndoorCode": {
+                    "summary": "정확한 호실 코드 검색: 층별안내도 한 건",
                     "value": {
                       "status": "API 요청 성공",
-                      "resultType": "FLOOR_MAP",
                       "data": [
-                        { "id": 353, "name": "강의실 S1353", "link": "/maps/floor?buildingId=2&floorLabel=F4&target=S1353" }
+                        { "id": 353, "type": "FLOOR_MAP", "name": "강의실 S1353", "categoryCode": "classroom", "iconKey": "ClassroomIcon", "imageUrl": null, "classroomCode": null, "location": "학생회관 F1", "favorite": false, "operatingStatus": "운영중", "distanceMeters": 120, "latitude": 37.221, "longitude": 127.187, "indoorCode": "S1353", "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" }
                       ],
-                      "timestamp": "2026-07-02T09:05:12"
+                      "timestamp": "2026-08-17T12:30:00"
                     }
                   },
-                  "LABEL": {
-                    "summary": "등록 라벨 정확 일치",
+                  "mixedLabel": {
+                    "summary": "프린터 라벨 검색: 내부·외부 혼합 목록",
                     "value": {
                       "status": "API 요청 성공",
-                      "resultType": "LABEL",
                       "data": [
-                        { "id": 51, "type": "PLACE", "name": "교내 카페", "categoryCode": "cafe", "iconKey": "CafeIcon", "favorite": false, "distanceMeters": 120 }
+                        { "id": 81, "type": "FLOOR_MAP", "name": "학생회관 무한프린터", "categoryCode": "printer", "iconKey": "PrinterIcon", "location": "학생회관 F4", "favorite": false, "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-printer-student-f4" },
+                        { "id": 82, "type": "PLACE", "name": "명지문구 프린터", "categoryCode": "printer", "iconKey": "PrinterIcon", "location": "경기 용인시 처인구 명지로 00", "favorite": false, "latitude": 37.2201, "longitude": 127.1881, "link": null }
                       ],
-                      "timestamp": "2026-07-02T09:05:12"
+                      "timestamp": "2026-08-17T12:30:00"
                     }
                   },
-                  "GENERAL": {
+                  "general": {
                     "summary": "일반 건물·장소 검색",
                     "value": {
                       "status": "API 요청 성공",
-                      "resultType": "GENERAL",
                       "data": [
-                        { "id": 1, "type": "BUILDING", "name": "종합관", "categoryCode": "building", "iconKey": "BuildingIcon", "classroomCode": "S1XXX", "favorite": false, "operatingStatus": "운영중", "distanceMeters": 80, "latitude": 37.5803, "longitude": 126.9223 }
+                        { "id": 1, "type": "BUILDING", "name": "종합관", "categoryCode": "building", "iconKey": "BuildingIcon", "classroomCode": "S1XXX", "favorite": false, "operatingStatus": "운영중", "distanceMeters": 80, "latitude": 37.5803, "longitude": 126.9223, "link": null }
                       ],
-                      "timestamp": "2026-07-02T09:05:12"
+                      "timestamp": "2026-08-17T12:30:00"
                     }
                   }
                 }
@@ -695,52 +687,6 @@
           "indoorCode": { "type": "string", "nullable": true, "description": "검색 가능한 실제 호실/요소 코드. 입력 시 소속 건물과 층 필수", "example": "S1353" }
         }
       },
-      "FloorMapSearchItem": {
-        "type": "object",
-        "description": "정확한 실내 title 검색 결과. 프론트는 link로 그대로 이동한다.",
-        "properties": {
-          "id": { "type": "integer", "format": "int64", "example": 353 },
-          "name": { "type": "string", "example": "강의실 S1353" },
-          "link": { "type": "string", "example": "/maps/floor?buildingId=2&floorLabel=F4&target=S1353" }
-        },
-        "required": ["id", "name", "link"]
-      },
-      "FloorMapSearchResponse": {
-        "title": "FLOOR_MAP",
-        "type": "object",
-        "description": "정확한 실내 title/호실 코드 검색 결과",
-        "properties": {
-          "status": { "type": "string", "example": "API 요청 성공" },
-          "resultType": { "type": "string", "enum": ["FLOOR_MAP"] },
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/FloorMapSearchItem" } },
-          "timestamp": { "type": "string", "format": "date-time" }
-        },
-        "required": ["status", "resultType", "data", "timestamp"]
-      },
-      "LabelMapSearchResponse": {
-        "title": "LABEL",
-        "type": "object",
-        "description": "등록된 명지도 라벨 정확 일치 결과",
-        "properties": {
-          "status": { "type": "string", "example": "API 요청 성공" },
-          "resultType": { "type": "string", "enum": ["LABEL"] },
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/PinSummary" } },
-          "timestamp": { "type": "string", "format": "date-time" }
-        },
-        "required": ["status", "resultType", "data", "timestamp"]
-      },
-      "GeneralMapSearchResponse": {
-        "title": "GENERAL",
-        "type": "object",
-        "description": "일반 건물·장소 검색 결과",
-        "properties": {
-          "status": { "type": "string", "example": "API 요청 성공" },
-          "resultType": { "type": "string", "enum": ["GENERAL"] },
-          "data": { "type": "array", "items": { "$ref": "#/components/schemas/PinSummary" } },
-          "timestamp": { "type": "string", "format": "date-time" }
-        },
-        "required": ["status", "resultType", "data", "timestamp"]
-      },
       "SyncOperatingHourRow": {
         "type": "object",
         "description": "건물 운영시간 1행 (건물코드 + 요일로 식별). 건물만 가짐.",
@@ -757,10 +703,10 @@
       },
       "PinSummary": {
         "type": "object",
-        "description": "목록 카드 1개 (건물 목록 / 칩 클릭 장소 목록 공용). 종류별로 일부 필드만 채워진다.",
+        "description": "목록 카드 1개 (건물 목록 / 칩 클릭 장소 목록 / 검색 공용). 기존 필드를 유지하고, 검색에서는 각 항목의 type과 link로 이동 방식을 결정한다.",
         "properties": {
           "id": { "type": "integer", "format": "int64", "description": "핀 ID (상세 요청에 사용)", "example": 51 },
-          "type": { "type": "string", "description": "종류. 프론트가 상세 화면을 분기", "enum": ["BUILDING", "PLACE"], "example": "PLACE" },
+          "type": { "type": "string", "description": "항목별 이동 종류. BUILDING은 건물, PLACE는 외부 장소, FLOOR_MAP은 학교 건물 내부 장소", "enum": ["BUILDING", "PLACE", "FLOOR_MAP"], "example": "FLOOR_MAP" },
           "name": { "type": "string", "description": "건물명/장소명", "example": "행복식당" },
           "categoryCode": { "type": "string", "description": "소속 카테고리 코드", "example": "korean" },
           "iconKey": { "type": "string", "description": "카드 아이콘 키 (카테고리 아이콘)", "example": "KoreanFoodIcon" },
@@ -772,7 +718,8 @@
           "distanceMeters": { "type": "integer", "nullable": true, "description": "현재 위치로부터 거리(미터). 캠퍼스 밖/GPS 없으면 null(미표시)", "example": 150 },
           "latitude": { "type": "number", "format": "double", "nullable": true, "description": "지도 마커용 위도. 내부 장소는 소속 건물 좌표. 좌표 없으면 null", "example": 37.5796415 },
           "longitude": { "type": "number", "format": "double", "nullable": true, "description": "지도 마커용 경도. 내부 장소는 소속 건물 좌표. 좌표 없으면 null", "example": 126.9250425 },
-          "indoorCode": { "type": "string", "nullable": true, "description": "검색 가능한 실제 호실/요소 코드", "example": "S1353" }
+          "indoorCode": { "type": "string", "nullable": true, "description": "검색 가능한 실제 호실/요소 코드. 사용자 검색용이며 층별안내도 target 식별자는 아님", "example": "S1353" },
+          "link": { "type": "string", "nullable": true, "description": "type이 FLOOR_MAP인 경우 이동할 층별안내도 상대 URL. target은 중복되지 않는 Pin.code이며 SVG data-target과 일치해야 함. 그 외 type은 null", "example": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" }
         },
         "required": ["id", "type", "name", "categoryCode", "favorite"]
       },
