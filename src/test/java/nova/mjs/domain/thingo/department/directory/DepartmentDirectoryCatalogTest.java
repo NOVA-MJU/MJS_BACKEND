@@ -35,6 +35,16 @@ class DepartmentDirectoryCatalogTest {
     }
 
     @Test
+    void resolvesApplicationSoftwareAliasesToTheSameDepartment() {
+        assertThat(catalog.resolve("응소 소개").orElseThrow().departmentName())
+                .isEqualTo(DepartmentName.APPLICATION_SOFTWARE);
+        assertThat(catalog.resolve("응용소프트웨어학과 홈페이지").orElseThrow().departmentName())
+                .isEqualTo(DepartmentName.APPLICATION_SOFTWARE);
+        assertThat(catalog.resolve("응용소프트웨어전공 소개").orElseThrow().departmentName())
+                .isEqualTo(DepartmentName.APPLICATION_SOFTWARE);
+    }
+
+    @Test
     void publicServiceSchoolAndAdministrationMajorUseDifferentCanonicalIds() {
         assertThat(catalog.resolve("공공인재학부 홈페이지").orElseThrow().departmentName())
                 .isEqualTo(DepartmentName.SCHOOL_OF_PUBLIC_SERVICE);

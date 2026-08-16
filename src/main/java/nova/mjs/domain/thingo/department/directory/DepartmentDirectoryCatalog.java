@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,6 +21,10 @@ import java.util.Set;
 public class DepartmentDirectoryCatalog {
 
     private static final String RESOURCE_PATH = "department/department_directory.psv";
+    private static final Map<String, DepartmentName> DEPARTMENT_ALIASES = Map.of(
+            "응소", DepartmentName.APPLICATION_SOFTWARE,
+            "응용소프트웨어학과", DepartmentName.APPLICATION_SOFTWARE
+    );
     private final List<Entry> entries;
 
     public DepartmentDirectoryCatalog() {
@@ -39,6 +44,16 @@ public class DepartmentDirectoryCatalog {
     public Optional<Entry> resolve(String rawQuery) {
         String query = normalize(rawQuery);
         if (query.isBlank()) return Optional.empty();
+
+        Optional<DepartmentName> aliasMatch = DEPARTMENT_ALIASES.entrySet().stream()
+                .filter(alias -> query.contains(normalize(alias.getKey())))
+                .max(Comparator.comparingInt(alias -> normalize(alias.getKey()).length()))
+                .map(Map.Entry::getValue);
+        if (aliasMatch.isPresent()) {
+            return entries.stream()
+                    .filter(entry -> entry.departmentName() == aliasMatch.get())
+                    .findFirst();
+        }
 
         return entries.stream()
                 .filter(entry -> query.contains(entry.searchLabel())

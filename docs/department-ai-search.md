@@ -39,4 +39,8 @@ mju:
 GET /api/v1/departments/ai-search?query=데이터사이언스전공%20소개&category=AUTO
 ```
 
+학과 약칭과 과거·관용 명칭도 같은 학과로 정규화한다. 예를 들어 `응소`,
+`응용소프트웨어학과`, `응용소프트웨어전공`은 모두 응용소프트웨어전공의
+기본 소개로 연결된다.
+
 기계 판독용 전체 예시는 `/openapi/department-ai-search.json`에서 확인한다.
