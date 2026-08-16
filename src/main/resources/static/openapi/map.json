@@ -289,7 +289,7 @@
         "tags": ["명지도 - 검색"],
         "summary": "명지도 검색 자동완성",
         "operationId": "suggestMap",
-        "description": "검색어를 입력하는 중 실시간으로 이름을 제안하는 경량 API입니다. 거리·운영상태는 계산하지 않아 빠릅니다.\n\n### 사용 시나리오\n1. 검색창에 글자를 입력할 때마다 호출(디바운스 권장)\n2. 제안 목록을 드롭다운으로 표시 (아이콘 + 이름)\n3. 항목 탭 시 응답 항목의 `type`으로 상세 분기 (`id`로 상세 요청)\n\n### 매칭 규칙\n- 검색(`/map/search`)과 동일: 부분 일치 / 초성(`ㅌㅆ`) / 오타 허용 / 공백·대소문자 무시",
+        "description": "검색어를 입력하는 중 실시간으로 이름을 제안하는 경량 API입니다. 거리·운영상태는 계산하지 않아 빠릅니다.\n\n### 사용 시나리오\n1. 검색창에 글자를 입력할 때마다 호출(디바운스 권장)\n2. 제안 목록을 드롭다운으로 표시 (아이콘 + 이름)\n3. 항목 탭 시 type이 FLOOR_MAP이면 link로 이동하고, BUILDING/PLACE이면 기존 id 기반 상세 흐름을 사용합니다.\n\n### 매칭 규칙\n- 검색(`/map/search`)과 동일: 부분 일치 / 초성(`ㅌㅆ`) / 오타 허용 / 공백·대소문자 무시",
         "parameters": [
           { "name": "keyword", "in": "query", "required": true, "description": "검색어(입력 중 문자열). 비면 빈 목록", "schema": { "type": "string", "example": "투" } },
           { "name": "limit", "in": "query", "required": false, "description": "최대 제안 개수", "schema": { "type": "integer", "default": 10, "example": 10 } }
@@ -310,8 +310,8 @@
                 "example": {
                   "status": "API 요청 성공",
                   "data": [
-                    { "id": 51, "name": "투썸플레이스 명지대점", "type": "PLACE", "categoryCode": "cafe", "iconKey": "CafeIcon" },
-                    { "id": 88, "name": "투썸플레이스 남가좌점", "type": "PLACE", "categoryCode": "cafe", "iconKey": "CafeIcon" }
+                    { "id": 353, "name": "강의실 S1353", "type": "FLOOR_MAP", "categoryCode": "classroom", "iconKey": "ClassroomIcon", "indoorCode": "S1353", "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" },
+                    { "id": 51, "name": "투썸플레이스 명지대점", "type": "PLACE", "categoryCode": "cafe", "iconKey": "CafeIcon", "link": null }
                   ],
                   "timestamp": "2026-07-02T09:05:12"
                 }
@@ -729,10 +729,11 @@
         "properties": {
           "id": { "type": "integer", "format": "int64", "description": "핀 ID (탭 시 상세 요청에 사용)", "example": 51 },
           "name": { "type": "string", "description": "건물명/장소명", "example": "투썸플레이스 명지대점" },
-          "type": { "type": "string", "description": "종류. 프론트가 상세 화면을 분기", "enum": ["BUILDING", "PLACE"], "example": "PLACE" },
+          "type": { "type": "string", "description": "항목별 이동 종류. FLOOR_MAP이면 link로 이동", "enum": ["BUILDING", "PLACE", "FLOOR_MAP"], "example": "FLOOR_MAP" },
           "categoryCode": { "type": "string", "description": "소속 카테고리 코드", "example": "cafe" },
           "iconKey": { "type": "string", "description": "아이콘 키 (카테고리 아이콘)", "example": "CafeIcon" },
-          "indoorCode": { "type": "string", "nullable": true, "example": "S1353" }
+          "indoorCode": { "type": "string", "nullable": true, "example": "S1353" },
+          "link": { "type": "string", "nullable": true, "description": "type이 FLOOR_MAP인 경우 이동할 층별안내도 상대 URL. 그 외 type은 null", "example": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" }
         },
         "required": ["id", "name", "type", "categoryCode"]
       },
