@@ -3,7 +3,8 @@
 ## 호환성 원칙
 
 - 기존 프론트가 사용하는 `/api/v1/search/**`, `/api/v1/departments/info`, 일정·공지 API의 요청과 응답은 변경하지 않는다.
-- 학과 AI 검색은 새 엔드포인트 `GET /api/v1/ai/departments/search`로만 제공한다.
+- 학과 AI 검색은 공개 엔드포인트 `GET /api/v1/departments/ai-search`로 제공한다.
+- 기존 `/api/v1/ai/departments/search`도 내부 호환을 위해 유지하지만, 운영 nginx의 `/api/v1/ai/*` 라우팅과 충돌하므로 외부 연동에서는 사용하지 않는다.
 - 응답은 `PROFILE_CARD`, `TEXT_ANSWER`, `COURSE_LIST`, `EVENT_LIST`, `SOURCE_LIST` 블록으로 유형화한다.
 
 ## 데이터 흐름
@@ -35,7 +36,7 @@ mju:
 ## 검색 요청 예시
 
 ```http
-GET /api/v1/ai/departments/search?query=데이터사이언스전공%20소개&category=AUTO
+GET /api/v1/departments/ai-search?query=데이터사이언스전공%20소개&category=AUTO
 ```
 
 기계 판독용 전체 예시는 `/openapi/department-ai-search.json`에서 확인한다.

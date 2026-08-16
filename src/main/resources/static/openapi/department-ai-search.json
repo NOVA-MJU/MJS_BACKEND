@@ -9,7 +9,7 @@
     { "url": "https://api.thingo.kr/api/v1" }
   ],
   "paths": {
-    "/ai/departments/search": {
+    "/departments/ai-search": {
       "get": {
         "summary": "학과 AI 검색",
         "parameters": [
