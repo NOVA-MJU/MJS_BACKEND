@@ -80,7 +80,7 @@
             "name": "college",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR","OTHER"] }
+            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","MEDIA_HUMANLIFE","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR"] }
           },
           {
             "name": "department",
@@ -123,7 +123,7 @@
             "name": "college",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR","OTHER"] }
+            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","MEDIA_HUMANLIFE","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR"] }
           },
           {
             "name": "department",
@@ -215,7 +215,7 @@
             "name": "college",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR","OTHER"] }
+            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","MEDIA_HUMANLIFE","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR"] }
           },
           {
             "name": "department",
@@ -372,7 +372,7 @@
             "name": "college",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR","OTHER"] }
+            "schema": { "type": "string", "enum": ["HUMANITIES","SOCIAL_SCIENCES","BUSINESS","MEDIA_HUMANLIFE","AI_SOFTWARE","FUTURE_CONVERGENCE","HONOR"] }
           },
           {
             "name": "department",

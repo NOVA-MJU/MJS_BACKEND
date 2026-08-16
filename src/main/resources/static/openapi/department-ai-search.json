@@ -1,0 +1,91 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MJU 학과 AI 검색 API",
+    "version": "v1.0.0",
+    "description": "기존 검색 API와 독립적으로 학과 기본정보, 학문기초교양, 전공, 이벤트를 유형화된 블록으로 반환합니다."
+  },
+  "servers": [
+    { "url": "https://api.thingo.kr/api/v1" }
+  ],
+  "paths": {
+    "/ai/departments/search": {
+      "get": {
+        "summary": "학과 AI 검색",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "데이터사이언스전공 소개"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "AUTO",
+              "enum": ["AUTO", "BASIC", "FOUNDATION", "MAJOR", "EVENT"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "검색 성공",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "query": "데이터사이언스전공 소개",
+                    "category": "BASIC",
+                    "entity": {
+                      "id": "DEPARTMENT:AI_SOFTWARE:DATA_SCIENCE",
+                      "college": "AI_SOFTWARE",
+                      "departmentName": "DATA_SCIENCE",
+                      "collegeLabel": "인공지능·소프트웨어융합대학",
+                      "departmentLabel": "데이터사이언스전공",
+                      "displayName": "데이터사이언스전공"
+                    },
+                    "blocks": [
+                      {
+                        "type": "PROFILE_CARD",
+                        "title": "데이터사이언스전공",
+                        "profile": {
+                          "academicOfficePhone": "02-300-0643",
+                          "instagramUrl": "https://www.instagram.com/mju_sw/",
+                          "homepageUrl": "https://www.mju.ac.kr/software/index.do",
+                          "collectionStatus": "COMPLETE",
+                          "verifiedAt": "2026-08-16T12:00:00"
+                        }
+                      },
+                      {
+                        "type": "TEXT_ANSWER",
+                        "title": "소개",
+                        "text": "공식 전공소개 페이지에서 수집한 소개 본문"
+                      },
+                      {
+                        "type": "SOURCE_LIST",
+                        "title": "공식 출처",
+                        "items": [
+                          {
+                            "title": "소개",
+                            "url": "https://www.mju.ac.kr/software/9783/subview.do",
+                            "sourceType": "OFFICIAL_DEPARTMENT_SITE"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "timestamp": "2026-08-16T12:00:00"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

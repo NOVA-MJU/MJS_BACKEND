@@ -101,6 +101,20 @@ public class Department extends BaseEntity {
         this.homepageUrl = getOrDefault(request.getHomepageUrl(), this.homepageUrl);
     }
 
+    /**
+     * 공식 학과 디렉터리 동기화 전용 갱신 메서드.
+     * 관리자 API DTO와 분리해 배치 동기화가 기존 API 계약에 의존하지 않도록 한다.
+     */
+    public void syncDirectoryInfo(
+            String academicOfficePhone,
+            String instagramUrl,
+            String homepageUrl
+    ) {
+        this.academicOfficePhone = getOrDefault(academicOfficePhone, this.academicOfficePhone);
+        this.instagramUrl = getOrDefault(instagramUrl, this.instagramUrl);
+        this.homepageUrl = getOrDefault(homepageUrl, this.homepageUrl);
+    }
+
 
 
     // 관리자 변경

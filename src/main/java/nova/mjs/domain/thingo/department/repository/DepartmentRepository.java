@@ -4,11 +4,22 @@ import nova.mjs.domain.thingo.department.entity.Department;
 import nova.mjs.domain.thingo.department.entity.enumList.College;
 import nova.mjs.domain.thingo.department.entity.enumList.DepartmentName;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
+
+    /** 수동 시드로 identity sequence가 뒤처진 운영 DB를 신규 insert 전에 멱등 보정한다. */
+    @Query(value = """
+            select setval(
+                pg_get_serial_sequence('department', 'department_id'),
+                coalesce((select max(department_id) from department), 0) + 1,
+                false
+            )
+            """, nativeQuery = true)
+    Long alignIdSequence();
 
     Optional<Department> findByDepartmentName(DepartmentName departmentName);
 
