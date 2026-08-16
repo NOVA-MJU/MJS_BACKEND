@@ -238,28 +238,54 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": { "type": "string", "example": "API 요청 성공" },
-                    "resultType": { "type": "string", "enum": ["FLOOR_MAP", "LABEL", "GENERAL"] },
-                    "data": {
-                      "oneOf": [
-                        { "type": "array", "items": { "$ref": "#/components/schemas/FloorMapSearchItem" } },
-                        { "type": "array", "items": { "$ref": "#/components/schemas/PinSummary" } }
-                      ]
-                    },
-                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-07-02T09:05:12" }
-                  },
-                  "required": ["status", "resultType", "data", "timestamp"]
-                },
-                "example": {
-                  "status": "API 요청 성공",
-                  "resultType": "GENERAL",
-                  "data": [
-                    { "id": 51, "type": "PLACE", "name": "투썸플레이스 명지대점", "categoryCode": "cafe", "iconKey": "CafeIcon", "imageUrl": "https://thingo.kr/img/place/51.jpg", "classroomCode": null, "location": "서울 서대문구 거북골로 31-1 1~3층", "favorite": false, "operatingStatus": null, "distanceMeters": 720, "latitude": 37.5806, "longitude": 126.9231 },
-                    { "id": 1, "type": "BUILDING", "name": "종합관", "categoryCode": "building", "iconKey": "BuildingIcon", "imageUrl": "https://thingo.kr/img/building/1.jpg", "classroomCode": "S1XXX", "location": null, "favorite": false, "operatingStatus": "운영중", "distanceMeters": 80, "latitude": 37.5803, "longitude": 126.9223 }
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/FloorMapSearchResponse" },
+                    { "$ref": "#/components/schemas/LabelMapSearchResponse" },
+                    { "$ref": "#/components/schemas/GeneralMapSearchResponse" }
                   ],
-                  "timestamp": "2026-07-02T09:05:12"
+                  "discriminator": {
+                    "propertyName": "resultType",
+                    "mapping": {
+                      "FLOOR_MAP": "#/components/schemas/FloorMapSearchResponse",
+                      "LABEL": "#/components/schemas/LabelMapSearchResponse",
+                      "GENERAL": "#/components/schemas/GeneralMapSearchResponse"
+                    }
+                  }
+                },
+                "examples": {
+                  "FLOOR_MAP": {
+                    "summary": "정확한 호실 코드 검색",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "resultType": "FLOOR_MAP",
+                      "data": [
+                        { "id": 353, "name": "강의실 S1353", "link": "/maps/floor?buildingId=2&floorLabel=F4&target=S1353" }
+                      ],
+                      "timestamp": "2026-07-02T09:05:12"
+                    }
+                  },
+                  "LABEL": {
+                    "summary": "등록 라벨 정확 일치",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "resultType": "LABEL",
+                      "data": [
+                        { "id": 51, "type": "PLACE", "name": "교내 카페", "categoryCode": "cafe", "iconKey": "CafeIcon", "favorite": false, "distanceMeters": 120 }
+                      ],
+                      "timestamp": "2026-07-02T09:05:12"
+                    }
+                  },
+                  "GENERAL": {
+                    "summary": "일반 건물·장소 검색",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "resultType": "GENERAL",
+                      "data": [
+                        { "id": 1, "type": "BUILDING", "name": "종합관", "categoryCode": "building", "iconKey": "BuildingIcon", "classroomCode": "S1XXX", "favorite": false, "operatingStatus": "운영중", "distanceMeters": 80, "latitude": 37.5803, "longitude": 126.9223 }
+                      ],
+                      "timestamp": "2026-07-02T09:05:12"
+                    }
+                  }
                 }
               }
             }
@@ -680,6 +706,42 @@
           "link": { "type": "string", "example": "/maps/floor?buildingId=2&floorLabel=F4&target=S1353" }
         },
         "required": ["id", "name", "link"]
+      },
+      "FloorMapSearchResponse": {
+        "title": "FLOOR_MAP",
+        "type": "object",
+        "description": "정확한 실내 title/호실 코드 검색 결과",
+        "properties": {
+          "status": { "type": "string", "example": "API 요청 성공" },
+          "resultType": { "type": "string", "enum": ["FLOOR_MAP"] },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/FloorMapSearchItem" } },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["status", "resultType", "data", "timestamp"]
+      },
+      "LabelMapSearchResponse": {
+        "title": "LABEL",
+        "type": "object",
+        "description": "등록된 명지도 라벨 정확 일치 결과",
+        "properties": {
+          "status": { "type": "string", "example": "API 요청 성공" },
+          "resultType": { "type": "string", "enum": ["LABEL"] },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/PinSummary" } },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["status", "resultType", "data", "timestamp"]
+      },
+      "GeneralMapSearchResponse": {
+        "title": "GENERAL",
+        "type": "object",
+        "description": "일반 건물·장소 검색 결과",
+        "properties": {
+          "status": { "type": "string", "example": "API 요청 성공" },
+          "resultType": { "type": "string", "enum": ["GENERAL"] },
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/PinSummary" } },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["status", "resultType", "data", "timestamp"]
       },
       "SyncOperatingHourRow": {
         "type": "object",
