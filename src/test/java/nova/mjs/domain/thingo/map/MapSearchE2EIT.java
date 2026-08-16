@@ -5,9 +5,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import nova.mjs.domain.thingo.ElasticSearch.indexing.publisher.SearchIndexPublisher;
 import nova.mjs.domain.thingo.map.dto.MapSuggestResponse;
-import nova.mjs.domain.thingo.map.dto.FloorMapSearchItemResponse;
-import nova.mjs.domain.thingo.map.dto.MapSearchResponse;
-import nova.mjs.domain.thingo.map.dto.MapSearchResultType;
 import nova.mjs.domain.thingo.map.dto.MapSyncDTO;
 import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
 import nova.mjs.domain.thingo.map.entity.Pin;
@@ -110,7 +107,7 @@ class MapSearchE2EIT {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /** 검색 시나리오용 시트 페이로드 (건물 1 + 외부장소 3 + 내부장소 1) */
+    /** 검색 시나리오용 시트 페이로드 (내부·외부 혼합 라벨과 중복 내부 시설 포함) */
     private static final String SHEET_JSON = """
             {
               "groups": [
@@ -125,7 +122,8 @@ class MapSearchE2EIT {
                 {"code":"bar","groupCode":"food","label":"주점","iconKey":"BarIcon","resultType":"PLACE_LIST","quickMenu":false,"displayOrder":3},
                 {"code":"building","groupCode":"guide","label":"건물","iconKey":"BuildingIcon","resultType":"BUILDING_LIST","quickMenu":true,"displayOrder":1},
                 {"code":"classroom","groupCode":"guide","label":"강의실","iconKey":"ClassroomIcon","resultType":"PLACE_LIST","quickMenu":false,"displayOrder":2},
-                {"code":"printer","groupCode":"convenience","label":"프린터","iconKey":"PrinterIcon","resultType":"PLACE_LIST","quickMenu":false,"displayOrder":1}
+                {"code":"printer","groupCode":"convenience","label":"프린터","iconKey":"PrinterIcon","resultType":"PLACE_LIST","quickMenu":false,"displayOrder":1},
+                {"code":"restroom","groupCode":"convenience","label":"화장실","iconKey":"RestroomIcon","resultType":"PLACE_LIST","quickMenu":false,"displayOrder":2}
               ],
               "buildings": [
                 {"code":"b-main","categoryCode":"building","name":"종합관","latitude":37.5803,"longitude":126.9223,"imageUrl":"https://thingo.kr/b1.jpg","infoText":"구 본관","buildingNumber":1,"classroomCode":"S1XXX"}
@@ -138,6 +136,9 @@ class MapSearchE2EIT {
                 {"code":"p-happy","categoryCode":"korean","name":"행복식당","latitude":37.5805,"longitude":126.9230,"address":"서울 서대문구 거북골로 34","infoText":"현금만"},
                 {"code":"p-twosome","categoryCode":"cafe","name":"투썸플레이스 명지대점","latitude":37.5806,"longitude":126.9231,"address":"서울 서대문구 거북골로 31-1 1~3층","infoText":"콘센트 많음"},
                 {"code":"p-printer","categoryCode":"printer","name":"무한프린터","parentBuildingCode":"b-main","floorLabel":"F1","infoText":"흑백 50원"},
+                {"code":"p-printer-outside","categoryCode":"printer","name":"명지문구 프린터","latitude":37.5810,"longitude":126.9240,"address":"서울 서대문구 명지대길 10"},
+                {"code":"p-restroom-f1-east","categoryCode":"restroom","name":"화장실","parentBuildingCode":"b-main","floorLabel":"F1"},
+                {"code":"p-restroom-f3-west","categoryCode":"restroom","name":"화장실","parentBuildingCode":"b-main","floorLabel":"F3"},
                 {"code":"p-s1353","categoryCode":"classroom","name":"강의실 S1353","parentBuildingCode":"b-main","floorLabel":"F3","indoorCode":"S1353"},
                 {"code":"p-twodari","categoryCode":"bar","name":"투다리 하나로점","latitude":37.5812,"longitude":126.9250,"address":"서울 서대문구 명지대길 18","infoText":"단체석 있음"}
               ],
@@ -166,14 +167,14 @@ class MapSearchE2EIT {
 
         // then - 섹션별 처리 건수
         assertThat(result.getGroups()).isEqualTo(3);
-        assertThat(result.getCategories()).isEqualTo(7);
+        assertThat(result.getCategories()).isEqualTo(8);
         assertThat(result.getBuildings()).isEqualTo(1);
         assertThat(result.getFloors()).isEqualTo(2);
-        assertThat(result.getPlaces()).isEqualTo(5);
+        assertThat(result.getPlaces()).isEqualTo(8);
         assertThat(result.getOperatingHours()).isEqualTo(2);
 
-        // 핀 총 6개 (건물1 + 장소5)
-        assertThat(pinRepository.count()).isEqualTo(6);
+        // 핀 총 9개 (건물1 + 장소8)
+        assertThat(pinRepository.count()).isEqualTo(9);
 
         // 개별 핀의 내용이 시트 값 그대로 적재됐는지 (데이터 품질)
         Pin twosome = pinRepository.findByCode("p-twosome").orElseThrow();
@@ -194,11 +195,9 @@ class MapSearchE2EIT {
         syncAndClear();
 
         // when
-        MapSearchResponse response = search("종합");
-        List<PinSummaryResponse> results = pinResults(response);
+        List<PinSummaryResponse> results = search("종합");
 
         // then
-        assertThat(response.getResultType()).isEqualTo(MapSearchResultType.GENERAL);
         assertThat(results).extracting(PinSummaryResponse::getName).contains("종합관");
         assertThat(results).allSatisfy(r -> assertThat(r.getType()).isEqualTo("BUILDING"));
     }
@@ -210,7 +209,7 @@ class MapSearchE2EIT {
         syncAndClear();
 
         // when
-        List<PinSummaryResponse> results = pinResults(search("ㅌㅆ"));
+        List<PinSummaryResponse> results = search("ㅌㅆ");
 
         // then
         assertThat(results).extracting(PinSummaryResponse::getName).contains("투썸플레이스 명지대점");
@@ -223,7 +222,7 @@ class MapSearchE2EIT {
         syncAndClear();
 
         // when
-        List<PinSummaryResponse> results = pinResults(search("투썹플레이스"));
+        List<PinSummaryResponse> results = search("투썹플레이스");
 
         // then
         assertThat(results).extracting(PinSummaryResponse::getName).contains("투썸플레이스 명지대점");
@@ -236,7 +235,7 @@ class MapSearchE2EIT {
         syncAndClear();
 
         // when
-        List<PinSummaryResponse> results = pinResults(search("투썸"));
+        List<PinSummaryResponse> results = search("투썸");
 
         // then - 카페(투썸플레이스)만 나오고, 이름이 다른 '투다리 하나로점'은 섞이지 않는다
         assertThat(results).extracting(PinSummaryResponse::getName)
@@ -251,11 +250,9 @@ class MapSearchE2EIT {
         syncAndClear();
 
         // when
-        MapSearchResponse response = search("한식");
-        List<PinSummaryResponse> results = pinResults(response);
+        List<PinSummaryResponse> results = search("한식");
 
         // then
-        assertThat(response.getResultType()).isEqualTo(MapSearchResultType.LABEL);
         assertThat(results).extracting(PinSummaryResponse::getName).contains("행복식당");
     }
 
@@ -294,15 +291,15 @@ class MapSearchE2EIT {
     void should_returnFloorMapLink_when_exactIndoorCodeMatches() throws Exception {
         syncAndClear();
 
-        MapSearchResponse response = search("s-1353");
-        assertThat(response.getResultType()).isEqualTo(MapSearchResultType.FLOOR_MAP);
-        assertThat(response.getData()).hasSize(1);
+        List<PinSummaryResponse> response = search("s-1353");
+        assertThat(response).hasSize(1);
 
-        FloorMapSearchItemResponse room = (FloorMapSearchItemResponse) response.getData().get(0);
+        PinSummaryResponse room = response.get(0);
         assertThat(room.getId()).isNotNull();
+        assertThat(room.getType()).isEqualTo("FLOOR_MAP");
         assertThat(room.getName()).isEqualTo("강의실 S1353");
         assertThat(room.getLink())
-                .contains("/maps/floor?buildingId=", "floorLabel=F3", "target=S1353")
+                .contains("/maps/floor?buildingId=", "floorLabel=F3", "target=p-s1353")
                 .doesNotContain("pinId=", "xPercent", "yPercent");
     }
 
@@ -311,11 +308,41 @@ class MapSearchE2EIT {
     void should_prioritizeLabel_when_labelMatchesExactly() throws Exception {
         syncAndClear();
 
-        MapSearchResponse response = search("카페");
+        List<PinSummaryResponse> response = search("카페");
 
-        assertThat(response.getResultType()).isEqualTo(MapSearchResultType.LABEL);
-        assertThat(pinResults(response)).extracting(PinSummaryResponse::getName)
+        assertThat(response).extracting(PinSummaryResponse::getName)
                 .containsExactly("투썸플레이스 명지대점");
+    }
+
+    @Test
+    @DisplayName("프린터 라벨 검색은 내부 FLOOR_MAP과 외부 PLACE를 한 목록에 반환한다")
+    void should_mixInternalAndExternalPlaces_inLabelResults() throws Exception {
+        syncAndClear();
+
+        List<PinSummaryResponse> results = search("프린터");
+
+        PinSummaryResponse internal = resultNamed(results, "무한프린터");
+        PinSummaryResponse external = resultNamed(results, "명지문구 프린터");
+        assertThat(internal.getType()).isEqualTo("FLOOR_MAP");
+        assertThat(internal.getLink()).contains("target=p-printer");
+        assertThat(external.getType()).isEqualTo("PLACE");
+        assertThat(external.getLink()).isNull();
+    }
+
+    @Test
+    @DisplayName("중복 내부 시설은 각각 고유 target을 가진 층별안내도 목록으로 반환한다")
+    void should_returnDistinctFloorMapTargets_forDuplicateFacilities() throws Exception {
+        syncAndClear();
+
+        List<PinSummaryResponse> results = search("화장실");
+
+        assertThat(results).hasSize(2);
+        assertThat(results).extracting(PinSummaryResponse::getType)
+                .containsOnly("FLOOR_MAP");
+        assertThat(results).extracting(PinSummaryResponse::getLink)
+                .containsExactlyInAnyOrder(
+                        floorMapLink(results, "p-restroom-f1-east"),
+                        floorMapLink(results, "p-restroom-f3-west"));
     }
 
     @Test
@@ -333,32 +360,50 @@ class MapSearchE2EIT {
     }
 
     @Test
+    @DisplayName("자동완성의 내부 장소도 FLOOR_MAP 링크를 반환한다")
+    void should_suggestFloorMapRoute_forInternalPlace() throws Exception {
+        syncAndClear();
+
+        MapSuggestResponse suggestion = mapSearchService.suggest("S1353", 10).get(0);
+
+        assertThat(suggestion.getType()).isEqualTo("FLOOR_MAP");
+        assertThat(suggestion.getLink()).contains("floorLabel=F3", "target=p-s1353");
+    }
+
+    @Test
     @DisplayName("빈 검색어는 빈 목록을 반환한다")
     void should_returnEmpty_when_blankKeyword() throws Exception {
         // given
         syncAndClear();
 
         // when - then
-        MapSearchResponse response = search("  ");
-        assertThat(response.getResultType()).isEqualTo(MapSearchResultType.GENERAL);
-        assertThat(response.getData()).isEmpty();
+        List<PinSummaryResponse> response = search("  ");
+        assertThat(response).isEmpty();
         assertThat(mapSearchService.suggest("", 10)).isEmpty();
     }
 
-    private MapSearchResponse search(String keyword) {
+    private List<PinSummaryResponse> search(String keyword) {
         return mapSearchService.search(keyword, null, null, 0, 20, null, null);
     }
 
-    private List<PinSummaryResponse> pinResults(MapSearchResponse response) {
-        return response.getData().stream()
-                .map(PinSummaryResponse.class::cast)
-                .toList();
-    }
-
     /** 검색 결과에서 특정 핀 1건을 뽑는다 (이름이 유니크한 검색어 전제) */
-    private PinSummaryResponse only(MapSearchResponse response) {
-        List<PinSummaryResponse> results = pinResults(response);
+    private PinSummaryResponse only(List<PinSummaryResponse> results) {
         assertThat(results).isNotEmpty();
         return results.get(0);
+    }
+
+    private PinSummaryResponse resultNamed(List<PinSummaryResponse> results, String name) {
+        return results.stream()
+                .filter(result -> result.getName().equals(name))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private String floorMapLink(List<PinSummaryResponse> results, String target) {
+        return results.stream()
+                .map(PinSummaryResponse::getLink)
+                .filter(link -> link != null && link.endsWith("target=" + target))
+                .findFirst()
+                .orElseThrow();
     }
 }

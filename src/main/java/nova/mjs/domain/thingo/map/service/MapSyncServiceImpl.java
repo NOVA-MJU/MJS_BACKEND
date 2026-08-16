@@ -198,6 +198,7 @@ public class MapSyncServiceImpl implements MapSyncService {
             requireText(row.getName(), "places", i, "name");
 
             Category category = resolveCategory(row.getCategoryCode(), i, context);
+            validateIndoorPlaceReferences(row.getParentBuildingCode(), row.getFloorLabel(), i);
             Pin parentBuilding = isBlank(row.getParentBuildingCode())
                     ? null : resolveBuilding(row.getParentBuildingCode(), i, context);
             Floor floor = (parentBuilding != null && !isBlank(row.getFloorLabel()))
@@ -316,6 +317,16 @@ public class MapSyncServiceImpl implements MapSyncService {
         if (indoorCode != null && (parentBuilding == null || floor == null)) {
             throw invalidRow("places", index,
                     "indoor_code를 입력하려면 parent_building_code와 floor_label이 필요합니다.");
+        }
+    }
+
+    /** 내부 장소는 상위 건물과 층을 항상 한 쌍으로 가져야 층별안내도를 제공할 수 있다. */
+    private void validateIndoorPlaceReferences(String parentBuildingCode, String floorLabel, int index) {
+        boolean hasBuilding = !isBlank(parentBuildingCode);
+        boolean hasFloor = !isBlank(floorLabel);
+        if (hasBuilding != hasFloor) {
+            throw invalidRow("places", index,
+                    "내부 장소는 parent_building_code와 floor_label을 모두 입력해야 합니다.");
         }
     }
 
