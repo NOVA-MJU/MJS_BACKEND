@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.thingo.map.dto.MapSuggestResponse;
 import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
-import nova.mjs.domain.thingo.map.entity.PinType;
 import nova.mjs.domain.thingo.map.service.MapSearchService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
@@ -23,8 +22,7 @@ import java.util.List;
  * 2. GET /api/v1/map/search/suggest   - 검색 자동완성 (경량)
  *
  * [공통 파라미터]
- * - keyword: 검색어 (건물/장소명 + 카테고리명 매칭, 초성/오타 허용)
- * - type: 종류 필터 (BUILDING/PLACE). 없으면 전체. 잘못된 값도 전체로 처리
+ * - keyword: 검색어 (실내 title 정확일치 → 라벨 정확일치 → 일반 이름 검색 순으로 판정)
  * - lat/lng: 프론트 GPS 좌표. 거리 계산/정렬에만 쓰고 저장하지 않는다
  *
  * [인증]
@@ -39,24 +37,23 @@ public class MapSearchController {
     private final MapSearchService mapSearchService;
 
     /**
-     * 명지도 검색 결과 목록 조회 (무한 스크롤).
-     * 반환 개수가 size보다 작으면 마지막 페이지다.
+     * 명지도 검색 결과 조회.
+     * data의 각 항목 type(BUILDING/PLACE/FLOOR_MAP)으로 화면 이동 방식을 결정한다.
      */
     @GetMapping("/search")
     public ApiResponse<List<PinSummaryResponse>> search(
             @RequestParam("keyword") String keyword,
-            @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "lat", required = false) Double lat,
             @RequestParam(value = "lng", required = false) Double lng,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "seed", required = false) String seed,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
-        PinType typeFilter = parseType(type);
-        log.info("[명지도 검색] keyword={}, type={}, lat={}, lng={}, page={}, email={}",
-                keyword, typeFilter, lat, lng, page, email);
-        return ApiResponse.success(mapSearchService.search(keyword, typeFilter, lat, lng, page, size, email));
+        log.info("[명지도 검색] keyword={}, lat={}, lng={}, page={}, email={}",
+                keyword, lat, lng, page, email);
+        return ApiResponse.success(mapSearchService.search(keyword, lat, lng, page, size, email, seed));
     }
 
     /**
@@ -65,22 +62,9 @@ public class MapSearchController {
     @GetMapping("/search/suggest")
     public ApiResponse<List<MapSuggestResponse>> suggest(
             @RequestParam("keyword") String keyword,
-            @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "limit", defaultValue = "10") int limit
     ) {
-        log.info("[명지도 자동완성] keyword={}, type={}, limit={}", keyword, type, limit);
-        return ApiResponse.success(mapSearchService.suggest(keyword, parseType(type), limit));
-    }
-
-    /** type 파라미터를 PinType으로 파싱. 비었거나 잘못된 값이면 null(전체) */
-    private PinType parseType(String type) {
-        if (type == null || type.isBlank()) {
-            return null;
-        }
-        try {
-            return PinType.valueOf(type.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
+        log.info("[명지도 자동완성] keyword={}, limit={}", keyword, limit);
+        return ApiResponse.success(mapSearchService.suggest(keyword, limit));
     }
 }
