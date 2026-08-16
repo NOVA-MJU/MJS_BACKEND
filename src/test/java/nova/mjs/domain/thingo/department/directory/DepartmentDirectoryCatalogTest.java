@@ -27,6 +27,14 @@ class DepartmentDirectoryCatalogTest {
     }
 
     @Test
+    void resolvesDepartmentWhenDepartmentSuffixIsOmitted() {
+        DepartmentDirectoryCatalog.Entry entry = catalog.resolve("데이터사이언스").orElseThrow();
+
+        assertThat(entry.college()).isEqualTo(College.AI_SOFTWARE);
+        assertThat(entry.departmentName()).isEqualTo(DepartmentName.DATA_SCIENCE);
+    }
+
+    @Test
     void publicServiceSchoolAndAdministrationMajorUseDifferentCanonicalIds() {
         assertThat(catalog.resolve("공공인재학부 홈페이지").orElseThrow().departmentName())
                 .isEqualTo(DepartmentName.SCHOOL_OF_PUBLIC_SERVICE);

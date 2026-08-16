@@ -42,6 +42,7 @@ public class DepartmentDirectoryCatalog {
 
         return entries.stream()
                 .filter(entry -> query.contains(entry.searchLabel())
+                        || matchesSuffixOmittedLabel(query, entry)
                         || (entry.departmentName() == null
                             && query.contains(normalize(entry.college().name())))
                         || (entry.departmentName() != null
@@ -58,7 +59,16 @@ public class DepartmentDirectoryCatalog {
                 && query.contains(normalize(entry.departmentName().name()))) {
             return 50_000 + entry.searchLabel().length();
         }
+        if (matchesSuffixOmittedLabel(query, entry)) {
+            return (entry.departmentName() == null ? 750 : 75_000) + entry.searchLabel().length();
+        }
         return 1_000 + entry.searchLabel().length();
+    }
+
+    private boolean matchesSuffixOmittedLabel(String query, Entry entry) {
+        String baseLabel = entry.searchLabel().replaceFirst("(전공|학과|학부|대학)$", "");
+        // '경영', '경제'처럼 지나치게 짧은 일반어가 학과 검색으로 오인되는 것을 막는다.
+        return baseLabel.length() >= 4 && query.contains(baseLabel);
     }
 
     public static String normalize(String value) {
