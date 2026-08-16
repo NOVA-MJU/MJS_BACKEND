@@ -257,12 +257,12 @@
                     }
                   },
                   "multipleFloorMapTargets": {
-                    "summary": "화장실 검색: 여러 층별안내도 핀",
+                    "summary": "화장실 검색: 같은 층의 다중 결과 (선택 시 1핀)",
                     "value": {
                       "status": "API 요청 성공",
                       "data": [
-                        { "id": 401, "type": "FLOOR_MAP", "name": "화장실", "categoryCode": "restroom", "iconKey": "RestroomIcon", "location": "학생회관 F1", "favorite": false, "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-restroom-student-f1-east" },
-                        { "id": 402, "type": "FLOOR_MAP", "name": "화장실", "categoryCode": "restroom", "iconKey": "RestroomIcon", "location": "학생회관 F4", "favorite": false, "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-restroom-student-f4-west" }
+                        { "id": 401, "type": "FLOOR_MAP", "name": "화장실 (동측)", "categoryCode": "restroom", "iconKey": "RestroomIcon", "location": "학생회관 F4", "favorite": false, "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-restroom-student-f4-east" },
+                        { "id": 402, "type": "FLOOR_MAP", "name": "화장실 (서측)", "categoryCode": "restroom", "iconKey": "RestroomIcon", "location": "학생회관 F4", "favorite": false, "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-restroom-student-f4-west" }
                       ],
                       "timestamp": "2026-08-17T12:30:00"
                     }
