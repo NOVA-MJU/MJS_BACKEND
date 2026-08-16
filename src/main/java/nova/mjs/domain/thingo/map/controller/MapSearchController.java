@@ -3,7 +3,7 @@ package nova.mjs.domain.thingo.map.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nova.mjs.domain.thingo.map.dto.MapSuggestResponse;
-import nova.mjs.domain.thingo.map.dto.MapSearchResponse;
+import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
 import nova.mjs.domain.thingo.map.service.MapSearchService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
@@ -38,10 +38,10 @@ public class MapSearchController {
 
     /**
      * 명지도 검색 결과 조회.
-     * 응답의 resultType은 data 배열 전체에 적용되며 FLOOR_MAP/LABEL/GENERAL 중 하나다.
+     * data의 각 항목 type(BUILDING/PLACE/FLOOR_MAP)으로 화면 이동 방식을 결정한다.
      */
     @GetMapping("/search")
-    public MapSearchResponse search(
+    public ApiResponse<List<PinSummaryResponse>> search(
             @RequestParam("keyword") String keyword,
             @RequestParam(value = "lat", required = false) Double lat,
             @RequestParam(value = "lng", required = false) Double lng,
@@ -53,7 +53,7 @@ public class MapSearchController {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
         log.info("[명지도 검색] keyword={}, lat={}, lng={}, page={}, email={}",
                 keyword, lat, lng, page, email);
-        return mapSearchService.search(keyword, lat, lng, page, size, email, seed);
+        return ApiResponse.success(mapSearchService.search(keyword, lat, lng, page, size, email, seed));
     }
 
     /**

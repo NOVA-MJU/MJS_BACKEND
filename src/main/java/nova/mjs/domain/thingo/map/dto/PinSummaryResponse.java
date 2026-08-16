@@ -17,7 +17,7 @@ public class PinSummaryResponse {
 
     /** 핀 ID (상세 페이지 요청에 사용) */
     private final Long id;
-    /** 종류 (BUILDING / PLACE) - 프론트가 상세 화면을 분기 */
+    /** 항목별 이동 종류 (BUILDING / PLACE / FLOOR_MAP) */
     private final String type;
     /** 건물명/장소명 */
     private final String name;
@@ -43,12 +43,14 @@ public class PinSummaryResponse {
     private final Double longitude;
     /** 검색 가능한 실제 호실/요소 코드 (예: S1353). 없으면 null */
     private final String indoorCode;
+    /** FLOOR_MAP 항목의 층별안내도 상대 URL. 그 외 항목은 null */
+    private final String link;
 
     public static PinSummaryResponse of(Long id, String type, String name, String categoryCode,
                                         String iconKey, String imageUrl, String classroomCode,
                                         String location, boolean favorite, String operatingStatus,
                                         Integer distanceMeters, Double latitude, Double longitude,
-                                        String indoorCode) {
+                                        String indoorCode, String link) {
         return PinSummaryResponse.builder()
                 .id(id)
                 .type(type)
@@ -64,6 +66,7 @@ public class PinSummaryResponse {
                 .latitude(latitude)
                 .longitude(longitude)
                 .indoorCode(indoorCode)
+                .link(link)
                 .build();
     }
 }

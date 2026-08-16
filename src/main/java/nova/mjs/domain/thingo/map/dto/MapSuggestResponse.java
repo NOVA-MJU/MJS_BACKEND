@@ -3,6 +3,7 @@ package nova.mjs.domain.thingo.map.dto;
 import lombok.Builder;
 import lombok.Getter;
 import nova.mjs.domain.thingo.map.entity.Pin;
+import nova.mjs.domain.thingo.map.support.MapSearchRouteResolver;
 
 /**
  * 검색 자동완성 항목 1개.
@@ -18,7 +19,7 @@ public class MapSuggestResponse {
     private final Long id;
     /** 건물명/장소명 (자동완성에 표시) */
     private final String name;
-    /** 종류 (BUILDING / PLACE) - 프론트가 상세 화면을 분기 */
+    /** 항목별 이동 종류 (BUILDING / PLACE / FLOOR_MAP) */
     private final String type;
     /** 소속 카테고리 코드 */
     private final String categoryCode;
@@ -26,15 +27,18 @@ public class MapSuggestResponse {
     private final String iconKey;
     /** 실제 호실/요소 코드 (예: S1353). 없으면 null */
     private final String indoorCode;
+    /** FLOOR_MAP 항목의 층별안내도 상대 URL. 그 외 항목은 null */
+    private final String link;
 
     public static MapSuggestResponse from(Pin pin) {
         return MapSuggestResponse.builder()
                 .id(pin.getId())
                 .name(pin.getName())
-                .type(pin.getType().name())
+                .type(MapSearchRouteResolver.responseType(pin))
                 .categoryCode(pin.getCategory().getCode())
                 .iconKey(pin.getCategory().getIconKey())
                 .indoorCode(pin.getIndoorCode())
+                .link(MapSearchRouteResolver.link(pin))
                 .build();
     }
 }

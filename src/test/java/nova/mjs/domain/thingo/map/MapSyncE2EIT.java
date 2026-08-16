@@ -44,6 +44,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * 명지도 동기화 → 조회 E2E 통합 테스트 (Testcontainers PostgreSQL).
@@ -183,7 +184,10 @@ class MapSyncE2EIT {
         assertThat(printerPins).hasSize(2);
         assertThat(printerPins).extracting(PinSummaryResponse::getName)
                 .containsExactlyInAnyOrder("무한프린터", "컬러프린터");
-        assertThat(printerPins).allSatisfy(pin -> assertThat(pin.getType()).isEqualTo("PLACE"));
+        assertThat(printerPins).allSatisfy(pin -> {
+            assertThat(pin.getType()).isEqualTo("FLOOR_MAP");
+            assertThat(pin.getLink()).contains("/maps/floor?buildingId=", "target=p-printer");
+        });
 
         // 지도에서는 같은 건물의 프린터 2개를 종합관 대표 마커 하나로 묶는다.
         List<MapMarkerResponse> printerMarkers = mapPinService.getMarkersByCategory("printer");
@@ -238,5 +242,15 @@ class MapSyncE2EIT {
 
         // then - 핀 개수 그대로 (중복 생성 없이 code 기준 갱신)
         assertThat(afterSecond).isEqualTo(afterFirst);
+    }
+
+    @Test
+    @DisplayName("상위 건물이 있는 내부 장소는 층 정보 없이 동기화할 수 없다")
+    void should_rejectInternalPlace_withoutFloor() throws Exception {
+        String invalidJson = SHEET_JSON.replace(",\"floorLabel\":\"F1\"", "");
+        MapSyncDTO.SyncRequest request = objectMapper.readValue(invalidJson, MapSyncDTO.SyncRequest.class);
+
+        assertThatThrownBy(() -> mapSyncService.syncFromSheet(request))
+                .hasMessageContaining("parent_building_code와 floor_label을 모두 입력");
     }
 }
