@@ -2,14 +2,18 @@ package nova.mjs.domain.thingo.search.service;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.search.dto.SearchResponseDTO;
+import nova.mjs.domain.thingo.map.entity.Pin;
+import nova.mjs.domain.thingo.map.repository.PinRepository;
 import nova.mjs.domain.thingo.search.model.SearchType;
 import nova.mjs.domain.thingo.realtimeKeyword.RealtimeKeywordService;
 import nova.mjs.domain.thingo.search.dto.SearchResultRow;
 import nova.mjs.domain.thingo.search.repository.UnifiedSearchIndexRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -32,6 +36,7 @@ public class PgUnifiedSearchService {
     private static final Pattern HOT_KEYWORD_SAFE = Pattern.compile("^[\\p{IsHangul}A-Za-z0-9]{2,20}$");
 
     private final UnifiedSearchIndexRepository repository;
+    private final PinRepository pinRepository;
     private final RealtimeKeywordService realtimeKeywordService;
 
     public Page<SearchResponseDTO> search(String keyword,
@@ -43,6 +48,18 @@ public class PgUnifiedSearchService {
         String normalizedType = normalizeType(type);
         String normalizedCategory = normalizeCategory(category);
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
+
+        // S1353처럼 실제 호실 코드를 정확히 입력하면 게시물 인덱스를 거치지 않고
+        // 해당 층 안내도 결과를 최우선으로 반환한다.
+        if (normalizedType == null) {
+            Pin exactIndoorPin = findExactIndoorPin(normalizedKeyword, normalizedCategory);
+            if (exactIndoorPin != null) {
+                List<SearchResponseDTO> content = pageable.getPageNumber() == 0
+                        ? List.of(toMapResponse(exactIndoorPin))
+                        : List.of();
+                return new PageImpl<>(content, pageable, 1L);
+            }
+        }
         String hotPattern = buildHotPattern();
 
         Page<SearchResultRow> rows = repository.search(
@@ -97,6 +114,44 @@ public class PgUnifiedSearchService {
                 .topicIds(r.topicIds())
                 .directTopicIds(r.directTopicIds())
                 .build();
+    }
+
+    private Pin findExactIndoorPin(String keyword, String category) {
+        String indoorCode = normalizeIndoorCode(keyword);
+        if (indoorCode.isEmpty()) {
+            return null;
+        }
+        return pinRepository.findByIndoorCodeIgnoreCase(indoorCode)
+                .filter(pin -> category == null || category.equals(pin.getCategory().getCode()))
+                .orElse(null);
+    }
+
+    private SearchResponseDTO toMapResponse(Pin pin) {
+        String location = pin.getParentBuilding().getName() + " " + pin.getFloor().getLabel();
+        String link = UriComponentsBuilder.fromPath("/maps/floor")
+                .queryParam("buildingId", pin.getParentBuilding().getId())
+                .queryParam("floorLabel", pin.getFloor().getLabel())
+                .queryParam("target", pin.getIndoorCode())
+                .encode()
+                .toUriString();
+
+        return SearchResponseDTO.builder()
+                .id("MAP:" + pin.getId())
+                .highlightedTitle("<em>" + pin.getIndoorCode() + "</em>"
+                        + (pin.getIndoorCode().equalsIgnoreCase(pin.getName()) ? "" : " · " + pin.getName()))
+                .highlightedContent(location + " 층별 안내도")
+                .link(link)
+                .category(pin.getCategory().getCode())
+                .type("map")
+                .score(100.0f)
+                .build();
+    }
+
+    private String normalizeIndoorCode(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
     }
 
     private String academicSourceContent(SearchResultRow row) {

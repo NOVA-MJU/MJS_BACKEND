@@ -115,6 +115,8 @@ public class BuildingDetailResponse {
         private final String name;
         private final String categoryCode;
         private final String iconKey;
+        /** 실제 호실/요소 코드 (예: S1353) */
+        private final String indoorCode;
 
         public static PlaceBrief from(Pin place) {
             return PlaceBrief.builder()
@@ -122,6 +124,7 @@ public class BuildingDetailResponse {
                     .name(place.getName())
                     .categoryCode(place.getCategory().getCode())
                     .iconKey(place.getCategory().getIconKey())
+                    .indoorCode(place.getIndoorCode())
                     .build();
         }
     }

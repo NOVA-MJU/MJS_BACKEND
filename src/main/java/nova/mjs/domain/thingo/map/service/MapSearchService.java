@@ -2,13 +2,18 @@ package nova.mjs.domain.thingo.map.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.domain.thingo.map.dto.FloorMapSearchItemResponse;
 import nova.mjs.domain.thingo.map.dto.MapSuggestResponse;
+import nova.mjs.domain.thingo.map.dto.MapSearchResponse;
+import nova.mjs.domain.thingo.map.dto.MapSearchResultType;
 import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
+import nova.mjs.domain.thingo.map.entity.Category;
 import nova.mjs.domain.thingo.map.entity.OperatingHour;
 import nova.mjs.domain.thingo.map.entity.Pin;
 import nova.mjs.domain.thingo.map.entity.PinType;
 import nova.mjs.domain.thingo.map.repository.PinFavoriteRepository;
 import nova.mjs.domain.thingo.map.repository.PinRepository;
+import nova.mjs.domain.thingo.map.repository.CategoryRepository;
 import nova.mjs.domain.thingo.map.support.CampusArea;
 import nova.mjs.domain.thingo.map.support.DistanceCalculator;
 import nova.mjs.domain.thingo.map.support.MapSearchMatcher;
@@ -34,7 +39,8 @@ import java.util.Set;
  * (거리 계산을 인메모리 Haversine으로 하는 것과 동일한 판단).
  *
  * [검색 규칙]
- * - 매칭/관련도: {@link MapSearchMatcher} (정규화·초성·오타허용·카테고리 보조)
+ * - 분기: 실내 title 정확일치 → 카테고리 라벨 정확일치 → 일반 이름 검색
+ * - 일반 매칭/관련도: {@link MapSearchMatcher} (정규화·초성·오타허용)
  * - 정렬: 관련도 우선 → 동점 시 가까운 순 → 이름순
  * - 거리: 사용자가 캠퍼스 안이면 표시, 밖이면 미표시(정렬만 정문 기준), GPS 없으면 null
  * - 운영상태: 건물은 자기 운영시간, 내부 장소는 소속 건물 운영시간 상속, 외부 장소는 미표시
@@ -48,31 +54,55 @@ public class MapSearchService {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final PinRepository pinRepository;
+    private final CategoryRepository categoryRepository;
     private final PinFavoriteRepository pinFavoriteRepository;
     private final MemberRepository memberRepository;
     private final DistanceCalculator distanceCalculator;
     private final OperatingStatusResolver operatingStatusResolver;
     private final MapSearchMatcher matcher;
+    private final MapPinService mapPinService;
 
     /** 관련도 정렬 계산용 임시 행 (핀 + 관련도 점수 + 정렬 거리) */
     private record Scored(Pin pin, double relevance, Double sortDistance) {}
 
     /**
-     * 명지도 검색. 이름·카테고리명에 대해 관련도 점수를 매겨 정렬한 뒤 페이지로 잘라 반환한다.
+     * 명지도 검색. 먼저 응답 전체의 종류를 정한 뒤 종류에 맞는 단일 스키마의 배열을 반환한다.
      *
      * @param keyword    검색어 (비면 빈 목록)
-     * @param typeFilter 종류 필터 (BUILDING/PLACE, null이면 전체)
      * @param userLat    사용자 현재 위도 (거리 계산/정렬용, 없으면 null)
      * @param userLng    사용자 현재 경도
      * @param page       0부터 시작하는 페이지 번호
      * @param size       페이지 크기
      * @param email      로그인 회원 이메일 (즐겨찾기 표시용, 비로그인 null)
+     * @param recommendationSeed 대동명지도 추천 순서를 고정할 선택 seed
      */
-    public List<PinSummaryResponse> search(String keyword, PinType typeFilter,
-                                           Double userLat, Double userLng, int page, int size, String email) {
+    public MapSearchResponse search(String keyword, Double userLat, Double userLng, int page, int size,
+                                    String email, String recommendationSeed) {
         if (keyword == null || keyword.isBlank()) {
-            return List.of();
+            return MapSearchResponse.success(MapSearchResultType.GENERAL, List.of());
         }
+
+        Pin exactIndoorPin = findExactIndoorPin(keyword);
+        if (exactIndoorPin != null) {
+            List<FloorMapSearchItemResponse> data = page <= 0
+                    ? List.of(FloorMapSearchItemResponse.from(exactIndoorPin))
+                    : List.of();
+            return MapSearchResponse.success(MapSearchResultType.FLOOR_MAP, data);
+        }
+
+        Category exactCategory = findExactCategory(keyword);
+        if (exactCategory != null) {
+            List<PinSummaryResponse> data = mapPinService.getPinsByCategory(
+                    exactCategory.getCode(), userLat, userLng, page, size, email, recommendationSeed);
+            return MapSearchResponse.success(MapSearchResultType.LABEL, data);
+        }
+
+        return MapSearchResponse.success(MapSearchResultType.GENERAL,
+                searchGeneral(keyword, userLat, userLng, page, size, email));
+    }
+
+    private List<PinSummaryResponse> searchGeneral(String keyword, Double userLat, Double userLng, int page, int size,
+                                                   String email) {
 
         // 검색 대상 핀을 연관과 함께 한 번에 로딩 (카테고리/소속건물/층)
         List<Pin> candidates = pinRepository.findAllForSearch();
@@ -82,13 +112,11 @@ public class MapSearchService {
         boolean hasGps = userLat != null && userLng != null;
         boolean insideCampus = distanceCalculator.isWithinCampus(userLat, userLng);
 
-        // 1. 종류 필터 + 관련도 점수 계산 (0 이하는 매칭 실패로 제외)
+        // 1. 관련도 점수 계산 (0 이하는 매칭 실패로 제외)
         List<Scored> scored = new ArrayList<>();
         for (Pin pin : candidates) {
-            if (typeFilter != null && pin.getType() != typeFilter) {
-                continue;
-            }
-            double relevance = matcher.score(pin.getName(), pin.getCategory().getLabel(), keyword);
+            double relevance = matcher.score(
+                    pin.getName(), null, pin.getIndoorCode(), keyword);
             if (relevance <= 0.0) {
                 continue;
             }
@@ -112,18 +140,17 @@ public class MapSearchService {
      * 거리·운영상태는 계산하지 않는다.
      *
      * @param keyword    검색어 (비면 빈 목록)
-     * @param typeFilter 종류 필터 (null이면 전체)
      * @param limit      최대 개수 (0 이하면 10)
      */
-    public List<MapSuggestResponse> suggest(String keyword, PinType typeFilter, int limit) {
+    public List<MapSuggestResponse> suggest(String keyword, int limit) {
         if (keyword == null || keyword.isBlank()) {
             return List.of();
         }
         int safeLimit = limit > 0 ? limit : 10;
 
         return pinRepository.findAllForSearch().stream()
-                .filter(pin -> typeFilter == null || pin.getType() == typeFilter)
-                .map(pin -> new Scored(pin, matcher.score(pin.getName(), pin.getCategory().getLabel(), keyword), null))
+                .map(pin -> new Scored(pin, matcher.score(
+                        pin.getName(), pin.getCategory().getLabel(), pin.getIndoorCode(), keyword), null))
                 .filter(s -> s.relevance() > 0.0)
                 .sorted(Comparator.comparingDouble(Scored::relevance).reversed()
                         .thenComparing(s -> s.pin().getName()))
@@ -154,7 +181,35 @@ public class MapSearchService {
                 operatingStatusLabel(pin, now),
                 displayDistance(pin, userLat, userLng, insideCampus),
                 pin.resolveLatitude(),
-                pin.resolveLongitude());
+                pin.resolveLongitude(),
+                pin.getIndoorCode());
+    }
+
+    /** 실내 코드는 공백·기호·대소문자를 무시하되 정확히 일치할 때만 층 안내도로 보낸다. */
+    private Pin findExactIndoorPin(String keyword) {
+        String indoorCode = matcher.normalize(keyword).toUpperCase();
+        if (indoorCode.isEmpty()) {
+            return null;
+        }
+        return pinRepository.findByIndoorCodeIgnoreCase(indoorCode)
+                .filter(pin -> pin.isInsideBuilding() && pin.getFloor() != null)
+                .orElse(null);
+    }
+
+    /** 등록된 명지도 라벨과 정확히 일치하면 일반 이름 검색보다 라벨 목록을 우선한다. */
+    private Category findExactCategory(String keyword) {
+        String normalizedKeyword = matcher.normalize(keyword);
+        if (normalizedKeyword.isEmpty()) {
+            return null;
+        }
+        return categoryRepository.findAll().stream()
+                .filter(category -> matcher.normalize(category.getLabel()).equals(normalizedKeyword))
+                .sorted(Comparator
+                        .comparing(Category::isTopLevel).reversed()
+                        .thenComparingInt(Category::getDisplayOrder)
+                        .thenComparing(Category::getId))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
