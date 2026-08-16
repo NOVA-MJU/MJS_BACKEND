@@ -233,7 +233,7 @@
         ],
         "responses": {
           "200": {
-            "description": "검색 결과. 기존 공통 응답 형태를 유지하며 각 data 항목의 type으로 화면을 분기합니다.",
+            "description": "검색 결과. 기존 공통 응답 형태를 유지하며 각 data 항목의 type으로 화면을 분기합니다. 아래 예시는 흐름을 빠르게 구분할 수 있도록 nullable 값이 null인 필드는 생략했습니다.",
             "content": {
               "application/json": {
                 "schema": {
@@ -251,7 +251,18 @@
                     "value": {
                       "status": "API 요청 성공",
                       "data": [
-                        { "id": 353, "type": "FLOOR_MAP", "name": "강의실 S1353", "categoryCode": "classroom", "iconKey": "ClassroomIcon", "imageUrl": null, "classroomCode": null, "location": "학생회관 F1", "favorite": false, "operatingStatus": "운영중", "distanceMeters": 120, "latitude": 37.221, "longitude": 127.187, "indoorCode": "S1353", "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" }
+                        { "id": 353, "type": "FLOOR_MAP", "name": "강의실 S1353", "categoryCode": "classroom", "iconKey": "ClassroomIcon", "location": "학생회관 F1", "favorite": false, "indoorCode": "S1353", "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" }
+                      ],
+                      "timestamp": "2026-08-17T12:30:00"
+                    }
+                  },
+                  "multipleFloorMapTargets": {
+                    "summary": "화장실 검색: 여러 층별안내도 핀",
+                    "value": {
+                      "status": "API 요청 성공",
+                      "data": [
+                        { "id": 401, "type": "FLOOR_MAP", "name": "화장실", "categoryCode": "restroom", "iconKey": "RestroomIcon", "location": "학생회관 F1", "favorite": false, "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-restroom-student-f1-east" },
+                        { "id": 402, "type": "FLOOR_MAP", "name": "화장실", "categoryCode": "restroom", "iconKey": "RestroomIcon", "location": "학생회관 F4", "favorite": false, "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-restroom-student-f4-west" }
                       ],
                       "timestamp": "2026-08-17T12:30:00"
                     }
@@ -262,7 +273,7 @@
                       "status": "API 요청 성공",
                       "data": [
                         { "id": 81, "type": "FLOOR_MAP", "name": "학생회관 무한프린터", "categoryCode": "printer", "iconKey": "PrinterIcon", "location": "학생회관 F4", "favorite": false, "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-printer-student-f4" },
-                        { "id": 82, "type": "PLACE", "name": "명지문구 프린터", "categoryCode": "printer", "iconKey": "PrinterIcon", "location": "경기 용인시 처인구 명지로 00", "favorite": false, "latitude": 37.2201, "longitude": 127.1881, "link": null }
+                        { "id": 82, "type": "PLACE", "name": "명지문구 프린터", "categoryCode": "printer", "iconKey": "PrinterIcon", "location": "경기 용인시 처인구 명지로 00", "favorite": false, "latitude": 37.2201, "longitude": 127.1881 }
                       ],
                       "timestamp": "2026-08-17T12:30:00"
                     }
@@ -272,7 +283,8 @@
                     "value": {
                       "status": "API 요청 성공",
                       "data": [
-                        { "id": 1, "type": "BUILDING", "name": "종합관", "categoryCode": "building", "iconKey": "BuildingIcon", "classroomCode": "S1XXX", "favorite": false, "operatingStatus": "운영중", "distanceMeters": 80, "latitude": 37.5803, "longitude": 126.9223, "link": null }
+                        { "id": 51, "type": "PLACE", "name": "투썸플레이스 명지대점", "categoryCode": "cafe", "iconKey": "CafeIcon", "imageUrl": "https://thingo.kr/img/place/51.jpg", "location": "서울 서대문구 거북골로 31-1 1~3층", "favorite": false, "distanceMeters": 720, "latitude": 37.5806, "longitude": 126.9231 },
+                        { "id": 1, "type": "BUILDING", "name": "종합관", "categoryCode": "building", "iconKey": "BuildingIcon", "imageUrl": "https://thingo.kr/img/building/1.jpg", "classroomCode": "S1XXX", "favorite": false, "operatingStatus": "운영중", "distanceMeters": 80, "latitude": 37.5803, "longitude": 126.9223 }
                       ],
                       "timestamp": "2026-08-17T12:30:00"
                     }
