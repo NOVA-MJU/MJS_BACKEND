@@ -45,6 +45,12 @@ class DepartmentDirectoryCatalogTest {
     }
 
     @Test
+    void resolvesManagementInformationSystemsAlias() {
+        assertThat(catalog.resolve("경정 소개").orElseThrow().departmentName())
+                .isEqualTo(DepartmentName.MANAGEMENT_INFORMATION_SYSTEMS);
+    }
+
+    @Test
     void publicServiceSchoolAndAdministrationMajorUseDifferentCanonicalIds() {
         assertThat(catalog.resolve("공공인재학부 홈페이지").orElseThrow().departmentName())
                 .isEqualTo(DepartmentName.SCHOOL_OF_PUBLIC_SERVICE);

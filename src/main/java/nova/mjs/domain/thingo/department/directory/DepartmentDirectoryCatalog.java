@@ -23,7 +23,8 @@ public class DepartmentDirectoryCatalog {
     private static final String RESOURCE_PATH = "department/department_directory.psv";
     private static final Map<String, DepartmentName> DEPARTMENT_ALIASES = Map.of(
             "응소", DepartmentName.APPLICATION_SOFTWARE,
-            "응용소프트웨어학과", DepartmentName.APPLICATION_SOFTWARE
+            "응용소프트웨어학과", DepartmentName.APPLICATION_SOFTWARE,
+            "경정", DepartmentName.MANAGEMENT_INFORMATION_SYSTEMS
     );
     private final List<Entry> entries;
 
