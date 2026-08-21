@@ -62,6 +62,12 @@ public class ReviewDTO {
 
             @NotNull
             private ReviewMediaType mediaType;
+
+            /**
+             * 영상 목록/뷰어 진입 전에 표시할 정적 이미지 URL.
+             * VIDEO는 필수이며 IMAGE는 생략 가능하다(응답에서는 원본 URL을 썸네일로 사용).
+             */
+            private String thumbnailUrl;
         }
     }
 
@@ -91,12 +97,14 @@ public class ReviewDTO {
         @Builder(access = AccessLevel.PRIVATE)
         public static class MediaInfo {
             private String url;
+            private String thumbnailUrl;
             private ReviewMediaType mediaType;
             private int sortOrder;
 
             public static MediaInfo from(ReviewMedia media) {
                 return MediaInfo.builder()
                         .url(media.getUrl())
+                        .thumbnailUrl(media.getThumbnailUrl())
                         .mediaType(media.getMediaType())
                         .sortOrder(media.getSortOrder())
                         .build();
@@ -107,11 +115,13 @@ public class ReviewDTO {
         @Getter
         @Builder(access = AccessLevel.PRIVATE)
         public static class AuthorInfo {
+            private UUID authorUuid;
             private String nickname;
             private String profileImageUrl;
 
             public static AuthorInfo from(Member member) {
                 return AuthorInfo.builder()
+                        .authorUuid(member.getUuid())
                         .nickname(member.getNickname())
                         .profileImageUrl(member.getProfileImageUrl())
                         .build();
@@ -190,6 +200,7 @@ public class ReviewDTO {
         public static class MediaStripItem {
             private UUID reviewUuid;
             private String url;
+            private String thumbnailUrl;
             private ReviewMediaType mediaType;
             private int sortOrder;
 
@@ -197,6 +208,7 @@ public class ReviewDTO {
                 return MediaStripItem.builder()
                         .reviewUuid(reviewUuid)
                         .url(media.getUrl())
+                        .thumbnailUrl(media.getThumbnailUrl())
                         .mediaType(media.getMediaType())
                         .sortOrder(media.getSortOrder())
                         .build();
@@ -209,6 +221,23 @@ public class ReviewDTO {
         public static class LikeResult {
             private boolean liked;
             private int likeCount;
+        }
+
+        /**
+         * 무한 스크롤용 리뷰 목록 응답.
+         * nextCursor는 서버만 해석하는 불투명 값이며 hasNext=false이면 null이다.
+         * totalElements는 현재 사용자에게 실제로 노출되는 리뷰 수다
+         * (자동 숨김, 차단 관계, 본인이 신고한 리뷰 제외).
+         */
+        @Getter
+        @Builder
+        public static class CursorPage {
+            private List<Summary> content;
+            private String nextCursor;
+            private boolean hasNext;
+            private int size;
+            private long totalElements;
+            private String sort;
         }
 
         /** 작성 화면용 키워드 카탈로그(카테고리 F&B 필터 반영) */

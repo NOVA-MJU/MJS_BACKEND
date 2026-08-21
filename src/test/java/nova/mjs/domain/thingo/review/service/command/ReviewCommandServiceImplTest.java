@@ -77,6 +77,12 @@ class ReviewCommandServiceImplTest {
         return item;
     }
 
+    private ReviewDTO.Request.MediaItem 영상(String url, String thumbnailUrl) {
+        ReviewDTO.Request.MediaItem item = 미디어(url, ReviewMediaType.VIDEO);
+        ReflectionTestUtils.setField(item, "thumbnailUrl", thumbnailUrl);
+        return item;
+    }
+
     private ReviewDTO.Request.Create 요청(Long pinId, List<ReviewKeyword> keywords, String content,
                                          List<ReviewDTO.Request.MediaItem> media) {
         ReviewDTO.Request.Create request = new ReviewDTO.Request.Create();
@@ -97,6 +103,8 @@ class ReviewCommandServiceImplTest {
         given(memberQueryService.getMemberByEmail("e@mju.ac.kr")).willReturn(author);
         given(pinQueryService.getPinById(1L)).willReturn(장소("restaurant", "food", PinType.PLACE));
         given(profanityFilter.mask(any())).willAnswer(invocation -> invocation.getArgument(0));
+        given(s3Service.replaceCloudfrontUrlToS3Url("https://thingo.kr/a.png"))
+                .willReturn("static/images/reviews/a.png");
         var request = 요청(1L, List.of(ReviewKeyword.TASTY, ReviewKeyword.VALUE), "가성비 최고",
                 List.of(미디어("https://thingo.kr/a.png", ReviewMediaType.IMAGE)));
 
@@ -231,6 +239,24 @@ class ReviewCommandServiceImplTest {
         assertThatThrownBy(() -> service.createReview("e@mju.ac.kr", request))
                 .isInstanceOfSatisfying(ReviewValidationException.class, ex ->
                         assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.REVIEW_MEDIA_LIMIT_EXCEEDED));
+    }
+
+    @Test
+    @DisplayName("영상에 리뷰 전용 경로의 썸네일이 없으면 검증 실패")
+    void should_throw_when_영상_썸네일_없음() {
+        given(memberQueryService.getMemberByEmail("e@mju.ac.kr"))
+                .willReturn(회원(1L, Member.Role.USER));
+        given(pinQueryService.getPinById(1L))
+                .willReturn(장소("restaurant", "food", PinType.PLACE));
+        given(s3Service.replaceCloudfrontUrlToS3Url("https://thingo.kr/video.mp4"))
+                .willReturn("static/images/reviews/video.mp4");
+        var request = 요청(1L, List.of(ReviewKeyword.TASTY), "내용",
+                List.of(영상("https://thingo.kr/video.mp4", null)));
+
+        assertThatThrownBy(() -> service.createReview("e@mju.ac.kr", request))
+                .isInstanceOfSatisfying(ReviewValidationException.class, ex ->
+                        assertThat(ex.getErrorCode())
+                                .isEqualTo(ErrorCode.REVIEW_MEDIA_THUMBNAIL_REQUIRED));
     }
 
     // ===== 삭제 =====

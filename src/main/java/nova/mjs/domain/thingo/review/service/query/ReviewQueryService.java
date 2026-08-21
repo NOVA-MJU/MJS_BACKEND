@@ -1,9 +1,6 @@
 package nova.mjs.domain.thingo.review.service.query;
 
 import nova.mjs.domain.thingo.review.dto.ReviewDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -12,8 +9,9 @@ import java.util.UUID;
  */
 public interface ReviewQueryService {
 
-    /** 장소별 리뷰 목록(최신순, 차단 사용자 제외) */
-    Page<ReviewDTO.Response.Summary> getReviews(Long pinId, Pageable pageable, String email);
+    /** 장소별 리뷰 무한 스크롤 목록(최신순/좋아요순, 차단·자가신고 제외) */
+    ReviewDTO.Response.CursorPage getReviews(
+            Long pinId, String sort, String cursor, int size, String email);
 
     /** 리뷰 단건 상세. 없거나 차단 관계면 REVIEW_NOT_FOUND */
     ReviewDTO.Response.Detail getReview(UUID reviewUuid, String email);

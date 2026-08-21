@@ -9,17 +9,18 @@ import nova.mjs.domain.thingo.member.service.query.MemberQueryService;
 import nova.mjs.domain.thingo.review.dto.ReviewDTO;
 import nova.mjs.domain.thingo.review.entity.Review;
 import nova.mjs.domain.thingo.review.entity.ReviewMedia;
+import nova.mjs.domain.thingo.review.entity.ReviewSort;
 import nova.mjs.domain.thingo.review.exception.ReviewNotFoundException;
 import nova.mjs.domain.thingo.review.repository.ReviewLikeRepository;
 import nova.mjs.domain.thingo.review.repository.ReviewRepository;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import nova.mjs.domain.thingo.report.entity.ReportTargetType;
+import nova.mjs.domain.thingo.report.service.ReportQueryService;
+import nova.mjs.domain.thingo.review.exception.ReviewValidationException;
+import nova.mjs.util.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,29 +37,60 @@ import java.util.UUID;
 public class ReviewQueryServiceImpl implements ReviewQueryService {
 
     private static final String FNB_GROUP_CODE = "food";
-    /** 스트립용으로 미디어를 충분히 모으기 위해 최소로 훑어볼 리뷰 수 */
-    private static final int MIN_REVIEW_SCAN = 20;
+    private static final int MAX_PAGE_SIZE = 50;
+    private static final Long EMPTY_MEMBER_SENTINEL = -1L;
+    private static final UUID EMPTY_REVIEW_SENTINEL = new UUID(0L, 0L);
 
     private final ReviewRepository reviewRepository;
     private final ReviewLikeRepository reviewLikeRepository;
     private final MemberQueryService memberQueryService;
     private final BlockQueryService blockQueryService;
     private final PinQueryService pinQueryService;
+    private final ReportQueryService reportQueryService;
 
     @Override
-    public Page<ReviewDTO.Response.Summary> getReviews(Long pinId, Pageable pageable, String email) {
+    public ReviewDTO.Response.CursorPage getReviews(
+            Long pinId, String sortRaw, String encodedCursor, int size, String email) {
+        validatePageSize(size);
+        ReviewSort sort = ReviewSort.fromApiValue(sortRaw);
+        ReviewCursor cursor = ReviewCursorCodec.decode(encodedCursor, sort);
+
         Member viewer = resolveViewer(email);
         Long viewerId = viewer == null ? null : viewer.getId();
-        Set<Long> hidden = blockQueryService.getHiddenMemberIds(viewerId);
+        Visibility visibility = resolveVisibility(viewerId);
 
-        // 차단 대상 있으면 제외 쿼리, 없으면 기본 쿼리(빈 IN 방지). 자동숨김(hidden)은 항상 제외.
-        Page<Review> page = hidden.isEmpty()
-                ? reviewRepository.findByPin_IdAndHiddenFalseOrderByCreatedAtDesc(pinId, pageable)
-                : reviewRepository.findByPin_IdAndHiddenFalseAndAuthor_IdNotInOrderByCreatedAtDesc(pinId, hidden, pageable);
+        // size+1 조회로 다음 페이지 유무를 판정한다. 별도의 count는 화면의 리뷰 총 개수 표시에만 사용한다.
+        PageRequest fetchSize = PageRequest.of(0, size + 1);
+        List<Review> fetched = sort == ReviewSort.LATEST
+                ? reviewRepository.findLatestCursor(
+                        pinId, visibility.authorIds(), visibility.reviewUuids(),
+                        cursor.createdAt(), cursor.reviewId(), fetchSize)
+                : reviewRepository.findLikesCursor(
+                        pinId, visibility.authorIds(), visibility.reviewUuids(),
+                        cursor.likeCount(), cursor.createdAt(), cursor.reviewId(), fetchSize);
 
-        Set<UUID> likedUuids = resolveLikedUuids(viewer, page.getContent());
-        return page.map(review -> ReviewDTO.Response.Summary.from(
-                review, likedUuids.contains(review.getUuid()), isMine(review, viewerId)));
+        boolean hasNext = fetched.size() > size;
+        List<Review> reviews = hasNext ? fetched.subList(0, size) : fetched;
+        Set<UUID> likedUuids = resolveLikedUuids(viewer, reviews);
+        List<ReviewDTO.Response.Summary> content = reviews.stream()
+                .map(review -> ReviewDTO.Response.Summary.from(
+                        review, likedUuids.contains(review.getUuid()), isMine(review, viewerId)))
+                .toList();
+
+        String nextCursor = hasNext && !reviews.isEmpty()
+                ? ReviewCursorCodec.encode(reviews.get(reviews.size() - 1), sort)
+                : null;
+        long totalElements = reviewRepository.countVisible(
+                pinId, visibility.authorIds(), visibility.reviewUuids());
+
+        return ReviewDTO.Response.CursorPage.builder()
+                .content(content)
+                .nextCursor(nextCursor)
+                .hasNext(hasNext)
+                .size(content.size())
+                .totalElements(totalElements)
+                .sort(sort.getApiValue())
+                .build();
     }
 
     @Override
@@ -75,8 +107,9 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
         }
 
         // 차단 관계(양방향)면 상세도 404로 숨긴다(게시판 정책과 동일)
-        Set<Long> hidden = blockQueryService.getHiddenMemberIds(viewerId);
-        if (hidden.contains(review.getAuthor().getId())) {
+        Visibility visibility = resolveVisibility(viewerId);
+        if (visibility.authorIds().contains(review.getAuthor().getId())
+                || visibility.reviewUuids().contains(review.getUuid())) {
             throw new ReviewNotFoundException();
         }
 
@@ -88,29 +121,18 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
 
     @Override
     public List<ReviewDTO.Response.MediaStripItem> getMediaStrip(Long pinId, int limit, String email) {
+        validatePageSize(limit);
         Member viewer = resolveViewer(email);
         Long viewerId = viewer == null ? null : viewer.getId();
-        Set<Long> hidden = blockQueryService.getHiddenMemberIds(viewerId);
+        Visibility visibility = resolveVisibility(viewerId);
 
-        Pageable scan = PageRequest.of(0, Math.max(limit, MIN_REVIEW_SCAN));
-        Page<Review> page = hidden.isEmpty()
-                ? reviewRepository.findByPin_IdAndHiddenFalseOrderByCreatedAtDesc(pinId, scan)
-                : reviewRepository.findByPin_IdAndHiddenFalseAndAuthor_IdNotInOrderByCreatedAtDesc(pinId, hidden, scan);
-
-        // 최신 리뷰부터 미디어를 순서대로 평탄화, limit개까지
-        List<ReviewDTO.Response.MediaStripItem> items = new ArrayList<>();
-        for (Review review : page.getContent()) {
-            List<ReviewMedia> ordered = review.getMedia().stream()
-                    .sorted(Comparator.comparingInt(ReviewMedia::getSortOrder))
-                    .toList();
-            for (ReviewMedia media : ordered) {
-                if (items.size() >= limit) {
-                    return items;
-                }
-                items.add(ReviewDTO.Response.MediaStripItem.of(review.getUuid(), media));
-            }
-        }
-        return items;
+        return reviewRepository.findVisibleMedia(
+                        pinId, visibility.authorIds(), visibility.reviewUuids(),
+                        PageRequest.of(0, limit))
+                .stream()
+                .map(media -> ReviewDTO.Response.MediaStripItem.of(
+                        media.getReview().getUuid(), media))
+                .toList();
     }
 
     @Override
@@ -134,6 +156,26 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
 
     private boolean isMine(Review review, Long viewerId) {
         return viewerId != null && viewerId.equals(review.getAuthor().getId());
+    }
+
+    private Visibility resolveVisibility(Long viewerId) {
+        Set<Long> hiddenAuthors = blockQueryService.getHiddenMemberIds(viewerId);
+        Set<UUID> selfReported = reportQueryService.getSelfReportedTargetUuids(
+                viewerId, ReportTargetType.REVIEW);
+        return new Visibility(
+                hiddenAuthors == null || hiddenAuthors.isEmpty()
+                        ? Set.of(EMPTY_MEMBER_SENTINEL) : hiddenAuthors,
+                selfReported == null || selfReported.isEmpty()
+                        ? Set.of(EMPTY_REVIEW_SENTINEL) : selfReported);
+    }
+
+    private void validatePageSize(int size) {
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new ReviewValidationException(ErrorCode.REVIEW_PAGE_SIZE_INVALID);
+        }
+    }
+
+    private record Visibility(Set<Long> authorIds, Set<UUID> reviewUuids) {
     }
 
     /** 목록 isLiked 일괄 계산: 뷰어가 좋아요한 리뷰 uuid 집합 */

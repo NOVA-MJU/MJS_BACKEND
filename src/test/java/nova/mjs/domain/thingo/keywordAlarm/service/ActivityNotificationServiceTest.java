@@ -2,14 +2,18 @@ package nova.mjs.domain.thingo.keywordAlarm.service;
 
 import nova.mjs.domain.thingo.community.entity.CommunityBoard;
 import nova.mjs.domain.thingo.keywordAlarm.entity.NotificationHistory;
+import nova.mjs.domain.thingo.keywordAlarm.event.ReviewLikePushRequestedEvent;
 import nova.mjs.domain.thingo.keywordAlarm.repository.NotificationHistoryRepository;
 import nova.mjs.domain.thingo.member.entity.Member;
+import nova.mjs.domain.thingo.map.entity.Pin;
+import nova.mjs.domain.thingo.review.entity.Review;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -21,12 +25,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class ActivityNotificationServiceTest {
 
     @Mock
     private NotificationHistoryRepository notificationHistoryRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private ActivityNotificationService service;
     private Member author;
@@ -35,7 +42,7 @@ class ActivityNotificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ActivityNotificationService(notificationHistoryRepository);
+        service = new ActivityNotificationService(notificationHistoryRepository, eventPublisher);
         author = member(1L, "작성자");
         actor = member(2L, "좋아요맨");
         board = CommunityBoard.builder()
@@ -109,6 +116,30 @@ class ActivityNotificationServiceTest {
         verify(notificationHistoryRepository, never()).save(any());
         verify(notificationHistoryRepository, never())
                 .findByMemberAndSearchIndexId(any(), any());
+    }
+
+    @Test
+    @DisplayName("리뷰 좋아요는 인앱 알림 저장과 함께 커밋 후 푸시 이벤트를 발행한다")
+    void notifyReviewLikePublishesPushEvent() {
+        Review review = mock(Review.class);
+        Pin pin = mock(Pin.class);
+        UUID reviewUuid = UUID.randomUUID();
+        given(review.getAuthor()).willReturn(author);
+        given(review.getUuid()).willReturn(reviewUuid);
+        given(review.getContent()).willReturn("정말 맛있는 리뷰 내용");
+        given(review.getPin()).willReturn(pin);
+        given(pin.getId()).willReturn(33L);
+        given(notificationHistoryRepository.findByMemberAndSearchIndexId(
+                author, "REVIEW_LIKE:" + reviewUuid)).willReturn(Optional.empty());
+
+        service.notifyReviewLike(review, actor, List.of(actor), 1);
+
+        ArgumentCaptor<ReviewLikePushRequestedEvent> eventCaptor =
+                ArgumentCaptor.forClass(ReviewLikePushRequestedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().recipientMemberId()).isEqualTo(author.getId());
+        assertThat(eventCaptor.getValue().reviewUuid()).isEqualTo(reviewUuid);
+        assertThat(eventCaptor.getValue().pinId()).isEqualTo(33L);
     }
 
     private Member member(long id, String nickname) {

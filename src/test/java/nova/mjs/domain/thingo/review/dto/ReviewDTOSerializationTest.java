@@ -1,10 +1,12 @@
 package nova.mjs.domain.thingo.review.dto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nova.mjs.domain.thingo.member.entity.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import java.util.UUID;
 
 /**
  * 응답 DTO JSON 키 검증. 커뮤니티와 동일하게 isLiked/isMine/isFnb 형태로 나가야 한다.
@@ -60,5 +62,20 @@ class ReviewDTOSerializationTest {
 
         assertThat(json).contains("\"liked\":true");
         assertThat(json).contains("\"likeCount\":5");
+    }
+
+    @Test
+    @DisplayName("작성자 정보에는 차단 API에 사용할 authorUuid가 포함된다")
+    void should_include_author_uuid() throws Exception {
+        UUID authorUuid = UUID.randomUUID();
+        Member member = Member.builder()
+                .uuid(authorUuid).nickname("길동").profileImageUrl("https://thingo.kr/p.png")
+                .build();
+
+        String json = objectMapper.writeValueAsString(
+                ReviewDTO.Response.AuthorInfo.from(member));
+
+        assertThat(json).contains("\"authorUuid\":\"" + authorUuid + "\"");
+        assertThat(json).contains("\"nickname\":\"길동\"");
     }
 }
