@@ -31,10 +31,10 @@ import java.util.List;
 @Entity
 @Table(
         name = "map_pin",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_map_pin_code",
-                columnNames = "code"
-        )
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_map_pin_code", columnNames = "code"),
+                @UniqueConstraint(name = "uk_map_pin_indoor_code", columnNames = "indoor_code")
+        }
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -105,6 +105,13 @@ public class Pin extends BaseEntity {
     @JoinColumn(name = "floor_id")
     private Floor floor;
 
+    /**
+     * 층 안내도에서 검색할 실제 호실/요소 코드 (예: S1353).
+     * 건물의 classroomCode(S1XXX)는 코드 체계 안내용이고, 이 값은 특정 위치를 가리키는 실제 코드다.
+     */
+    @Column(name = "indoor_code")
+    private String indoorCode;
+
     // ===== 연관 (건물 기준) =====
 
     /** 건물에 속한 층 목록 (건물이 아닐 경우 빈 리스트) */
@@ -118,7 +125,7 @@ public class Pin extends BaseEntity {
     @Builder(access = AccessLevel.PRIVATE)
     private Pin(String code, PinType type, Category category, String name, Double latitude, Double longitude,
                String imageUrl, String infoText, Integer buildingNumber, String classroomCode,
-               String address, Pin parentBuilding, Floor floor) {
+               String address, Pin parentBuilding, Floor floor, String indoorCode) {
         this.code = code;
         this.type = type;
         this.category = category;
@@ -132,6 +139,7 @@ public class Pin extends BaseEntity {
         this.address = address;
         this.parentBuilding = parentBuilding;
         this.floor = floor;
+        this.indoorCode = indoorCode;
     }
 
     /**
@@ -175,7 +183,7 @@ public class Pin extends BaseEntity {
      * 건물 내부 장소 핀 생성 (프린터/라운지 등). 좌표는 소속 건물을 따르므로 받지 않는다.
      */
     public static Pin ofInternalPlace(String code, Category category, String name, String imageUrl, String infoText,
-                                      Pin parentBuilding, Floor floor) {
+                                      Pin parentBuilding, Floor floor, String indoorCode) {
         return Pin.builder()
                 .code(code)
                 .type(PinType.PLACE)
@@ -185,6 +193,7 @@ public class Pin extends BaseEntity {
                 .infoText(infoText)
                 .parentBuilding(parentBuilding)
                 .floor(floor)
+                .indoorCode(indoorCode)
                 .build();
     }
 
@@ -194,7 +203,7 @@ public class Pin extends BaseEntity {
      */
     public void update(Category category, String name, Double latitude, Double longitude,
                        String imageUrl, String infoText, Integer buildingNumber, String classroomCode,
-                       String address, Pin parentBuilding, Floor floor) {
+                       String address, Pin parentBuilding, Floor floor, String indoorCode) {
         this.category = category;
         this.name = name;
         this.latitude = latitude;
@@ -206,6 +215,7 @@ public class Pin extends BaseEntity {
         this.address = address;
         this.parentBuilding = parentBuilding;
         this.floor = floor;
+        this.indoorCode = indoorCode;
     }
 
     /** 거리 계산에 쓸 위도. 내부 장소면 소속 건물 위도로 대체. 둘 다 없으면 null */

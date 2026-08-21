@@ -96,6 +96,8 @@ public class MapSyncDTO {
         private String parentBuildingCode;
         /** 내부 장소면 소속 층 라벨(건물의 floors와 매칭), 외부 장소면 비움 */
         private String floorLabel;
+        /** 검색 가능한 실제 호실/요소 코드. 예: S1353 */
+        private String indoorCode;
     }
 
     /** operating_hours 탭 1행 (건물 코드 + 요일로 식별) */

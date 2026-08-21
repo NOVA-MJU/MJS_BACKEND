@@ -31,6 +31,11 @@ public interface PinRepository extends JpaRepository<Pin, Long> {
     /** 동기화 upsert용 - code로 단건 조회 */
     Optional<Pin> findByCode(String code);
 
+    /** 일반 검색에서 S1353 같은 실제 호실 코드를 정확히 찾을 때 사용 */
+    @Query("select p from Pin p join fetch p.category left join fetch p.parentBuilding "
+            + "left join fetch p.floor where lower(p.indoorCode) = lower(:indoorCode)")
+    Optional<Pin> findByIndoorCodeIgnoreCase(@Param("indoorCode") String indoorCode);
+
     /**
      * 리뷰 도메인 등 타 도메인이 카테고리/그룹까지 즉시 필요할 때 쓰는 단건 조회.
      * (리뷰 작성 시 type/카테고리 코드/그룹 코드(F&B 판정)를 트랜잭션 밖에서도 안전하게 접근)

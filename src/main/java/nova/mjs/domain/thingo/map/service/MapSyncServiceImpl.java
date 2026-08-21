@@ -154,7 +154,7 @@ public class MapSyncServiceImpl implements MapSyncService {
                     .map(existing -> {
                         existing.update(category, row.getName(), row.getLatitude(), row.getLongitude(),
                                 row.getImageUrl(), row.getInfoText(), row.getBuildingNumber(), row.getClassroomCode(),
-                                null, null, null);
+                                null, null, null, null);
                         return existing;
                     })
                     .orElseGet(() -> pinRepository.save(Pin.ofBuilding(row.getCode(), category, row.getName(),
@@ -202,18 +202,20 @@ public class MapSyncServiceImpl implements MapSyncService {
                     ? null : resolveBuilding(row.getParentBuildingCode(), i, context);
             Floor floor = (parentBuilding != null && !isBlank(row.getFloorLabel()))
                     ? resolveFloor(row.getParentBuildingCode(), row.getFloorLabel(), i, context) : null;
+            String indoorCode = normalizeIndoorCode(row.getIndoorCode());
+            validateIndoorTarget(indoorCode, parentBuilding, floor, i);
 
             Pin place = pinRepository.findByCode(row.getCode())
                     .map(existing -> {
                         existing.update(category, row.getName(), row.getLatitude(), row.getLongitude(),
                                 row.getImageUrl(), row.getInfoText(), null, null,
-                                row.getAddress(), parentBuilding, floor);
+                                row.getAddress(), parentBuilding, floor, indoorCode);
                         return existing;
                     })
                     .orElseGet(() -> {
                         Pin created = parentBuilding != null
                                 ? Pin.ofInternalPlace(row.getCode(), category, row.getName(),
-                                    row.getImageUrl(), row.getInfoText(), parentBuilding, floor)
+                                    row.getImageUrl(), row.getInfoText(), parentBuilding, floor, indoorCode)
                                 : Pin.ofExternalPlace(row.getCode(), category, row.getName(),
                                     row.getLatitude(), row.getLongitude(), row.getImageUrl(),
                                     row.getInfoText(), row.getAddress());
@@ -301,6 +303,20 @@ public class MapSyncServiceImpl implements MapSyncService {
 
     private String floorKey(String buildingCode, String label) {
         return buildingCode + "::" + label;
+    }
+
+    private String normalizeIndoorCode(String value) {
+        if (isBlank(value)) {
+            return null;
+        }
+        return value.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+    }
+
+    private void validateIndoorTarget(String indoorCode, Pin parentBuilding, Floor floor, int index) {
+        if (indoorCode != null && (parentBuilding == null || floor == null)) {
+            throw invalidRow("places", index,
+                    "indoor_code를 입력하려면 parent_building_code와 floor_label이 필요합니다.");
+        }
     }
 
     // ====================== 검증/파싱 ======================
