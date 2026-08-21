@@ -3,10 +3,12 @@ package nova.mjs.domain.thingo.keywordAlarm.service;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.community.entity.CommunityBoard;
 import nova.mjs.domain.thingo.keywordAlarm.entity.NotificationHistory;
+import nova.mjs.domain.thingo.keywordAlarm.event.ReviewLikePushRequestedEvent;
 import nova.mjs.domain.thingo.keywordAlarm.repository.NotificationHistoryRepository;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.review.entity.Review;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -26,6 +28,7 @@ public class ActivityNotificationService {
     private static final String REVIEW_LIKE = "REVIEW_LIKE";
 
     private final NotificationHistoryRepository notificationHistoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void notifyCommunityLike(CommunityBoard board, Member actor,
@@ -77,13 +80,20 @@ public class ActivityNotificationService {
                 preview(review.getContent(), 10),
                 "리뷰를"
         );
+        String link = "/reviews/" + review.getUuid();
         upsertAggregate(
                 review.getAuthor(),
                 REVIEW_LIKE + ":" + review.getUuid(),
                 title,
-                "/reviews/" + review.getUuid(),
+                link,
                 REVIEW_LIKE
         );
+        eventPublisher.publishEvent(new ReviewLikePushRequestedEvent(
+                review.getAuthor().getId(),
+                review.getUuid(),
+                review.getPin().getId(),
+                title,
+                link));
     }
 
     private void upsertAggregate(Member recipient, String key, String title,

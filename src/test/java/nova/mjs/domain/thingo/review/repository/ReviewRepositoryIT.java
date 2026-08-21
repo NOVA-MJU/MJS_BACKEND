@@ -141,7 +141,7 @@ class ReviewRepositoryIT {
         Pin pin = 영속장소("p-1", "학식당");
         Review review = Review.create(pin, author, "가성비 최고", Set.of(ReviewKeyword.TASTY, ReviewKeyword.VALUE));
         review.addMedia("https://thingo.kr/1.png", ReviewMediaType.IMAGE);
-        review.addMedia("https://thingo.kr/2.mp4", ReviewMediaType.VIDEO);
+        review.addMedia("https://thingo.kr/2.mp4", "https://thingo.kr/2-thumb.jpg", ReviewMediaType.VIDEO);
         UUID uuid = review.getUuid();
         em.persistAndFlush(review);
         em.clear();
@@ -158,6 +158,8 @@ class ReviewRepositoryIT {
         assertThat(found.getMedia().get(0).getMediaType()).isEqualTo(ReviewMediaType.IMAGE);
         assertThat(found.getMedia().get(1).getSortOrder()).isEqualTo(1);
         assertThat(found.getMedia().get(1).getMediaType()).isEqualTo(ReviewMediaType.VIDEO);
+        assertThat(found.getMedia().get(1).getThumbnailUrl())
+                .isEqualTo("https://thingo.kr/2-thumb.jpg");
     }
 
     @Test
@@ -182,6 +184,40 @@ class ReviewRepositoryIT {
         // then - r2(7/3) > r3(7/2) > r1(7/1)
         assertThat(result).extracting(Review::getContent)
                 .containsExactly("최신 리뷰", "중간 리뷰", "오래된 리뷰");
+    }
+
+    @Test
+    @DisplayName("좋아요순 커서는 likeCount, createdAt, id 순서로 중복 없이 이어진다")
+    void should_좋아요순_커서() {
+        Member author = 영속회원("cursor@mju.ac.kr");
+        Pin pin = 영속장소("p-cursor", "커서카페");
+        Review low = 영속리뷰(pin, author, "좋아요 2", Set.of(ReviewKeyword.KIND));
+        Review highOld = 영속리뷰(pin, author, "좋아요 5 오래됨", Set.of(ReviewKeyword.COZY));
+        Review highNew = 영속리뷰(pin, author, "좋아요 5 최신", Set.of(ReviewKeyword.FOCUS));
+        createdAt덮어쓰기(low.getId(), "2026-07-03T10:00:00");
+        createdAt덮어쓰기(highOld.getId(), "2026-07-01T10:00:00");
+        createdAt덮어쓰기(highNew.getId(), "2026-07-02T10:00:00");
+        for (int i = 0; i < 2; i++) reviewRepository.increaseLikeCount(low.getUuid());
+        for (int i = 0; i < 5; i++) reviewRepository.increaseLikeCount(highOld.getUuid());
+        for (int i = 0; i < 5; i++) reviewRepository.increaseLikeCount(highNew.getUuid());
+        em.flush();
+        em.clear();
+
+        Set<Long> noBlocked = Set.of(-1L);
+        Set<UUID> noReported = Set.of(new UUID(0L, 0L));
+        List<Review> first = reviewRepository.findLikesCursor(
+                pin.getId(), noBlocked, noReported, null, null, null,
+                PageRequest.of(0, 2));
+        Review cursor = first.get(1);
+        List<Review> second = reviewRepository.findLikesCursor(
+                pin.getId(), noBlocked, noReported, cursor.getLikeCount(),
+                cursor.getCreatedAt(), cursor.getId(), PageRequest.of(0, 2));
+
+        assertThat(first).extracting(Review::getContent)
+                .containsExactly("좋아요 5 최신", "좋아요 5 오래됨");
+        assertThat(second).extracting(Review::getContent).containsExactly("좋아요 2");
+        assertThat(reviewRepository.countVisible(pin.getId(), noBlocked, noReported))
+                .isEqualTo(3);
     }
 
     @Test

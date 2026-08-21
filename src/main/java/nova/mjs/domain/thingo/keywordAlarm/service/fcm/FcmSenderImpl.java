@@ -37,9 +37,12 @@ public class FcmSenderImpl implements FcmSender {
             return;
         }
 
-        // 알림 표시: 제목=등록 키워드, 본문=콘텐츠 제목
+        // 키워드 알림은 기존 제목 형식을 유지하고, 활동 알림은 전달받은 제목을 그대로 표시한다.
+        String notificationTitle = dispatch.keywordStyle()
+                ? "'" + dispatch.title() + "' 키워드 새 소식"
+                : dispatch.title();
         Notification notification = Notification.builder()
-                .setTitle("'" + dispatch.title() + "' 키워드 새 소식")
+                .setTitle(notificationTitle)
                 .setBody(dispatch.body())
                 .build();
 

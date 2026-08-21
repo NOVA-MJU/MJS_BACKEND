@@ -117,8 +117,14 @@ public class Review extends BaseEntity {
     }
 
     /** 미디어 1건을 현재 크기를 순서로 하여 부착한다(호출 순서가 곧 표시 순서). */
+    public void addMedia(String url, String thumbnailUrl, ReviewMediaType mediaType) {
+        String resolvedThumbnail = mediaType == ReviewMediaType.IMAGE ? url : thumbnailUrl;
+        this.media.add(ReviewMedia.of(this, url, resolvedThumbnail, mediaType, this.media.size()));
+    }
+
+    /** 기존 내부 호출 호환용. 신규 VIDEO 작성 요청은 서비스 검증상 썸네일이 반드시 필요하다. */
     public void addMedia(String url, ReviewMediaType mediaType) {
-        this.media.add(ReviewMedia.of(this, url, mediaType, this.media.size()));
+        addMedia(url, null, mediaType);
     }
 
     /** 삭제 권한 판정용: 작성자 본인인지 여부 */

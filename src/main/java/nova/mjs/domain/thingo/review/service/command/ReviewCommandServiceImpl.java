@@ -11,6 +11,7 @@ import nova.mjs.domain.thingo.review.dto.ReviewDTO;
 import nova.mjs.domain.thingo.review.entity.Review;
 import nova.mjs.domain.thingo.review.entity.ReviewKeyword;
 import nova.mjs.domain.thingo.review.entity.ReviewMedia;
+import nova.mjs.domain.thingo.review.entity.ReviewMediaType;
 import nova.mjs.domain.thingo.review.exception.ReviewForbiddenException;
 import nova.mjs.domain.thingo.review.exception.ReviewNotFoundException;
 import nova.mjs.domain.thingo.review.exception.ReviewValidationException;
@@ -18,6 +19,7 @@ import nova.mjs.domain.thingo.review.repository.ReviewRepository;
 import nova.mjs.util.exception.ErrorCode;
 import nova.mjs.util.profanity.ProfanityFilter;
 import nova.mjs.util.s3.S3Service;
+import nova.mjs.util.s3.S3DomainType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,17 +66,19 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
         // 3. 키워드 검증(개수/조합/카테고리 허용)
         Set<ReviewKeyword> keywords = validateKeywords(request.getKeywords(), pin);
 
-        // 4. 미디어 개수 검증
+        // 4. 미디어 개수/URL/영상 썸네일 검증
         List<ReviewDTO.Request.MediaItem> mediaItems =
                 request.getMedia() == null ? List.of() : request.getMedia();
         if (mediaItems.size() > MAX_MEDIA) {
             throw new ReviewValidationException(ErrorCode.REVIEW_MEDIA_LIMIT_EXCEEDED);
         }
+        mediaItems.forEach(this::validateMedia);
 
         // 5. 리뷰 생성(비속어 마스킹 L1) + 미디어 순서대로 부착
         String maskedContent = profanityFilter.mask(request.getContent());
         Review review = Review.create(pin, author, maskedContent, keywords);
-        mediaItems.forEach(item -> review.addMedia(item.getUrl(), item.getMediaType()));
+        mediaItems.forEach(item -> review.addMedia(
+                item.getUrl(), item.getThumbnailUrl(), item.getMediaType()));
         reviewRepository.save(review);
 
         log.info("리뷰 작성 완료 - reviewUuid: {}, pinId: {}, 작성자: {}",
@@ -140,11 +144,43 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
         return keywords;
     }
 
+    /**
+     * 리뷰에는 REVIEW_MEDIA 경로로 사전 업로드된 CloudFront URL만 허용한다.
+     * 영상 썸네일도 동일한 업로드 API를 사용하며, 목록에서 영상을 내려받기 전에
+     * 가벼운 정적 이미지를 표시할 수 있도록 VIDEO에서는 필수다.
+     */
+    private void validateMedia(ReviewDTO.Request.MediaItem media) {
+        if (media == null || media.getMediaType() == null || !isReviewMediaUrl(media.getUrl())) {
+            throw new ReviewValidationException(ErrorCode.REVIEW_MEDIA_INVALID);
+        }
+        if (media.getMediaType() == ReviewMediaType.VIDEO
+                && !isReviewMediaUrl(media.getThumbnailUrl())) {
+            throw new ReviewValidationException(ErrorCode.REVIEW_MEDIA_THUMBNAIL_REQUIRED);
+        }
+    }
+
+    private boolean isReviewMediaUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+        try {
+            String key = s3Service.replaceCloudfrontUrlToS3Url(url);
+            return key != null && key.startsWith(S3DomainType.REVIEW_MEDIA.getPrefix());
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     /** 리뷰 미디어를 S3에서 개별 삭제한다(실패는 무시하고 로그). */
     private void deleteMediaFromS3(Review review) {
         for (ReviewMedia media : review.getMedia()) {
             try {
                 s3Service.deleteFile(s3Service.replaceCloudfrontUrlToS3Url(media.getUrl()));
+                if (media.getThumbnailUrl() != null
+                        && !media.getThumbnailUrl().equals(media.getUrl())) {
+                    s3Service.deleteFile(
+                            s3Service.replaceCloudfrontUrlToS3Url(media.getThumbnailUrl()));
+                }
             } catch (Exception e) {
                 log.warn("리뷰 미디어 S3 삭제 실패(무시) - url: {}, cause: {}", media.getUrl(), e.getMessage());
             }

@@ -42,8 +42,9 @@ public class S3ServiceImpl implements S3Service {
     @Value("${cloud.aws.cloudfront.url}")
     private String cloudFrontUrl;
 
-    /** 프리사인 업로드 상한(50MB) 및 유효시간(5분) */
-    private static final long MAX_PRESIGN_SIZE = 50L * 1024 * 1024;
+    /** 모바일 업로드 기준: 이미지는 10MB, 영상은 50MB까지 허용한다. */
+    private static final long MAX_IMAGE_PRESIGN_SIZE = 10L * 1024 * 1024;
+    private static final long MAX_VIDEO_PRESIGN_SIZE = 50L * 1024 * 1024;
     private static final Duration PRESIGN_TTL = Duration.ofMinutes(5);
 
     /** 허용 Content-Type → 확장자. 영상(mp4/mov/webm) + 이미지(jpg/png/webp) */
@@ -66,6 +67,9 @@ public class S3ServiceImpl implements S3Service {
      */
     @Override
     public String uploadFile(MultipartFile file, S3DomainType domainType) throws IOException {
+        if (domainType == S3DomainType.REVIEW_MEDIA) {
+            validateReviewMedia(file.getContentType(), file.getSize());
+        }
         String fileUrl = S3KeyGenerator.generateFileKeyWithHash(file, domainType);
 
         log.info("[S3 업로드 요청] key: {}", fileUrl);
@@ -93,15 +97,9 @@ public class S3ServiceImpl implements S3Service {
      */
     @Override
     public S3PresignDto.Response presignPut(S3PresignDto.Request request) {
-        // 1. Content-Type 허용 검증
+        // 1~2. 게시판형 업로드와 동일한 형식/용량 정책을 적용한다.
+        validateReviewMedia(request.getContentType(), request.getFileSize());
         String extension = EXTENSION_BY_CONTENT_TYPE.get(request.getContentType());
-        if (extension == null) {
-            throw new RequestException(ErrorCode.S3_PRESIGN_UNSUPPORTED_TYPE);
-        }
-        // 2. 용량 검증(0 이하/상한 초과 거부)
-        if (request.getFileSize() <= 0 || request.getFileSize() > MAX_PRESIGN_SIZE) {
-            throw new RequestException(ErrorCode.S3_PRESIGN_SIZE_EXCEEDED);
-        }
 
         // 3. 키 생성 + 프리사인 PUT 발급
         String key = request.getDomain().getPrefix() + UUID.randomUUID() + extension;
@@ -123,6 +121,19 @@ public class S3ServiceImpl implements S3Service {
                 .fileUrl(cloudFrontUrl + "/" + key)
                 .expiresInSeconds(PRESIGN_TTL.getSeconds())
                 .build();
+    }
+
+    /** 리뷰 멀티파트 업로드와 프리사인 호환 API가 공유하는 단일 정책. */
+    private void validateReviewMedia(String contentType, long fileSize) {
+        if (contentType == null || !EXTENSION_BY_CONTENT_TYPE.containsKey(contentType)) {
+            throw new RequestException(ErrorCode.S3_PRESIGN_UNSUPPORTED_TYPE);
+        }
+        long maxSize = contentType.startsWith("image/")
+                ? MAX_IMAGE_PRESIGN_SIZE
+                : MAX_VIDEO_PRESIGN_SIZE;
+        if (fileSize <= 0 || fileSize > maxSize) {
+            throw new RequestException(ErrorCode.S3_PRESIGN_SIZE_EXCEEDED);
+        }
     }
 
     @Override

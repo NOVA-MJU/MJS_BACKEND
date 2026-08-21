@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -53,21 +52,23 @@ class ReviewControllerTest {
     @Test
     @DisplayName("목록 조회 시 로그인 이메일을 서비스에 전달한다")
     void should_getReviews_로그인() {
-        given(reviewQueryService.getReviews(eq(1L), any(), eq("e@mju.ac.kr"))).willReturn(Page.empty());
+        given(reviewQueryService.getReviews(1L, "latest", null, 10, "e@mju.ac.kr"))
+                .willReturn(ReviewDTO.Response.CursorPage.builder().content(List.of()).build());
 
-        controller.getReviews(1L, "latest", 0, 10, principal);
+        controller.getReviews(1L, "latest", null, 10, principal);
 
-        verify(reviewQueryService).getReviews(eq(1L), any(), eq("e@mju.ac.kr"));
+        verify(reviewQueryService).getReviews(1L, "latest", null, 10, "e@mju.ac.kr");
     }
 
     @Test
     @DisplayName("비로그인 목록 조회 시 email은 null로 전달된다")
     void should_getReviews_비로그인() {
-        given(reviewQueryService.getReviews(eq(1L), any(), isNull())).willReturn(Page.empty());
+        given(reviewQueryService.getReviews(1L, "latest", null, 10, null))
+                .willReturn(ReviewDTO.Response.CursorPage.builder().content(List.of()).build());
 
-        controller.getReviews(1L, "latest", 0, 10, null);
+        controller.getReviews(1L, "latest", null, 10, null);
 
-        verify(reviewQueryService).getReviews(eq(1L), any(), isNull());
+        verify(reviewQueryService).getReviews(1L, "latest", null, 10, null);
     }
 
     @Test

@@ -1,6 +1,7 @@
 package nova.mjs.domain.thingo.review.repository;
 
 import nova.mjs.domain.thingo.review.entity.Review;
+import nova.mjs.domain.thingo.review.entity.ReviewMedia;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -14,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDateTime;
 
 /**
  * ReviewRepository
@@ -31,6 +33,93 @@ import java.util.UUID;
  */
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
+
+    /**
+     * 최신순 커서 조회. 제외 집합은 서비스가 빈 값 대신 절대 매칭되지 않는 sentinel을 전달한다.
+     * size+1개를 요청해 다음 페이지 존재 여부를 count 쿼리 없이 판정한다.
+     */
+    @EntityGraph(attributePaths = "author")
+    @Query("""
+        select r
+        from Review r
+        where r.pin.id = :pinId
+          and r.hidden = false
+          and r.author.id not in :excludedAuthorIds
+          and r.uuid not in :excludedReviewUuids
+          and (
+              :cursorId is null
+              or r.createdAt < :cursorCreatedAt
+              or (r.createdAt = :cursorCreatedAt and r.id < :cursorId)
+          )
+        order by r.createdAt desc, r.id desc
+    """)
+    List<Review> findLatestCursor(
+            @Param("pinId") Long pinId,
+            @Param("excludedAuthorIds") Collection<Long> excludedAuthorIds,
+            @Param("excludedReviewUuids") Collection<UUID> excludedReviewUuids,
+            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
+            @Param("cursorId") Long cursorId,
+            Pageable pageable);
+
+    /** 좋아요순: 좋아요 수 → 작성일 → 내부 id 순으로 안정적인 동률 순서를 만든다. */
+    @EntityGraph(attributePaths = "author")
+    @Query("""
+        select r
+        from Review r
+        where r.pin.id = :pinId
+          and r.hidden = false
+          and r.author.id not in :excludedAuthorIds
+          and r.uuid not in :excludedReviewUuids
+          and (
+              :cursorId is null
+              or r.likeCount < :cursorLikeCount
+              or (r.likeCount = :cursorLikeCount and r.createdAt < :cursorCreatedAt)
+              or (r.likeCount = :cursorLikeCount and r.createdAt = :cursorCreatedAt and r.id < :cursorId)
+          )
+        order by r.likeCount desc, r.createdAt desc, r.id desc
+    """)
+    List<Review> findLikesCursor(
+            @Param("pinId") Long pinId,
+            @Param("excludedAuthorIds") Collection<Long> excludedAuthorIds,
+            @Param("excludedReviewUuids") Collection<UUID> excludedReviewUuids,
+            @Param("cursorLikeCount") Integer cursorLikeCount,
+            @Param("cursorCreatedAt") LocalDateTime cursorCreatedAt,
+            @Param("cursorId") Long cursorId,
+            Pageable pageable);
+
+    /** 현재 뷰어에게 노출되는 총 리뷰 수(상단 '리뷰 N' 표기용). */
+    @Query("""
+        select count(r)
+        from Review r
+        where r.pin.id = :pinId
+          and r.hidden = false
+          and r.author.id not in :excludedAuthorIds
+          and r.uuid not in :excludedReviewUuids
+    """)
+    long countVisible(
+            @Param("pinId") Long pinId,
+            @Param("excludedAuthorIds") Collection<Long> excludedAuthorIds,
+            @Param("excludedReviewUuids") Collection<UUID> excludedReviewUuids);
+
+    /**
+     * 장소 상단 사진·영상 스트립. 미디어가 없는 리뷰 때문에 결과가 덜 채워지지 않도록
+     * 리뷰가 아닌 미디어를 직접 최신 리뷰 순서로 조회한다.
+     */
+    @Query("""
+        select m
+        from ReviewMedia m
+        join fetch m.review r
+        where r.pin.id = :pinId
+          and r.hidden = false
+          and r.author.id not in :excludedAuthorIds
+          and r.uuid not in :excludedReviewUuids
+        order by r.createdAt desc, r.id desc, m.sortOrder asc
+    """)
+    List<ReviewMedia> findVisibleMedia(
+            @Param("pinId") Long pinId,
+            @Param("excludedAuthorIds") Collection<Long> excludedAuthorIds,
+            @Param("excludedReviewUuids") Collection<UUID> excludedReviewUuids,
+            Pageable pageable);
 
     /**
      * 상세 조회: author + media 즉시 로딩.

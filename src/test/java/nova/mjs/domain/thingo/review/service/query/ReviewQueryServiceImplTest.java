@@ -15,23 +15,24 @@ import nova.mjs.domain.thingo.review.entity.Review;
 import nova.mjs.domain.thingo.review.entity.ReviewKeyword;
 import nova.mjs.domain.thingo.review.entity.ReviewMediaType;
 import nova.mjs.domain.thingo.review.exception.ReviewNotFoundException;
+import nova.mjs.domain.thingo.review.exception.ReviewValidationException;
 import nova.mjs.domain.thingo.review.repository.ReviewLikeRepository;
 import nova.mjs.domain.thingo.review.repository.ReviewRepository;
+import nova.mjs.domain.thingo.report.service.ReportQueryService;
+import nova.mjs.util.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,6 +40,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -51,6 +53,7 @@ class ReviewQueryServiceImplTest {
     @Mock private MemberQueryService memberQueryService;
     @Mock private BlockQueryService blockQueryService;
     @Mock private PinQueryService pinQueryService;
+    @Mock private ReportQueryService reportQueryService;
 
     @InjectMocks private ReviewQueryServiceImpl service;
 
@@ -94,13 +97,14 @@ class ReviewQueryServiceImplTest {
         Review r2 = 리뷰(other);
         given(memberQueryService.getMemberByEmail("v@mju.ac.kr")).willReturn(viewer);
         given(blockQueryService.getHiddenMemberIds(1L)).willReturn(Set.of());
-        given(reviewRepository.findByPin_IdAndHiddenFalseOrderByCreatedAtDesc(eq(10L), any()))
-                .willReturn(new PageImpl<>(List.of(r1, r2)));
+        given(reviewRepository.findLatestCursor(eq(10L), anySet(), anySet(),
+                isNull(), isNull(), any())).willReturn(List.of(r1, r2));
+        given(reviewRepository.countVisible(eq(10L), anySet(), anySet())).willReturn(2L);
         given(reviewLikeRepository.findLikedReviewUuids(eq(1L), anyList()))
                 .willReturn(List.of(r1.getUuid()));
 
         // when
-        Page<ReviewDTO.Response.Summary> page = service.getReviews(10L, PageRequest.of(0, 10), "v@mju.ac.kr");
+        ReviewDTO.Response.CursorPage page = service.getReviews(10L, "latest", null, 10, "v@mju.ac.kr");
 
         // then
         List<ReviewDTO.Response.Summary> content = page.getContent();
@@ -117,28 +121,80 @@ class ReviewQueryServiceImplTest {
         Member viewer = 회원(1L, Member.Role.USER);
         given(memberQueryService.getMemberByEmail("v@mju.ac.kr")).willReturn(viewer);
         given(blockQueryService.getHiddenMemberIds(1L)).willReturn(Set.of(2L));
-        given(reviewRepository.findByPin_IdAndHiddenFalseAndAuthor_IdNotInOrderByCreatedAtDesc(eq(10L), anySet(), any()))
-                .willReturn(new PageImpl<>(List.of(리뷰(viewer))));
+        given(reviewRepository.findLatestCursor(eq(10L), eq(Set.of(2L)), anySet(),
+                isNull(), isNull(), any())).willReturn(List.of(리뷰(viewer)));
+        given(reviewRepository.countVisible(eq(10L), eq(Set.of(2L)), anySet())).willReturn(1L);
         given(reviewLikeRepository.findLikedReviewUuids(eq(1L), anyList())).willReturn(List.of());
 
-        service.getReviews(10L, PageRequest.of(0, 10), "v@mju.ac.kr");
+        service.getReviews(10L, "latest", null, 10, "v@mju.ac.kr");
 
-        verify(reviewRepository).findByPin_IdAndHiddenFalseAndAuthor_IdNotInOrderByCreatedAtDesc(eq(10L), anySet(), any());
-        verify(reviewRepository, never()).findByPin_IdAndHiddenFalseOrderByCreatedAtDesc(any(), any());
+        verify(reviewRepository).findLatestCursor(eq(10L), eq(Set.of(2L)), anySet(),
+                isNull(), isNull(), any());
+        verify(reviewRepository, never()).findLikesCursor(any(), anySet(), anySet(), any(), any(), any(), any());
     }
 
     @Test
     @DisplayName("비로그인 목록은 차단 필터·isLiked 없이 조회된다")
     void should_목록_비로그인() {
         given(blockQueryService.getHiddenMemberIds(null)).willReturn(Set.of());
-        given(reviewRepository.findByPin_IdAndHiddenFalseOrderByCreatedAtDesc(eq(10L), any()))
-                .willReturn(new PageImpl<>(List.of(리뷰(회원(2L, Member.Role.USER)))));
+        given(reviewRepository.findLatestCursor(eq(10L), anySet(), anySet(),
+                isNull(), isNull(), any()))
+                .willReturn(List.of(리뷰(회원(2L, Member.Role.USER))));
+        given(reviewRepository.countVisible(eq(10L), anySet(), anySet())).willReturn(1L);
 
-        Page<ReviewDTO.Response.Summary> page = service.getReviews(10L, PageRequest.of(0, 10), null);
+        ReviewDTO.Response.CursorPage page = service.getReviews(10L, "latest", null, 10, null);
 
         assertThat(page.getContent()).hasSize(1);
         assertThat(page.getContent().get(0).isLiked()).isFalse();
         assertThat(page.getContent().get(0).isMine()).isFalse();
+    }
+
+    @Test
+    @DisplayName("좋아요순은 size+1 조회로 다음 커서를 만들고 노출 가능한 총 개수를 반환한다")
+    void should_좋아요순_커서() {
+        Member viewer = 회원(1L, Member.Role.USER);
+        Review first = 리뷰(회원(2L, Member.Role.USER));
+        Review second = 리뷰(회원(3L, Member.Role.USER));
+        ReflectionTestUtils.setField(first, "id", 20L);
+        ReflectionTestUtils.setField(first, "likeCount", 7);
+        ReflectionTestUtils.setField(first, "createdAt", LocalDateTime.of(2026, 8, 21, 12, 0));
+        ReflectionTestUtils.setField(second, "id", 19L);
+        ReflectionTestUtils.setField(second, "likeCount", 5);
+        ReflectionTestUtils.setField(second, "createdAt", LocalDateTime.of(2026, 8, 20, 12, 0));
+        given(memberQueryService.getMemberByEmail("v@mju.ac.kr")).willReturn(viewer);
+        given(blockQueryService.getHiddenMemberIds(1L)).willReturn(Set.of());
+        given(reviewRepository.findLikesCursor(eq(10L), anySet(), anySet(),
+                isNull(), isNull(), isNull(), any())).willReturn(List.of(first, second));
+        given(reviewRepository.countVisible(eq(10L), anySet(), anySet())).willReturn(8L);
+        given(reviewLikeRepository.findLikedReviewUuids(eq(1L), anyList())).willReturn(List.of());
+
+        ReviewDTO.Response.CursorPage page =
+                service.getReviews(10L, "likes", null, 1, "v@mju.ac.kr");
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.isHasNext()).isTrue();
+        assertThat(page.getNextCursor()).isNotBlank();
+        assertThat(page.getTotalElements()).isEqualTo(8);
+        assertThat(page.getSort()).isEqualTo("likes");
+        ReviewCursor decoded = ReviewCursorCodec.decode(page.getNextCursor(),
+                nova.mjs.domain.thingo.review.entity.ReviewSort.LIKES);
+        assertThat(decoded.likeCount()).isEqualTo(7);
+        assertThat(decoded.reviewId()).isEqualTo(20L);
+    }
+
+    @Test
+    @DisplayName("다른 정렬에서 발급한 커서는 재사용할 수 없다")
+    void should_reject_cursor_sort_mismatch() {
+        Member author = 회원(2L, Member.Role.USER);
+        Review review = 리뷰(author);
+        ReflectionTestUtils.setField(review, "id", 10L);
+        ReflectionTestUtils.setField(review, "createdAt", LocalDateTime.of(2026, 8, 21, 12, 0));
+        String latestCursor = ReviewCursorCodec.encode(
+                review, nova.mjs.domain.thingo.review.entity.ReviewSort.LATEST);
+
+        assertThatThrownBy(() -> service.getReviews(10L, "likes", latestCursor, 10, null))
+                .isInstanceOfSatisfying(ReviewValidationException.class, ex ->
+                        assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.REVIEW_CURSOR_INVALID));
     }
 
     // ===== 상세 =====
@@ -193,12 +249,12 @@ class ReviewQueryServiceImplTest {
         Review r1 = 리뷰_미디어2(author); // 2개
         Review r2 = 리뷰_미디어2(author); // 2개
         given(blockQueryService.getHiddenMemberIds(null)).willReturn(Set.of());
-        given(reviewRepository.findByPin_IdAndHiddenFalseOrderByCreatedAtDesc(eq(10L), any()))
-                .willReturn(new PageImpl<>(List.of(r1, r2)));
+        given(reviewRepository.findVisibleMedia(eq(10L), anySet(), anySet(), any()))
+                .willReturn(List.of(
+                        r1.getMedia().get(0), r1.getMedia().get(1), r2.getMedia().get(0)));
 
         List<ReviewDTO.Response.MediaStripItem> strip = service.getMediaStrip(10L, 3, null);
 
-        // r1 미디어 2개 + r2 미디어 1개 = 3개에서 컷
         assertThat(strip).hasSize(3);
         assertThat(strip.get(0).getReviewUuid()).isEqualTo(r1.getUuid());
         assertThat(strip.get(2).getReviewUuid()).isEqualTo(r2.getUuid());

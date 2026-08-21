@@ -8,9 +8,6 @@ import nova.mjs.domain.thingo.review.service.like.ReviewLikeService;
 import nova.mjs.domain.thingo.review.service.query.ReviewQueryService;
 import nova.mjs.util.response.ApiResponse;
 import nova.mjs.util.security.UserPrincipal;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,18 +43,18 @@ public class ReviewController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
-    /** 장소별 리뷰 목록(최신순, 차단 사용자 제외) */
+    /** 장소별 리뷰 무한 스크롤 목록(최신순/좋아요순, 차단·자가신고 제외) */
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ReviewDTO.Response.Summary>>> getReviews(
+    public ResponseEntity<ApiResponse<ReviewDTO.Response.CursorPage>> getReviews(
             @RequestParam Long pinId,
             @RequestParam(defaultValue = "latest") String sort,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = resolveEmail(userPrincipal);
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ReviewDTO.Response.Summary> response = reviewQueryService.getReviews(pinId, pageable, email);
+        ReviewDTO.Response.CursorPage response =
+                reviewQueryService.getReviews(pinId, sort, cursor, size, email);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

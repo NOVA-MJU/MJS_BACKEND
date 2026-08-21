@@ -2,17 +2,17 @@
   "openapi": "3.0.1",
   "info": {
     "title": "MJU 명지도 리뷰 API",
-    "version": "v1.1.0",
-    "description": "명지도 장소(PLACE) 리뷰 기능. 키워드 태그 + 본문 + 사진/영상 후기, 좋아요 토글, 사진·영상 프리사인 업로드, 신고/차단/자동숨김 연동을 다룹니다.\n\n공통 응답 래퍼: { \"status\": \"API 요청 성공\", \"data\": <값>, \"timestamp\": \"...\" }\n오류 응답: { \"status\": <int>, \"error\": <코드>, \"message\": <메시지> }\n\n조회(목록/상세/미디어/키워드)는 비로그인 허용(로그인 시 isLiked/isMine 부가). 작성/삭제/좋아요/프리사인은 로그인 필요. 운영자 검토 API는 OPERATOR 권한 필요."
+    "version": "v1.2.0",
+    "description": "명지도 장소(PLACE) 리뷰 기능. 키워드 태그 + 본문 + 사진/영상 후기, 최신순/좋아요순 무한 스크롤, 좋아요 FCM 푸시, 게시판 공통 S3 업로드, 신고/차단/자동숨김 연동을 다룹니다.\n\n공통 응답 래퍼: { \"status\": \"API 요청 성공\", \"data\": <값>, \"timestamp\": \"...\" }\n오류 응답: { \"status\": <int>, \"error\": <코드>, \"message\": <메시지> }\n\n조회(목록/상세/미디어/키워드)는 비로그인 허용(로그인 시 isLiked/isMine 부가). 작성/좋아요는 로그인 필요합니다. 수정·삭제는 현재 프론트 기능 범위에서 보류이며, 기존 삭제 API는 호환성을 위해 유지합니다. 운영자 검토 API는 OPERATOR 권한이 필요합니다.\n\n신고/차단은 기존 공통 API를 그대로 사용합니다. 리뷰 신고는 POST /reports에 targetType=REVIEW, targetUuid=reviewUuid를 전달합니다. 작성자 차단은 POST /blocks에 targetMemberUuid=author.authorUuid를 전달합니다. 신고한 리뷰는 신고자 본인에게 즉시 숨겨지고, 차단 관계인 작성자의 리뷰는 양방향으로 목록·상세·미디어에서 제외됩니다."
   },
   "servers": [
     { "url": "https://api.thingo.kr/api/v1" }
   ],
   "tags": [
     { "name": "Review", "description": "리뷰 작성/조회/삭제" },
-    { "name": "ReviewLike", "description": "리뷰 좋아요 토글 + 작성자 인앱 알림" },
+    { "name": "ReviewLike", "description": "리뷰 좋아요 토글 + 작성자 인앱 알림/FCM 푸시" },
     { "name": "ReviewMeta", "description": "미디어 스트립 / 키워드 카탈로그" },
-    { "name": "ReviewUpload", "description": "리뷰 사진·영상 프리사인 직접 업로드" },
+    { "name": "ReviewUpload", "description": "게시판과 동일한 공통 S3 멀티파트 업로드" },
     { "name": "ReviewModeration", "description": "신고 자동 숨김 리뷰 운영자 검토(OPERATOR)" }
   ],
   "security": [ { "bearerAuth": [] } ],
@@ -21,7 +21,7 @@
       "post": {
         "tags": ["Review"],
         "summary": "리뷰 작성",
-        "description": "PLACE 타입 장소에만 작성 가능(동아리방 club-room / 흡연부스 smoking 제외). 키워드 1~5개 필수, '적절한 키워드 없음(NONE_APPROPRIATE)'은 단독 선택만 허용, 비F&B 장소는 F&B 전용 키워드 선택 불가. 본문 최대 400자(비속어 자동 마스킹). 미디어 0~10개(사전 업로드된 URL). 성공 시 작성된 리뷰 상세를 반환합니다.",
+        "description": "PLACE 타입 장소에 여러 리뷰를 작성할 수 있습니다(동아리방 club-room / 흡연부스 smoking 제외). 키워드 1~5개 필수, '적절한 키워드 없음(NONE_APPROPRIATE)'은 단독 선택만 허용, 비F&B 장소는 F&B 전용 키워드 선택 불가. 본문 최대 400자(비속어 자동 마스킹). 사진/영상을 합쳐 0~10개이며, VIDEO는 thumbnailUrl이 필수입니다. 게시판과 동일하게 ① /s3/upload에 파일 업로드 ② 응답 URL을 이 요청에 전달하는 순서입니다.",
         "security": [ { "bearerAuth": [] } ],
         "requestBody": {
           "required": true,
@@ -37,7 +37,7 @@
                     "content": "가성비 최고. 학식보다 낫다.",
                     "media": [
                       { "url": "https://thingo.kr/static/images/reviews/ab12.png", "mediaType": "IMAGE" },
-                      { "url": "https://thingo.kr/static/images/reviews/cd34.mp4", "mediaType": "VIDEO" }
+                      { "url": "https://thingo.kr/static/images/reviews/cd34.mp4", "thumbnailUrl": "https://thingo.kr/static/images/reviews/cd34-thumb.jpg", "mediaType": "VIDEO" }
                     ]
                   }
                 }
@@ -61,6 +61,7 @@
                   "keywordCombo": { "summary": "적절없음 단독", "value": { "status": 400, "error": "REVIEW_KEYWORD_COMBINATION_INVALID", "message": "[MJS] '적절한 키워드 없음'은 단독으로만 선택할 수 있습니다." } },
                   "keywordCategory": { "summary": "F&B 전용 키워드", "value": { "status": 400, "error": "REVIEW_KEYWORD_NOT_ALLOWED_FOR_CATEGORY", "message": "[MJS] 해당 장소에서 사용할 수 없는 키워드입니다." } },
                   "mediaLimit": { "summary": "미디어 초과", "value": { "status": 400, "error": "REVIEW_MEDIA_LIMIT_EXCEEDED", "message": "[MJS] 사진·영상은 최대 10개까지 첨부할 수 있습니다." } },
+                  "thumbnail": { "summary": "영상 썸네일 누락", "value": { "status": 400, "error": "REVIEW_MEDIA_THUMBNAIL_REQUIRED", "message": "[MJS] 영상에는 썸네일 이미지가 필요합니다." } },
                   "malformed": { "summary": "잘못된 enum/본문", "value": { "status": 400, "error": "MALFORMED_REQUEST_BODY", "message": "[MJS] 요청 본문 형식이 올바르지 않습니다. (필드 타입/enum 값을 확인해 주세요)" } },
                   "validation": { "summary": "필수값 검증", "value": { "status": 400, "error": "VALIDATION_FAILED", "message": "content : 공백일 수 없습니다" } }
                 }
@@ -76,21 +77,21 @@
       },
       "get": {
         "tags": ["Review"],
-        "summary": "장소별 리뷰 목록(최신순)",
-        "description": "특정 장소의 리뷰를 최신순(createdAt DESC)으로 페이지 조회합니다. 자동 숨김(hidden) 리뷰는 제외되며, 로그인 시 차단한(양방향) 사용자의 리뷰도 제외됩니다. 로그인 시 isLiked/isMine이 계산됩니다.",
+        "summary": "장소별 리뷰 무한 스크롤(최신순/좋아요순)",
+        "description": "첫 요청은 cursor 없이 호출하고, hasNext=true이면 응답 nextCursor를 다음 요청에 그대로 전달합니다. 커서는 불투명 값이므로 프론트에서 해석하거나 조합하지 않습니다. latest는 createdAt DESC, likes는 likeCount DESC 후 createdAt DESC입니다. 좋아요순은 조회 중 좋아요 수가 변할 수 있으므로 프론트는 reviewUuid 기준으로 중복 렌더링을 방지하는 것이 안전합니다. totalElements는 자동 숨김·차단·본인 신고 리뷰를 제외한 실제 노출 개수이며 화면의 '리뷰 N'에 사용합니다.",
         "security": [],
         "parameters": [
           { "name": "pinId", "in": "query", "required": true, "schema": { "type": "integer", "format": "int64" }, "description": "장소(Pin) id" },
-          { "name": "sort", "in": "query", "schema": { "type": "string", "default": "latest", "enum": ["latest"] }, "description": "정렬(현재 최신순만)" },
-          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 0, "minimum": 0 } },
-          { "name": "size", "in": "query", "schema": { "type": "integer", "default": 10, "minimum": 1 } }
+          { "name": "sort", "in": "query", "schema": { "type": "string", "default": "latest", "enum": ["latest", "likes"] }, "description": "latest=최신순, likes=좋아요순" },
+          { "name": "cursor", "in": "query", "required": false, "schema": { "type": "string" }, "description": "이전 응답의 nextCursor. 첫 요청에서는 생략하며 다른 sort의 커서와 섞지 않습니다." },
+          { "name": "size", "in": "query", "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 50 } }
         ],
         "responses": {
           "200": {
             "description": "목록",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiSuccess_ReviewPage" },
+                "schema": { "$ref": "#/components/schemas/ApiSuccess_ReviewCursorPage" },
                 "examples": {
                   "example": {
                     "value": {
@@ -99,20 +100,21 @@
                         "content": [
                           {
                             "reviewUuid": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
-                            "author": { "nickname": "길동", "profileImageUrl": null },
+                            "author": { "authorUuid": "11111111-2222-3333-4444-555555555555", "nickname": "길동", "profileImageUrl": null },
                             "keywords": [ { "code": "TASTY", "emoji": "🤤", "label": "맛있음" }, { "code": "VALUE", "emoji": "🐷", "label": "가성비" } ],
                             "content": "가성비 최고. 학식보다 낫다.",
-                            "media": [ { "url": "https://thingo.kr/static/images/reviews/ab12.png", "mediaType": "IMAGE", "sortOrder": 0 } ],
+                            "media": [ { "url": "https://thingo.kr/static/images/reviews/ab12.png", "thumbnailUrl": "https://thingo.kr/static/images/reviews/ab12.png", "mediaType": "IMAGE", "sortOrder": 0 } ],
                             "likeCount": 3,
                             "isLiked": false,
                             "isMine": false,
                             "createdAt": "2026-07-14T12:30:00"
                           }
                         ],
+                        "nextCursor": "djF8bGF0ZXN0fDN8MjAyNi0wNy0xNFQxMjozMDowMHwxMjM",
+                        "hasNext": true,
+                        "size": 10,
                         "totalElements": 42,
-                        "totalPages": 5,
-                        "number": 0,
-                        "size": 10
+                        "sort": "latest"
                       },
                       "timestamp": "2026-07-14T12:30:05"
                     }
@@ -121,7 +123,7 @@
               }
             }
           },
-          "400": { "description": "pinId 누락", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" }, "examples": { "missing": { "value": { "status": 400, "error": "MISSING_PARAMETER", "message": "Required request parameter 'pinId' ... is not present" } } } } } }
+          "400": { "description": "파라미터/정렬/커서 오류", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" }, "examples": { "sort": { "value": { "status": 400, "error": "REVIEW_SORT_INVALID", "message": "[MJS] 리뷰 정렬 기준은 latest 또는 likes만 사용할 수 있습니다." } }, "cursor": { "value": { "status": 400, "error": "REVIEW_CURSOR_INVALID", "message": "[MJS] 리뷰 목록 커서가 올바르지 않거나 정렬 기준과 일치하지 않습니다." } } } } } }
         }
       }
     },
@@ -152,13 +154,14 @@
     },
     "/reviews/{reviewUuid}/like": {
       "post": {
-        "tags": ["ReviewLike"],
+        "tags": ["Review"],
         "summary": "좋아요 토글",
-        "description": "좋아요가 없으면 추가(+1, liked=true), 있으면 취소(-1, liked=false). 좋아요 추가 시 리뷰 작성자에게 REVIEW_LIKE 인앱 알림을 적재합니다. 본인이 자기 리뷰를 좋아한 경우에는 알림을 만들지 않으며, 같은 리뷰의 좋아요는 알림 1건으로 집계됩니다. FCM 푸시는 별도입니다.",
+        "description": "좋아요가 없으면 추가(+1, liked=true), 있으면 취소(-1, liked=false)합니다. 추가 시 REVIEW_LIKE 인앱 알림을 집계 갱신하고 트랜잭션 커밋 후 작성자의 모든 등록 기기로 FCM 푸시를 보냅니다. 푸시 data에는 type, reviewUuid, pinId, link가 포함됩니다. 취소 시에는 푸시를 보내지 않으며 FCM 실패는 좋아요 결과를 롤백하지 않습니다. 본인 리뷰 좋아요는 허용하지 않습니다.",
         "security": [ { "bearerAuth": [] } ],
         "parameters": [ { "name": "reviewUuid", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
         "responses": {
           "200": { "description": "토글 결과", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiSuccess_LikeResult" }, "examples": { "liked": { "value": { "status": "API 요청 성공", "data": { "liked": true, "likeCount": 4 }, "timestamp": "2026-07-14T12:30:00" } } } } } },
+          "400": { "description": "본인 리뷰 좋아요", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" }, "examples": { "self": { "value": { "status": 400, "error": "REVIEW_SELF_LIKE_NOT_ALLOWED", "message": "[MJS] 본인이 작성한 리뷰에는 좋아요를 누를 수 없습니다." } } } } } },
           "403": { "description": "미인증", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "404": { "description": "리뷰 없음", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
         }
@@ -166,7 +169,7 @@
     },
     "/reviews/media": {
       "get": {
-        "tags": ["ReviewMeta"],
+        "tags": ["Review"],
         "summary": "장소 상세 상단 사진·영상 스트립",
         "description": "최신 리뷰부터 미디어를 평탄화해 limit개까지 반환합니다. 자동 숨김/차단 사용자 미디어는 제외됩니다. 클릭 시 프론트는 reviewUuid 상세로 이동합니다.",
         "security": [],
@@ -175,13 +178,13 @@
           { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10, "minimum": 1 } }
         ],
         "responses": {
-          "200": { "description": "미디어 배열", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiSuccess_MediaStripList" }, "examples": { "example": { "value": { "status": "API 요청 성공", "data": [ { "reviewUuid": "aaaabbbb-cccc-dddd-eeee-ffff00001111", "url": "https://thingo.kr/static/images/reviews/cd34.mp4", "mediaType": "VIDEO", "sortOrder": 0 } ], "timestamp": "2026-07-14T12:30:00" } } } } } }
+          "200": { "description": "미디어 배열", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiSuccess_MediaStripList" }, "examples": { "example": { "value": { "status": "API 요청 성공", "data": [ { "reviewUuid": "aaaabbbb-cccc-dddd-eeee-ffff00001111", "url": "https://thingo.kr/static/images/reviews/cd34.mp4", "thumbnailUrl": "https://thingo.kr/static/images/reviews/cd34-thumb.jpg", "mediaType": "VIDEO", "sortOrder": 0 } ], "timestamp": "2026-07-14T12:30:00" } } } } } }
         }
       }
     },
     "/reviews/keywords": {
       "get": {
-        "tags": ["ReviewMeta"],
+        "tags": ["Review"],
         "summary": "작성 화면용 키워드 카탈로그",
         "description": "리뷰 작성 화면이 보여줄 키워드 목록을 그룹별로 반환합니다. pinId가 F&B 장소면 F&B 전용 키워드(음식/가격 그룹 + '어른 식사 대접')를 포함하고, 비F&B면 제외합니다. pinId를 생략하면 전체(F&B 포함) 카탈로그를 반환합니다.",
         "security": [],
@@ -192,26 +195,25 @@
         }
       }
     },
-    "/s3/presign": {
+    "/s3/upload": {
       "post": {
-        "tags": ["ReviewUpload"],
-        "summary": "리뷰 사진·영상 프리사인 PUT URL 발급",
-        "description": "리뷰 사진·영상을 S3에 직접 업로드하기 위한 프리사인 PUT URL을 발급합니다. 앱 서버는 파일 바이트를 거치지 않습니다. 허용 Content-Type: video/mp4, video/quicktime, video/webm, image/jpeg, image/png, image/webp. 상한 50MB, 유효시간 5분. 발급받은 uploadUrl로 직접 PUT한 뒤, fileUrl을 리뷰 작성 요청 media[].url에 담습니다. 등록 전 미리보기 삭제는 프론트 로컬 목록에서 처리하며, 최종적으로 남은 파일만 업로드합니다.",
-        "security": [ { "bearerAuth": [] } ],
+        "tags": ["Review"],
+        "summary": "리뷰 사진·영상 업로드(게시판 공통 방식)",
+        "description": "게시판 이미지와 동일한 공통 multipart/form-data 업로드 API를 사용합니다. domain은 REVIEW_MEDIA로 고정합니다. 허용 형식은 video/mp4, video/quicktime, video/webm, image/jpeg, image/png, image/webp이며 이미지는 파일당 10MB, 영상은 파일당 50MB입니다. 응답 data의 CloudFront URL을 리뷰 작성 요청 media[].url에 전달합니다. VIDEO 썸네일은 이미지 파일로 한 번 더 업로드해 그 응답 URL을 media[].thumbnailUrl에 넣습니다. 업로드 미리보기 삭제는 프론트 목록에서 처리하며, 불필요한 고아 파일을 줄이기 위해 최종 선택이 끝난 파일부터 업로드하는 것을 권장합니다.",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PresignRequest" }, "examples": { "image": { "value": { "domain": "REVIEW_MEDIA", "contentType": "image/jpeg", "fileSize": 524288 } }, "video": { "value": { "domain": "REVIEW_MEDIA", "contentType": "video/mp4", "fileSize": 12582912 } } } } }
+          "content": { "multipart/form-data": { "schema": { "type": "object", "required": ["file", "domain"], "properties": { "file": { "type": "string", "format": "binary", "description": "이미지 또는 영상 파일" }, "domain": { "type": "string", "enum": ["REVIEW_MEDIA"] } } } } }
         },
         "responses": {
-          "200": { "description": "발급 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiSuccess_Presign" }, "examples": { "example": { "value": { "status": "API 요청 성공", "data": { "uploadUrl": "https://s3-thingo.s3.ap-northeast-2.amazonaws.com/static/images/reviews/uuid.mp4?X-Amz-...", "fileUrl": "https://thingo.kr/static/images/reviews/uuid.mp4", "expiresInSeconds": 300 }, "timestamp": "2026-07-14T12:30:00" } } } } } },
+          "200": { "description": "업로드 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiSuccess_String" }, "examples": { "example": { "value": { "status": "API 요청 성공", "data": "https://thingo.kr/static/images/reviews/uuid.mp4", "timestamp": "2026-07-14T12:30:00" } } } } } },
           "400": { "description": "형식/용량 위반", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" }, "examples": { "type": { "value": { "status": 400, "error": "S3_PRESIGN_UNSUPPORTED_TYPE", "message": "[MJS] 지원하지 않는 파일 형식입니다." } }, "size": { "value": { "status": 400, "error": "S3_PRESIGN_SIZE_EXCEEDED", "message": "[MJS] 파일 용량이 허용 범위를 초과했습니다." } } } } } },
-          "403": { "description": "미인증", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+          "500": { "description": "S3 업로드 실패", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
         }
       }
     },
     "/reviews/moderation/hidden": {
       "get": {
-        "tags": ["ReviewModeration"],
+        "tags": ["Review"],
         "summary": "자동 숨김된 리뷰 목록(운영자)",
         "description": "신고 누적 임계(기본 5명) 초과로 자동 숨김된 리뷰 목록을 최신순으로 반환합니다. OPERATOR 권한 필요.",
         "security": [ { "bearerAuth": [] } ],
@@ -223,7 +225,7 @@
     },
     "/reviews/moderation/{reviewUuid}/restore": {
       "patch": {
-        "tags": ["ReviewModeration"],
+        "tags": ["Review"],
         "summary": "리뷰 숨김 해제(운영자)",
         "description": "운영자 검토 후 자동 숨김된 리뷰를 정상 복원합니다. OPERATOR 권한 필요.",
         "security": [ { "bearerAuth": [] } ],
@@ -266,6 +268,7 @@
         "required": ["url", "mediaType"],
         "properties": {
           "url": { "type": "string", "description": "사전 업로드된 CloudFront URL (https://thingo.kr/...)" },
+          "thumbnailUrl": { "type": "string", "nullable": true, "description": "VIDEO에서 필수인 정적 이미지 URL. IMAGE는 생략하면 서버가 url과 동일하게 응답합니다." },
           "mediaType": { "$ref": "#/components/schemas/MediaType" }
         }
       },
@@ -281,6 +284,7 @@
         "type": "object",
         "properties": {
           "url": { "type": "string" },
+          "thumbnailUrl": { "type": "string", "nullable": true, "description": "목록/뷰어 진입 전 미리보기. IMAGE는 url과 동일합니다." },
           "mediaType": { "$ref": "#/components/schemas/MediaType" },
           "sortOrder": { "type": "integer" }
         }
@@ -288,6 +292,7 @@
       "AuthorInfo": {
         "type": "object",
         "properties": {
+          "authorUuid": { "type": "string", "format": "uuid", "description": "작성자 차단 시 POST /blocks의 targetMemberUuid로 사용" },
           "nickname": { "type": "string" },
           "profileImageUrl": { "type": "string", "nullable": true }
         }
@@ -327,6 +332,7 @@
         "properties": {
           "reviewUuid": { "type": "string", "format": "uuid" },
           "url": { "type": "string" },
+          "thumbnailUrl": { "type": "string", "nullable": true },
           "mediaType": { "$ref": "#/components/schemas/MediaType" },
           "sortOrder": { "type": "integer" }
         }
@@ -359,7 +365,7 @@
         "properties": {
           "domain": { "type": "string", "enum": ["REVIEW_MEDIA"], "description": "S3 도메인 타입(영상은 REVIEW_MEDIA)" },
           "contentType": { "type": "string", "description": "MIME 타입", "enum": ["video/mp4", "video/quicktime", "video/webm", "image/jpeg", "image/png", "image/webp"] },
-          "fileSize": { "type": "integer", "format": "int64", "description": "바이트. 최대 52428800(50MB)" }
+          "fileSize": { "type": "integer", "format": "int64", "description": "바이트. 이미지 최대 10485760(10MB), 영상 최대 52428800(50MB)" }
         }
       },
       "PresignResponse": {
@@ -370,14 +376,15 @@
           "expiresInSeconds": { "type": "integer", "format": "int64" }
         }
       },
-      "ReviewPage": {
+      "ReviewCursorPage": {
         "type": "object",
         "properties": {
           "content": { "type": "array", "items": { "$ref": "#/components/schemas/ReviewSummary" } },
+          "nextCursor": { "type": "string", "nullable": true, "description": "hasNext=true일 때 다음 요청에 그대로 전달" },
+          "hasNext": { "type": "boolean" },
+          "size": { "type": "integer", "description": "이번 응답에 포함된 항목 수" },
           "totalElements": { "type": "integer", "format": "int64" },
-          "totalPages": { "type": "integer" },
-          "number": { "type": "integer" },
-          "size": { "type": "integer" }
+          "sort": { "type": "string", "enum": ["latest", "likes"] }
         }
       },
       "ErrorResponse": {
@@ -392,9 +399,9 @@
         "type": "object",
         "properties": { "status": { "type": "string" }, "data": { "$ref": "#/components/schemas/ReviewDetail" }, "timestamp": { "type": "string", "format": "date-time" } }
       },
-      "ApiSuccess_ReviewPage": {
+      "ApiSuccess_ReviewCursorPage": {
         "type": "object",
-        "properties": { "status": { "type": "string" }, "data": { "$ref": "#/components/schemas/ReviewPage" }, "timestamp": { "type": "string", "format": "date-time" } }
+        "properties": { "status": { "type": "string" }, "data": { "$ref": "#/components/schemas/ReviewCursorPage" }, "timestamp": { "type": "string", "format": "date-time" } }
       },
       "ApiSuccess_ReviewSummaryList": {
         "type": "object",
@@ -419,6 +426,10 @@
       "ApiSuccess_Void": {
         "type": "object",
         "properties": { "status": { "type": "string" }, "data": { "type": "object", "nullable": true }, "timestamp": { "type": "string", "format": "date-time" } }
+      },
+      "ApiSuccess_String": {
+        "type": "object",
+        "properties": { "status": { "type": "string" }, "data": { "type": "string", "description": "업로드된 CloudFront URL" }, "timestamp": { "type": "string", "format": "date-time" } }
       }
     }
   }

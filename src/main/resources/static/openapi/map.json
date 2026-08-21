@@ -21,6 +21,10 @@
       "description": "건물 목록·상세, 장소(비건물) 상세 API. 운영 상태와 거리는 요청 시점에 계산해 내려줍니다. 운영시간은 건물에만 존재합니다."
     },
     {
+      "name": "Review",
+      "description": "명지도 장소 리뷰 API. 등록, 최신순·좋아요순 무한 스크롤, 상세, 좋아요/FCM, 사진·영상, 키워드, 기존 신고·차단 정책 연동을 포함합니다."
+    },
+    {
       "name": "명지도 - 즐겨찾기",
       "description": "건물/장소 즐겨찾기 토글 API. 즐겨찾기한 핀은 칩 목록에서 상단으로 정렬됩니다. 로그인 필요."
     },
@@ -607,6 +611,30 @@
           }
         }
       }
+    },
+    "/reviews": {
+      "$ref": "./review.json#/paths/~1reviews"
+    },
+    "/reviews/{reviewUuid}": {
+      "$ref": "./review.json#/paths/~1reviews~1{reviewUuid}"
+    },
+    "/reviews/{reviewUuid}/like": {
+      "$ref": "./review.json#/paths/~1reviews~1{reviewUuid}~1like"
+    },
+    "/reviews/media": {
+      "$ref": "./review.json#/paths/~1reviews~1media"
+    },
+    "/reviews/keywords": {
+      "$ref": "./review.json#/paths/~1reviews~1keywords"
+    },
+    "/s3/upload": {
+      "$ref": "./review.json#/paths/~1s3~1upload"
+    },
+    "/reviews/moderation/hidden": {
+      "$ref": "./review.json#/paths/~1reviews~1moderation~1hidden"
+    },
+    "/reviews/moderation/{reviewUuid}/restore": {
+      "$ref": "./review.json#/paths/~1reviews~1moderation~1{reviewUuid}~1restore"
     }
   },
   "components": {
