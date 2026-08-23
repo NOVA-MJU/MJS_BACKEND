@@ -194,11 +194,26 @@ dto/
 
 ---
 
-## 7. 미해결 논의 항목 (요약)
+## 7. 논의 결과 (확정) 및 구현 반영
 
-1. **★A** 기존 `PinFavorite` → `내 장소` 그룹 흡수(권장) vs 병행 유지?
-2. **★B** `버스` 그룹을 `BusFavorite` 기반 가상 그룹으로 처리(권장) — 확정?
-3. **★C** 메모 = (그룹,핀) 멤버십 종속(권장) — 확정?
-4. **★D** 별 클릭 = 그룹 선택 바텀시트 진입 + `내 장소` 기본 체크 여부?
-5. 시스템 그룹 자동 생성 시점(가입 시 일괄 vs 최초 접근 시 lazy)?
-6. 그룹 개수/장소 개수 상한(있다면)?
+| # | 항목 | 결정 |
+|---|---|---|
+| ★A | 기존 `PinFavorite` | **`내 장소` 그룹으로 흡수.** 기동 시 1회성 마이그레이션(`FavoriteMigrationRunner`)으로 기존 행을 `내 장소` `FavoritePlace`로 이관(멱등). 읽기(`favoritePinIds`)·마이페이지 집계·레거시 토글 모두 그룹 모델로 재연결 |
+| ★B | `버스` 그룹 | **`BusFavorite` 기반.** 실제 `FavoriteGroup`(type=SYSTEM_BUS) 행으로 목록에 노출하되, 저장 개수는 `BusFavorite`에서 집계. 핀 place 엔드포인트에서는 제외 |
+| ★C | 메모 단위 | **(그룹, 핀) 멤버십 종속** = `FavoritePlace.memo`. 같은 장소도 그룹마다 다른 메모 가능 |
+| ★D | 별 클릭 | **그룹 선택 바텀시트 진입 + `내 장소` 기본 체크.** 기본 체크는 프론트 프리셋(백엔드는 전달된 groupIds를 그대로 반영). 레거시 `POST /favorites` 토글은 `내 장소` 편입/해제로 호환 유지 |
+| 5 | 시스템 그룹 생성 시점 | **최초 접근 시 lazy 생성**(`FavoriteGroupProvisioner`). 가입 플로우 미변경 |
+| 6 | 개수 상한 | 이번 구현에서는 미설정(무제한). 필요 시 후속 |
+
+### 구현 산출물 (엔티티/서비스/컨트롤러)
+- entity: `FavoriteGroup`, `FavoritePlace`, `FavoriteGroupColor`, `FavoriteGroupType`
+- repository: `FavoriteGroupRepository`, `FavoritePlaceRepository`, (`BusFavoriteRepository.countByMember` 추가)
+- service: `FavoriteGroupService`, `FavoritePlaceService`, `FavoriteGroupProvisioner`, `FavoriteMigrationRunner`, (`PinFavoriteService` 위임 전환)
+- controller: `MapFavoriteGroupController` (신규), `MapFavoriteController` (레거시 토글 유지)
+- 재연결: `MapPinService`/`MapSearchService`의 즐겨찾기 판정, `ProfileService` 마이페이지 집계 → `FavoritePlace` 기준
+- 에러코드: `FAVORITE_GROUP_NOT_FOUND`, `FAVORITE_GROUP_FORBIDDEN`, `FAVORITE_GROUP_NAME_INVALID`, `FAVORITE_GROUP_SYSTEM_MODIFY_NOT_ALLOWED`, `FAVORITE_MEMO_TOO_LONG`
+
+### 남은 후속 과제
+- `버스` 그룹 상세(즐겨찾기 노선 카드) 응답 형태 확정 — 현재는 place 엔드포인트에서 빈 목록(버스 화면 재사용 가정)
+- 안정화 후 레거시 `map_pin_favorite` 테이블/`PinFavorite` 정리
+- 단위/통합 테스트 (현 원격 환경은 jitpack(KOMORAN) 차단으로 빌드 불가 → 테스트는 로컬/CI에서 추가 필요)

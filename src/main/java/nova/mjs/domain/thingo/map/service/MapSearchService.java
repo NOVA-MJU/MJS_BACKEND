@@ -7,7 +7,7 @@ import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
 import nova.mjs.domain.thingo.map.entity.OperatingHour;
 import nova.mjs.domain.thingo.map.entity.Pin;
 import nova.mjs.domain.thingo.map.entity.PinType;
-import nova.mjs.domain.thingo.map.repository.PinFavoriteRepository;
+import nova.mjs.domain.thingo.map.repository.FavoritePlaceRepository;
 import nova.mjs.domain.thingo.map.repository.PinRepository;
 import nova.mjs.domain.thingo.map.support.CampusArea;
 import nova.mjs.domain.thingo.map.support.DistanceCalculator;
@@ -48,7 +48,7 @@ public class MapSearchService {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final PinRepository pinRepository;
-    private final PinFavoriteRepository pinFavoriteRepository;
+    private final FavoritePlaceRepository favoritePlaceRepository;
     private final MemberRepository memberRepository;
     private final DistanceCalculator distanceCalculator;
     private final OperatingStatusResolver operatingStatusResolver;
@@ -241,6 +241,6 @@ public class MapSearchService {
         if (member == null) {
             return Set.of();
         }
-        return new HashSet<>(pinFavoriteRepository.findFavoritePinIds(member));
+        return new HashSet<>(favoritePlaceRepository.findDistinctPinIdsByMember(member));
     }
 }

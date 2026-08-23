@@ -11,7 +11,7 @@ import nova.mjs.domain.thingo.community.likes.repository.CommunityLikeRepository
 import nova.mjs.domain.thingo.community.repository.CommunityBoardRepository;
 import nova.mjs.domain.thingo.block.repository.BlockRepository;
 import nova.mjs.domain.thingo.keywordAlarm.repository.KeywordSubscriptionRepository;
-import nova.mjs.domain.thingo.map.repository.PinFavoriteRepository;
+import nova.mjs.domain.thingo.map.repository.FavoritePlaceRepository;
 import nova.mjs.domain.thingo.member.DTO.CommentWithBoardResponse;
 import nova.mjs.domain.thingo.member.DTO.ProfileCountResponse;
 import nova.mjs.domain.thingo.member.entity.Member;
@@ -35,7 +35,7 @@ public class ProfileService {
     private final CommunityLikeRepository communityLikeRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final MemberRepository memberRepository;
-    private final PinFavoriteRepository pinFavoriteRepository;
+    private final FavoritePlaceRepository favoritePlaceRepository;
     private final KeywordSubscriptionRepository keywordSubscriptionRepository;
     private final BlockRepository blockRepository;
 
@@ -153,7 +153,7 @@ public class ProfileService {
         int postCount = communityBoardRepository.countByAuthor(member);
         int commentCount = commentRepository.countByMember(member);
         int likedPostCount = communityLikeRepository.countByMember(member);
-        long mapFavoriteCount = pinFavoriteRepository.countByMember(member);
+        long mapFavoriteCount = favoritePlaceRepository.countDistinctPinsByMember(member);
         long keywordAlarmCount = keywordSubscriptionRepository.countByMember(member);
         long blockedUserCount = blockRepository.countByBlocker(member);
 

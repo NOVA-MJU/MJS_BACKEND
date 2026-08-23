@@ -19,4 +19,7 @@ public interface BusFavoriteRepository extends JpaRepository<BusFavorite, Long> 
     /** 도착 정보 마킹용: 특정 회원이 해당 정류장에서 즐겨찾기한 노선 번호 목록 */
     @Query("SELECT bf.routeName FROM BusFavorite bf WHERE bf.member = :member AND bf.arsId = :arsId")
     List<String> findRouteNamesByMemberAndArsId(@Param("member") Member member, @Param("arsId") String arsId);
+
+    /** '버스' 시스템 그룹 개수 표시용: 회원의 버스 즐겨찾기 총 개수 */
+    long countByMember(Member member);
 }

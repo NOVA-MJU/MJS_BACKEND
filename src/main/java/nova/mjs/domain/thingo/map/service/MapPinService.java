@@ -10,7 +10,7 @@ import nova.mjs.domain.thingo.map.entity.*;
 import nova.mjs.domain.thingo.map.exception.CategoryNotFoundException;
 import nova.mjs.domain.thingo.map.exception.PinNotFoundException;
 import nova.mjs.domain.thingo.map.repository.CategoryRepository;
-import nova.mjs.domain.thingo.map.repository.PinFavoriteRepository;
+import nova.mjs.domain.thingo.map.repository.FavoritePlaceRepository;
 import nova.mjs.domain.thingo.map.repository.PinRepository;
 import nova.mjs.domain.thingo.map.support.CampusArea;
 import nova.mjs.domain.thingo.map.support.DistanceCalculator;
@@ -47,7 +47,7 @@ public class MapPinService {
 
     private final PinRepository pinRepository;
     private final CategoryRepository categoryRepository;
-    private final PinFavoriteRepository pinFavoriteRepository;
+    private final FavoritePlaceRepository favoritePlaceRepository;
     private final MemberRepository memberRepository;
     private final DistanceCalculator distanceCalculator;
     private final MapRecommendationRanker mapRecommendationRanker;
@@ -371,11 +371,23 @@ public class MapPinService {
         return memberRepository.findByEmail(email).orElse(null);
     }
 
-    /** 회원의 즐겨찾기 핀 ID 집합 (비로그인이면 빈 집합) */
+    /** 회원의 즐겨찾기 핀 ID 집합 (비로그인이면 빈 집합). 그룹 모델(FavoritePlace) 기준 */
     private Set<Long> favoritePinIds(Member member) {
         if (member == null) {
             return Set.of();
         }
-        return new HashSet<>(pinFavoriteRepository.findFavoritePinIds(member));
+        return new HashSet<>(favoritePlaceRepository.findDistinctPinIdsByMember(member));
+    }
+
+    /**
+     * 핀 목록을 입력 순서 그대로 목록 카드 DTO로 변환한다. (즐겨찾기 그룹 상세 등에서 재사용)
+     * 운영 상태·거리는 요청 시점에 계산한다.
+     */
+    public List<PinSummaryResponse> toSummaries(List<Pin> pins, Set<Long> favoriteIds,
+                                                Double userLat, Double userLng) {
+        LocalDateTime now = LocalDateTime.now(KST);
+        return pins.stream()
+                .map(pin -> toSummary(pin, favoriteIds, userLat, userLng, now))
+                .toList();
     }
 }
