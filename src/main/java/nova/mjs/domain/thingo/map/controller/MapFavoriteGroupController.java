@@ -81,10 +81,10 @@ public class MapFavoriteGroupController {
 
     // ============================ 그룹 상세(장소) ============================
 
-    /** 그룹 상세 장소 목록. sort: place_added(기본)/name. lat/lng 있으면 거리 계산. */
+    /** 그룹 상세: 그룹 헤더 + 장소 목록. sort: place_added(기본)/name. lat/lng 있으면 거리 계산. */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/groups/{groupId}/places")
-    public ApiResponse<List<FavoritePlaceCardResponse>> getGroupPlaces(
+    public ApiResponse<FavoriteGroupDetailResponse> getGroupPlaces(
             @PathVariable Long groupId,
             @RequestParam(value = "sort", defaultValue = FavoritePlaceService.SORT_PLACE_ADDED) String sort,
             @RequestParam(value = "lat", required = false) Double lat,

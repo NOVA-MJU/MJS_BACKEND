@@ -1321,7 +1321,7 @@
         ],
         "summary": "그룹 상세 - 장소 목록 조회",
         "operationId": "getFavoriteGroupPlaces",
-        "description": "그룹 상세(05-1-1)에서 그 그룹에 담긴 장소 카드들을 나열합니다.\n\n### 정렬\n- `place_added`(기본): 그룹에 추가한 순서(최신 추가가 위)\n- `name`: 가나다순(장소명)\n\n### 카드 구성\n카테고리 아이콘(`iconKey`), 이름, 강의실코드(건물)/위치(장소), 운영상태(건물), 거리(`lat`/`lng` 있을 때), 그리고 이 그룹에서의 **메모(`memo`)**. 그룹에 담긴 카드이므로 `favorite`는 항상 `true`입니다.\n\n### 빈 상태\n담긴 장소가 없으면 **빈 배열**을 반환합니다(프론트는 '아직 저장된 장소가 없어요' 표시).\n\n### 참고\n'버스'는 그룹으로 저장되지 않아 이 엔드포인트로 조회하지 않습니다(버스 도착정보 화면 사용).\n\n### 인증\n로그인 필요.",
+        "description": "그룹 상세(05-1-1)에서 그 그룹에 담긴 장소 카드들을 나열합니다.\n\n### 정렬\n- `place_added`(기본): 그룹에 추가한 순서(최신 추가가 위)\n- `name`: 가나다순(장소명)\n\n### 카드 구성\n카테고리 아이콘(`iconKey`), 이름, 강의실코드(건물)/위치(장소), 운영상태(건물), 거리(`lat`/`lng` 있을 때), 그리고 이 그룹에서의 **메모(`memo`)**. 그룹에 담긴 카드이므로 `favorite`는 항상 `true`입니다.\n\n### 응답 구성\n그룹 헤더(`group`: 이름·색상·개수)와 장소 카드(`places`)를 함께 내려주어 상세 화면을 자립적으로 그릴 수 있습니다.\n\n### 빈 상태\n담긴 장소가 없으면 `places`가 **빈 배열**입니다(프론트는 '아직 저장된 장소가 없어요' 표시).\n\n### 참고\n'버스'는 그룹으로 저장되지 않아 이 엔드포인트로 조회하지 않습니다(버스 도착정보 화면 사용).\n\n### 인증\n로그인 필요.",
         "security": [
           {
             "bearerAuth": []
@@ -1379,7 +1379,7 @@
         ],
         "responses": {
           "200": {
-            "description": "그룹 내 장소 카드 목록(비어 있으면 빈 배열)",
+            "description": "그룹 헤더 + 장소 카드 목록(장소 없으면 places는 빈 배열)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1390,10 +1390,7 @@
                       "example": "API 요청 성공"
                     },
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/FavoritePlaceCard"
-                      }
+                      "$ref": "#/components/schemas/FavoriteGroupDetail"
                     },
                     "timestamp": {
                       "type": "string",
@@ -1404,40 +1401,50 @@
                 },
                 "example": {
                   "status": "API 요청 성공",
-                  "data": [
-                    {
-                      "pinId": 51,
-                      "type": "BUILDING",
-                      "name": "학생회관",
-                      "categoryCode": "building",
-                      "iconKey": "BuildingIcon",
-                      "imageUrl": "https://thingo.kr/img/building/2.jpg",
-                      "classroomCode": "S2XXX",
-                      "location": null,
-                      "operatingStatus": "운영중",
-                      "distanceMeters": 720,
-                      "latitude": 37.5804,
-                      "longitude": 126.9228,
-                      "memo": "1층 매점 자주 감",
-                      "favorite": true
+                  "data": {
+                    "group": {
+                      "id": 21,
+                      "name": "맛집",
+                      "color": "CORAL",
+                      "type": "USER",
+                      "system": false,
+                      "placeCount": 2
                     },
-                    {
-                      "pinId": 88,
-                      "type": "PLACE",
-                      "name": "투썸플레이스",
-                      "categoryCode": "cafe",
-                      "iconKey": "CafeIcon",
-                      "imageUrl": null,
-                      "classroomCode": null,
-                      "location": "학생회관 1층",
-                      "operatingStatus": null,
-                      "distanceMeters": 735,
-                      "latitude": 37.5804,
-                      "longitude": 126.9228,
-                      "memo": null,
-                      "favorite": true
-                    }
-                  ],
+                    "places": [
+                      {
+                        "pinId": 51,
+                        "type": "BUILDING",
+                        "name": "학생회관",
+                        "categoryCode": "building",
+                        "iconKey": "BuildingIcon",
+                        "imageUrl": "https://thingo.kr/img/building/2.jpg",
+                        "classroomCode": "S2XXX",
+                        "location": null,
+                        "operatingStatus": "운영중",
+                        "distanceMeters": 720,
+                        "latitude": 37.5804,
+                        "longitude": 126.9228,
+                        "memo": "1층 매점 자주 감",
+                        "favorite": true
+                      },
+                      {
+                        "pinId": 88,
+                        "type": "PLACE",
+                        "name": "투썸플레이스",
+                        "categoryCode": "cafe",
+                        "iconKey": "CafeIcon",
+                        "imageUrl": null,
+                        "classroomCode": null,
+                        "location": "학생회관 1층",
+                        "operatingStatus": null,
+                        "distanceMeters": 735,
+                        "latitude": 37.5804,
+                        "longitude": 126.9228,
+                        "memo": null,
+                        "favorite": true
+                      }
+                    ]
+                  },
                   "timestamp": "2026-08-23T12:30:00"
                 }
               }
@@ -3342,6 +3349,21 @@
             "type": "boolean",
             "description": "그룹 내 카드는 항상 true",
             "example": true
+          }
+        }
+      },
+      "FavoriteGroupDetail": {
+        "type": "object",
+        "description": "그룹 상세 응답: 그룹 헤더 + 장소 카드 목록.",
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/FavoriteGroup"
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FavoritePlaceCard"
+            }
           }
         }
       },

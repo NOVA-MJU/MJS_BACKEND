@@ -2,6 +2,8 @@ package nova.mjs.domain.thingo.map.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.domain.thingo.map.dto.FavoriteGroupDetailResponse;
+import nova.mjs.domain.thingo.map.dto.FavoriteGroupResponse;
 import nova.mjs.domain.thingo.map.dto.FavoritePlaceCardResponse;
 import nova.mjs.domain.thingo.map.dto.PinFavoriteGroupsResponse;
 import nova.mjs.domain.thingo.map.dto.PinFavoriteSaveRequest;
@@ -49,12 +51,12 @@ public class FavoritePlaceService {
     private final MapPinService mapPinService;
 
     /**
-     * 그룹 상세(05-1-1)의 장소 카드 목록.
+     * 그룹 상세(05-1-1). 그룹 헤더(이름·색상·개수) + 그 안의 장소 카드 목록을 함께 반환한다.
      * ('버스'는 핀 기반이 아니라 그룹으로 저장되지 않으므로 이 엔드포인트로 들어오지 않는다.
      *  버스 즐겨찾기는 버스 도착정보 화면/기존 bus API 로 처리한다.)
      */
-    public List<FavoritePlaceCardResponse> getGroupPlaces(String email, Long groupId, String sort,
-                                                          Double userLat, Double userLng) {
+    public FavoriteGroupDetailResponse getGroupPlaces(String email, Long groupId, String sort,
+                                                      Double userLat, Double userLng) {
         FavoriteGroup group = groupService.getOwnedGroup(email, groupId);
         List<FavoritePlace> memberships = placeRepository.findByGroupWithPin(group);
         List<FavoritePlace> sorted = sortMemberships(memberships, sort);
@@ -67,7 +69,9 @@ public class FavoritePlaceService {
         for (int i = 0; i < sorted.size(); i++) {
             cards.add(FavoritePlaceCardResponse.of(summaries.get(i), sorted.get(i).getMemo()));
         }
-        return cards;
+
+        FavoriteGroupResponse header = FavoriteGroupResponse.of(group, memberships.size());
+        return FavoriteGroupDetailResponse.of(header, cards);
     }
 
     /**
