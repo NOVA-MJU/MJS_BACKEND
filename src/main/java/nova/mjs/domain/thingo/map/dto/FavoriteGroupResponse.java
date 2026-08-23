@@ -3,6 +3,8 @@ package nova.mjs.domain.thingo.map.dto;
 import lombok.Builder;
 import lombok.Getter;
 import nova.mjs.domain.thingo.map.entity.FavoriteGroup;
+import nova.mjs.domain.thingo.map.entity.FavoriteGroupColor;
+import nova.mjs.domain.thingo.map.entity.FavoriteGroupType;
 
 /**
  * 즐겨찾기 그룹 카드 1개 (그룹 리스트 / 그룹 상세 헤더 공용).
@@ -35,6 +37,23 @@ public class FavoriteGroupResponse {
                 .type(group.getType().name())
                 .system(group.isSystem())
                 .placeCount(placeCount)
+                .build();
+    }
+
+    /**
+     * 가상 '버스' 그룹 카드. DB에 저장되지 않으며(핀이 아니라 정류장·노선 단위),
+     * 그룹 리스트 응답에만 상단 고정으로 끼워 넣는다.
+     * id 는 null 이고, 프론트는 type=SYSTEM_BUS 로 식별해 버스 화면으로 이동한다.
+     * placeCount 는 회원이 담은 버스 노선 총합(정류장 A/B 무관).
+     */
+    public static FavoriteGroupResponse virtualBus(long routeCount) {
+        return FavoriteGroupResponse.builder()
+                .id(null)
+                .name("버스")
+                .color(FavoriteGroupColor.AMBER.name())
+                .type(FavoriteGroupType.SYSTEM_BUS.name())
+                .system(true)
+                .placeCount(routeCount)
                 .build();
     }
 }

@@ -2,8 +2,8 @@
   "openapi": "3.0.1",
   "info": {
     "title": "MJU 지도·버스 API",
-    "version": "v1.2.0",
-    "description": "명지대 캠퍼스 지도 서비스 '명지도'와 주변 버스 도착 정보를 제공하는 API입니다.\n\n## 명지도란?\n명지대 캠퍼스 지도 위에 건물과 장소(맛집/편의시설 등)를 핀으로 보여주는 서비스입니다.\n지도는 프론트가 네이버 지도로 그리고, 백엔드는 핀의 좌표·정보·정렬된 목록을 내려줍니다.\n\n## 데이터 3종\n| 종류 | 설명 | 예 |\n|------|------|----|\n| 카테고리(칩) | 지도 위 핀을 묶고 필터링하는 단위. 상단 퀵메뉴/전체 목록은 프론트가 자체 관리하고, 백엔드는 칩 클릭 시 목록만 제공 | 대동명지도, 프린터, 라운지 |\n| 건물 | 강의실코드·층별 안내·운영시간을 가진 캠퍼스 건물 | 종합관, 방목학술정보관 |\n| 장소(비건물) | 건물 안 시설 또는 건물 밖 가게. 위치/추가정보만 가짐 | 맛집, 편의점, 프린터 |\n\n## 핵심 개념\n- **운영 상태/거리는 저장값이 아니라 요청 시점에 계산**합니다. 운영시간+현재시각으로 상태를, 사용자 좌표로 거리를 구합니다.\n- **사용자 현재 위치(lat/lng)는 프론트가 기기 GPS로 얻어 쿼리 파라미터로 전달**합니다. 백엔드는 정렬·거리 계산에만 쓰고 저장하지 않습니다.\n- 캠퍼스 반경(약 500m) 밖이거나 좌표가 없으면 거리는 표시하지 않습니다(정렬만 정문 기준).\n- **운영시간/운영상태는 건물에만** 있습니다. 장소(비건물)는 운영시간 없이 위치·추가정보만 제공합니다.\n- 즐겨찾기는 건물·장소를 핀 ID 하나로 동일하게 다룹니다.\n\n## 인증\n- 조회 API는 비로그인 가능. 로그인 시 즐겨찾기 여부가 표시되고 칩 목록에서 즐겨찾기가 상단 정렬됩니다.\n- 즐겨찾기 토글은 로그인 필요.\n\n---\n\n## 버스 도착 정보\n명지대 주변 정류장(A/B)의 서울 버스 실시간 도착 정보를 공공데이터포털에서 중계합니다. 프론트는 정류장 키(A/B)만 전달합니다.\n\n## 명지도 검색\n건물/장소를 이름·카테고리로 검색합니다(초성·오타 허용, 자동완성 제공). 기존 통합검색(search 문서)과 별개이며 캠퍼스 건물/장소만 대상입니다."
+    "version": "v1.3.0",
+    "description": "명지대 캠퍼스 지도 서비스 '명지도'와 주변 버스 도착 정보를 제공하는 API입니다.\n\n## 명지도란?\n명지대 캠퍼스 지도 위에 건물과 장소(맛집/편의시설 등)를 핀으로 보여주는 서비스입니다.\n지도는 프론트가 네이버 지도로 그리고, 백엔드는 핀의 좌표·정보·정렬된 목록을 내려줍니다.\n\n## 데이터 3종\n| 종류 | 설명 | 예 |\n|------|------|----|\n| 카테고리(칩) | 지도 위 핀을 묶고 필터링하는 단위. 상단 퀵메뉴/전체 목록은 프론트가 자체 관리하고, 백엔드는 칩 클릭 시 목록만 제공 | 대동명지도, 프린터, 라운지 |\n| 건물 | 강의실코드·층별 안내·운영시간을 가진 캠퍼스 건물 | 종합관, 방목학술정보관 |\n| 장소(비건물) | 건물 안 시설 또는 건물 밖 가게. 위치/추가정보만 가짐 | 맛집, 편의점, 프린터 |\n\n## 핵심 개념\n- **운영 상태/거리는 저장값이 아니라 요청 시점에 계산**합니다. 운영시간+현재시각으로 상태를, 사용자 좌표로 거리를 구합니다.\n- **사용자 현재 위치(lat/lng)는 프론트가 기기 GPS로 얻어 쿼리 파라미터로 전달**합니다. 백엔드는 정렬·거리 계산에만 쓰고 저장하지 않습니다.\n- 캠퍼스 반경(약 500m) 밖이거나 좌표가 없으면 거리는 표시하지 않습니다(정렬만 정문 기준).\n- **운영시간/운영상태는 건물에만** 있습니다. 장소(비건물)는 운영시간 없이 위치·추가정보만 제공합니다.\n- 즐겨찾기는 건물·장소를 핀 ID 하나로 동일하게 다룹니다.\n\n## 인증\n- 조회 API는 비로그인 가능. 로그인 시 즐겨찾기 여부가 표시되고 칩 목록에서 즐겨찾기가 상단 정렬됩니다.\n- 즐겨찾기 토글은 로그인 필요.\n\n---\n\n## 버스 도착 정보\n명지대 주변 정류장(A/B)의 서울 버스 실시간 도착 정보를 공공데이터포털에서 중계합니다. 프론트는 정류장 키(A/B)만 전달합니다.\n\n## 명지도 검색\n건물/장소를 이름·카테고리로 검색합니다(초성·오타 허용, 자동완성 제공). 기존 통합검색(search 문서)과 별개이며 캠퍼스 건물/장소만 대상입니다.\n\n## 즐겨찾기 그룹(폴더)\n즐겨찾기를 그룹으로 묶어 관리합니다. 한 장소(핀)는 여러 그룹에 동시에 담기며, (그룹, 핀)마다 메모(최대 30자)를 가질 수 있습니다.\n- '내 장소'는 기본 시스템 그룹(DB 저장), 장소 별 클릭 시 기본 편입 대상입니다.\n- '버스'는 정류장·노선 단위(BusFavorite)라 그룹으로 저장하지 않고 목록에 가상 항목(id=null, type=SYSTEM_BUS)으로만 노출하며, 탭 시 버스 도착정보 화면으로 이동합니다.\n- 그룹 리스트 기본 정렬은 최신순, 그룹 상세는 장소 추가순이며 '내 장소'→'버스'는 항상 상단 고정입니다."
   },
   "servers": [
     {
@@ -26,7 +26,7 @@
     },
     {
       "name": "명지도 - 즐겨찾기",
-      "description": "건물/장소 즐겨찾기 토글 API. 즐겨찾기한 핀은 칩 목록에서 상단으로 정렬됩니다. 로그인 필요."
+      "description": "건물/장소 즐겨찾기를 **그룹(폴더)** 으로 관리하는 API. 그룹 CRUD, 그룹 상세 장소 목록, 그룹 선택 바텀시트(한 장소를 여러 그룹에 담기 + 그룹별 메모), 그룹 상세 별 토글을 제공합니다. '내 장소'는 기본 시스템 그룹(저장), '버스'는 정류장·노선 단위라 저장하지 않고 목록에 가상으로 노출되며 버스 도착정보 화면으로 이동합니다. 기존 단순 토글(POST /map/favorites)은 '내 장소' 편입/해제로 호환 유지됩니다. 모두 로그인 필요."
     },
     {
       "name": "명지도 - 검색",
@@ -44,16 +44,67 @@
   "paths": {
     "/map/categories/{code}/pins": {
       "get": {
-        "tags": ["명지도 - 카테고리"],
+        "tags": [
+          "명지도 - 카테고리"
+        ],
         "summary": "칩 클릭 시 장소/건물 목록 조회",
         "operationId": "getPinsByCategory",
         "description": "특정 칩을 눌렀을 때 지도 하단 바텀시트에 띄울 목록입니다.\n\n### 사용 시나리오\n1. 사용자가 칩(예: 대동명지도) 클릭\n2. 기기 GPS 좌표(lat/lng)와 함께 이 API 호출\n3. 응답 목록을 카드로 렌더, 동시에 지도에 핀을 찍음\n\n### 정렬 규칙\n- 로그인 사용자의 **즐겨찾기가 먼저**, 그다음 **현재 위치에서 가까운 순**\n- 캠퍼스 반경(약 500m) 밖이면: 거리는 표시하지 않고(미표시) **정문 기준 가까운 순**으로 정렬\n- GPS가 없으면: 거리 없이 이름순\n\n### 페이지네이션\n- 장소 목록은 무한 스크롤을 위해 `page`/`size`로 잘라 반환합니다. 반환 개수가 `size`보다 작으면 마지막 페이지입니다.\n- 건물 칩은 수가 적어 사실상 한 페이지로 들어옵니다.\n\n### 하위 탭\n- 대동명지도처럼 하위 탭(한식/중식)이 있는 칩은 자식 카테고리의 장소까지 함께 반환합니다.\n\n### 버스 칩\n- `code=bus`(resultType=BUS)는 목록이 아니라 버스 화면용입니다. 이 API는 빈 목록을 반환하므로 프론트는 `/bus/arrivals`로 이동하세요.",
         "parameters": [
-          { "name": "code", "in": "path", "required": true, "description": "칩 코드 (예: daedong, printer, building)", "schema": { "type": "string", "example": "daedong" } },
-          { "name": "lat", "in": "query", "required": false, "description": "사용자 현재 위도 (프론트 GPS). 없으면 거리 미계산", "schema": { "type": "number", "format": "double", "example": 37.5802 } },
-          { "name": "lng", "in": "query", "required": false, "description": "사용자 현재 경도 (프론트 GPS)", "schema": { "type": "number", "format": "double", "example": 126.9226 } },
-          { "name": "page", "in": "query", "required": false, "description": "0부터 시작하는 페이지 번호", "schema": { "type": "integer", "default": 0, "example": 0 } },
-          { "name": "size", "in": "query", "required": false, "description": "페이지 크기", "schema": { "type": "integer", "default": 20, "example": 20 } }
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "description": "칩 코드 (예: daedong, printer, building)",
+            "schema": {
+              "type": "string",
+              "example": "daedong"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 위도 (프론트 GPS). 없으면 거리 미계산",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 37.5802
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 경도 (프론트 GPS)",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 126.9226
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "0부터 시작하는 페이지 번호",
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "example": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "description": "페이지 크기",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "example": 20
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -63,19 +114,52 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
                     "data": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/PinSummary" }
+                      "items": {
+                        "$ref": "#/components/schemas/PinSummary"
+                      }
                     },
-                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-06-22T09:05:12" }
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-06-22T09:05:12"
+                    }
                   }
                 },
                 "example": {
                   "status": "API 요청 성공",
                   "data": [
-                    { "id": 51, "type": "PLACE", "name": "행복식당", "categoryCode": "korean", "iconKey": "KoreanFoodIcon", "imageUrl": "https://thingo.kr/img/place/51.jpg", "classroomCode": null, "location": "서울 서대문구 거북골로 34", "favorite": true, "operatingStatus": null, "distanceMeters": 150 },
-                    { "id": 52, "type": "PLACE", "name": "명지면옥", "categoryCode": "korean", "iconKey": "KoreanFoodIcon", "imageUrl": null, "classroomCode": null, "location": "서울 서대문구 거북골로 36", "favorite": false, "operatingStatus": null, "distanceMeters": 320 }
+                    {
+                      "id": 51,
+                      "type": "PLACE",
+                      "name": "행복식당",
+                      "categoryCode": "korean",
+                      "iconKey": "KoreanFoodIcon",
+                      "imageUrl": "https://thingo.kr/img/place/51.jpg",
+                      "classroomCode": null,
+                      "location": "서울 서대문구 거북골로 34",
+                      "favorite": true,
+                      "operatingStatus": null,
+                      "distanceMeters": 150
+                    },
+                    {
+                      "id": 52,
+                      "type": "PLACE",
+                      "name": "명지면옥",
+                      "categoryCode": "korean",
+                      "iconKey": "KoreanFoodIcon",
+                      "imageUrl": null,
+                      "classroomCode": null,
+                      "location": "서울 서대문구 거북골로 36",
+                      "favorite": false,
+                      "operatingStatus": null,
+                      "distanceMeters": 320
+                    }
                   ],
                   "timestamp": "2026-06-22T09:05:12"
                 }
@@ -86,8 +170,14 @@
             "description": "존재하지 않는 칩 코드",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": { "error": "MAP_CATEGORY_NOT_FOUND", "message": "[MJS] 해당 카테고리를 찾을 수 없습니다.", "status": 404 }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "MAP_CATEGORY_NOT_FOUND",
+                  "message": "[MJS] 해당 카테고리를 찾을 수 없습니다.",
+                  "status": 404
+                }
               }
             }
           }
@@ -96,13 +186,35 @@
     },
     "/map/buildings": {
       "get": {
-        "tags": ["명지도 - 건물/장소"],
+        "tags": [
+          "명지도 - 건물/장소"
+        ],
         "summary": "건물 전체 목록 조회",
         "operationId": "getBuildings",
         "description": "바텀시트에 건물 카드를 나열할 때 사용합니다.\n\n### 사용 시나리오\n1. 명지도 기본 화면에서 바텀시트를 위로 슬라이드\n2. (선택) 기기 GPS 좌표와 함께 호출\n3. 건물 카드 목록 렌더\n\n### 특징\n- **건물 번호 순**으로 고정 노출, 페이지네이션 없음 (건물 수가 적음)\n- 각 건물의 운영 상태(운영중/곧 종료 등)와 거리, 즐겨찾기 여부를 함께 계산해 반환\n- 강의실 코드(예: S1XXX)는 건물 카드/상세에 표시",
         "parameters": [
-          { "name": "lat", "in": "query", "required": false, "description": "사용자 현재 위도 (프론트 GPS)", "schema": { "type": "number", "format": "double", "example": 37.5802 } },
-          { "name": "lng", "in": "query", "required": false, "description": "사용자 현재 경도 (프론트 GPS)", "schema": { "type": "number", "format": "double", "example": 126.9226 } }
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 위도 (프론트 GPS)",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 37.5802
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 경도 (프론트 GPS)",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 126.9226
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -112,19 +224,52 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
                     "data": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/PinSummary" }
+                      "items": {
+                        "$ref": "#/components/schemas/PinSummary"
+                      }
                     },
-                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-06-22T09:05:12" }
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-06-22T09:05:12"
+                    }
                   }
                 },
                 "example": {
                   "status": "API 요청 성공",
                   "data": [
-                    { "id": 1, "type": "BUILDING", "name": "종합관", "categoryCode": "building", "iconKey": "BuildingIcon", "imageUrl": "https://thingo.kr/img/building/1.jpg", "classroomCode": "S1XXX", "location": null, "favorite": false, "operatingStatus": "24시간 운영", "distanceMeters": 80 },
-                    { "id": 7, "type": "BUILDING", "name": "방목학술정보관", "categoryCode": "building", "iconKey": "BuildingIcon", "imageUrl": "https://thingo.kr/img/building/7.jpg", "classroomCode": "S7XXX", "location": null, "favorite": true, "operatingStatus": "운영중", "distanceMeters": 240 }
+                    {
+                      "id": 1,
+                      "type": "BUILDING",
+                      "name": "종합관",
+                      "categoryCode": "building",
+                      "iconKey": "BuildingIcon",
+                      "imageUrl": "https://thingo.kr/img/building/1.jpg",
+                      "classroomCode": "S1XXX",
+                      "location": null,
+                      "favorite": false,
+                      "operatingStatus": "24시간 운영",
+                      "distanceMeters": 80
+                    },
+                    {
+                      "id": 7,
+                      "type": "BUILDING",
+                      "name": "방목학술정보관",
+                      "categoryCode": "building",
+                      "iconKey": "BuildingIcon",
+                      "imageUrl": "https://thingo.kr/img/building/7.jpg",
+                      "classroomCode": "S7XXX",
+                      "location": null,
+                      "favorite": true,
+                      "operatingStatus": "운영중",
+                      "distanceMeters": 240
+                    }
                   ],
                   "timestamp": "2026-06-22T09:05:12"
                 }
@@ -136,14 +281,46 @@
     },
     "/map/buildings/{buildingId}": {
       "get": {
-        "tags": ["명지도 - 건물/장소"],
+        "tags": [
+          "명지도 - 건물/장소"
+        ],
         "summary": "건물 상세 조회",
         "operationId": "getBuildingDetail",
         "description": "건물 카드를 눌러 들어가는 상세 페이지입니다.\n\n### 포함 정보\n- 기본 정보: 건물명, 아이콘, 이미지, 건물 번호, 강의실 코드\n- **운영 상태**(실시간 계산) + **요일별 운영시간**(토글에 나열)\n- **카테고리 필터 탭**: 이 건물 안에 있는 장소들의 카테고리 모음 (별도 데이터가 아니라 유도값)\n- **층별 시설 목록**: 층(B1, F1 ...)별로 시설을 묶고, 각 층의 안내도 이미지 포함\n\n### 운영 상태 종류\n곧 운영 시작 / 운영중 / 곧 운영 종료 / 운영 종료 / 24시간 운영 / 휴무",
         "parameters": [
-          { "name": "buildingId", "in": "path", "required": true, "description": "건물 핀 ID", "schema": { "type": "integer", "format": "int64", "example": 7 } },
-          { "name": "lat", "in": "query", "required": false, "description": "사용자 현재 위도 (프론트 GPS)", "schema": { "type": "number", "format": "double", "example": 37.5802 } },
-          { "name": "lng", "in": "query", "required": false, "description": "사용자 현재 경도 (프론트 GPS)", "schema": { "type": "number", "format": "double", "example": 126.9226 } }
+          {
+            "name": "buildingId",
+            "in": "path",
+            "required": true,
+            "description": "건물 핀 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 7
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 위도 (프론트 GPS)",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 37.5802
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 경도 (프론트 GPS)",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 126.9226
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -153,9 +330,18 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string", "example": "API 요청 성공" },
-                    "data": { "$ref": "#/components/schemas/BuildingDetail" },
-                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-06-22T09:05:12" }
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BuildingDetail"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-06-22T09:05:12"
+                    }
                   }
                 }
               }
@@ -165,8 +351,14 @@
             "description": "존재하지 않는 건물",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": { "error": "MAP_PIN_NOT_FOUND", "message": "[MJS] 해당 건물/장소를 찾을 수 없습니다.", "status": 404 }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "MAP_PIN_NOT_FOUND",
+                  "message": "[MJS] 해당 건물/장소를 찾을 수 없습니다.",
+                  "status": 404
+                }
               }
             }
           }
@@ -175,14 +367,46 @@
     },
     "/map/places/{placeId}": {
       "get": {
-        "tags": ["명지도 - 건물/장소"],
+        "tags": [
+          "명지도 - 건물/장소"
+        ],
         "summary": "장소(비건물) 상세 조회",
         "operationId": "getPlaceDetail",
         "description": "장소 카드를 눌러 들어가는 상세 페이지입니다. 건물 상세와 달리 **강의실 코드와 운영시간이 없고**, 대신 위치와 추가정보를 제공합니다.\n\n### 포함 정보\n- 기본 정보: 장소명, 카테고리 아이콘, 이미지\n- **위치**: 건물 안 시설이면 '건물명 + 층수', 건물 밖 장소면 '도로명 주소'\n- **추가정보(infoText)**: 기타 안내 텍스트\n- 거리, 즐겨찾기 여부\n\n장소는 운영시간/운영상태를 제공하지 않습니다(운영시간은 건물에만).",
         "parameters": [
-          { "name": "placeId", "in": "path", "required": true, "description": "장소 핀 ID", "schema": { "type": "integer", "format": "int64", "example": 51 } },
-          { "name": "lat", "in": "query", "required": false, "description": "사용자 현재 위도 (프론트 GPS)", "schema": { "type": "number", "format": "double", "example": 37.5802 } },
-          { "name": "lng", "in": "query", "required": false, "description": "사용자 현재 경도 (프론트 GPS)", "schema": { "type": "number", "format": "double", "example": 126.9226 } }
+          {
+            "name": "placeId",
+            "in": "path",
+            "required": true,
+            "description": "장소 핀 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 51
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 위도 (프론트 GPS)",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 37.5802
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 경도 (프론트 GPS)",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 126.9226
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -192,17 +416,32 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string", "example": "API 요청 성공" },
-                    "data": { "$ref": "#/components/schemas/PlaceDetail" },
-                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-06-22T09:05:12" }
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PlaceDetail"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-06-22T09:05:12"
+                    }
                   }
                 },
                 "example": {
                   "status": "API 요청 성공",
                   "data": {
-                    "id": 51, "name": "행복식당", "categoryCode": "korean", "iconKey": "KoreanFoodIcon",
-                    "imageUrl": "https://thingo.kr/img/place/51.jpg", "favorite": true, "distanceMeters": 150,
-                    "location": "서울 서대문구 거북골로 34", "infoText": "현금 결제만 가능, 단체석 보유"
+                    "id": 51,
+                    "name": "행복식당",
+                    "categoryCode": "korean",
+                    "iconKey": "KoreanFoodIcon",
+                    "imageUrl": "https://thingo.kr/img/place/51.jpg",
+                    "favorite": true,
+                    "distanceMeters": 150,
+                    "location": "서울 서대문구 거북골로 34",
+                    "infoText": "현금 결제만 가능, 단체석 보유"
                   },
                   "timestamp": "2026-06-22T09:05:12"
                 }
@@ -213,8 +452,14 @@
             "description": "존재하지 않는 장소",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": { "error": "MAP_PIN_NOT_FOUND", "message": "[MJS] 해당 건물/장소를 찾을 수 없습니다.", "status": 404 }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "MAP_PIN_NOT_FOUND",
+                  "message": "[MJS] 해당 건물/장소를 찾을 수 없습니다.",
+                  "status": 404
+                }
               }
             }
           }
@@ -223,17 +468,93 @@
     },
     "/map/search": {
       "get": {
-        "tags": ["명지도 - 검색"],
+        "tags": [
+          "명지도 - 검색"
+        ],
         "summary": "명지도 검색 (건물/장소)",
         "operationId": "searchMap",
         "description": "기존 명지도 검색 응답(status/data/timestamp)을 유지하며, 화면 이동 방식은 data의 각 항목 type으로 판단합니다. 최상단 resultType은 사용하지 않습니다.\n\n## 프론트 처리 요약\n| item.type | 일반 지도 | 항목 선택 |\n|---|---|---|\n| BUILDING | latitude/longitude에 건물 핀 표시 | 기존 건물 상세를 id로 조회 |\n| PLACE | latitude/longitude에 장소 핀 표시 | 기존 장소 상세를 id로 조회 |\n| FLOOR_MAP | 소속 건물 latitude/longitude에 표시·그룹화 | link로 이동하여 SVG의 target 핀 표시 |\n\n학교 내부 장소도 장소 정보와 층별안내도 정보를 별도 항목으로 나누지 않습니다. 하나의 PinSummary에 기존 장소 카드·지도 정보와 층별안내도 link를 함께 제공합니다. 단일 결과와 다중 결과의 DTO는 같고 data 개수만 달라집니다. 프린터처럼 한 목록에 PLACE와 FLOOR_MAP이 섞일 수 있으므로 반드시 항목별 type으로 분기해야 합니다.\n\n## 필드 필수·nullable 규칙\n| 필드 | 규칙 |\n|---|---|\n| id, type, name, categoryCode, favorite | 모든 항목에서 필수·non-null |\n| iconKey, imageUrl | 등록되지 않았으면 null |\n| classroomCode | BUILDING 전용, 그 외 null |\n| location | PLACE/FLOOR_MAP의 주소 또는 건물+층. 값이 없으면 null |\n| operatingStatus | 운영시간을 계산할 수 없으면 null |\n| distanceMeters | GPS가 없거나 캠퍼스 밖이면 null |\n| latitude, longitude | 좌표가 없으면 null. FLOOR_MAP은 소속 건물 좌표 사용 |\n| indoorCode | S1353 같은 검색 코드가 있는 내부 장소만 값 존재. 화장실·프린터는 null 가능 |\n| link | FLOOR_MAP에서는 필수·non-null, BUILDING/PLACE에서는 null |\n\n## 대표 검색 흐름\n1. S1353: FLOOR_MAP 한 건. 프론트는 결과 화면을 생략하고 link로 바로 이동할 수 있습니다.\n2. 화장실: FLOOR_MAP 여러 건. 일반 지도에서는 건물 위치에 묶어 표시하고 목록에서 선택한 항목의 link로 이동합니다.\n3. 프린터: 교내 FLOOR_MAP과 교외 PLACE가 한 목록에 함께 올 수 있습니다.\n4. 그 외 건물·외부 장소: 기존 BUILDING/PLACE 응답과 이동 방식을 유지합니다.\n\n## 좌표와 내부 SVG 핀\n- FLOOR_MAP의 latitude/longitude는 소속 건물 좌표입니다. 같은 건물의 내부 시설은 일반 지도에서 같은 위치에 겹치므로 프론트는 건물 단위로 묶어 표시할 수 있습니다.\n- 정확한 실내 위치는 좌표가 아니라 link의 target으로 구분합니다. 내부 장소의 고유 Pin.code를 target으로 사용하며 같은 층의 화장실/프린터가 여러 개여도 겹치지 않아야 합니다.\n- SVG 요소의 data-target 값은 반드시 해당 Pin.code와 같아야 합니다. indoorCode는 S1353 같은 사용자 검색용 코드이며 라우팅 식별자로 사용하지 않습니다.\n- parentBuildingCode와 floorLabel이 모두 있는 장소를 내부 장소로 판별합니다.\n\n## 검색 품질·페이지네이션\n- 일반 검색은 공백/기호 무시, 부분 일치, 초성, 오타 허용을 지원합니다. 실내 호실 코드 단독 이동은 정확 일치만 허용합니다.\n- 목록 결과는 page/size를 사용합니다. 정확히 일치한 실내 호실 한 건은 첫 페이지에만 반환합니다.",
         "parameters": [
-          { "name": "keyword", "in": "query", "required": true, "description": "검색어. 호실 코드·시설명·등록 라벨·건물/장소명을 검색합니다. 비면 빈 목록을 반환합니다.", "schema": { "type": "string" }, "examples": { "singleIndoor": { "summary": "단일 내부 장소", "value": "S1353" }, "multipleIndoor": { "summary": "다중 내부 시설", "value": "화장실" }, "mixedLabel": { "summary": "내부·외부 혼합 라벨", "value": "프린터" }, "general": { "summary": "일반 장소", "value": "투썸" } } },
-          { "name": "lat", "in": "query", "required": false, "description": "사용자 현재 위도 (프론트 GPS). 없으면 거리 미계산", "schema": { "type": "number", "format": "double", "example": 37.5802 } },
-          { "name": "lng", "in": "query", "required": false, "description": "사용자 현재 경도 (프론트 GPS)", "schema": { "type": "number", "format": "double", "example": 126.9226 } },
-          { "name": "page", "in": "query", "required": false, "description": "0부터 시작하는 페이지 번호", "schema": { "type": "integer", "default": 0, "example": 0 } },
-          { "name": "size", "in": "query", "required": false, "description": "페이지 크기", "schema": { "type": "integer", "default": 20, "example": 20 } },
-          { "name": "seed", "in": "query", "required": false, "description": "대동명지도 추천 순서를 세션 동안 고정할 seed", "schema": { "type": "string" } }
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": true,
+            "description": "검색어. 호실 코드·시설명·등록 라벨·건물/장소명을 검색합니다. 비면 빈 목록을 반환합니다.",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "singleIndoor": {
+                "summary": "단일 내부 장소",
+                "value": "S1353"
+              },
+              "multipleIndoor": {
+                "summary": "다중 내부 시설",
+                "value": "화장실"
+              },
+              "mixedLabel": {
+                "summary": "내부·외부 혼합 라벨",
+                "value": "프린터"
+              },
+              "general": {
+                "summary": "일반 장소",
+                "value": "투썸"
+              }
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 위도 (프론트 GPS). 없으면 거리 미계산",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 37.5802
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 경도 (프론트 GPS)",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 126.9226
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "0부터 시작하는 페이지 번호",
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "example": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "description": "페이지 크기",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "example": 20
+            }
+          },
+          {
+            "name": "seed",
+            "in": "query",
+            "required": false,
+            "description": "대동명지도 추천 순서를 세션 동안 고정할 seed",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -243,11 +564,27 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string", "example": "API 요청 성공" },
-                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/PinSummary" } },
-                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-08-17T12:30:00" }
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PinSummary"
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-17T12:30:00"
+                    }
                   },
-                  "required": ["status", "data", "timestamp"]
+                  "required": [
+                    "status",
+                    "data",
+                    "timestamp"
+                  ]
                 },
                 "examples": {
                   "exactIndoorCode": {
@@ -256,7 +593,20 @@
                     "value": {
                       "status": "API 요청 성공",
                       "data": [
-                        { "id": 353, "type": "FLOOR_MAP", "name": "강의실 S1353", "categoryCode": "classroom", "iconKey": "ClassroomIcon", "location": "학생회관 F1", "favorite": false, "distanceMeters": 120, "latitude": 37.221, "longitude": 127.187, "indoorCode": "S1353", "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" }
+                        {
+                          "id": 353,
+                          "type": "FLOOR_MAP",
+                          "name": "강의실 S1353",
+                          "categoryCode": "classroom",
+                          "iconKey": "ClassroomIcon",
+                          "location": "학생회관 F1",
+                          "favorite": false,
+                          "distanceMeters": 120,
+                          "latitude": 37.221,
+                          "longitude": 127.187,
+                          "indoorCode": "S1353",
+                          "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353"
+                        }
                       ],
                       "timestamp": "2026-08-17T12:30:00"
                     }
@@ -267,8 +617,32 @@
                     "value": {
                       "status": "API 요청 성공",
                       "data": [
-                        { "id": 401, "type": "FLOOR_MAP", "name": "화장실 (동측)", "categoryCode": "restroom", "iconKey": "RestroomIcon", "location": "학생회관 F4", "favorite": false, "distanceMeters": 120, "latitude": 37.221, "longitude": 127.187, "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-restroom-student-f4-east" },
-                        { "id": 402, "type": "FLOOR_MAP", "name": "화장실 (서측)", "categoryCode": "restroom", "iconKey": "RestroomIcon", "location": "학생회관 F4", "favorite": false, "distanceMeters": 120, "latitude": 37.221, "longitude": 127.187, "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-restroom-student-f4-west" }
+                        {
+                          "id": 401,
+                          "type": "FLOOR_MAP",
+                          "name": "화장실 (동측)",
+                          "categoryCode": "restroom",
+                          "iconKey": "RestroomIcon",
+                          "location": "학생회관 F4",
+                          "favorite": false,
+                          "distanceMeters": 120,
+                          "latitude": 37.221,
+                          "longitude": 127.187,
+                          "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-restroom-student-f4-east"
+                        },
+                        {
+                          "id": 402,
+                          "type": "FLOOR_MAP",
+                          "name": "화장실 (서측)",
+                          "categoryCode": "restroom",
+                          "iconKey": "RestroomIcon",
+                          "location": "학생회관 F4",
+                          "favorite": false,
+                          "distanceMeters": 120,
+                          "latitude": 37.221,
+                          "longitude": 127.187,
+                          "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-restroom-student-f4-west"
+                        }
                       ],
                       "timestamp": "2026-08-17T12:30:00"
                     }
@@ -279,8 +653,30 @@
                     "value": {
                       "status": "API 요청 성공",
                       "data": [
-                        { "id": 81, "type": "FLOOR_MAP", "name": "학생회관 무한프린터", "categoryCode": "printer", "iconKey": "PrinterIcon", "location": "학생회관 F4", "favorite": false, "distanceMeters": 120, "latitude": 37.221, "longitude": 127.187, "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-printer-student-f4" },
-                        { "id": 82, "type": "PLACE", "name": "명지문구 프린터", "categoryCode": "printer", "iconKey": "PrinterIcon", "location": "경기 용인시 처인구 명지로 00", "favorite": false, "latitude": 37.2201, "longitude": 127.1881 }
+                        {
+                          "id": 81,
+                          "type": "FLOOR_MAP",
+                          "name": "학생회관 무한프린터",
+                          "categoryCode": "printer",
+                          "iconKey": "PrinterIcon",
+                          "location": "학생회관 F4",
+                          "favorite": false,
+                          "distanceMeters": 120,
+                          "latitude": 37.221,
+                          "longitude": 127.187,
+                          "link": "/maps/floor?buildingId=2&floorLabel=F4&target=p-printer-student-f4"
+                        },
+                        {
+                          "id": 82,
+                          "type": "PLACE",
+                          "name": "명지문구 프린터",
+                          "categoryCode": "printer",
+                          "iconKey": "PrinterIcon",
+                          "location": "경기 용인시 처인구 명지로 00",
+                          "favorite": false,
+                          "latitude": 37.2201,
+                          "longitude": 127.1881
+                        }
                       ],
                       "timestamp": "2026-08-17T12:30:00"
                     }
@@ -291,8 +687,33 @@
                     "value": {
                       "status": "API 요청 성공",
                       "data": [
-                        { "id": 51, "type": "PLACE", "name": "투썸플레이스 명지대점", "categoryCode": "cafe", "iconKey": "CafeIcon", "imageUrl": "https://thingo.kr/img/place/51.jpg", "location": "서울 서대문구 거북골로 31-1 1~3층", "favorite": false, "distanceMeters": 720, "latitude": 37.5806, "longitude": 126.9231 },
-                        { "id": 1, "type": "BUILDING", "name": "종합관", "categoryCode": "building", "iconKey": "BuildingIcon", "imageUrl": "https://thingo.kr/img/building/1.jpg", "classroomCode": "S1XXX", "favorite": false, "operatingStatus": "운영중", "distanceMeters": 80, "latitude": 37.5803, "longitude": 126.9223 }
+                        {
+                          "id": 51,
+                          "type": "PLACE",
+                          "name": "투썸플레이스 명지대점",
+                          "categoryCode": "cafe",
+                          "iconKey": "CafeIcon",
+                          "imageUrl": "https://thingo.kr/img/place/51.jpg",
+                          "location": "서울 서대문구 거북골로 31-1 1~3층",
+                          "favorite": false,
+                          "distanceMeters": 720,
+                          "latitude": 37.5806,
+                          "longitude": 126.9231
+                        },
+                        {
+                          "id": 1,
+                          "type": "BUILDING",
+                          "name": "종합관",
+                          "categoryCode": "building",
+                          "iconKey": "BuildingIcon",
+                          "imageUrl": "https://thingo.kr/img/building/1.jpg",
+                          "classroomCode": "S1XXX",
+                          "favorite": false,
+                          "operatingStatus": "운영중",
+                          "distanceMeters": 80,
+                          "latitude": 37.5803,
+                          "longitude": 126.9223
+                        }
                       ],
                       "timestamp": "2026-08-17T12:30:00"
                     }
@@ -315,13 +736,34 @@
     },
     "/map/search/suggest": {
       "get": {
-        "tags": ["명지도 - 검색"],
+        "tags": [
+          "명지도 - 검색"
+        ],
         "summary": "명지도 검색 자동완성",
         "operationId": "suggestMap",
         "description": "검색어를 입력하는 중 실시간으로 이름을 제안하는 경량 API입니다. 거리·운영상태는 계산하지 않아 빠릅니다.\n\n### 사용 시나리오\n1. 검색창에 글자를 입력할 때마다 호출(디바운스 권장)\n2. 제안 목록을 드롭다운으로 표시 (아이콘 + 이름)\n3. 항목 탭 시 type이 FLOOR_MAP이면 link로 이동하고, BUILDING/PLACE이면 기존 id 기반 상세 흐름을 사용합니다.\n\n### 매칭 규칙\n- 검색(`/map/search`)과 동일: 부분 일치 / 초성(`ㅌㅆ`) / 오타 허용 / 공백·대소문자 무시",
         "parameters": [
-          { "name": "keyword", "in": "query", "required": true, "description": "검색어(입력 중 문자열). 비면 빈 목록", "schema": { "type": "string", "example": "투" } },
-          { "name": "limit", "in": "query", "required": false, "description": "최대 제안 개수", "schema": { "type": "integer", "default": 10, "example": 10 } }
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": true,
+            "description": "검색어(입력 중 문자열). 비면 빈 목록",
+            "schema": {
+              "type": "string",
+              "example": "투"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "최대 제안 개수",
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "example": 10
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -331,16 +773,43 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string", "example": "API 요청 성공" },
-                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/MapSuggestItem" } },
-                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-07-02T09:05:12" }
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MapSuggestItem"
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-07-02T09:05:12"
+                    }
                   }
                 },
                 "example": {
                   "status": "API 요청 성공",
                   "data": [
-                    { "id": 353, "name": "강의실 S1353", "type": "FLOOR_MAP", "categoryCode": "classroom", "iconKey": "ClassroomIcon", "indoorCode": "S1353", "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" },
-                    { "id": 51, "name": "투썸플레이스 명지대점", "type": "PLACE", "categoryCode": "cafe", "iconKey": "CafeIcon", "link": null }
+                    {
+                      "id": 353,
+                      "name": "강의실 S1353",
+                      "type": "FLOOR_MAP",
+                      "categoryCode": "classroom",
+                      "iconKey": "ClassroomIcon",
+                      "indoorCode": "S1353",
+                      "link": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353"
+                    },
+                    {
+                      "id": 51,
+                      "name": "투썸플레이스 명지대점",
+                      "type": "PLACE",
+                      "categoryCode": "cafe",
+                      "iconKey": "CafeIcon",
+                      "link": null
+                    }
                   ],
                   "timestamp": "2026-07-02T09:05:12"
                 }
@@ -352,13 +821,29 @@
     },
     "/map/favorites": {
       "post": {
-        "tags": ["명지도 - 즐겨찾기"],
+        "tags": [
+          "명지도 - 즐겨찾기"
+        ],
         "summary": "건물/장소 즐겨찾기 토글",
         "operationId": "togglePinFavorite",
         "description": "건물 또는 장소를 마이 즐겨찾기 리스트에 추가하거나 해제합니다.\n\n### 동작\n- 즐겨찾기가 없으면 등록(true), 이미 있으면 해제(false) - 토글 방식\n- 건물·장소 구분 없이 핀 ID(`pinId`) 하나로 다룹니다\n- 즐겨찾기한 핀은 칩 목록에서 상단으로 정렬되고 각 응답에서 `favorite=true`로 표시됩니다\n\n### 인증\n로그인 필요 (Bearer 토큰).",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          { "name": "pinId", "in": "query", "required": true, "description": "건물/장소 핀 ID", "schema": { "type": "integer", "format": "int64", "example": 51 } }
+          {
+            "name": "pinId",
+            "in": "query",
+            "required": true,
+            "description": "건물/장소 핀 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 51
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -368,21 +853,983 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string", "example": "API 요청 성공" },
-                    "data": { "type": "boolean", "description": "true: 즐겨찾기 추가됨 / false: 즐겨찾기 해제됨", "example": true },
-                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-06-22T09:05:12" }
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "true: 즐겨찾기 추가됨 / false: 즐겨찾기 해제됨",
+                      "example": true
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-06-22T09:05:12"
+                    }
                   }
                 }
               }
             }
           },
-          "401": { "description": "미인증 (로그인 필요)" },
+          "401": {
+            "description": "미인증 (로그인 필요)"
+          },
           "404": {
             "description": "존재하지 않는 핀",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
-                "example": { "error": "MAP_PIN_NOT_FOUND", "message": "[MJS] 해당 건물/장소를 찾을 수 없습니다.", "status": 404 }
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "MAP_PIN_NOT_FOUND",
+                  "message": "[MJS] 해당 건물/장소를 찾을 수 없습니다.",
+                  "status": 404
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map/favorites/groups": {
+      "get": {
+        "tags": [
+          "명지도 - 즐겨찾기"
+        ],
+        "summary": "즐겨찾기 그룹 리스트 조회",
+        "operationId": "getFavoriteGroups",
+        "description": "즐겨찾기 첫 화면(05-1)에 그룹 폴더 목록을 나열합니다.\n\n### 정렬/고정 규칙\n- **'내 장소' → '버스'** 순으로 항상 **상단 고정**(정렬과 무관).\n- 이어서 사용자 그룹을 `sort` 기준으로 정렬합니다.\n  - `latest`(기본): 그룹 생성일 최신순\n  - `name`: 가나다순(그룹명)\n  - `place_added`: 그룹에 마지막으로 장소가 추가된 시각 최신순(장소 없는 그룹은 뒤로)\n\n### '버스' 그룹(가상)\n'버스'는 핀이 아니라 정류장·노선 단위(BusFavorite)라 **DB에 저장하지 않고 목록 응답에만 끼워 넣습니다**. 따라서 `id`는 **null**, `type`은 `SYSTEM_BUS`이며 `placeCount`는 **회원이 담은 버스 노선 총합**(정류장 A/B 무관, 한쪽만 담아도 그만큼)입니다. 프론트는 이 항목을 탭하면 그룹 상세가 아니라 **버스 도착정보 화면**으로 이동하세요.\n\n### 별(즐겨찾기) 아이콘\n색상(`color`)으로 시각적 구분만 하며 별도 기능은 없습니다.\n\n### 인증\n로그인 필요. 최초 호출 시 '내 장소' 그룹이 없으면 자동 생성됩니다.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "정렬 기준 (기본 latest). 시스템 그룹은 정렬과 무관하게 상단 고정",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "latest",
+                "name",
+                "place_added"
+              ],
+              "default": "latest",
+              "example": "latest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "그룹 목록 (내 장소 → 버스 → 사용자 그룹)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FavoriteGroup"
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-23T12:30:00"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": [
+                    {
+                      "id": 10,
+                      "name": "내 장소",
+                      "color": "BLUE",
+                      "type": "SYSTEM_MY_PLACES",
+                      "system": true,
+                      "placeCount": 12
+                    },
+                    {
+                      "id": null,
+                      "name": "버스",
+                      "color": "AMBER",
+                      "type": "SYSTEM_BUS",
+                      "system": true,
+                      "placeCount": 11
+                    },
+                    {
+                      "id": 21,
+                      "name": "맛집",
+                      "color": "CORAL",
+                      "type": "USER",
+                      "system": false,
+                      "placeCount": 5
+                    },
+                    {
+                      "id": 22,
+                      "name": "카페",
+                      "color": "GREEN",
+                      "type": "USER",
+                      "system": false,
+                      "placeCount": 3
+                    }
+                  ],
+                  "timestamp": "2026-08-23T12:30:00"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "미인증 (로그인 필요)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "명지도 - 즐겨찾기"
+        ],
+        "summary": "새 그룹 생성",
+        "operationId": "createFavoriteGroup",
+        "description": "새 그룹 만들기(05-5-3) 바텀시트에서 그룹을 생성합니다.\n\n### 입력 규칙\n- `name`: **1~12자(공백 포함)**, 필수. 미입력/초과 시 `FAVORITE_GROUP_NAME_INVALID`.\n- `color`: 팔레트 10색 중 하나. 미지정 시 **기본 BLUE(띵고 색)**.\n\n생성 직후에는 담긴 장소가 없으므로 `placeCount=0`으로 내려갑니다.\n\n### 인증\n로그인 필요.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteGroupCreateRequest"
+              },
+              "example": {
+                "name": "시험기간 스팟",
+                "color": "PURPLE"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "생성된 그룹",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/FavoriteGroup"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-23T12:30:00"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "id": 23,
+                    "name": "시험기간 스팟",
+                    "color": "PURPLE",
+                    "type": "USER",
+                    "system": false,
+                    "placeCount": 0
+                  },
+                  "timestamp": "2026-08-23T12:30:00"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "그룹명 형식 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_NAME_INVALID",
+                  "message": "[MJS] 올바른 형식의 그룹명을 입력해 주세요. (1~12자)",
+                  "status": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "미인증 (로그인 필요)"
+          }
+        }
+      }
+    },
+    "/map/favorites/groups/{groupId}": {
+      "patch": {
+        "tags": [
+          "명지도 - 즐겨찾기"
+        ],
+        "summary": "그룹명/색상 수정",
+        "operationId": "updateFavoriteGroup",
+        "description": "그룹명 수정(05-5-1-1) 바텀시트에서 그룹의 이름과 색상을 수정합니다.\n\n### 규칙\n- `name`: **1~12자(공백 포함)**. 미충족 시 `FAVORITE_GROUP_NAME_INVALID`.\n- **시스템 그룹('내 장소')은 수정 불가** → `FAVORITE_GROUP_SYSTEM_MODIFY_NOT_ALLOWED`.\n- 남의 그룹이면 403, 없는 그룹이면 404.\n\n### 인증\n로그인 필요.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "description": "그룹 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 21
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteGroupUpdateRequest"
+              },
+              "example": {
+                "name": "맛집 리스트",
+                "color": "RED"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "수정된 그룹",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/FavoriteGroup"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-23T12:30:00"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "id": 21,
+                    "name": "맛집 리스트",
+                    "color": "RED",
+                    "type": "USER",
+                    "system": false,
+                    "placeCount": 5
+                  },
+                  "timestamp": "2026-08-23T12:30:00"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "그룹명 형식 오류 또는 시스템 그룹 수정 시도",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_SYSTEM_MODIFY_NOT_ALLOWED",
+                  "message": "[MJS] 시스템 기본 그룹은 수정하거나 삭제할 수 없습니다.",
+                  "status": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "미인증 (로그인 필요)"
+          },
+          "403": {
+            "description": "다른 회원의 그룹",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_FORBIDDEN",
+                  "message": "[MJS] 해당 즐겨찾기 그룹에 접근할 권한이 없습니다.",
+                  "status": 403
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "존재하지 않는 그룹",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_NOT_FOUND",
+                  "message": "[MJS] 요청한 즐겨찾기 그룹을 찾을 수 없습니다.",
+                  "status": 404
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "명지도 - 즐겨찾기"
+        ],
+        "summary": "그룹 삭제",
+        "operationId": "deleteFavoriteGroup",
+        "description": "그룹 삭제(05-5-1-2) 팝업에서 그룹을 삭제합니다.\n\n### 동작\n- **그룹과 그 안에 저장된 장소·메모가 모두 함께 삭제**됩니다(핀 자체는 삭제되지 않음).\n- **시스템 그룹('내 장소')은 삭제 불가** → `FAVORITE_GROUP_SYSTEM_MODIFY_NOT_ALLOWED`.\n- 남의 그룹이면 403, 없는 그룹이면 404.\n\n### 인증\n로그인 필요.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "description": "그룹 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 21
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "삭제 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true,
+                      "example": null
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-23T12:30:00"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": null,
+                  "timestamp": "2026-08-23T12:30:00"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "시스템 그룹 삭제 시도",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_SYSTEM_MODIFY_NOT_ALLOWED",
+                  "message": "[MJS] 시스템 기본 그룹은 수정하거나 삭제할 수 없습니다.",
+                  "status": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "미인증 (로그인 필요)"
+          },
+          "403": {
+            "description": "다른 회원의 그룹",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_FORBIDDEN",
+                  "message": "[MJS] 해당 즐겨찾기 그룹에 접근할 권한이 없습니다.",
+                  "status": 403
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "존재하지 않는 그룹",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_NOT_FOUND",
+                  "message": "[MJS] 요청한 즐겨찾기 그룹을 찾을 수 없습니다.",
+                  "status": 404
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map/favorites/groups/{groupId}/places": {
+      "get": {
+        "tags": [
+          "명지도 - 즐겨찾기"
+        ],
+        "summary": "그룹 상세 - 장소 목록 조회",
+        "operationId": "getFavoriteGroupPlaces",
+        "description": "그룹 상세(05-1-1)에서 그 그룹에 담긴 장소 카드들을 나열합니다.\n\n### 정렬\n- `place_added`(기본): 그룹에 추가한 순서(최신 추가가 위)\n- `name`: 가나다순(장소명)\n\n### 카드 구성\n카테고리 아이콘(`iconKey`), 이름, 강의실코드(건물)/위치(장소), 운영상태(건물), 거리(`lat`/`lng` 있을 때), 그리고 이 그룹에서의 **메모(`memo`)**. 그룹에 담긴 카드이므로 `favorite`는 항상 `true`입니다.\n\n### 빈 상태\n담긴 장소가 없으면 **빈 배열**을 반환합니다(프론트는 '아직 저장된 장소가 없어요' 표시).\n\n### 참고\n'버스'는 그룹으로 저장되지 않아 이 엔드포인트로 조회하지 않습니다(버스 도착정보 화면 사용).\n\n### 인증\n로그인 필요.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "description": "그룹 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 21
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "정렬 기준 (기본 place_added)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "place_added",
+                "name"
+              ],
+              "default": "place_added",
+              "example": "place_added"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 위도 (프론트 GPS). 있으면 거리 계산",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 37.5802
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": false,
+            "description": "사용자 현재 경도 (프론트 GPS). 있으면 거리 계산",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 126.9226
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "그룹 내 장소 카드 목록(비어 있으면 빈 배열)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FavoritePlaceCard"
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-23T12:30:00"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": [
+                    {
+                      "pinId": 51,
+                      "type": "BUILDING",
+                      "name": "학생회관",
+                      "categoryCode": "building",
+                      "iconKey": "BuildingIcon",
+                      "imageUrl": "https://thingo.kr/img/building/2.jpg",
+                      "classroomCode": "S2XXX",
+                      "location": null,
+                      "operatingStatus": "운영중",
+                      "distanceMeters": 720,
+                      "latitude": 37.5804,
+                      "longitude": 126.9228,
+                      "memo": "1층 매점 자주 감",
+                      "favorite": true
+                    },
+                    {
+                      "pinId": 88,
+                      "type": "PLACE",
+                      "name": "투썸플레이스",
+                      "categoryCode": "cafe",
+                      "iconKey": "CafeIcon",
+                      "imageUrl": null,
+                      "classroomCode": null,
+                      "location": "학생회관 1층",
+                      "operatingStatus": null,
+                      "distanceMeters": 735,
+                      "latitude": 37.5804,
+                      "longitude": 126.9228,
+                      "memo": null,
+                      "favorite": true
+                    }
+                  ],
+                  "timestamp": "2026-08-23T12:30:00"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "미인증 (로그인 필요)"
+          },
+          "403": {
+            "description": "다른 회원의 그룹",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_FORBIDDEN",
+                  "message": "[MJS] 해당 즐겨찾기 그룹에 접근할 권한이 없습니다.",
+                  "status": 403
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "존재하지 않는 그룹",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_NOT_FOUND",
+                  "message": "[MJS] 요청한 즐겨찾기 그룹을 찾을 수 없습니다.",
+                  "status": 404
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map/favorites/groups/{groupId}/places/{pinId}": {
+      "delete": {
+        "tags": [
+          "명지도 - 즐겨찾기"
+        ],
+        "summary": "그룹 상세 - 장소 제거(별 토글)",
+        "operationId": "removeFavoritePlaceFromGroup",
+        "description": "그룹 상세(05-1-1)에서 장소 카드의 **별 아이콘을 눌러 해당 그룹에서 장소를 제거**합니다(멱등).\n\n### 동작\n- 이 그룹의 멤버십만 제거하며, 같은 핀이 담긴 다른 그룹에는 영향을 주지 않습니다.\n- 화면 UX: 별을 눌러 해제해도 **현재 페이지에 머무는 동안 카드는 사라지지 않습니다**(프론트가 유지). 백엔드는 즉시 삭제하며, 목록을 다시 조회하면 빠집니다.\n\n### 인증\n로그인 필요.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "description": "그룹 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 21
+            }
+          },
+          {
+            "name": "pinId",
+            "in": "path",
+            "required": true,
+            "description": "건물/장소 핀 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 51
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "제거 성공(멱등 - 원래 없어도 성공)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true,
+                      "example": null
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-23T12:30:00"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": null,
+                  "timestamp": "2026-08-23T12:30:00"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "미인증 (로그인 필요)"
+          },
+          "403": {
+            "description": "다른 회원의 그룹",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_FORBIDDEN",
+                  "message": "[MJS] 해당 즐겨찾기 그룹에 접근할 권한이 없습니다.",
+                  "status": 403
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "존재하지 않는 그룹/핀",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_GROUP_NOT_FOUND",
+                  "message": "[MJS] 요청한 즐겨찾기 그룹을 찾을 수 없습니다.",
+                  "status": 404
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map/favorites/pins/{pinId}/groups": {
+      "get": {
+        "tags": [
+          "명지도 - 즐겨찾기"
+        ],
+        "summary": "그룹 선택 바텀시트 조회",
+        "operationId": "getPinFavoriteGroups",
+        "description": "특정 장소에서 별(즐겨찾기)을 눌렀을 때 뜨는 **'그룹 선택 바텀시트'** 데이터를 내려줍니다.\n\n### 구성\n- 상단: 장소명(`placeName`), 기존 메모(`memo`, 프리필)\n- 목록: 회원의 그룹들(**'내 장소' 상단 고정 후 최신순**)과 각 그룹에 이 핀이 담겨 있는지(`selected`)\n- '버스'는 핀을 담을 수 없어 이 목록에 **표시되지 않습니다**.\n\n### 메모 프리필\n메모는 (그룹, 핀) 단위로 저장됩니다. 프리필은 '내 장소'의 메모를 우선 보여주고, 없으면 다른 그룹의 메모 중 하나를 보여줍니다.\n\n### 화면 기본값\n프론트는 신규 저장 시 **'내 장소'를 기본 체크**로 두세요(사용자가 해제 가능).\n\n### 인증\n로그인 필요.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pinId",
+            "in": "path",
+            "required": true,
+            "description": "건물/장소 핀 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 51
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "바텀시트 상태(그룹별 선택 여부 + 메모)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PinFavoriteGroups"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-23T12:30:00"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "pinId": 51,
+                    "placeName": "학생회관",
+                    "memo": "1층 매점 자주 감",
+                    "groups": [
+                      {
+                        "id": 10,
+                        "name": "내 장소",
+                        "color": "BLUE",
+                        "type": "SYSTEM_MY_PLACES",
+                        "system": true,
+                        "placeCount": 12,
+                        "selected": true
+                      },
+                      {
+                        "id": 21,
+                        "name": "맛집",
+                        "color": "CORAL",
+                        "type": "USER",
+                        "system": false,
+                        "placeCount": 5,
+                        "selected": false
+                      },
+                      {
+                        "id": 22,
+                        "name": "카페",
+                        "color": "GREEN",
+                        "type": "USER",
+                        "system": false,
+                        "placeCount": 3,
+                        "selected": true
+                      }
+                    ]
+                  },
+                  "timestamp": "2026-08-23T12:30:00"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "미인증 (로그인 필요)"
+          },
+          "404": {
+            "description": "존재하지 않는 핀",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "MAP_PIN_NOT_FOUND",
+                  "message": "[MJS] 해당 건물/장소를 찾을 수 없습니다.",
+                  "status": 404
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/map/favorites/pins/{pinId}": {
+      "put": {
+        "tags": [
+          "명지도 - 즐겨찾기"
+        ],
+        "summary": "그룹 선택 바텀시트 저장(다중 그룹 + 메모)",
+        "operationId": "savePinFavoriteGroups",
+        "description": "'그룹 선택 바텀시트'의 **저장** 버튼. 이 핀이 속할 그룹 집합을 `groupIds`로 **통째로 교체(replace)**하고 메모를 반영합니다.\n\n### 동작\n- `groupIds`에 있는 그룹에는 담고(없으면 추가), 빠진 그룹에서는 제거합니다.\n- `groupIds`가 **빈 배열이면 전 그룹에서 제거**(= 즐겨찾기 완전 해제).\n- `memo`(최대 30자, 공백 포함)는 **선택된 각 그룹 멤버십에 동일하게** 저장됩니다. 이후 그룹마다 서로 다른 메모를 가질 수 있습니다(그룹·핀 단위 저장).\n- 존재하지 않거나 소유하지 않은 그룹 id는 무시합니다.\n\n### 응답\n저장 후 갱신된 바텀시트 상태(조회와 동일 형태)를 돌려줍니다.\n\n### 인증\n로그인 필요.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pinId",
+            "in": "path",
+            "required": true,
+            "description": "건물/장소 핀 ID",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 51
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinFavoriteSaveRequest"
+              },
+              "example": {
+                "groupIds": [
+                  10,
+                  22
+                ],
+                "memo": "1층 매점 자주 감"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "저장 후 최신 바텀시트 상태",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PinFavoriteGroups"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-08-23T12:30:00"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": {
+                    "pinId": 51,
+                    "placeName": "학생회관",
+                    "memo": "1층 매점 자주 감",
+                    "groups": [
+                      {
+                        "id": 10,
+                        "name": "내 장소",
+                        "color": "BLUE",
+                        "type": "SYSTEM_MY_PLACES",
+                        "system": true,
+                        "placeCount": 12,
+                        "selected": true
+                      },
+                      {
+                        "id": 21,
+                        "name": "맛집",
+                        "color": "CORAL",
+                        "type": "USER",
+                        "system": false,
+                        "placeCount": 5,
+                        "selected": false
+                      },
+                      {
+                        "id": 22,
+                        "name": "카페",
+                        "color": "GREEN",
+                        "type": "USER",
+                        "system": false,
+                        "placeCount": 3,
+                        "selected": true
+                      }
+                    ]
+                  },
+                  "timestamp": "2026-08-23T12:30:00"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "메모 길이 초과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "FAVORITE_MEMO_TOO_LONG",
+                  "message": "[MJS] 메모는 최대 30자까지 입력할 수 있습니다.",
+                  "status": 400
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "미인증 (로그인 필요)"
+          },
+          "404": {
+            "description": "존재하지 않는 핀",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "MAP_PIN_NOT_FOUND",
+                  "message": "[MJS] 해당 건물/장소를 찾을 수 없습니다.",
+                  "status": 404
+                }
               }
             }
           }
@@ -391,7 +1838,9 @@
     },
     "/bus/arrivals": {
       "get": {
-        "tags": ["Bus Arrivals"],
+        "tags": [
+          "Bus Arrivals"
+        ],
         "summary": "실시간 버스 도착 정보 조회",
         "operationId": "getBusArrivals",
         "description": "정류장(A/B)의 실시간 버스 도착 정보를 반환합니다.\n\n### 사용 시나리오\n1. 지도에서 정류장(A 또는 B) 선택\n2. `station=A` 또는 `station=B`로 호출\n3. 응답의 `buses` 배열을 화면 목록으로 렌더링 (즐겨찾기 노선이 상단)\n\n### 혼잡도\n| 코드 | 한글 |\n|------|------|\n| 3 | 여유 |\n| 4 | 보통 |\n| 5 | 혼잡 |\n| 6 | 매우혼잡 |\n| 0 | (정보없음 → null) |",
@@ -403,7 +1852,10 @@
             "description": "정류장 선택 키",
             "schema": {
               "type": "string",
-              "enum": ["A", "B"],
+              "enum": [
+                "A",
+                "B"
+              ],
               "example": "A"
             }
           }
@@ -483,7 +1935,9 @@
             "description": "잘못된 정류장 키 (A/B 아님)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
                 "example": {
                   "error": "BUS_STATION_NOT_FOUND",
                   "message": "[MJS] 지원하지 않는 정류장입니다. (A 또는 B)",
@@ -496,7 +1950,9 @@
             "description": "해당 정류장의 도착 예정 버스 없음",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
                 "example": {
                   "error": "BUS_ARRIVAL_NOT_FOUND",
                   "message": "[MJS] 버스 도착 정보를 찾을 수 없습니다.",
@@ -509,7 +1965,9 @@
             "description": "외부 공공데이터 API 호출 실패",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
                 "example": {
                   "error": "BUS_ARRIVAL_API_CALL_FAILED",
                   "message": "[MJS] 버스 도착 정보 API 호출에 실패했습니다.",
@@ -523,25 +1981,41 @@
     },
     "/bus/favorites": {
       "post": {
-        "tags": ["Bus Arrivals"],
+        "tags": [
+          "Bus Arrivals"
+        ],
         "summary": "버스 노선 즐겨찾기 토글",
         "operationId": "toggleBusFavorite",
         "description": "정류장(A/B)의 특정 노선을 즐겨찾기에 추가하거나 해제합니다.\n\n### 동작\n- 즐겨찾기가 없으면 등록(true), 이미 있으면 해제(false) - 토글 방식\n- 즐겨찾기한 노선은 `/bus/arrivals` 응답에서 상단 정렬되고 `favorite=true`로 표시됩니다.\n\n### 인증\n로그인 필요 (Bearer 토큰).",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "station",
             "in": "query",
             "required": true,
             "description": "정류장 선택 키",
-            "schema": { "type": "string", "enum": ["A", "B"], "example": "A" }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "A",
+                "B"
+              ],
+              "example": "A"
+            }
           },
           {
             "name": "routeName",
             "in": "query",
             "required": true,
             "description": "버스 노선 번호",
-            "schema": { "type": "string", "example": "7611" }
+            "schema": {
+              "type": "string",
+              "example": "7611"
+            }
           }
         ],
         "responses": {
@@ -552,13 +2026,20 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "status": {
+                      "type": "string",
+                      "example": "API 요청 성공"
+                    },
                     "data": {
                       "type": "boolean",
                       "description": "true: 즐겨찾기 추가됨 / false: 즐겨찾기 해제됨",
                       "example": true
                     },
-                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-05-19T09:05:12" }
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-05-19T09:05:12"
+                    }
                   }
                 }
               }
@@ -575,7 +2056,9 @@
     },
     "/sync/map": {
       "post": {
-        "tags": ["명지도 - 동기화"],
+        "tags": [
+          "명지도 - 동기화"
+        ],
         "summary": "구글 시트 → DB 명지도 동기화 (운영자 전용)",
         "operationId": "syncMap",
         "description": "운영팀 구글 시트(Apps Script)가 편집한 명지도 데이터를 한 번에 DB로 upsert 합니다. 조회 API가 아니라 **운영자 적재용**입니다.\n\n### 인증\n- 헤더 `X-Sync-Token` 상수시간 비교. 값 불일치 시 본문 파싱 전에 401.\n\n### 동작\n- code(그룹/카테고리/핀) 또는 (건물+층 / 건물+요일) 키로 **upsert** (재발행해도 중복 없음, 즐겨찾기 보존).\n- 처리 순서: 그룹 → 카테고리(최상위 먼저, 하위탭 나중) → 건물 → 층 → 장소 → 운영시간. 한 건이라도 검증 실패하면 전체 롤백.\n- 하위탭(parentCode 있음)은 result_type을 부모에게서 상속하므로 생략 가능. 외부 장소는 latitude/longitude를 직접 주거나 비우면 좌표 미변환.\n- v1은 추가/수정만. 시트에서 빠진 행의 자동 삭제는 하지 않습니다.",
@@ -584,7 +2067,9 @@
             "name": "X-Sync-Token",
             "in": "header",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "동기화 공유 토큰 (서버 설정값과 일치해야 함)"
           }
         ],
@@ -592,17 +2077,70 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/MapSyncRequest" },
+              "schema": {
+                "$ref": "#/components/schemas/MapSyncRequest"
+              },
               "example": {
-                "groups": [ { "code": "food", "name": "식사 (F&B)", "displayOrder": 1 } ],
-                "categories": [
-                  { "code": "daedong", "groupCode": "food", "label": "대동명지도", "resultType": "PLACE_LIST", "quickMenu": true, "displayOrder": 1 },
-                  { "code": "daedong-kr", "groupCode": "food", "parentCode": "daedong", "label": "한식", "displayOrder": 1 }
+                "groups": [
+                  {
+                    "code": "food",
+                    "name": "식사 (F&B)",
+                    "displayOrder": 1
+                  }
                 ],
-                "buildings": [ { "code": "b-jonghap", "categoryCode": "building", "name": "종합관", "latitude": 37.5802215, "longitude": 126.9225443, "buildingNumber": 1, "infoText": "구 본관" } ],
-                "floors": [ { "buildingCode": "b-jonghap", "label": "F1", "floorOrder": 1 } ],
-                "places": [ { "code": "dd-1025414098", "categoryCode": "daedong-kr", "name": "삼정식당", "latitude": 37.5796415, "longitude": 126.9250425, "address": "서울 서대문구 거북골로 25-8" } ],
-                "operatingHours": [ { "buildingCode": "b-jonghap", "dayOfWeek": "MONDAY", "openTime": "09:00", "closeTime": "22:00" } ]
+                "categories": [
+                  {
+                    "code": "daedong",
+                    "groupCode": "food",
+                    "label": "대동명지도",
+                    "resultType": "PLACE_LIST",
+                    "quickMenu": true,
+                    "displayOrder": 1
+                  },
+                  {
+                    "code": "daedong-kr",
+                    "groupCode": "food",
+                    "parentCode": "daedong",
+                    "label": "한식",
+                    "displayOrder": 1
+                  }
+                ],
+                "buildings": [
+                  {
+                    "code": "b-jonghap",
+                    "categoryCode": "building",
+                    "name": "종합관",
+                    "latitude": 37.5802215,
+                    "longitude": 126.9225443,
+                    "buildingNumber": 1,
+                    "infoText": "구 본관"
+                  }
+                ],
+                "floors": [
+                  {
+                    "buildingCode": "b-jonghap",
+                    "label": "F1",
+                    "floorOrder": 1
+                  }
+                ],
+                "places": [
+                  {
+                    "code": "dd-1025414098",
+                    "categoryCode": "daedong-kr",
+                    "name": "삼정식당",
+                    "latitude": 37.5796415,
+                    "longitude": 126.9250425,
+                    "address": "서울 서대문구 거북골로 25-8"
+                  }
+                ],
+                "operatingHours": [
+                  {
+                    "buildingCode": "b-jonghap",
+                    "dayOfWeek": "MONDAY",
+                    "openTime": "09:00",
+                    "closeTime": "22:00"
+                  }
+                ]
               }
             }
           }
@@ -614,7 +2152,14 @@
               "application/json": {
                 "example": {
                   "status": "API 요청 성공",
-                  "data": { "groups": 4, "categories": 35, "buildings": 8, "floors": 0, "places": 305, "operatingHours": 0 },
+                  "data": {
+                    "groups": 4,
+                    "categories": 35,
+                    "buildings": 8,
+                    "floors": 0,
+                    "places": 305,
+                    "operatingHours": 0
+                  },
                   "timestamp": "2026-07-01T01:19:28"
                 }
               }
@@ -660,220 +2205,788 @@
         "type": "object",
         "description": "구글 시트 6개 탭에 대응하는 동기화 본문. 각 섹션은 생략 가능(생략 시 해당 섹션 미변경).",
         "properties": {
-          "groups": { "type": "array", "items": { "$ref": "#/components/schemas/SyncGroupRow" } },
-          "categories": { "type": "array", "items": { "$ref": "#/components/schemas/SyncCategoryRow" } },
-          "buildings": { "type": "array", "items": { "$ref": "#/components/schemas/SyncBuildingRow" } },
-          "floors": { "type": "array", "items": { "$ref": "#/components/schemas/SyncFloorRow" } },
-          "places": { "type": "array", "items": { "$ref": "#/components/schemas/SyncPlaceRow" } },
-          "operatingHours": { "type": "array", "items": { "$ref": "#/components/schemas/SyncOperatingHourRow" } }
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncGroupRow"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncCategoryRow"
+            }
+          },
+          "buildings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncBuildingRow"
+            }
+          },
+          "floors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncFloorRow"
+            }
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncPlaceRow"
+            }
+          },
+          "operatingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncOperatingHourRow"
+            }
+          }
         }
       },
       "SyncGroupRow": {
         "type": "object",
         "description": "카테고리 대분류(그룹) 1행",
-        "required": ["code", "name"],
+        "required": [
+          "code",
+          "name"
+        ],
         "properties": {
-          "code": { "type": "string", "example": "food" },
-          "name": { "type": "string", "example": "식사 (F&B)" },
-          "displayOrder": { "type": "integer", "example": 1 }
+          "code": {
+            "type": "string",
+            "example": "food"
+          },
+          "name": {
+            "type": "string",
+            "example": "식사 (F&B)"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "example": 1
+          }
         }
       },
       "SyncCategoryRow": {
         "type": "object",
         "description": "칩(카테고리) 1행. parentCode가 있으면 하위탭이며 result_type을 부모에게서 상속(생략 가능).",
-        "required": ["code", "groupCode", "label"],
+        "required": [
+          "code",
+          "groupCode",
+          "label"
+        ],
         "properties": {
-          "code": { "type": "string", "example": "daedong" },
-          "groupCode": { "type": "string", "example": "food" },
-          "parentCode": { "type": "string", "nullable": true, "description": "하위탭이면 상위 칩 코드, 최상위면 생략", "example": "daedong" },
-          "label": { "type": "string", "example": "한식" },
-          "subtitle": { "type": "string", "nullable": true, "example": "by. 명월" },
-          "tooltipText": { "type": "string", "nullable": true },
-          "iconKey": { "type": "string", "nullable": true, "example": "MyeongwolIcon" },
-          "resultType": { "type": "string", "enum": ["PLACE_LIST", "BUILDING_LIST", "BUS"], "description": "최상위 칩은 필수, 하위탭은 부모 상속(생략 가능)" },
-          "quickMenu": { "type": "boolean", "example": true },
-          "displayOrder": { "type": "integer", "example": 1 }
+          "code": {
+            "type": "string",
+            "example": "daedong"
+          },
+          "groupCode": {
+            "type": "string",
+            "example": "food"
+          },
+          "parentCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "하위탭이면 상위 칩 코드, 최상위면 생략",
+            "example": "daedong"
+          },
+          "label": {
+            "type": "string",
+            "example": "한식"
+          },
+          "subtitle": {
+            "type": "string",
+            "nullable": true,
+            "example": "by. 명월"
+          },
+          "tooltipText": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconKey": {
+            "type": "string",
+            "nullable": true,
+            "example": "MyeongwolIcon"
+          },
+          "resultType": {
+            "type": "string",
+            "enum": [
+              "PLACE_LIST",
+              "BUILDING_LIST",
+              "BUS"
+            ],
+            "description": "최상위 칩은 필수, 하위탭은 부모 상속(생략 가능)"
+          },
+          "quickMenu": {
+            "type": "boolean",
+            "example": true
+          },
+          "displayOrder": {
+            "type": "integer",
+            "example": 1
+          }
         }
       },
       "SyncBuildingRow": {
         "type": "object",
         "description": "건물 1행. 위도/경도는 핀 겹침 방지를 위해 운영팀이 직접 입력.",
-        "required": ["code", "categoryCode", "name"],
+        "required": [
+          "code",
+          "categoryCode",
+          "name"
+        ],
         "properties": {
-          "code": { "type": "string", "example": "b-jonghap" },
-          "categoryCode": { "type": "string", "example": "building" },
-          "name": { "type": "string", "example": "종합관" },
-          "latitude": { "type": "number", "format": "double", "example": 37.5802215 },
-          "longitude": { "type": "number", "format": "double", "example": 126.9225443 },
-          "imageUrl": { "type": "string", "nullable": true },
-          "infoText": { "type": "string", "nullable": true, "example": "구 본관" },
-          "buildingNumber": { "type": "integer", "nullable": true, "example": 1 },
-          "classroomCode": { "type": "string", "nullable": true, "example": "S1XXX" }
+          "code": {
+            "type": "string",
+            "example": "b-jonghap"
+          },
+          "categoryCode": {
+            "type": "string",
+            "example": "building"
+          },
+          "name": {
+            "type": "string",
+            "example": "종합관"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "example": 37.5802215
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "example": 126.9225443
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "infoText": {
+            "type": "string",
+            "nullable": true,
+            "example": "구 본관"
+          },
+          "buildingNumber": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1
+          },
+          "classroomCode": {
+            "type": "string",
+            "nullable": true,
+            "example": "S1XXX"
+          }
         }
       },
       "SyncFloorRow": {
         "type": "object",
         "description": "건물 층 1행 (건물코드 + 층 라벨로 식별)",
-        "required": ["buildingCode", "label"],
+        "required": [
+          "buildingCode",
+          "label"
+        ],
         "properties": {
-          "buildingCode": { "type": "string", "example": "b-jonghap" },
-          "label": { "type": "string", "example": "F1" },
-          "floorOrder": { "type": "integer", "description": "지하 음수/지상 양수", "example": 1 },
-          "mapImageUrl": { "type": "string", "nullable": true }
+          "buildingCode": {
+            "type": "string",
+            "example": "b-jonghap"
+          },
+          "label": {
+            "type": "string",
+            "example": "F1"
+          },
+          "floorOrder": {
+            "type": "integer",
+            "description": "지하 음수/지상 양수",
+            "example": 1
+          },
+          "mapImageUrl": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "SyncPlaceRow": {
         "type": "object",
         "description": "장소(비건물) 1행. 내부 장소는 parentBuildingCode+floorLabel, 외부 장소는 address 또는 latitude/longitude.",
-        "required": ["code", "categoryCode", "name"],
+        "required": [
+          "code",
+          "categoryCode",
+          "name"
+        ],
         "properties": {
-          "code": { "type": "string", "example": "dd-1025414098" },
-          "categoryCode": { "type": "string", "example": "daedong-kr" },
-          "name": { "type": "string", "example": "삼정식당" },
-          "latitude": { "type": "number", "format": "double", "nullable": true, "example": 37.5796415 },
-          "longitude": { "type": "number", "format": "double", "nullable": true, "example": 126.9250425 },
-          "imageUrl": { "type": "string", "nullable": true },
-          "infoText": { "type": "string", "nullable": true },
-          "address": { "type": "string", "nullable": true, "description": "외부 장소 도로명 주소", "example": "서울 서대문구 거북골로 25-8" },
-          "parentBuildingCode": { "type": "string", "nullable": true, "description": "내부 장소면 소속 건물 코드" },
-          "floorLabel": { "type": "string", "nullable": true, "description": "내부 장소면 소속 층 라벨" },
-          "indoorCode": { "type": "string", "nullable": true, "description": "검색 가능한 실제 호실/요소 코드. 입력 시 소속 건물과 층 필수", "example": "S1353" }
+          "code": {
+            "type": "string",
+            "example": "dd-1025414098"
+          },
+          "categoryCode": {
+            "type": "string",
+            "example": "daedong-kr"
+          },
+          "name": {
+            "type": "string",
+            "example": "삼정식당"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "example": 37.5796415
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "example": 126.9250425
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "infoText": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "description": "외부 장소 도로명 주소",
+            "example": "서울 서대문구 거북골로 25-8"
+          },
+          "parentBuildingCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "내부 장소면 소속 건물 코드"
+          },
+          "floorLabel": {
+            "type": "string",
+            "nullable": true,
+            "description": "내부 장소면 소속 층 라벨"
+          },
+          "indoorCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "검색 가능한 실제 호실/요소 코드. 입력 시 소속 건물과 층 필수",
+            "example": "S1353"
+          }
         }
       },
       "SyncOperatingHourRow": {
         "type": "object",
         "description": "건물 운영시간 1행 (건물코드 + 요일로 식별). 건물만 가짐.",
-        "required": ["buildingCode", "dayOfWeek"],
+        "required": [
+          "buildingCode",
+          "dayOfWeek"
+        ],
         "properties": {
-          "buildingCode": { "type": "string", "example": "b-jonghap" },
-          "dayOfWeek": { "type": "string", "enum": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"] },
-          "openTime": { "type": "string", "nullable": true, "example": "09:00" },
-          "closeTime": { "type": "string", "nullable": true, "description": "자정 넘김은 23:59", "example": "22:00" },
-          "always24h": { "type": "boolean", "nullable": true },
-          "closed": { "type": "boolean", "nullable": true },
-          "note": { "type": "string", "nullable": true }
+          "buildingCode": {
+            "type": "string",
+            "example": "b-jonghap"
+          },
+          "dayOfWeek": {
+            "type": "string",
+            "enum": [
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ]
+          },
+          "openTime": {
+            "type": "string",
+            "nullable": true,
+            "example": "09:00"
+          },
+          "closeTime": {
+            "type": "string",
+            "nullable": true,
+            "description": "자정 넘김은 23:59",
+            "example": "22:00"
+          },
+          "always24h": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "closed": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "PinSummary": {
         "type": "object",
         "description": "목록 카드 1개 (건물 목록 / 칩 클릭 장소 목록 / 검색 공용). 기존 필드를 유지하고, 검색에서는 각 항목의 type과 link로 이동 방식을 결정한다.",
         "properties": {
-          "id": { "type": "integer", "format": "int64", "description": "핀 ID (상세 요청에 사용)", "example": 51 },
-          "type": { "type": "string", "description": "항목별 이동 종류. BUILDING은 건물, PLACE는 외부 장소, FLOOR_MAP은 학교 건물 내부 장소", "enum": ["BUILDING", "PLACE", "FLOOR_MAP"], "example": "FLOOR_MAP" },
-          "name": { "type": "string", "description": "건물명/장소명", "example": "행복식당" },
-          "categoryCode": { "type": "string", "description": "소속 카테고리 코드", "example": "korean" },
-          "iconKey": { "type": "string", "nullable": true, "description": "카드 아이콘 키 (카테고리 아이콘). 등록되지 않았으면 null", "example": "KoreanFoodIcon" },
-          "imageUrl": { "type": "string", "nullable": true, "description": "이미지 URL. 없으면 null (레이아웃 분기)", "example": "https://thingo.kr/img/place/51.jpg" },
-          "classroomCode": { "type": "string", "nullable": true, "description": "예시 강의실 코드 (건물만). 장소는 null", "example": "S1XXX" },
-          "location": { "type": "string", "nullable": true, "description": "위치 텍스트 (장소만: 건물명+층수 또는 주소). 건물은 null", "example": "서울 서대문구 거북골로 34" },
-          "favorite": { "type": "boolean", "description": "즐겨찾기 여부 (비로그인 시 false)", "example": true },
-          "operatingStatus": { "type": "string", "nullable": true, "description": "운영 상태 한글 라벨. 기본값: '곧 운영 시작' / '운영중' / '곧 운영 종료' / '운영 종료' / '24시간 운영' / '휴무'. 검색(/map/search) 결과에서는 '운영 종료'에 다음 오픈 안내가 붙는다(예: '운영 종료 (내일 09:00 오픈)'). 건물은 자기 운영시간, 검색 결과의 내부 장소는 소속 건물 운영시간을 상속. 외부 장소/운영시간 없으면 null", "example": "운영중" },
-          "distanceMeters": { "type": "integer", "nullable": true, "description": "현재 위치로부터 거리(미터). 캠퍼스 밖/GPS 없으면 null(미표시)", "example": 150 },
-          "latitude": { "type": "number", "format": "double", "nullable": true, "description": "지도 마커용 위도. 내부 장소는 소속 건물 좌표. 좌표 없으면 null", "example": 37.5796415 },
-          "longitude": { "type": "number", "format": "double", "nullable": true, "description": "지도 마커용 경도. 내부 장소는 소속 건물 좌표. 좌표 없으면 null", "example": 126.9250425 },
-          "indoorCode": { "type": "string", "nullable": true, "description": "검색 가능한 실제 호실/요소 코드. S1353 같은 값이 있는 내부 장소만 non-null이며 화장실·프린터는 null 가능. 사용자 검색용이며 층별안내도 target 식별자는 아님", "example": "S1353" },
-          "link": { "type": "string", "nullable": true, "description": "FLOOR_MAP이면 필수·non-null인 층별안내도 상대 URL. target은 중복되지 않는 Pin.code이며 SVG data-target과 일치해야 함. BUILDING/PLACE이면 null", "example": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" }
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "핀 ID (상세 요청에 사용)",
+            "example": 51
+          },
+          "type": {
+            "type": "string",
+            "description": "항목별 이동 종류. BUILDING은 건물, PLACE는 외부 장소, FLOOR_MAP은 학교 건물 내부 장소",
+            "enum": [
+              "BUILDING",
+              "PLACE",
+              "FLOOR_MAP"
+            ],
+            "example": "FLOOR_MAP"
+          },
+          "name": {
+            "type": "string",
+            "description": "건물명/장소명",
+            "example": "행복식당"
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "소속 카테고리 코드",
+            "example": "korean"
+          },
+          "iconKey": {
+            "type": "string",
+            "nullable": true,
+            "description": "카드 아이콘 키 (카테고리 아이콘). 등록되지 않았으면 null",
+            "example": "KoreanFoodIcon"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "이미지 URL. 없으면 null (레이아웃 분기)",
+            "example": "https://thingo.kr/img/place/51.jpg"
+          },
+          "classroomCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "예시 강의실 코드 (건물만). 장소는 null",
+            "example": "S1XXX"
+          },
+          "location": {
+            "type": "string",
+            "nullable": true,
+            "description": "위치 텍스트 (장소만: 건물명+층수 또는 주소). 건물은 null",
+            "example": "서울 서대문구 거북골로 34"
+          },
+          "favorite": {
+            "type": "boolean",
+            "description": "즐겨찾기 여부 (비로그인 시 false)",
+            "example": true
+          },
+          "operatingStatus": {
+            "type": "string",
+            "nullable": true,
+            "description": "운영 상태 한글 라벨. 기본값: '곧 운영 시작' / '운영중' / '곧 운영 종료' / '운영 종료' / '24시간 운영' / '휴무'. 검색(/map/search) 결과에서는 '운영 종료'에 다음 오픈 안내가 붙는다(예: '운영 종료 (내일 09:00 오픈)'). 건물은 자기 운영시간, 검색 결과의 내부 장소는 소속 건물 운영시간을 상속. 외부 장소/운영시간 없으면 null",
+            "example": "운영중"
+          },
+          "distanceMeters": {
+            "type": "integer",
+            "nullable": true,
+            "description": "현재 위치로부터 거리(미터). 캠퍼스 밖/GPS 없으면 null(미표시)",
+            "example": 150
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "지도 마커용 위도. 내부 장소는 소속 건물 좌표. 좌표 없으면 null",
+            "example": 37.5796415
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "지도 마커용 경도. 내부 장소는 소속 건물 좌표. 좌표 없으면 null",
+            "example": 126.9250425
+          },
+          "indoorCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "검색 가능한 실제 호실/요소 코드. S1353 같은 값이 있는 내부 장소만 non-null이며 화장실·프린터는 null 가능. 사용자 검색용이며 층별안내도 target 식별자는 아님",
+            "example": "S1353"
+          },
+          "link": {
+            "type": "string",
+            "nullable": true,
+            "description": "FLOOR_MAP이면 필수·non-null인 층별안내도 상대 URL. target은 중복되지 않는 Pin.code이며 SVG data-target과 일치해야 함. BUILDING/PLACE이면 null",
+            "example": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353"
+          }
         },
-        "required": ["id", "type", "name", "categoryCode", "favorite"]
+        "required": [
+          "id",
+          "type",
+          "name",
+          "categoryCode",
+          "favorite"
+        ]
       },
       "MapSuggestItem": {
         "type": "object",
         "description": "검색 자동완성 항목 1개 (경량). 거리·운영상태 없음.",
         "properties": {
-          "id": { "type": "integer", "format": "int64", "description": "핀 ID (탭 시 상세 요청에 사용)", "example": 51 },
-          "name": { "type": "string", "description": "건물명/장소명", "example": "투썸플레이스 명지대점" },
-          "type": { "type": "string", "description": "항목별 이동 종류. FLOOR_MAP이면 link로 이동", "enum": ["BUILDING", "PLACE", "FLOOR_MAP"], "example": "FLOOR_MAP" },
-          "categoryCode": { "type": "string", "description": "소속 카테고리 코드", "example": "cafe" },
-          "iconKey": { "type": "string", "description": "아이콘 키 (카테고리 아이콘)", "example": "CafeIcon" },
-          "indoorCode": { "type": "string", "nullable": true, "example": "S1353" },
-          "link": { "type": "string", "nullable": true, "description": "type이 FLOOR_MAP인 경우 이동할 층별안내도 상대 URL. 그 외 type은 null", "example": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353" }
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "핀 ID (탭 시 상세 요청에 사용)",
+            "example": 51
+          },
+          "name": {
+            "type": "string",
+            "description": "건물명/장소명",
+            "example": "투썸플레이스 명지대점"
+          },
+          "type": {
+            "type": "string",
+            "description": "항목별 이동 종류. FLOOR_MAP이면 link로 이동",
+            "enum": [
+              "BUILDING",
+              "PLACE",
+              "FLOOR_MAP"
+            ],
+            "example": "FLOOR_MAP"
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "소속 카테고리 코드",
+            "example": "cafe"
+          },
+          "iconKey": {
+            "type": "string",
+            "description": "아이콘 키 (카테고리 아이콘)",
+            "example": "CafeIcon"
+          },
+          "indoorCode": {
+            "type": "string",
+            "nullable": true,
+            "example": "S1353"
+          },
+          "link": {
+            "type": "string",
+            "nullable": true,
+            "description": "type이 FLOOR_MAP인 경우 이동할 층별안내도 상대 URL. 그 외 type은 null",
+            "example": "/maps/floor?buildingId=2&floorLabel=F1&target=p-s1353"
+          }
         },
-        "required": ["id", "name", "type", "categoryCode"]
+        "required": [
+          "id",
+          "name",
+          "type",
+          "categoryCode"
+        ]
       },
       "OperatingHourLine": {
         "type": "object",
         "description": "요일별 운영시간 1줄",
         "properties": {
-          "dayOfWeek": { "type": "string", "description": "요일 식별자", "enum": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"], "example": "MONDAY" },
-          "dayLabel": { "type": "string", "description": "요일 한글", "example": "월" },
-          "text": { "type": "string", "description": "운영시간 표시 텍스트", "example": "10:00-15:00" },
-          "note": { "type": "string", "nullable": true, "description": "부가 안내. 없으면 null", "example": "00:00~05:00 학생증 태그 시 출입" }
+          "dayOfWeek": {
+            "type": "string",
+            "description": "요일 식별자",
+            "enum": [
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ],
+            "example": "MONDAY"
+          },
+          "dayLabel": {
+            "type": "string",
+            "description": "요일 한글",
+            "example": "월"
+          },
+          "text": {
+            "type": "string",
+            "description": "운영시간 표시 텍스트",
+            "example": "10:00-15:00"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "description": "부가 안내. 없으면 null",
+            "example": "00:00~05:00 학생증 태그 시 출입"
+          }
         },
-        "required": ["dayOfWeek", "dayLabel", "text"]
+        "required": [
+          "dayOfWeek",
+          "dayLabel",
+          "text"
+        ]
       },
       "BuildingCategoryTab": {
         "type": "object",
         "description": "건물 상세의 카테고리 필터 탭 1개 (건물 안 장소들의 카테고리에서 유도)",
         "properties": {
-          "code": { "type": "string", "example": "printer" },
-          "label": { "type": "string", "example": "프린터" },
-          "iconKey": { "type": "string", "example": "PrinterIcon" }
+          "code": {
+            "type": "string",
+            "example": "printer"
+          },
+          "label": {
+            "type": "string",
+            "example": "프린터"
+          },
+          "iconKey": {
+            "type": "string",
+            "example": "PrinterIcon"
+          }
         },
-        "required": ["code", "label"]
+        "required": [
+          "code",
+          "label"
+        ]
       },
       "PlaceBrief": {
         "type": "object",
         "description": "층별 목록에 나열되는 시설 1개",
         "properties": {
-          "id": { "type": "integer", "format": "int64", "example": 120 },
-          "name": { "type": "string", "example": "무한 프린터" },
-          "categoryCode": { "type": "string", "example": "printer" },
-          "iconKey": { "type": "string", "example": "PrinterIcon" },
-          "indoorCode": { "type": "string", "nullable": true, "example": "S1353" }
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 120
+          },
+          "name": {
+            "type": "string",
+            "example": "무한 프린터"
+          },
+          "categoryCode": {
+            "type": "string",
+            "example": "printer"
+          },
+          "iconKey": {
+            "type": "string",
+            "example": "PrinterIcon"
+          },
+          "indoorCode": {
+            "type": "string",
+            "nullable": true,
+            "example": "S1353"
+          }
         },
-        "required": ["id", "name", "categoryCode"]
+        "required": [
+          "id",
+          "name",
+          "categoryCode"
+        ]
       },
       "BuildingFloorPlaces": {
         "type": "object",
         "description": "한 층의 시설 목록",
         "properties": {
-          "floorId": { "type": "integer", "format": "int64", "nullable": true, "description": "층 ID. 층 미지정 시설 묶음이면 null", "example": 30 },
-          "floorLabel": { "type": "string", "nullable": true, "description": "층 라벨 (B1, F1)", "example": "F1" },
-          "floorOrder": { "type": "integer", "nullable": true, "description": "층 정렬 순서 (지하 음수, 지상 양수)", "example": 1 },
-          "mapImageUrl": { "type": "string", "nullable": true, "description": "층별 안내도 이미지 URL", "example": "https://thingo.kr/img/floor/30.jpg" },
-          "places": { "type": "array", "items": { "$ref": "#/components/schemas/PlaceBrief" } }
+          "floorId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "층 ID. 층 미지정 시설 묶음이면 null",
+            "example": 30
+          },
+          "floorLabel": {
+            "type": "string",
+            "nullable": true,
+            "description": "층 라벨 (B1, F1)",
+            "example": "F1"
+          },
+          "floorOrder": {
+            "type": "integer",
+            "nullable": true,
+            "description": "층 정렬 순서 (지하 음수, 지상 양수)",
+            "example": 1
+          },
+          "mapImageUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "층별 안내도 이미지 URL",
+            "example": "https://thingo.kr/img/floor/30.jpg"
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaceBrief"
+            }
+          }
         },
-        "required": ["places"]
+        "required": [
+          "places"
+        ]
       },
       "BuildingDetail": {
         "type": "object",
         "description": "건물 상세 응답",
         "properties": {
-          "id": { "type": "integer", "format": "int64", "example": 7 },
-          "name": { "type": "string", "example": "방목학술정보관" },
-          "iconKey": { "type": "string", "example": "BuildingIcon" },
-          "imageUrl": { "type": "string", "nullable": true, "example": "https://thingo.kr/img/building/7.jpg" },
-          "buildingNumber": { "type": "integer", "nullable": true, "description": "건물 고유 번호", "example": 7 },
-          "classroomCode": { "type": "string", "nullable": true, "description": "예시 강의실 코드 (건물 상세에만 존재)", "example": "S7XXX" },
-          "favorite": { "type": "boolean", "example": false },
-          "operatingStatus": { "type": "string", "nullable": true, "description": "운영 상태 한글 라벨", "enum": ["곧 운영 시작", "운영중", "곧 운영 종료", "운영 종료", "24시간 운영", "휴무"], "example": "운영중" },
-          "distanceMeters": { "type": "integer", "nullable": true, "example": 240 },
-          "latitude": { "type": "number", "format": "double", "nullable": true, "description": "지도 마커용 위도", "example": 37.5807286 },
-          "longitude": { "type": "number", "format": "double", "nullable": true, "description": "지도 마커용 경도", "example": 126.9243805 },
-          "infoText": { "type": "string", "nullable": true, "description": "기타 안내 텍스트", "example": "06:00~00:00 운영" },
-          "weeklyOperatingHours": { "type": "array", "description": "요일별 운영시간 (토글에 나열)", "items": { "$ref": "#/components/schemas/OperatingHourLine" } },
-          "categoryTabs": { "type": "array", "description": "카테고리 필터 탭 (건물 안 장소들의 카테고리에서 유도)", "items": { "$ref": "#/components/schemas/BuildingCategoryTab" } },
-          "floors": { "type": "array", "description": "층별 시설 목록", "items": { "$ref": "#/components/schemas/BuildingFloorPlaces" } }
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 7
+          },
+          "name": {
+            "type": "string",
+            "example": "방목학술정보관"
+          },
+          "iconKey": {
+            "type": "string",
+            "example": "BuildingIcon"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://thingo.kr/img/building/7.jpg"
+          },
+          "buildingNumber": {
+            "type": "integer",
+            "nullable": true,
+            "description": "건물 고유 번호",
+            "example": 7
+          },
+          "classroomCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "예시 강의실 코드 (건물 상세에만 존재)",
+            "example": "S7XXX"
+          },
+          "favorite": {
+            "type": "boolean",
+            "example": false
+          },
+          "operatingStatus": {
+            "type": "string",
+            "nullable": true,
+            "description": "운영 상태 한글 라벨",
+            "enum": [
+              "곧 운영 시작",
+              "운영중",
+              "곧 운영 종료",
+              "운영 종료",
+              "24시간 운영",
+              "휴무"
+            ],
+            "example": "운영중"
+          },
+          "distanceMeters": {
+            "type": "integer",
+            "nullable": true,
+            "example": 240
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "지도 마커용 위도",
+            "example": 37.5807286
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "지도 마커용 경도",
+            "example": 126.9243805
+          },
+          "infoText": {
+            "type": "string",
+            "nullable": true,
+            "description": "기타 안내 텍스트",
+            "example": "06:00~00:00 운영"
+          },
+          "weeklyOperatingHours": {
+            "type": "array",
+            "description": "요일별 운영시간 (토글에 나열)",
+            "items": {
+              "$ref": "#/components/schemas/OperatingHourLine"
+            }
+          },
+          "categoryTabs": {
+            "type": "array",
+            "description": "카테고리 필터 탭 (건물 안 장소들의 카테고리에서 유도)",
+            "items": {
+              "$ref": "#/components/schemas/BuildingCategoryTab"
+            }
+          },
+          "floors": {
+            "type": "array",
+            "description": "층별 시설 목록",
+            "items": {
+              "$ref": "#/components/schemas/BuildingFloorPlaces"
+            }
+          }
         },
-        "required": ["id", "name", "favorite"]
+        "required": [
+          "id",
+          "name",
+          "favorite"
+        ]
       },
       "PlaceDetail": {
         "type": "object",
         "description": "장소(비건물) 상세 응답. 강의실 코드/운영시간 없음.",
         "properties": {
-          "id": { "type": "integer", "format": "int64", "example": 51 },
-          "name": { "type": "string", "example": "행복식당" },
-          "categoryCode": { "type": "string", "example": "korean" },
-          "iconKey": { "type": "string", "example": "KoreanFoodIcon" },
-          "imageUrl": { "type": "string", "nullable": true, "example": "https://thingo.kr/img/place/51.jpg" },
-          "favorite": { "type": "boolean", "example": true },
-          "distanceMeters": { "type": "integer", "nullable": true, "example": 150 },
-          "latitude": { "type": "number", "format": "double", "nullable": true, "description": "지도 마커용 위도. 내부 장소는 소속 건물 좌표", "example": 37.5796415 },
-          "longitude": { "type": "number", "format": "double", "nullable": true, "description": "지도 마커용 경도. 내부 장소는 소속 건물 좌표", "example": 126.9250425 },
-          "location": { "type": "string", "nullable": true, "description": "위치 (내부: 건물명+층수, 외부: 도로명주소)", "example": "서울 서대문구 거북골로 34" },
-          "infoText": { "type": "string", "nullable": true, "description": "추가 정보 텍스트", "example": "현금 결제만 가능, 단체석 보유" }
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 51
+          },
+          "name": {
+            "type": "string",
+            "example": "행복식당"
+          },
+          "categoryCode": {
+            "type": "string",
+            "example": "korean"
+          },
+          "iconKey": {
+            "type": "string",
+            "example": "KoreanFoodIcon"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://thingo.kr/img/place/51.jpg"
+          },
+          "favorite": {
+            "type": "boolean",
+            "example": true
+          },
+          "distanceMeters": {
+            "type": "integer",
+            "nullable": true,
+            "example": 150
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "지도 마커용 위도. 내부 장소는 소속 건물 좌표",
+            "example": 37.5796415
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "지도 마커용 경도. 내부 장소는 소속 건물 좌표",
+            "example": 126.9250425
+          },
+          "location": {
+            "type": "string",
+            "nullable": true,
+            "description": "위치 (내부: 건물명+층수, 외부: 도로명주소)",
+            "example": "서울 서대문구 거북골로 34"
+          },
+          "infoText": {
+            "type": "string",
+            "nullable": true,
+            "description": "추가 정보 텍스트",
+            "example": "현금 결제만 가능, 단체석 보유"
+          }
         },
-        "required": ["id", "name", "categoryCode", "favorite"]
+        "required": [
+          "id",
+          "name",
+          "categoryCode",
+          "favorite"
+        ]
       },
       "Arrival": {
         "type": "object",
@@ -894,11 +3007,18 @@
             "type": "string",
             "nullable": true,
             "description": "혼잡도 (코드 0=정보없음은 null)",
-            "enum": ["여유", "보통", "혼잡", "매우혼잡"],
+            "enum": [
+              "여유",
+              "보통",
+              "혼잡",
+              "매우혼잡"
+            ],
             "example": "보통"
           }
         },
-        "required": ["remainingTime"]
+        "required": [
+          "remainingTime"
+        ]
       },
       "BusItem": {
         "type": "object",
@@ -933,7 +3053,12 @@
             }
           }
         },
-        "required": ["routeName", "direction", "favorite", "arrivals"]
+        "required": [
+          "routeName",
+          "direction",
+          "favorite",
+          "arrivals"
+        ]
       },
       "BusArrivalResponse": {
         "type": "object",
@@ -969,7 +3094,13 @@
             }
           }
         },
-        "required": ["arsId", "stationName", "lat", "lng", "buses"]
+        "required": [
+          "arsId",
+          "stationName",
+          "lat",
+          "lng",
+          "buses"
+        ]
       },
       "ApiResponseBusArrival": {
         "type": "object",
@@ -1007,6 +3138,316 @@
             "type": "integer",
             "description": "HTTP 상태 코드",
             "example": 404
+          }
+        }
+      },
+      "FavoriteGroup": {
+        "type": "object",
+        "description": "즐겨찾기 그룹 카드. '버스' 가상 항목은 id=null, type=SYSTEM_BUS 로 내려간다.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "그룹 ID. '버스' 가상 그룹은 null",
+            "example": 21
+          },
+          "name": {
+            "type": "string",
+            "description": "그룹명(최대 12자)",
+            "example": "맛집"
+          },
+          "color": {
+            "type": "string",
+            "enum": [
+              "CORAL",
+              "RED",
+              "ORANGE",
+              "AMBER",
+              "LIME",
+              "GREEN",
+              "SKY",
+              "BLUE",
+              "PURPLE",
+              "GRAY"
+            ],
+            "description": "그룹 색상(팔레트 10색). 기본 BLUE",
+            "example": "CORAL"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SYSTEM_MY_PLACES",
+              "SYSTEM_BUS",
+              "USER"
+            ],
+            "description": "그룹 종류",
+            "example": "USER"
+          },
+          "system": {
+            "type": "boolean",
+            "description": "시스템 기본 그룹 여부(상단 고정·수정삭제 불가)",
+            "example": false
+          },
+          "placeCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "저장된 장소 수(없으면 0). 버스는 담은 노선 총합",
+            "example": 5
+          }
+        }
+      },
+      "FavoriteGroupCreateRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 12,
+            "description": "그룹명(1~12자, 공백 포함)",
+            "example": "시험기간 스팟"
+          },
+          "color": {
+            "type": "string",
+            "enum": [
+              "CORAL",
+              "RED",
+              "ORANGE",
+              "AMBER",
+              "LIME",
+              "GREEN",
+              "SKY",
+              "BLUE",
+              "PURPLE",
+              "GRAY"
+            ],
+            "description": "그룹 색상. 미지정 시 BLUE",
+            "example": "PURPLE"
+          }
+        }
+      },
+      "FavoriteGroupUpdateRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 12,
+            "description": "그룹명(1~12자, 공백 포함)",
+            "example": "맛집 리스트"
+          },
+          "color": {
+            "type": "string",
+            "enum": [
+              "CORAL",
+              "RED",
+              "ORANGE",
+              "AMBER",
+              "LIME",
+              "GREEN",
+              "SKY",
+              "BLUE",
+              "PURPLE",
+              "GRAY"
+            ],
+            "description": "그룹 색상. 미지정 시 BLUE",
+            "example": "RED"
+          }
+        }
+      },
+      "FavoritePlaceCard": {
+        "type": "object",
+        "description": "그룹 상세의 장소 카드(지도 카드 + 그룹 메모).",
+        "properties": {
+          "pinId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 51
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "BUILDING",
+              "PLACE"
+            ],
+            "example": "BUILDING"
+          },
+          "name": {
+            "type": "string",
+            "example": "학생회관"
+          },
+          "categoryCode": {
+            "type": "string",
+            "example": "building"
+          },
+          "iconKey": {
+            "type": "string",
+            "description": "카테고리 아이콘 키(프린트/카페 등)",
+            "example": "BuildingIcon"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "classroomCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "예시 강의실 코드(건물만)",
+            "example": "S2XXX"
+          },
+          "location": {
+            "type": "string",
+            "nullable": true,
+            "description": "위치 텍스트(장소만)",
+            "example": null
+          },
+          "operatingStatus": {
+            "type": "string",
+            "nullable": true,
+            "description": "운영 상태 라벨(건물만)",
+            "example": "운영중"
+          },
+          "distanceMeters": {
+            "type": "integer",
+            "nullable": true,
+            "description": "거리(m). GPS/캠퍼스 밖이면 null",
+            "example": 720
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "example": 37.5804
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "example": 126.9228
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true,
+            "description": "이 그룹에서의 메모(최대 30자)",
+            "example": "1층 매점 자주 감"
+          },
+          "favorite": {
+            "type": "boolean",
+            "description": "그룹 내 카드는 항상 true",
+            "example": true
+          }
+        }
+      },
+      "PinFavoriteGroupSelection": {
+        "type": "object",
+        "description": "바텀시트의 그룹 1개(선택 여부 포함).",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 10
+          },
+          "name": {
+            "type": "string",
+            "example": "내 장소"
+          },
+          "color": {
+            "type": "string",
+            "enum": [
+              "CORAL",
+              "RED",
+              "ORANGE",
+              "AMBER",
+              "LIME",
+              "GREEN",
+              "SKY",
+              "BLUE",
+              "PURPLE",
+              "GRAY"
+            ],
+            "example": "BLUE"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SYSTEM_MY_PLACES",
+              "USER"
+            ],
+            "example": "SYSTEM_MY_PLACES"
+          },
+          "system": {
+            "type": "boolean",
+            "example": true
+          },
+          "placeCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 12
+          },
+          "selected": {
+            "type": "boolean",
+            "description": "이 핀이 해당 그룹에 이미 담겨 있는지",
+            "example": true
+          }
+        }
+      },
+      "PinFavoriteGroups": {
+        "type": "object",
+        "description": "그룹 선택 바텀시트 상태.",
+        "properties": {
+          "pinId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 51
+          },
+          "placeName": {
+            "type": "string",
+            "description": "장소명(바텀시트 제목)",
+            "example": "학생회관"
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true,
+            "description": "기존 메모(프리필)",
+            "example": "1층 매점 자주 감"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PinFavoriteGroupSelection"
+            }
+          }
+        }
+      },
+      "PinFavoriteSaveRequest": {
+        "type": "object",
+        "description": "바텀시트 저장 요청.",
+        "properties": {
+          "groupIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "이 핀이 속할 그룹 id 집합(replace). 빈 배열이면 전 그룹에서 제거",
+            "example": [
+              10,
+              22
+            ]
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 30,
+            "description": "메모(최대 30자). 선택된 각 그룹에 동일 반영",
+            "example": "1층 매점 자주 감"
           }
         }
       }

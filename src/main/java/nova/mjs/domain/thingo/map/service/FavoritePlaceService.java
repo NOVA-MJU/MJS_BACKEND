@@ -50,15 +50,12 @@ public class FavoritePlaceService {
 
     /**
      * 그룹 상세(05-1-1)의 장소 카드 목록.
-     * '버스' 그룹은 핀 기반이 아니므로 이 엔드포인트에서는 빈 목록을 반환한다(버스 화면에서 별도 처리).
+     * ('버스'는 핀 기반이 아니라 그룹으로 저장되지 않으므로 이 엔드포인트로 들어오지 않는다.
+     *  버스 즐겨찾기는 버스 도착정보 화면/기존 bus API 로 처리한다.)
      */
     public List<FavoritePlaceCardResponse> getGroupPlaces(String email, Long groupId, String sort,
                                                           Double userLat, Double userLng) {
         FavoriteGroup group = groupService.getOwnedGroup(email, groupId);
-        if (group.getType() == FavoriteGroupType.SYSTEM_BUS) {
-            return List.of();
-        }
-
         List<FavoritePlace> memberships = placeRepository.findByGroupWithPin(group);
         List<FavoritePlace> sorted = sortMemberships(memberships, sort);
 
@@ -123,13 +120,11 @@ public class FavoritePlaceService {
         Set<Long> targetIds = request.getGroupIds() == null
                 ? Set.of() : new HashSet<>(request.getGroupIds());
 
-        // 선택 가능한 그룹 = 회원의 핀 그룹('버스' 제외)
-        List<FavoriteGroup> selectable = groupRepository.findByMember(member).stream()
-                .filter(g -> g.getType() != FavoriteGroupType.SYSTEM_BUS)
-                .toList();
+        // 선택 가능한 그룹 = 회원의 모든 저장 그룹('내 장소' + 사용자 그룹). '버스'는 저장되지 않음.
+        List<FavoriteGroup> selectable = groupRepository.findByMember(member);
         Set<Long> selectableIds = selectable.stream().map(FavoriteGroup::getId).collect(Collectors.toSet());
 
-        // 존재하지 않거나 소유하지 않은 그룹 id 는 무시(방어). 버스 그룹 id 도 자동 제외됨.
+        // 존재하지 않거나 소유하지 않은 그룹 id 는 무시(방어).
         for (FavoriteGroup group : selectable) {
             boolean shouldContain = targetIds.contains(group.getId());
             Optional<FavoritePlace> existing = placeRepository.findByGroupAndPin(group, pin);
@@ -206,13 +201,10 @@ public class FavoritePlaceService {
         return memberships.stream().sorted(comparator).toList();
     }
 
-    /** 바텀시트용 그룹 정렬: 시스템 그룹('내 장소' → '버스') 상단 고정 후 최신순 */
+    /** 바텀시트용 그룹 정렬: '내 장소' 상단 고정 후 최신순 (바텀시트에 '버스'는 노출되지 않음) */
     private List<FavoriteGroup> sortForBottomSheet(List<FavoriteGroup> groups) {
-        Comparator<FavoriteGroup> systemFirst = Comparator.comparingInt(g -> {
-            if (g.getType() == FavoriteGroupType.SYSTEM_MY_PLACES) return 0;
-            if (g.getType() == FavoriteGroupType.SYSTEM_BUS) return 1;
-            return 2;
-        });
+        Comparator<FavoriteGroup> systemFirst = Comparator.comparingInt(
+                g -> g.getType() == FavoriteGroupType.SYSTEM_MY_PLACES ? 0 : 1);
         Comparator<FavoriteGroup> latest = Comparator.comparing(FavoriteGroup::getCreatedAt,
                 Comparator.nullsLast(Comparator.<LocalDateTime>reverseOrder()));
         return groups.stream().sorted(systemFirst.thenComparing(latest)).toList();

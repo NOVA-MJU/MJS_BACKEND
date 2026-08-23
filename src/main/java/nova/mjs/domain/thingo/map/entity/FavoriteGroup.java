@@ -12,8 +12,10 @@ import nova.mjs.util.entity.BaseEntity;
  * 즐겨찾기 그룹(폴더).
  *
  * 한 회원이 장소(핀)를 분류해 담는 단위. 그룹명 + 색상을 가진다.
- * '내 장소'(SYSTEM_MY_PLACES), '버스'(SYSTEM_BUS)는 회원별로 시스템이 기본 제공하며
- * 수정/삭제할 수 없고 정렬과 무관하게 목록 상단에 고정된다.
+ * '내 장소'(SYSTEM_MY_PLACES)는 회원별로 시스템이 기본 제공하는 저장 그룹으로,
+ * 수정/삭제할 수 없고 정렬과 무관하게 목록 최상단에 고정된다.
+ * ('버스'는 핀이 아니라 정류장·노선 단위라 이 엔티티로 저장하지 않고, 그룹 리스트 응답에만
+ *  가상 항목으로 '내 장소' 다음에 노출된다 — FavoriteGroupResponse.virtualBus 참고.)
  *
  * [정렬 기준]
  * - 최신순: createdAt DESC
@@ -83,15 +85,8 @@ public class FavoriteGroup extends BaseEntity {
                 .build();
     }
 
-    /** 시스템 기본 '버스' 그룹 */
-    public static FavoriteGroup systemBus(Member member) {
-        return FavoriteGroup.builder()
-                .member(member)
-                .name("버스")
-                .color(FavoriteGroupColor.AMBER)
-                .type(FavoriteGroupType.SYSTEM_BUS)
-                .build();
-    }
+    // '버스'는 핀이 아니라 정류장·노선 단위(BusFavorite)라 그룹으로 저장하지 않는다.
+    // 그룹 리스트 응답에만 가상 항목으로 노출된다 (FavoriteGroupResponse.virtualBus).
 
     /** 그룹명/색상 수정 (사용자 그룹 전용). 시스템 그룹 차단은 서비스에서 처리한다. */
     public void update(String name, FavoriteGroupColor color) {

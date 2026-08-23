@@ -41,8 +41,10 @@ Option B(기존 `PinFavorite` 유지 + 그룹 별도)는 "즐겨찾기됨" 판�
 ### ★B. `버스` 시스템 그룹의 데이터 소스
 
 버스 즐겨찾기는 핀이 아니라 (arsId, routeName)이라 `FavoritePlace`(핀 멤버십)로 담을 수 없다.
-→ **`버스` 그룹은 가상(시스템) 그룹**으로, 그 내용물은 기존 `BusFavorite`에서 읽는다.
-그룹 리스트에서 `버스`의 "저장된 개수"는 `BusFavorite` count로 계산. (별도 멤버십 테이블 없음)
+→ **`버스`는 DB에 저장하지 않는 가상 그룹.** 그룹 리스트 응답에만 `내 장소` 다음(상단 고정)으로 끼워 넣는다.
+`id=null`, `type=SYSTEM_BUS`, `placeCount`=회원의 `BusFavorite` 노선 총합(정류장 A/B 무관, 한쪽만 담아도 그만큼).
+프론트는 이 항목을 탭하면 그룹 상세가 아니라 **기존 버스 도착정보 화면**으로 이동한다.
+(버스 노선 조회/토글은 기존 `/bus/arrivals`, `/bus/favorites` 재사용 — 즐겨찾기 노선 상단 정렬 이미 구현됨.)
 
 ### ★C. 메모의 소속 단위
 
@@ -70,12 +72,13 @@ Option B(기존 `PinFavorite` 유지 + 그룹 별도)는 "즐겨찾기됨" 판�
 | `member_id` | BIGINT FK | not null | 소유 회원 |
 | `name` | VARCHAR(12) | not null | 그룹명 (1~12자, 공백포함) |
 | `color` | VARCHAR(20) | not null | `FavoriteGroupColor` enum, 기본 `BLUE` |
-| `type` | VARCHAR(20) | not null | `SYSTEM_MY_PLACES` / `SYSTEM_BUS` / `USER` |
+| `type` | VARCHAR(20) | not null | `SYSTEM_MY_PLACES` / `USER` (저장되는 값). `SYSTEM_BUS`는 가상 응답 마커로만 사용 |
 | `created_at`,`updated_at` | (BaseEntity) | | 최신순 정렬 기준 = created_at |
 
-- 시스템 그룹(`내 장소`,`버스`)은 회원 최초 진입/가입 시 자동 생성(또는 lazy 생성).
+- **저장되는 시스템 그룹은 `내 장소` 하나뿐**이며, 회원 최초 접근 시 lazy 생성한다.
+- `버스`는 저장하지 않고 그룹 리스트 응답에만 가상 항목으로 노출한다(§★B).
 - 시스템 그룹은 **수정/삭제 불가** (요청 시 예외).
-- (선택) `sort_order` 컬럼으로 시스템 그룹 고정 순서 보장 — 또는 type 우선 정렬로 처리.
+- 상단 고정 순서(`내 장소`→`버스`)는 정렬 로직에서 처리(별도 sort_order 컬럼 불필요).
 
 ### 3.2 `FavoritePlace` — 그룹 내 장소 멤버십
 
@@ -199,7 +202,7 @@ dto/
 | # | 항목 | 결정 |
 |---|---|---|
 | ★A | 기존 `PinFavorite` | **`내 장소` 그룹으로 흡수.** 기동 시 1회성 마이그레이션(`FavoriteMigrationRunner`)으로 기존 행을 `내 장소` `FavoritePlace`로 이관(멱등). 읽기(`favoritePinIds`)·마이페이지 집계·레거시 토글 모두 그룹 모델로 재연결 |
-| ★B | `버스` 그룹 | **`BusFavorite` 기반.** 실제 `FavoriteGroup`(type=SYSTEM_BUS) 행으로 목록에 노출하되, 저장 개수는 `BusFavorite`에서 집계. 핀 place 엔드포인트에서는 제외 |
+| ★B | `버스` 그룹 | **가상 그룹(미저장).** DB에 행을 만들지 않고 그룹 리스트 응답에만 `내 장소` 다음에 삽입(id=null, type=SYSTEM_BUS). 개수는 `BusFavorite` count. 탭 시 버스 도착정보 화면으로 이동 (기존 bus API 재사용) |
 | ★C | 메모 단위 | **(그룹, 핀) 멤버십 종속** = `FavoritePlace.memo`. 같은 장소도 그룹마다 다른 메모 가능 |
 | ★D | 별 클릭 | **그룹 선택 바텀시트 진입 + `내 장소` 기본 체크.** 기본 체크는 프론트 프리셋(백엔드는 전달된 groupIds를 그대로 반영). 레거시 `POST /favorites` 토글은 `내 장소` 편입/해제로 호환 유지 |
 | 5 | 시스템 그룹 생성 시점 | **최초 접근 시 lazy 생성**(`FavoriteGroupProvisioner`). 가입 플로우 미변경 |
@@ -213,7 +216,10 @@ dto/
 - 재연결: `MapPinService`/`MapSearchService`의 즐겨찾기 판정, `ProfileService` 마이페이지 집계 → `FavoritePlace` 기준
 - 에러코드: `FAVORITE_GROUP_NOT_FOUND`, `FAVORITE_GROUP_FORBIDDEN`, `FAVORITE_GROUP_NAME_INVALID`, `FAVORITE_GROUP_SYSTEM_MODIFY_NOT_ALLOWED`, `FAVORITE_MEMO_TOO_LONG`
 
+### API 문서
+- OpenAPI 스펙(`src/main/resources/static/openapi/map.json`)에 즐겨찾기 그룹 API 6종 경로 + 스키마 7종 반영, `버스` 가상 그룹 규칙 명시 (버전 v1.3.0)
+
 ### 남은 후속 과제
-- `버스` 그룹 상세(즐겨찾기 노선 카드) 응답 형태 확정 — 현재는 place 엔드포인트에서 빈 목록(버스 화면 재사용 가정)
+- `버스` 그룹 처리 확정됨: **가상 그룹으로 리스트에만 노출, 탭 시 기존 버스 도착정보 화면**으로 이동(별도 상세 엔드포인트 없음)
 - 안정화 후 레거시 `map_pin_favorite` 테이블/`PinFavorite` 정리
 - 단위/통합 테스트 (현 원격 환경은 jitpack(KOMORAN) 차단으로 빌드 불가 → 테스트는 로컬/CI에서 추가 필요)

@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Collator;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -57,26 +58,34 @@ public class FavoriteGroupService {
     private final FavoriteGroupProvisioner provisioner;
 
     /**
-     * 그룹 리스트(05-1). 시스템 그룹 상단 고정 후 사용자 그룹을 sort 기준으로 정렬한다.
+     * 그룹 리스트(05-1). '내 장소'(저장됨) → '버스'(가상) 순으로 상단 고정하고,
+     * 이어서 사용자 그룹을 sort 기준으로 정렬한다.
+     * '버스'는 DB에 저장하지 않고 응답에만 끼워 넣으며, 개수는 BusFavorite 에서 집계한다.
      */
     @Transactional
     public List<FavoriteGroupResponse> getGroups(String email, String sort) {
         Member member = resolveMember(email);
-        provisioner.ensureSystemGroups(member);
+        provisioner.ensureMyPlaces(member);
 
         List<FavoriteGroup> groups = groupRepository.findByMember(member);
 
         Map<Long, Long> placeCounts = placeCountsByGroup(groups);
-        long busCount = busFavoriteRepository.countByMember(member);
         Map<Long, LocalDateTime> lastAdded = lastAddedByGroup(groups);
 
         Comparator<FavoriteGroup> systemFirst = Comparator.comparingInt(this::systemRank);
         Comparator<FavoriteGroup> userOrder = userComparator(sort, lastAdded);
 
-        return groups.stream()
+        List<FavoriteGroupResponse> result = new ArrayList<>();
+        groups.stream()
                 .sorted(systemFirst.thenComparing(userOrder))
-                .map(g -> FavoriteGroupResponse.of(g, placeCount(g, placeCounts, busCount)))
-                .toList();
+                .forEach(g -> result.add(
+                        FavoriteGroupResponse.of(g, placeCounts.getOrDefault(g.getId(), 0L))));
+
+        // 가상 '버스' 그룹을 '내 장소' 바로 다음(상단 고정)에 삽입
+        long busCount = busFavoriteRepository.countByMember(member);
+        int busIndex = result.isEmpty() ? 0 : 1; // '내 장소'가 항상 첫 번째
+        result.add(busIndex, FavoriteGroupResponse.virtualBus(busCount));
+        return result;
     }
 
     /** 새 그룹 생성(05-5-3). */
@@ -162,11 +171,9 @@ public class FavoriteGroupService {
 
     // ====================== 내부 헬퍼 ======================
 
-    /** 시스템 그룹 상단 고정 순위 ('내 장소'=0, '버스'=1, 사용자=2) */
+    /** 저장 그룹 상단 고정 순위 ('내 장소'=0, 사용자=1). '버스'는 저장되지 않고 응답에서 별도 삽입 */
     private int systemRank(FavoriteGroup g) {
-        if (g.getType() == FavoriteGroupType.SYSTEM_MY_PLACES) return 0;
-        if (g.getType() == FavoriteGroupType.SYSTEM_BUS) return 1;
-        return 2;
+        return g.getType() == FavoriteGroupType.SYSTEM_MY_PLACES ? 0 : 1;
     }
 
     /** 사용자 그룹 정렬 비교자 (시스템 그룹끼리는 systemRank 로 이미 정렬됨) */
@@ -183,13 +190,6 @@ public class FavoriteGroupService {
         // 기본: 최신순 (생성일 DESC)
         return Comparator.comparing(FavoriteGroup::getCreatedAt,
                 Comparator.nullsLast(Comparator.<LocalDateTime>reverseOrder()));
-    }
-
-    private long placeCount(FavoriteGroup g, Map<Long, Long> placeCounts, long busCount) {
-        if (g.getType() == FavoriteGroupType.SYSTEM_BUS) {
-            return busCount;
-        }
-        return placeCounts.getOrDefault(g.getId(), 0L);
     }
 
     private Map<Long, Long> placeCountsByGroup(List<FavoriteGroup> groups) {
