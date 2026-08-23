@@ -145,7 +145,9 @@ Member 1 ──< BusFavorite        (버스 시스템 그룹의 내용물)
 ### 5.2 그룹 상세(장소 목록)
 | 메서드 | 경로 | 설명 |
 |---|---|---|
-| GET | `/groups/{groupId}/places?sort=place_added\|name&lat=&lng=` | 그룹 내 장소 카드 목록. 카드: 카테고리 아이콘, 이름, 강의실코드, 운영상태, 거리(lat/lng 있을 때), memo, favorite=true. `버스` 그룹이면 버스 즐겨찾기 목록 반환 |
+| GET | `/groups/{groupId}/places?sort=place_added\|name&lat=&lng=` | 그룹 내 장소 카드 목록. 카드: 카테고리 아이콘, 이름, 강의실코드, 운영상태, 거리(lat/lng 있을 때), memo, favorite=true. 비었으면 빈 배열(프론트 '아직 저장된 장소가 없어요' 표시). `버스` 그룹이면 버스 즐겨찾기 목록 반환 |
+
+> UX 문구: 그룹 상세 빈 상태 = "아직 저장된 장소가 없어요" / 새 그룹 생성 입력 힌트 = "설정하실 그룹명을 입력해 주세요" / 그룹명 수정 = 기존 이름 prefill.
 
 ### 5.3 특정 장소 → 그룹 선택 바텀시트
 | 메서드 | 경로 | 설명 |
