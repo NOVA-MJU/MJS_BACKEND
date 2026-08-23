@@ -1702,7 +1702,7 @@
       }
     },
     "/map/favorites/pins/{pinId}": {
-      "put": {
+      "patch": {
         "tags": [
           "명지도 - 즐겨찾기"
         ],

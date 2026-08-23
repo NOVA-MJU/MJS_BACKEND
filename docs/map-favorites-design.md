@@ -156,13 +156,13 @@ Member 1 ──< BusFavorite        (버스 시스템 그룹의 내용물)
 | 메서드 | 경로 | 설명 |
 |---|---|---|
 | GET | `/pins/{pinId}/groups` | 바텀시트용: 회원 그룹 목록 + 각 그룹에 이 핀 포함여부(selected) + 기존 memo |
-| PUT | `/pins/{pinId}` `{groupIds:[...], memo}` | 이 핀의 소속 그룹 집합을 replace + memo 반영. groupIds 비면 전 그룹에서 제거(=즐겨찾기 해제) |
+| PATCH | `/pins/{pinId}` `{groupIds:[...], memo}` | 이 핀의 소속 그룹 집합을 replace + memo 반영. groupIds 비면 전 그룹에서 제거(=즐겨찾기 해제) |
 
 ### 5.4 개별 해제 / 기존 토글 처리 (★논의)
 - 그룹 상세의 별 토글: `DELETE /groups/{groupId}/places/{pinId}` (그룹에서만 제거).
   - UI: 해제해도 페이지 이탈 전까지 카드 유지(프론트 처리) — 백엔드는 즉시 삭제.
 - 기존 `POST /api/v1/map/favorites`(플랫 토글): §2-★A 결정에 따라
-  (a) 폐기하고 바텀시트 PUT로 대체, 또는 (b) "내 장소" 토글로 동작 유지.
+  (a) 폐기하고 바텀시트 PATCH로 대체, 또는 (b) "내 장소" 토글로 동작 유지.
 
 ### 5.5 검증/에러코드(신규 예정)
 - `FAVORITE_GROUP_NOT_FOUND` (404)

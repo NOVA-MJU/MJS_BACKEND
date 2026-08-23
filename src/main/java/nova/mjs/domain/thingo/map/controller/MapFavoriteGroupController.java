@@ -24,7 +24,7 @@ import java.util.List;
  * - GET    /api/v1/map/favorites/groups/{groupId}/places      그룹 상세 장소 목록(05-1-1)
  * - DELETE /api/v1/map/favorites/groups/{groupId}/places/{pinId}  그룹에서 장소 제거(별 토글)
  * - GET    /api/v1/map/favorites/pins/{pinId}/groups          그룹 선택 바텀시트 조회
- * - PUT    /api/v1/map/favorites/pins/{pinId}                 그룹 선택 바텀시트 저장(다중 그룹 + 메모)
+ * - PATCH  /api/v1/map/favorites/pins/{pinId}                 그룹 선택 바텀시트 저장(다중 그룹 + 메모)
  */
 @Slf4j
 @RestController
@@ -121,7 +121,7 @@ public class MapFavoriteGroupController {
 
     /** 그룹 선택 바텀시트 저장: 소속 그룹 집합 replace + 메모 반영. */
     @PreAuthorize("isAuthenticated()")
-    @PutMapping("/pins/{pinId}")
+    @PatchMapping("/pins/{pinId}")
     public ApiResponse<PinFavoriteGroupsResponse> savePinGroups(
             @PathVariable Long pinId,
             @RequestBody PinFavoriteSaveRequest request,
