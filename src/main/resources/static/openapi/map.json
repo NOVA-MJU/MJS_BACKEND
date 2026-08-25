@@ -1001,7 +1001,7 @@
         ],
         "summary": "새 그룹 생성",
         "operationId": "createFavoriteGroup",
-        "description": "새 그룹 만들기(05-5-3) 바텀시트에서 그룹을 생성합니다.\n\n### 입력 규칙\n- `name`: **1~12자(공백 포함)**, 필수. 미입력/초과 시 `FAVORITE_GROUP_NAME_INVALID`.\n- `color`: 팔레트 10색 중 하나. 미지정 시 **기본 BLUE(띵고 색)**.\n\n생성 직후에는 담긴 장소가 없으므로 `placeCount=0`으로 내려갑니다.\n\n### 인증\n로그인 필요.",
+        "description": "새 그룹 만들기(05-5-3) 바텀시트에서 그룹을 생성합니다.\n\n### 입력 규칙\n- `name`: **1~12자(공백 포함)**, 필수. 미입력/초과 시 `FAVORITE_GROUP_NAME_INVALID`.\n- `color`: 팔레트 10색 **enum 이름** 중 하나(hex 코드가 아님). 미지정 시 **기본 BLUE(띵고 색)**.\n\n### 색상 팔레트(10색)\n게시판 글쓰기(노션형) 팔레트와 동일한 구성이며, 백엔드는 **enum 이름만 저장**합니다. 실제 표시용 hex 값은 프론트/공용 상수에서 이 이름과 1:1로 매핑합니다.\n\n순서대로: `CORAL`, `RED`, `ORANGE`, `AMBER`, `LIME`, `GREEN`, `SKY`, `BLUE`(기본·띵고 색), `PURPLE`, `GRAY`.\n\n생성 직후에는 담긴 장소가 없으므로 `placeCount=0`으로 내려갑니다.\n\n### 인증\n로그인 필요.",
         "security": [
           {
             "bearerAuth": []
@@ -3178,7 +3178,7 @@
               "PURPLE",
               "GRAY"
             ],
-            "description": "그룹 색상(팔레트 10색). 기본 BLUE",
+            "description": "그룹 색상. 팔레트 10색 enum 이름 중 하나(hex 아님). 순서: CORAL, RED, ORANGE, AMBER, LIME, GREEN, SKY, BLUE(기본), PURPLE, GRAY. 기본 BLUE(띵고 색). 실제 hex는 프론트/공용 상수에서 매핑.",
             "example": "CORAL"
           },
           "type": {
@@ -3231,7 +3231,7 @@
               "PURPLE",
               "GRAY"
             ],
-            "description": "그룹 색상. 미지정 시 BLUE",
+            "description": "그룹 색상. 팔레트 10색 enum 이름 중 하나(hex 아님). 순서: CORAL, RED, ORANGE, AMBER, LIME, GREEN, SKY, BLUE(기본), PURPLE, GRAY. 미지정 시 BLUE(띵고 색). 실제 hex는 프론트/공용 상수에서 매핑.",
             "example": "PURPLE"
           }
         }
@@ -3263,7 +3263,7 @@
               "PURPLE",
               "GRAY"
             ],
-            "description": "그룹 색상. 미지정 시 BLUE",
+            "description": "그룹 색상. 팔레트 10색 enum 이름 중 하나(hex 아님). 순서: CORAL, RED, ORANGE, AMBER, LIME, GREEN, SKY, BLUE(기본), PURPLE, GRAY. 미지정 시 BLUE(띵고 색). 실제 hex는 프론트/공용 상수에서 매핑.",
             "example": "RED"
           }
         }
@@ -3394,6 +3394,7 @@
               "PURPLE",
               "GRAY"
             ],
+            "description": "그룹 색상. 팔레트 10색 enum 이름 중 하나(hex 아님). 순서: CORAL, RED, ORANGE, AMBER, LIME, GREEN, SKY, BLUE(기본), PURPLE, GRAY. 기본 BLUE(띵고 색). 실제 hex는 프론트/공용 상수에서 매핑.",
             "example": "BLUE"
           },
           "type": {
