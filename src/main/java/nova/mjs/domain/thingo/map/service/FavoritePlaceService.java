@@ -28,8 +28,9 @@ import java.util.stream.Collectors;
  *
  * - 그룹 상세(05-1-1)의 장소 카드 목록
  * - '그룹 선택 바텀시트' 조회/저장 (특정 장소를 여러 그룹에 담기 + 메모)
- * - 그룹 상세의 별 토글(그룹에서 제거)
- * - 지도/상세 별 토글 레거시 호환('내 장소' 편입/해제)
+ *
+ * 별 토글은 지도/검색/그룹 상세 어디서든 '그룹 선택 바텀시트'(GET+PATCH)로 통일한다.
+ * 소속 그룹 추가/제거·완전 해제는 모두 {@link #savePinGroups} 의 집합 replace 로 처리한다.
  */
 @Slf4j
 @Service
@@ -146,37 +147,6 @@ public class FavoritePlaceService {
                 pinId, targetIds.stream().filter(selectableIds::contains).toList());
 
         return getPinGroups(email, pinId);
-    }
-
-    /**
-     * 그룹 상세의 별 토글: 해당 그룹에서 이 핀 제거(멱등).
-     * UI 는 페이지 이탈 전까지 카드를 유지하므로 응답은 성공만 내려준다.
-     */
-    @Transactional
-    public void removePinFromGroup(String email, Long groupId, Long pinId) {
-        FavoriteGroup group = groupService.getOwnedGroup(email, groupId);
-        Pin pin = getPin(pinId);
-        placeRepository.findByGroupAndPin(group, pin).ifPresent(placeRepository::delete);
-        log.debug("그룹에서 장소 제거 - email={}, groupId={}, pinId={}", email, groupId, pinId);
-    }
-
-    /**
-     * 레거시 별 토글 호환: '내 장소' 그룹에 편입/해제.
-     * @return true: 추가됨, false: 해제됨
-     */
-    @Transactional
-    public boolean toggleMyPlaces(String email, Long pinId) {
-        Member member = groupService.resolveMember(email);
-        FavoriteGroup myPlaces = provisioner.ensureMyPlaces(member);
-        Pin pin = getPin(pinId);
-
-        Optional<FavoritePlace> existing = placeRepository.findByGroupAndPin(myPlaces, pin);
-        if (existing.isPresent()) {
-            placeRepository.delete(existing.get());
-            return false;
-        }
-        placeRepository.save(FavoritePlace.of(myPlaces, pin, null));
-        return true;
     }
 
     // ====================== 내부 헬퍼 ======================
