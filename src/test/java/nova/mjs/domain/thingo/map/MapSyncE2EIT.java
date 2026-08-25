@@ -13,7 +13,6 @@ import nova.mjs.domain.thingo.map.repository.PinRepository;
 import nova.mjs.domain.thingo.map.service.MapPinService;
 import nova.mjs.domain.thingo.map.service.MapSyncService;
 import nova.mjs.domain.thingo.map.service.MapSyncServiceImpl;
-import nova.mjs.domain.thingo.map.service.PinFavoriteService;
 import nova.mjs.domain.thingo.ElasticSearch.indexing.publisher.SearchIndexPublisher;
 import nova.mjs.domain.thingo.map.support.CampusArea;
 import nova.mjs.domain.thingo.map.support.DistanceCalculator;
@@ -73,7 +72,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({
         MapSyncServiceImpl.class,
         MapPinService.class,
-        PinFavoriteService.class,
         DistanceCalculator.class,
         MapRecommendationRanker.class,
         OperatingStatusResolver.class,

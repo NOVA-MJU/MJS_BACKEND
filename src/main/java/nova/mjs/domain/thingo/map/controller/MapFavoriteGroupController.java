@@ -22,9 +22,11 @@ import java.util.List;
  * - PATCH  /api/v1/map/favorites/groups/{groupId}             그룹명/색상 수정(05-5-1-1)
  * - DELETE /api/v1/map/favorites/groups/{groupId}             그룹 삭제(05-5-1-2)
  * - GET    /api/v1/map/favorites/groups/{groupId}/places      그룹 상세 장소 목록(05-1-1)
- * - DELETE /api/v1/map/favorites/groups/{groupId}/places/{pinId}  그룹에서 장소 제거(별 토글)
  * - GET    /api/v1/map/favorites/pins/{pinId}/groups          그룹 선택 바텀시트 조회
  * - PATCH  /api/v1/map/favorites/pins/{pinId}                 그룹 선택 바텀시트 저장(다중 그룹 + 메모)
+ *
+ * [별 토글] 지도/검색/그룹 상세의 별은 모두 '그룹 선택 바텀시트'(GET pins/{pinId}/groups → PATCH pins/{pinId})로
+ * 처리한다. 특정 그룹에서 빼기·완전 해제는 PATCH 의 소속 그룹 집합 replace 로 흡수한다.
  */
 @Slf4j
 @RestController
@@ -93,18 +95,6 @@ public class MapFavoriteGroupController {
     ) {
         return ApiResponse.success(
                 favoritePlaceService.getGroupPlaces(userPrincipal.getUsername(), groupId, sort, lat, lng));
-    }
-
-    /** 그룹 상세의 별 토글: 해당 그룹에서 장소 제거. */
-    @PreAuthorize("isAuthenticated()")
-    @DeleteMapping("/groups/{groupId}/places/{pinId}")
-    public ApiResponse<Void> removePlaceFromGroup(
-            @PathVariable Long groupId,
-            @PathVariable Long pinId,
-            @AuthenticationPrincipal UserPrincipal userPrincipal
-    ) {
-        favoritePlaceService.removePinFromGroup(userPrincipal.getUsername(), groupId, pinId);
-        return ApiResponse.success();
     }
 
     // ============================ 그룹 선택 바텀시트 ============================
