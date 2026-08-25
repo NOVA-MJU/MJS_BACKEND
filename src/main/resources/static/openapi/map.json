@@ -2214,36 +2214,42 @@
         "properties": {
           "groups": {
             "type": "array",
+            "description": "대분류(그룹) 시트 행 목록. 생략 시 그룹 미변경.",
             "items": {
               "$ref": "#/components/schemas/SyncGroupRow"
             }
           },
           "categories": {
             "type": "array",
+            "description": "칩(카테고리) 시트 행 목록. 생략 시 카테고리 미변경.",
             "items": {
               "$ref": "#/components/schemas/SyncCategoryRow"
             }
           },
           "buildings": {
             "type": "array",
+            "description": "건물 시트 행 목록. 생략 시 건물 미변경.",
             "items": {
               "$ref": "#/components/schemas/SyncBuildingRow"
             }
           },
           "floors": {
             "type": "array",
+            "description": "건물 층 시트 행 목록. 생략 시 층 미변경.",
             "items": {
               "$ref": "#/components/schemas/SyncFloorRow"
             }
           },
           "places": {
             "type": "array",
+            "description": "장소(비건물) 시트 행 목록. 생략 시 장소 미변경.",
             "items": {
               "$ref": "#/components/schemas/SyncPlaceRow"
             }
           },
           "operatingHours": {
             "type": "array",
+            "description": "건물 운영시간 시트 행 목록. 생략 시 운영시간 미변경.",
             "items": {
               "$ref": "#/components/schemas/SyncOperatingHourRow"
             }
@@ -2260,14 +2266,17 @@
         "properties": {
           "code": {
             "type": "string",
+            "description": "그룹 고유 코드(식별자). 카테고리의 groupCode가 이 값을 참조.",
             "example": "food"
           },
           "name": {
             "type": "string",
+            "description": "그룹 표시명.",
             "example": "식사 (F&B)"
           },
           "displayOrder": {
             "type": "integer",
+            "description": "노출 순서(오름차순).",
             "example": 1
           }
         }
@@ -2283,10 +2292,12 @@
         "properties": {
           "code": {
             "type": "string",
+            "description": "카테고리(칩) 고유 코드. 장소·건물의 categoryCode가 참조.",
             "example": "daedong"
           },
           "groupCode": {
             "type": "string",
+            "description": "소속 그룹 코드(SyncGroupRow.code).",
             "example": "food"
           },
           "parentCode": {
@@ -2297,19 +2308,23 @@
           },
           "label": {
             "type": "string",
+            "description": "카테고리(칩) 표시명.",
             "example": "한식"
           },
           "subtitle": {
             "type": "string",
+            "description": "칩 아래 보조 문구(선택).",
             "nullable": true,
             "example": "by. 명월"
           },
           "tooltipText": {
             "type": "string",
+            "description": "칩 툴팁 문구(선택).",
             "nullable": true
           },
           "iconKey": {
             "type": "string",
+            "description": "프론트 아이콘 키(공용 아이콘 매핑용).",
             "nullable": true,
             "example": "MyeongwolIcon"
           },
@@ -2324,10 +2339,12 @@
           },
           "quickMenu": {
             "type": "boolean",
+            "description": "퀵메뉴(빠른 접근) 노출 여부.",
             "example": true
           },
           "displayOrder": {
             "type": "integer",
+            "description": "노출 순서(오름차순).",
             "example": 1
           }
         }
@@ -2343,42 +2360,51 @@
         "properties": {
           "code": {
             "type": "string",
+            "description": "건물 고유 코드(식별자).",
             "example": "b-jonghap"
           },
           "categoryCode": {
             "type": "string",
+            "description": "소속 카테고리 코드(SyncCategoryRow.code).",
             "example": "building"
           },
           "name": {
             "type": "string",
+            "description": "건물명.",
             "example": "종합관"
           },
           "latitude": {
             "type": "number",
+            "description": "위도. 핀 겹침 방지를 위해 운영팀이 직접 입력.",
             "format": "double",
             "example": 37.5802215
           },
           "longitude": {
             "type": "number",
+            "description": "경도. 핀 겹침 방지를 위해 운영팀이 직접 입력.",
             "format": "double",
             "example": 126.9225443
           },
           "imageUrl": {
             "type": "string",
+            "description": "건물 대표 이미지 URL(선택).",
             "nullable": true
           },
           "infoText": {
             "type": "string",
+            "description": "건물 부가 설명(예: 구 본관)(선택).",
             "nullable": true,
             "example": "구 본관"
           },
           "buildingNumber": {
             "type": "integer",
+            "description": "건물 번호(캠퍼스 안내도 기준).",
             "nullable": true,
             "example": 1
           },
           "classroomCode": {
             "type": "string",
+            "description": "강의실 코드 패턴(예: S1XXX)(선택).",
             "nullable": true,
             "example": "S1XXX"
           }
@@ -2394,10 +2420,12 @@
         "properties": {
           "buildingCode": {
             "type": "string",
+            "description": "소속 건물 코드(SyncBuildingRow.code).",
             "example": "b-jonghap"
           },
           "label": {
             "type": "string",
+            "description": "층 라벨(예: F1, B1). 건물코드와 함께 층을 식별.",
             "example": "F1"
           },
           "floorOrder": {
@@ -2407,6 +2435,7 @@
           },
           "mapImageUrl": {
             "type": "string",
+            "description": "층 도면 이미지 URL(선택).",
             "nullable": true
           }
         }
@@ -2422,34 +2451,41 @@
         "properties": {
           "code": {
             "type": "string",
+            "description": "장소 고유 코드(식별자).",
             "example": "dd-1025414098"
           },
           "categoryCode": {
             "type": "string",
+            "description": "소속 카테고리 코드(SyncCategoryRow.code).",
             "example": "daedong-kr"
           },
           "name": {
             "type": "string",
+            "description": "장소명.",
             "example": "삼정식당"
           },
           "latitude": {
             "type": "number",
+            "description": "위도(외부 장소). 내부 장소는 parentBuildingCode+floorLabel 사용.",
             "format": "double",
             "nullable": true,
             "example": 37.5796415
           },
           "longitude": {
             "type": "number",
+            "description": "경도(외부 장소). 내부 장소는 parentBuildingCode+floorLabel 사용.",
             "format": "double",
             "nullable": true,
             "example": 126.9250425
           },
           "imageUrl": {
             "type": "string",
+            "description": "장소 대표 이미지 URL(선택).",
             "nullable": true
           },
           "infoText": {
             "type": "string",
+            "description": "장소 부가 설명(선택).",
             "nullable": true
           },
           "address": {
@@ -2486,10 +2522,12 @@
         "properties": {
           "buildingCode": {
             "type": "string",
+            "description": "소속 건물 코드(SyncBuildingRow.code). 요일과 함께 식별.",
             "example": "b-jonghap"
           },
           "dayOfWeek": {
             "type": "string",
+            "description": "요일. 건물코드와 함께 운영시간 1행을 식별.",
             "enum": [
               "MONDAY",
               "TUESDAY",
@@ -2502,6 +2540,7 @@
           },
           "openTime": {
             "type": "string",
+            "description": "개점 시각(HH:mm). closed/always24h면 무시.",
             "nullable": true,
             "example": "09:00"
           },
@@ -2513,14 +2552,17 @@
           },
           "always24h": {
             "type": "boolean",
+            "description": "24시간 운영 여부. true면 개점/폐점 시각 무시.",
             "nullable": true
           },
           "closed": {
             "type": "boolean",
+            "description": "휴무 여부. true면 해당 요일 미운영.",
             "nullable": true
           },
           "note": {
             "type": "string",
+            "description": "운영시간 특이사항 메모(선택).",
             "nullable": true
           }
         }
@@ -2668,6 +2710,7 @@
           },
           "indoorCode": {
             "type": "string",
+            "description": "실내(강의실) 코드(선택). 내부 장소 식별용.",
             "nullable": true,
             "example": "S1353"
           },
@@ -2732,14 +2775,17 @@
         "properties": {
           "code": {
             "type": "string",
+            "description": "카테고리 코드(건물 내 장소들의 categoryCode에서 유도).",
             "example": "printer"
           },
           "label": {
             "type": "string",
+            "description": "탭 표시명.",
             "example": "프린터"
           },
           "iconKey": {
             "type": "string",
+            "description": "프론트 아이콘 키.",
             "example": "PrinterIcon"
           }
         },
@@ -2754,23 +2800,28 @@
         "properties": {
           "id": {
             "type": "integer",
+            "description": "장소(시설) ID.",
             "format": "int64",
             "example": 120
           },
           "name": {
             "type": "string",
+            "description": "시설명.",
             "example": "무한 프린터"
           },
           "categoryCode": {
             "type": "string",
+            "description": "카테고리 코드.",
             "example": "printer"
           },
           "iconKey": {
             "type": "string",
+            "description": "프론트 아이콘 키.",
             "example": "PrinterIcon"
           },
           "indoorCode": {
             "type": "string",
+            "description": "실내(강의실) 코드(선택).",
             "nullable": true,
             "example": "S1353"
           }
@@ -2812,6 +2863,7 @@
           },
           "places": {
             "type": "array",
+            "description": "해당 층의 시설(PlaceBrief) 목록.",
             "items": {
               "$ref": "#/components/schemas/PlaceBrief"
             }
@@ -2827,19 +2879,23 @@
         "properties": {
           "id": {
             "type": "integer",
+            "description": "건물 ID.",
             "format": "int64",
             "example": 7
           },
           "name": {
             "type": "string",
+            "description": "건물명.",
             "example": "방목학술정보관"
           },
           "iconKey": {
             "type": "string",
+            "description": "프론트 아이콘 키.",
             "example": "BuildingIcon"
           },
           "imageUrl": {
             "type": "string",
+            "description": "건물 대표 이미지 URL.",
             "nullable": true,
             "example": "https://thingo.kr/img/building/7.jpg"
           },
@@ -2857,6 +2913,7 @@
           },
           "favorite": {
             "type": "boolean",
+            "description": "현재 회원의 즐겨찾기 여부.",
             "example": false
           },
           "operatingStatus": {
@@ -2875,6 +2932,7 @@
           },
           "distanceMeters": {
             "type": "integer",
+            "description": "현재 위치로부터의 거리(m). 위치 미제공 시 null.",
             "nullable": true,
             "example": 240
           },
@@ -2932,32 +2990,39 @@
         "properties": {
           "id": {
             "type": "integer",
+            "description": "장소 ID.",
             "format": "int64",
             "example": 51
           },
           "name": {
             "type": "string",
+            "description": "장소명.",
             "example": "행복식당"
           },
           "categoryCode": {
             "type": "string",
+            "description": "카테고리 코드.",
             "example": "korean"
           },
           "iconKey": {
             "type": "string",
+            "description": "프론트 아이콘 키.",
             "example": "KoreanFoodIcon"
           },
           "imageUrl": {
             "type": "string",
+            "description": "장소 대표 이미지 URL.",
             "nullable": true,
             "example": "https://thingo.kr/img/place/51.jpg"
           },
           "favorite": {
             "type": "boolean",
+            "description": "현재 회원의 즐겨찾기 여부.",
             "example": true
           },
           "distanceMeters": {
             "type": "integer",
+            "description": "현재 위치로부터의 거리(m). 위치 미제공 시 null.",
             "nullable": true,
             "example": 150
           },
@@ -3115,13 +3180,16 @@
         "properties": {
           "status": {
             "type": "string",
+            "description": "응답 상태 메시지.",
             "example": "API 요청 성공"
           },
           "data": {
-            "$ref": "#/components/schemas/BusArrivalResponse"
+            "$ref": "#/components/schemas/BusArrivalResponse",
+            "description": "버스 도착 정보 페이로드."
           },
           "timestamp": {
             "type": "string",
+            "description": "응답 생성 시각(ISO-8601).",
             "format": "date-time",
             "example": "2026-05-19T09:05:12"
           }
@@ -3274,11 +3342,13 @@
         "properties": {
           "pinId": {
             "type": "integer",
+            "description": "핀(장소 즐겨찾기) ID.",
             "format": "int64",
             "example": 51
           },
           "type": {
             "type": "string",
+            "description": "카드 대상 종류. BUILDING=건물, PLACE=비건물 장소.",
             "enum": [
               "BUILDING",
               "PLACE"
@@ -3287,10 +3357,12 @@
           },
           "name": {
             "type": "string",
+            "description": "장소/건물명.",
             "example": "학생회관"
           },
           "categoryCode": {
             "type": "string",
+            "description": "카테고리 코드.",
             "example": "building"
           },
           "iconKey": {
@@ -3300,6 +3372,7 @@
           },
           "imageUrl": {
             "type": "string",
+            "description": "대표 이미지 URL(선택).",
             "nullable": true,
             "example": null
           },
@@ -3329,12 +3402,14 @@
           },
           "latitude": {
             "type": "number",
+            "description": "위도.",
             "format": "double",
             "nullable": true,
             "example": 37.5804
           },
           "longitude": {
             "type": "number",
+            "description": "경도.",
             "format": "double",
             "nullable": true,
             "example": 126.9228
@@ -3357,10 +3432,12 @@
         "description": "그룹 상세 응답: 그룹 헤더 + 장소 카드 목록.",
         "properties": {
           "group": {
-            "$ref": "#/components/schemas/FavoriteGroup"
+            "$ref": "#/components/schemas/FavoriteGroup",
+            "description": "그룹 헤더(FavoriteGroupResponse)."
           },
           "places": {
             "type": "array",
+            "description": "그룹에 담긴 장소 카드(FavoritePlaceCard) 목록.",
             "items": {
               "$ref": "#/components/schemas/FavoritePlaceCard"
             }
@@ -3373,11 +3450,13 @@
         "properties": {
           "id": {
             "type": "integer",
+            "description": "그룹 ID.",
             "format": "int64",
             "example": 10
           },
           "name": {
             "type": "string",
+            "description": "그룹명.",
             "example": "내 장소"
           },
           "color": {
@@ -3430,6 +3509,7 @@
         "properties": {
           "pinId": {
             "type": "integer",
+            "description": "핀(장소 즐겨찾기) ID.",
             "format": "int64",
             "example": 51
           },
@@ -3446,6 +3526,7 @@
           },
           "groups": {
             "type": "array",
+            "description": "이 핀을 담을 수 있는 그룹 목록(선택 여부 포함).",
             "items": {
               "$ref": "#/components/schemas/PinFavoriteGroupSelection"
             }
