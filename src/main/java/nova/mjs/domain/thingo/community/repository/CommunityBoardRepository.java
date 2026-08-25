@@ -44,6 +44,24 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
     @EntityGraph(attributePaths = "author")
     List<CommunityBoard> findByHiddenTrueOrderByCreatedAtDesc();
 
+    /**
+     * 제목 또는 본문에 키워드가 포함된 게시글 목록 (운영자 키워드 일괄 관리, L2).
+     *
+     * - 대소문자 무시(lower) LIKE 부분 일치.
+     * - content 는 nullable 이므로 NULL 방어 후 매칭.
+     * - author 를 함께 로딩해 목록/삭제 로그 변환 시 N+1 을 막는다.
+     * - 인덱스/S3 정리를 위해 삭제는 Service 에서 건별 순회로 처리하므로 여기선 조회만 담당한다.
+     */
+    @EntityGraph(attributePaths = "author")
+    @Query("""
+        SELECT b
+        FROM CommunityBoard b
+        WHERE lower(b.title) LIKE lower(concat('%', :keyword, '%'))
+           OR (b.content IS NOT NULL AND lower(b.content) LIKE lower(concat('%', :keyword, '%')))
+        ORDER BY b.createdAt DESC
+    """)
+    List<CommunityBoard> findByKeywordInTitleOrContent(@Param("keyword") String keyword);
+
     @Query("""
         SELECT cb
         FROM CommunityBoard cb

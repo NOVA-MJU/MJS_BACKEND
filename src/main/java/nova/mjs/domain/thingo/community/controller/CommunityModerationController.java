@@ -2,15 +2,18 @@ package nova.mjs.domain.thingo.community.controller;
 
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.community.DTO.CommunityBoardResponse;
+import nova.mjs.domain.thingo.community.DTO.CommunityKeywordDeletionResponse;
 import nova.mjs.domain.thingo.community.comment.DTO.CommentResponseDto;
 import nova.mjs.domain.thingo.community.service.CommunityModerationService;
 import nova.mjs.util.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -54,5 +57,31 @@ public class CommunityModerationController {
     public ResponseEntity<ApiResponse<Void>> restoreComment(@PathVariable UUID uuid) {
         moderationService.restoreComment(uuid);
         return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    /**
+     * 키워드 일괄 삭제 - 미리보기 (삭제 전 확인).
+     *
+     * 예: GET /api/v1/community/moderation/boards?keyword=테스트
+     * 제목/본문에 키워드가 포함된 게시글 목록을 실제 삭제 없이 반환한다.
+     */
+    @GetMapping("/boards")
+    public ResponseEntity<ApiResponse<CommunityKeywordDeletionResponse>> previewBoardsByKeyword(
+            @RequestParam String keyword) {
+        return ResponseEntity.ok(ApiResponse.success(
+                moderationService.previewBoardsByKeyword(keyword)));
+    }
+
+    /**
+     * 키워드 일괄 삭제 - 실행.
+     *
+     * 예: DELETE /api/v1/community/moderation/boards?keyword=테스트
+     * 제목/본문에 키워드가 포함된 게시글을 좋아요/댓글/검색인덱스/S3 첨부까지 함께 삭제한다.
+     */
+    @DeleteMapping("/boards")
+    public ResponseEntity<ApiResponse<CommunityKeywordDeletionResponse>> deleteBoardsByKeyword(
+            @RequestParam String keyword) {
+        return ResponseEntity.ok(ApiResponse.success(
+                moderationService.deleteBoardsByKeyword(keyword)));
     }
 }
