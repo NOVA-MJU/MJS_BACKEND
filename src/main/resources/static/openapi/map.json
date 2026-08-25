@@ -3188,12 +3188,12 @@
               "SYSTEM_BUS",
               "USER"
             ],
-            "description": "그룹 종류",
+            "description": "그룹 종류. 프론트는 이 값으로 탭 시 이동 화면과 수정/삭제 버튼 노출을 분기합니다.\n- `SYSTEM_MY_PLACES`: 시스템 기본 '내 장소' 그룹(회원당 1개, DB 저장). 상단 고정, 수정·삭제 불가. 탭 시 그룹 상세로 이동.\n- `SYSTEM_BUS`: '버스' 가상 그룹(DB 미저장, `id=null`). 상단 고정. 탭 시 그룹 상세가 아니라 **버스 도착정보 화면**으로 라우팅.\n- `USER`: 사용자가 만든 그룹. 이름·색상 수정 및 삭제 가능, 탭 시 그룹 상세로 이동.",
             "example": "USER"
           },
           "system": {
             "type": "boolean",
-            "description": "시스템 기본 그룹 여부(상단 고정·수정삭제 불가)",
+            "description": "시스템 기본 그룹 여부(상단 고정·수정삭제 불가). `type != USER`(즉 SYSTEM_MY_PLACES 또는 SYSTEM_BUS)와 동일한 파생값이며, 수정/삭제 버튼 숨김 판단용 편의 플래그입니다. '내 장소'와 '버스' 구분은 `type`으로 하세요.",
             "example": false
           },
           "placeCount": {
@@ -3403,15 +3403,18 @@
               "SYSTEM_MY_PLACES",
               "USER"
             ],
+            "description": "그룹 종류. `SYSTEM_MY_PLACES`=시스템 기본 '내 장소'(상단 고정, 수정·삭제 불가), `USER`=사용자 생성 그룹. 장소는 '버스'(SYSTEM_BUS)에 담을 수 없어 여기엔 나오지 않습니다.",
             "example": "SYSTEM_MY_PLACES"
           },
           "system": {
             "type": "boolean",
+            "description": "시스템 기본 그룹 여부(=`type == SYSTEM_MY_PLACES`). 수정/삭제 버튼 숨김 판단용 파생 플래그.",
             "example": true
           },
           "placeCount": {
             "type": "integer",
             "format": "int64",
+            "description": "그룹에 저장된 장소 수(없으면 0).",
             "example": 12
           },
           "selected": {
