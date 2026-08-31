@@ -11,12 +11,10 @@ import nova.mjs.domain.thingo.review.dto.ReviewDTO;
 import nova.mjs.domain.thingo.review.entity.Review;
 import nova.mjs.domain.thingo.review.entity.ReviewLike;
 import nova.mjs.domain.thingo.review.exception.ReviewNotFoundException;
-import nova.mjs.domain.thingo.review.exception.ReviewValidationException;
 import nova.mjs.domain.thingo.review.repository.ReviewLikeRepository;
 import nova.mjs.domain.thingo.review.repository.ReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import nova.mjs.util.exception.ErrorCode;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -24,6 +22,7 @@ import java.util.UUID;
 /**
  * 리뷰 좋아요 토글. 게시판과 같은 원자적 집계 방식을 사용하며,
  * 좋아요 등록 시 인앱 알림과 커밋 후 FCM 푸시를 연동한다.
+ * 본인이 작성한 리뷰에도 좋아요를 누를 수 있고, 이때 알림은 발송하지 않는다.
  */
 @Service
 @RequiredArgsConstructor
@@ -39,6 +38,7 @@ public class ReviewLikeService {
 
     /**
      * 좋아요 토글. 없으면 추가(+1), 있으면 취소(-1). 결과 상태와 최신 좋아요 수 반환.
+     * 본인 리뷰도 좋아요 대상이며, 알림 발송 여부는 ActivityNotificationService가 판단한다.
      */
     @Transactional
     public ReviewDTO.Response.LikeResult toggleLike(UUID reviewUuid, String email) {
@@ -54,9 +54,6 @@ public class ReviewLikeService {
                 || (hiddenAuthors != null && hiddenAuthors.contains(review.getAuthor().getId()))
                 || (selfReported != null && selfReported.contains(reviewUuid))) {
             throw new ReviewNotFoundException();
-        }
-        if (review.isAuthoredBy(member)) {
-            throw new ReviewValidationException(ErrorCode.REVIEW_SELF_LIKE_NOT_ALLOWED);
         }
 
         Optional<ReviewLike> existing = reviewLikeRepository.findByMemberAndReview(member, review);

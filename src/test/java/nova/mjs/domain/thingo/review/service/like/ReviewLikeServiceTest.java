@@ -13,10 +13,8 @@ import nova.mjs.domain.thingo.report.entity.ReportTargetType;
 import nova.mjs.domain.thingo.report.service.ReportQueryService;
 import nova.mjs.domain.thingo.review.entity.Review;
 import nova.mjs.domain.thingo.review.entity.ReviewKeyword;
-import nova.mjs.domain.thingo.review.exception.ReviewValidationException;
 import nova.mjs.domain.thingo.review.repository.ReviewLikeRepository;
 import nova.mjs.domain.thingo.review.repository.ReviewRepository;
-import nova.mjs.util.exception.ErrorCode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,10 +28,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -71,7 +67,8 @@ class ReviewLikeServiceTest {
     }
 
     @Test
-    void 본인_리뷰에는_좋아요를_누를_수_없다() {
+    void 본인_리뷰에도_좋아요를_누를_수_있다() {
+        // given: 작성자가 자기 리뷰에 좋아요를 누르는 상황
         Member author = member(1L, "작성자");
         Review review = review(author);
         given(memberQueryService.getMemberByEmail("author@mju.ac.kr")).willReturn(author);
@@ -79,11 +76,18 @@ class ReviewLikeServiceTest {
         given(blockQueryService.getHiddenMemberIds(1L)).willReturn(Set.of());
         given(reportQueryService.getSelfReportedTargetUuids(1L, ReportTargetType.REVIEW))
                 .willReturn(Set.of());
+        given(reviewLikeRepository.findByMemberAndReview(author, review)).willReturn(Optional.empty());
+        given(reviewLikeRepository.findTop2ByReviewOrderByIdDesc(review)).willReturn(List.of());
+        given(reviewRepository.findLikeCount(review.getUuid())).willReturn(1);
 
-        assertThatThrownBy(() -> service.toggleLike(review.getUuid(), "author@mju.ac.kr"))
-                .isInstanceOfSatisfying(ReviewValidationException.class, ex ->
-                        assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.REVIEW_SELF_LIKE_NOT_ALLOWED));
-        verify(reviewLikeRepository, never()).save(any());
+        // when
+        var result = service.toggleLike(review.getUuid(), "author@mju.ac.kr");
+
+        // then: 좋아요는 반영되고, 자기 알림 제외는 ActivityNotificationService가 처리한다
+        assertThat(result.isLiked()).isTrue();
+        assertThat(result.getLikeCount()).isEqualTo(1);
+        verify(reviewLikeRepository).save(any());
+        verify(reviewRepository).increaseLikeCount(review.getUuid());
     }
 
     private Member member(long id, String nickname) {

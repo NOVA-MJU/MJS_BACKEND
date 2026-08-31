@@ -156,12 +156,11 @@
       "post": {
         "tags": ["Review"],
         "summary": "좋아요 토글",
-        "description": "좋아요가 없으면 추가(+1, liked=true), 있으면 취소(-1, liked=false)합니다. 추가 시 REVIEW_LIKE 인앱 알림을 집계 갱신하고 트랜잭션 커밋 후 작성자의 모든 등록 기기로 FCM 푸시를 보냅니다. 푸시 data에는 type, reviewUuid, pinId, link가 포함됩니다. 취소 시에는 푸시를 보내지 않으며 FCM 실패는 좋아요 결과를 롤백하지 않습니다. 본인 리뷰 좋아요는 허용하지 않습니다.",
+        "description": "좋아요가 없으면 추가(+1, liked=true), 있으면 취소(-1, liked=false)합니다. 추가 시 REVIEW_LIKE 인앱 알림을 집계 갱신하고 트랜잭션 커밋 후 작성자의 모든 등록 기기로 FCM 푸시를 보냅니다. 푸시 data에는 type, reviewUuid, pinId, link가 포함됩니다. 취소 시에는 푸시를 보내지 않으며 FCM 실패는 좋아요 결과를 롤백하지 않습니다. 본인이 작성한 리뷰에도 좋아요를 누를 수 있으며, 이 경우 인앱 알림과 FCM 푸시는 발송하지 않습니다.",
         "security": [ { "bearerAuth": [] } ],
         "parameters": [ { "name": "reviewUuid", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
         "responses": {
           "200": { "description": "토글 결과", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiSuccess_LikeResult" }, "examples": { "liked": { "value": { "status": "API 요청 성공", "data": { "liked": true, "likeCount": 4 }, "timestamp": "2026-07-14T12:30:00" } } } } } },
-          "400": { "description": "본인 리뷰 좋아요", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" }, "examples": { "self": { "value": { "status": 400, "error": "REVIEW_SELF_LIKE_NOT_ALLOWED", "message": "[MJS] 본인이 작성한 리뷰에는 좋아요를 누를 수 없습니다." } } } } } },
           "403": { "description": "미인증", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
           "404": { "description": "리뷰 없음", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
         }

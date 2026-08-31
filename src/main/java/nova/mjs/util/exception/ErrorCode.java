@@ -137,7 +137,6 @@ public enum ErrorCode {
     REVIEW_SORT_INVALID(HttpStatus.BAD_REQUEST, "REVIEW_SORT_INVALID", "[MJS] 리뷰 정렬 기준은 latest 또는 likes만 사용할 수 있습니다."),
     REVIEW_CURSOR_INVALID(HttpStatus.BAD_REQUEST, "REVIEW_CURSOR_INVALID", "[MJS] 리뷰 목록 커서가 올바르지 않거나 정렬 기준과 일치하지 않습니다."),
     REVIEW_PAGE_SIZE_INVALID(HttpStatus.BAD_REQUEST, "REVIEW_PAGE_SIZE_INVALID", "[MJS] 리뷰 목록 크기는 1개 이상 50개 이하로 요청해 주세요."),
-    REVIEW_SELF_LIKE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "REVIEW_SELF_LIKE_NOT_ALLOWED", "[MJS] 본인이 작성한 리뷰에는 좋아요를 누를 수 없습니다."),
 
     // 명지도 즐겨찾기(그룹) 관련 에러 (FV)
     FAVORITE_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "FAVORITE_GROUP_NOT_FOUND", "[MJS] 요청한 즐겨찾기 그룹을 찾을 수 없습니다."),
