@@ -1,0 +1,67 @@
+{
+  "places": [
+    {
+      "code": "p-printer-b-jonghap-01",
+      "categoryCode": "printer",
+      "name": "preprint",
+      "infoText": "명지대 스마트 출력 서비스",
+      "parentBuildingCode": "b-jonghap",
+      "floorLabel": "F1",
+      "imageUrl": "https://thingo.kr/static/images/map/p-printer-b-jonghap-01.jpg"
+    },
+    {
+      "code": "p-printer-b-library-04",
+      "categoryCode": "printer",
+      "name": "프린터",
+      "infoText": null,
+      "parentBuildingCode": "b-library",
+      "floorLabel": "F1",
+      "imageUrl": "https://thingo.kr/static/images/map/p-printer-b-library-04.jpg"
+    },
+    {
+      "code": "p-printer-b-student-02",
+      "categoryCode": "printer",
+      "name": "preprint",
+      "infoText": "명지대 스마트 출력 서비스",
+      "parentBuildingCode": "b-student",
+      "floorLabel": "F4",
+      "imageUrl": "https://thingo.kr/static/images/map/p-printer-b-student-02.jpg"
+    },
+    {
+      "code": "p-smoking-ext-01",
+      "categoryCode": "smoking",
+      "name": "흡연부스",
+      "infoText": "a.k.a. 종합관 뒷골목",
+      "latitude": 37.5802215,
+      "longitude": 126.9225443,
+      "imageUrl": "https://thingo.kr/static/images/map/p-smoking-ext-01.jpg"
+    },
+    {
+      "code": "p-smoking-ext-02",
+      "categoryCode": "smoking",
+      "name": "흡연부스",
+      "infoText": "a.k.a. 담배나무",
+      "latitude": 37.5803346,
+      "longitude": 126.9234212,
+      "imageUrl": "https://thingo.kr/static/images/map/p-smoking-ext-02.jpg"
+    },
+    {
+      "code": "p-smoking-ext-03",
+      "categoryCode": "smoking",
+      "name": "흡연구역",
+      "infoText": null,
+      "latitude": 37.5795181,
+      "longitude": 126.9226788,
+      "imageUrl": "https://thingo.kr/static/images/map/p-smoking-ext-03.jpg"
+    },
+    {
+      "code": "p-smoking-ext-04",
+      "categoryCode": "smoking",
+      "name": "흡연구역",
+      "infoText": null,
+      "latitude": 37.5801766,
+      "longitude": 126.9242742,
+      "imageUrl": "https://thingo.kr/static/images/map/p-smoking-ext-04.jpg"
+    }
+  ]
+}

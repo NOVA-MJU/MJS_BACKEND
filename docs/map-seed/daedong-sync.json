@@ -914,14 +914,6 @@
                        "categoryCode":  "daedong-snack"
                    },
                    {
-                       "name":  "슬로우캘리 명지대점",
-                       "code":  "dd-2047894579",
-                       "latitude":  37.5797056,
-                       "address":  "서울 서대문구 거북골로 29",
-                       "longitude":  126.9244004,
-                       "categoryCode":  "daedong-snack"
-                   },
-                   {
                        "name":  "본도시락 명지대점",
                        "code":  "dd-2079328195",
                        "latitude":  37.5807155,
@@ -1487,7 +1479,8 @@
                        "latitude":  37.5811783,
                        "address":  "서울 서대문구 명지대1나길 1",
                        "longitude":  126.9227767,
-                       "categoryCode":  "daedong-bar"
+                       "categoryCode":  "daedong-bar",
+                       "infoText":  "술집·바 · 커피와 위스키"
                    },
                    {
                        "name":  "핫바비큐",

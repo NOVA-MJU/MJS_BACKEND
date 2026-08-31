@@ -1,0 +1,92 @@
+{
+  "buildings": [
+    {
+      "code": "b-jonghap",
+      "categoryCode": "building",
+      "name": "종합관",
+      "latitude": 37.5802215,
+      "longitude": 126.9225443,
+      "imageUrl": "https://thingo.kr/static/images/map//b0c92a85a5e5c6cdff8583f6cfd3b2426f2e739929facce89b9f97938a30b930.jpg",
+      "infoText": "구 본관",
+      "buildingNumber": 1,
+      "classroomCode": "S1XXX"
+    },
+    {
+      "code": "b-student",
+      "categoryCode": "building",
+      "name": "학생회관",
+      "latitude": 37.5803346,
+      "longitude": 126.9234212,
+      "imageUrl": "https://thingo.kr/static/images/map//05baab25658e5a4586b6f8ecdfe04bf5f4c4b99ae3e86e362e6074ee36471a53.jpg",
+      "infoText": null,
+      "buildingNumber": 2,
+      "classroomCode": "S2XXX"
+    },
+    {
+      "code": "b-mirae",
+      "categoryCode": "building",
+      "name": "미래관",
+      "latitude": 37.5801278,
+      "longitude": 126.9215957,
+      "imageUrl": "https://thingo.kr/static/images/map//254857a30df3a6dc290fd1db822940052e5e19208cdb49a508386a937ea3fb75.jpg",
+      "infoText": null,
+      "buildingNumber": 3,
+      "classroomCode": "S3XXX"
+    },
+    {
+      "code": "b-intl",
+      "categoryCode": "building",
+      "name": "국제관",
+      "latitude": 37.580761,
+      "longitude": 126.9238108,
+      "imageUrl": "https://thingo.kr/static/images/map//699b7633e731f872982f20a0274f245f6ddf5f79afa25a51785033f670922a65.jpg",
+      "infoText": "구 경상관",
+      "buildingNumber": 4,
+      "classroomCode": "S4XXX"
+    },
+    {
+      "code": "b-admin",
+      "categoryCode": "building",
+      "name": "행정동",
+      "latitude": 37.5801766,
+      "longitude": 126.9242742,
+      "imageUrl": "https://thingo.kr/static/images/map//e7b6cbfc6c407ce31b2d78a839bd8d72543ff73ff46f37556681fb32f7945ee0.jpg",
+      "infoText": null,
+      "buildingNumber": 5,
+      "classroomCode": "S5XXX"
+    },
+    {
+      "code": "b-dorm",
+      "categoryCode": "building",
+      "name": "생활관",
+      "latitude": 37.5808614,
+      "longitude": 126.9229762,
+      "imageUrl": "https://thingo.kr/static/images/map//dff6d0841ceb2e81f6e90596994612cf9653b8fe4c174c52183fe25a1b460172.jpg",
+      "infoText": null,
+      "buildingNumber": 8,
+      "classroomCode": "S6XXX"
+    },
+    {
+      "code": "b-library",
+      "categoryCode": "building",
+      "name": "방목학술정보관",
+      "latitude": 37.5807286,
+      "longitude": 126.9243805,
+      "imageUrl": "https://thingo.kr/static/images/map//c49ee1e5c61147b0231b4caa63f98dd4444ace4a2e2a1c934c2c1b51bf30eb7b.jpg",
+      "infoText": null,
+      "buildingNumber": 9,
+      "classroomCode": "S7XXX"
+    },
+    {
+      "code": "b-mcc",
+      "categoryCode": "building",
+      "name": "MCC관",
+      "latitude": 37.5795181,
+      "longitude": 126.9226788,
+      "imageUrl": "https://thingo.kr/static/images/map//f017067c4e3f9186cfafaff709bd0580159e47ced0c50228b261595db84b8b9a.jpg",
+      "infoText": null,
+      "buildingNumber": 10,
+      "classroomCode": "S10XXX"
+    }
+  ]
+}
