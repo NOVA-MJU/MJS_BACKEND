@@ -115,6 +115,8 @@ public enum ErrorCode {
     KEYWORD_SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "KEYWORD_SUBSCRIPTION_NOT_FOUND", "[MJS] 키워드 알림 구독을 찾을 수 없습니다."),
     NOTIFICATION_HISTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_HISTORY_NOT_FOUND", "[MJS] 알림 내역을 찾을 수 없습니다."),
     DEVICE_TOKEN_REGISTER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DEVICE_TOKEN_REGISTER_FAILED", "[MJS] 디바이스 토큰 등록에 실패했습니다."),
+    DEVICE_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "DEVICE_TOKEN_NOT_FOUND", "[MJS] 대상 회원의 등록된 기기 토큰이 없습니다."),
+    ALARM_SOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "ALARM_SOURCE_NOT_FOUND", "[MJS] 키워드에 매칭되는 과거 콘텐츠를 찾을 수 없습니다."),
     FCM_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FCM_SEND_FAILED", "[MJS] 푸시 알림 전송에 실패했습니다."),
 
     // 신고(Report) 관련 에러 (RP)

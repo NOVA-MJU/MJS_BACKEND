@@ -237,6 +237,73 @@ PATCH /api/v1/notifications/read-all      # 전체 (updatedCount, unreadCount=0,
 
 ---
 
+## 10. 관리자 수동 발송 (운영/데모용)
+
+자동 매칭 파이프라인과 별개로, **특정 회원 + 특정 키워드**로 과거에 색인된 콘텐츠 1건을
+골라 즉시 FCM 푸시를 보낸다. (예: '멘토' 키워드의 과거 공지 1건을 한 사용자에게 발송)
+
+```http
+POST /api/v1/admin/keyword-alarms/manual-send
+```
+
+- **권한**: 로그인 + `ADMIN` 또는 `OPERATOR` 롤
+- **요청 바디**
+
+```json
+{ "email": "kimgusqls1@gmail.com", "keyword": "멘토", "searchIndexId": "NOTICE:12345" }
+```
+
+| 필드 | 뜻 | 제약 |
+| --- | --- | --- |
+| `email` | 발송 대상 회원 이메일 | 필수, 이메일 형식 |
+| `keyword` | 알림 표기·스냅샷 키워드(`'멘토' 키워드 새 소식`) | 필수, 최대 5자 |
+| `searchIndexId` | (선택) 발송할 과거 콘텐츠를 정확히 지정. `{TYPE}:{원본ID}` | 선택, 최대 64자 |
+
+- **동작**
+  1. 이메일로 회원을 찾는다(없으면 `MEMBER_NOT_FOUND`).
+  2. 발송 콘텐츠 1건 결정:
+     - `searchIndexId` 지정 시 → **그 활성 콘텐츠를 그대로 사용**(마케팅: 특정 캠페인 공지 지정).
+     - 미지정 시 → 알림 대상 카테고리(`NOTICE`/`MJU_CALENDAR`/`COMMUNITY`)의 활성 콘텐츠 중
+       **제목에 키워드가 포함된 가장 최근 1건** 자동 선택.
+     - 어느 쪽도 없으면 `ALARM_SOURCE_NOT_FOUND`.
+  3. 대상 회원의 기기 토큰을 모은다(없으면 `DEVICE_TOKEN_NOT_FOUND`).
+  4. 알림함(`notification_history`)에 기록한다. 같은 회원+콘텐츠 기록이 이미 있으면
+     새로 만들지 않고 재사용해 **재발송을 허용**한다.
+  5. 자동 키워드 알림과 동일한 표기(`'멘토' 키워드 새 소식` / 본문=콘텐츠 제목)로 푸시한다.
+
+- **응답 예시**
+
+```json
+{
+  "status": "success",
+  "data": {
+    "email": "kimgusqls1@gmail.com",
+    "keyword": "멘토",
+    "searchIndexId": "NOTICE:12345",
+    "matchedTitle": "2024-2 멘토링 프로그램 멘토 모집 안내",
+    "matchedType": "NOTICE",
+    "link": "https://www.mju.ac.kr/.../view.do?...",
+    "historyId": 987,
+    "tokenCount": 2,
+    "pushDispatched": true
+  }
+}
+```
+
+```bash
+curl -X POST https://<host>/api/v1/admin/keyword-alarms/manual-send \
+  -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+  -d '{"email":"kimgusqls1@gmail.com","keyword":"멘토"}'
+```
+
+> 보낼 콘텐츠의 `searchIndexId` 는 통합검색으로 찾는다:
+> `GET /api/v1/search/detail?keyword=멘토&type=NOTICE&order=latest` → 응답의 `id` 값.
+>
+> FCM 자격증명이 설정돼 있어야 실제 푸시가 나간다(`fcm.enabled=true` + 서비스 계정 JSON).
+> 미설정 환경에서는 알림함 기록만 남고 실제 발송은 생략된다(FcmSender no-op).
+
+---
+
 ## 동작 메모 (헷갈리기 쉬운 부분)
 
 - **키워드 푸시 시점**: 콘텐츠가 **처음 올라올 때만** 발송한다(수정으로는 재알림 안 함).
