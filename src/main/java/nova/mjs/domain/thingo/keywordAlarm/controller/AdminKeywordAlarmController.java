@@ -32,8 +32,8 @@ public class AdminKeywordAlarmController {
     public ApiResponse<ManualAlarmDTO.Response> manualSend(
             @Valid @RequestBody ManualAlarmDTO.Request request) {
         log.info("[수동알림] 요청 - email={}, keyword={}", request.getEmail(), request.getKeyword());
-        ManualAlarmDTO.Response response =
-                manualKeywordAlarmService.send(request.getEmail(), request.getKeyword());
+        ManualAlarmDTO.Response response = manualKeywordAlarmService.send(
+                request.getEmail(), request.getKeyword(), request.getSearchIndexId());
         return ApiResponse.success(response);
     }
 }

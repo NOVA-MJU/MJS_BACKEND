@@ -250,18 +250,22 @@ POST /api/v1/admin/keyword-alarms/manual-send
 - **요청 바디**
 
 ```json
-{ "email": "kimgusqls1@gmail.com", "keyword": "멘토" }
+{ "email": "kimgusqls1@gmail.com", "keyword": "멘토", "searchIndexId": "NOTICE:12345" }
 ```
 
 | 필드 | 뜻 | 제약 |
 | --- | --- | --- |
 | `email` | 발송 대상 회원 이메일 | 필수, 이메일 형식 |
-| `keyword` | 매칭 키워드(알림 스냅샷과 동일) | 필수, 최대 5자 |
+| `keyword` | 알림 표기·스냅샷 키워드(`'멘토' 키워드 새 소식`) | 필수, 최대 5자 |
+| `searchIndexId` | (선택) 발송할 과거 콘텐츠를 정확히 지정. `{TYPE}:{원본ID}` | 선택, 최대 64자 |
 
 - **동작**
   1. 이메일로 회원을 찾는다(없으면 `MEMBER_NOT_FOUND`).
-  2. 알림 대상 카테고리(`NOTICE`/`MJU_CALENDAR`/`COMMUNITY`)의 활성 콘텐츠 중
-     **제목에 키워드가 포함된 가장 최근 1건**을 고른다(없으면 `ALARM_SOURCE_NOT_FOUND`).
+  2. 발송 콘텐츠 1건 결정:
+     - `searchIndexId` 지정 시 → **그 활성 콘텐츠를 그대로 사용**(마케팅: 특정 캠페인 공지 지정).
+     - 미지정 시 → 알림 대상 카테고리(`NOTICE`/`MJU_CALENDAR`/`COMMUNITY`)의 활성 콘텐츠 중
+       **제목에 키워드가 포함된 가장 최근 1건** 자동 선택.
+     - 어느 쪽도 없으면 `ALARM_SOURCE_NOT_FOUND`.
   3. 대상 회원의 기기 토큰을 모은다(없으면 `DEVICE_TOKEN_NOT_FOUND`).
   4. 알림함(`notification_history`)에 기록한다. 같은 회원+콘텐츠 기록이 이미 있으면
      새로 만들지 않고 재사용해 **재발송을 허용**한다.
@@ -292,6 +296,9 @@ curl -X POST https://<host>/api/v1/admin/keyword-alarms/manual-send \
   -d '{"email":"kimgusqls1@gmail.com","keyword":"멘토"}'
 ```
 
+> 보낼 콘텐츠의 `searchIndexId` 는 통합검색으로 찾는다:
+> `GET /api/v1/search/detail?keyword=멘토&type=NOTICE&order=latest` → 응답의 `id` 값.
+>
 > FCM 자격증명이 설정돼 있어야 실제 푸시가 나간다(`fcm.enabled=true` + 서비스 계정 JSON).
 > 미설정 환경에서는 알림함 기록만 남고 실제 발송은 생략된다(FcmSender no-op).
 

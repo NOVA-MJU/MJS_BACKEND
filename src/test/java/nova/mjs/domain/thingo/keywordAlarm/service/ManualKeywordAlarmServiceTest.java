@@ -80,7 +80,7 @@ class ManualKeywordAlarmServiceTest {
                     return h;
                 });
 
-        ManualAlarmDTO.Response response = service.send(EMAIL, KEYWORD);
+        ManualAlarmDTO.Response response = service.send(EMAIL, KEYWORD, null);
 
         ArgumentCaptor<FcmDispatch> captor = ArgumentCaptor.forClass(FcmDispatch.class);
         verify(fcmSender).sendAll(captor.capture());
@@ -94,6 +94,29 @@ class ManualKeywordAlarmServiceTest {
         assertThat(response.getHistoryId()).isEqualTo(55L);
         assertThat(response.getTokenCount()).isEqualTo(1);
         assertThat(response.isPushDispatched()).isTrue();
+        assertThat(response.getMatchedTitle()).isEqualTo(doc.getTitle());
+    }
+
+    @Test
+    @DisplayName("searchIndexId 를 지정하면 키워드 매칭 대신 그 콘텐츠로 발송한다")
+    void should_send_specified_content() {
+        Member member = 회원(1L);
+        UnifiedSearchIndex doc = 공지("2024-2 멘토링 발대식 안내");
+        given(memberRepository.findByEmail(EMAIL)).willReturn(Optional.of(member));
+        given(unifiedSearchIndexRepository.findById("NOTICE:100")).willReturn(Optional.of(doc));
+        given(deviceTokenRepository.findByMember(member))
+                .willReturn(List.of(DeviceToken.of(member, "tok-1", DevicePlatform.ANDROID)));
+        given(notificationHistoryRepository.findByMemberAndSearchIndexId(member, "NOTICE:100"))
+                .willReturn(Optional.empty());
+        given(notificationHistoryRepository.saveAndFlush(any(NotificationHistory.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        ManualAlarmDTO.Response response = service.send(EMAIL, KEYWORD, "NOTICE:100");
+
+        // 키워드 자동 매칭 쿼리는 타지 않아야 한다(지정 콘텐츠 우선)
+        verify(unifiedSearchIndexRepository, never()).findLatestActiveByTitleKeyword(any(), any());
+        verify(fcmSender).sendAll(any());
+        assertThat(response.getSearchIndexId()).isEqualTo("NOTICE:100");
         assertThat(response.getMatchedTitle()).isEqualTo(doc.getTitle());
     }
 
@@ -113,7 +136,7 @@ class ManualKeywordAlarmServiceTest {
         given(notificationHistoryRepository.findByMemberAndSearchIndexId(member, "NOTICE:100"))
                 .willReturn(Optional.of(existing));
 
-        ManualAlarmDTO.Response response = service.send(EMAIL, KEYWORD);
+        ManualAlarmDTO.Response response = service.send(EMAIL, KEYWORD, null);
 
         verify(notificationHistoryRepository, never()).saveAndFlush(any());
         verify(fcmSender).sendAll(any());
@@ -125,7 +148,7 @@ class ManualKeywordAlarmServiceTest {
     void should_throw_when_member_missing() {
         given(memberRepository.findByEmail(EMAIL)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.send(EMAIL, KEYWORD))
+        assertThatThrownBy(() -> service.send(EMAIL, KEYWORD, null))
                 .isInstanceOf(MemberNotFoundException.class);
         verify(fcmSender, never()).sendAll(any());
     }
@@ -137,7 +160,7 @@ class ManualKeywordAlarmServiceTest {
         given(unifiedSearchIndexRepository.findLatestActiveByTitleKeyword(any(), any()))
                 .willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.send(EMAIL, KEYWORD))
+        assertThatThrownBy(() -> service.send(EMAIL, KEYWORD, null))
                 .isInstanceOf(AlarmSourceNotFoundException.class);
         verify(fcmSender, never()).sendAll(any());
     }
@@ -151,7 +174,7 @@ class ManualKeywordAlarmServiceTest {
                 .willReturn(Optional.of(공지("멘토 모집")));
         given(deviceTokenRepository.findByMember(member)).willReturn(List.of());
 
-        assertThatThrownBy(() -> service.send(EMAIL, KEYWORD))
+        assertThatThrownBy(() -> service.send(EMAIL, KEYWORD, null))
                 .isInstanceOf(DeviceTokenNotFoundException.class);
         verify(fcmSender, never()).sendAll(any());
     }

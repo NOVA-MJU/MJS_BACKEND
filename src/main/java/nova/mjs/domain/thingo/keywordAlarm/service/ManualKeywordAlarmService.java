@@ -54,17 +54,17 @@ public class ManualKeywordAlarmService {
      * @throws DeviceTokenNotFoundException 대상 회원의 등록 기기 토큰이 없음(보낼 곳이 없음)
      */
     @Transactional
-    public ManualAlarmDTO.Response send(String email, String rawKeyword) {
+    public ManualAlarmDTO.Response send(String email, String rawKeyword, String searchIndexId) {
         String keyword = rawKeyword.trim();
 
         // 1. 대상 회원
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
 
-        // 2. 키워드에 매칭되는 과거 콘텐츠 1건(최신)
-        UnifiedSearchIndex doc = unifiedSearchIndexRepository
-                .findLatestActiveByTitleKeyword(escapeLike(keyword), contentSearchTypes())
-                .orElseThrow(AlarmSourceNotFoundException::new);
+        // 2. 발송할 과거 콘텐츠 1건.
+        //    - searchIndexId 를 주면 그 콘텐츠를 정확히 지정(마케팅: 특정 캠페인 공지 선택).
+        //    - 없으면 키워드가 제목에 포함된 활성 콘텐츠 중 최신 1건 자동 선택.
+        UnifiedSearchIndex doc = resolveSource(searchIndexId, keyword);
 
         // 3. 대상 회원의 기기 토큰(없으면 보낼 곳이 없음)
         List<String> tokens = deviceTokenRepository.findByMember(member).stream()
@@ -91,6 +91,24 @@ public class ManualKeywordAlarmService {
 
         return ManualAlarmDTO.Response.of(email, keyword, doc.getId(), doc.getTitle(),
                 doc.getType(), doc.getLink(), history.getId(), tokens.size());
+    }
+
+    /**
+     * 발송할 과거 콘텐츠를 결정한다.
+     * searchIndexId 지정 시 해당 콘텐츠(활성)를 그대로 사용하고, 없으면 키워드 최신 매칭으로 자동 선택한다.
+     */
+    private UnifiedSearchIndex resolveSource(String searchIndexId, String keyword) {
+        if (searchIndexId != null && !searchIndexId.isBlank()) {
+            UnifiedSearchIndex doc = unifiedSearchIndexRepository.findById(searchIndexId.trim())
+                    .orElseThrow(AlarmSourceNotFoundException::new);
+            if (!Boolean.TRUE.equals(doc.getActive())) {
+                throw new AlarmSourceNotFoundException();
+            }
+            return doc;
+        }
+        return unifiedSearchIndexRepository
+                .findLatestActiveByTitleKeyword(escapeLike(keyword), contentSearchTypes())
+                .orElseThrow(AlarmSourceNotFoundException::new);
     }
 
     /** 알림 대상 카테고리의 통합검색 type(학식/WEEKLY_MENU 은 인덱스에 없어 제외). */

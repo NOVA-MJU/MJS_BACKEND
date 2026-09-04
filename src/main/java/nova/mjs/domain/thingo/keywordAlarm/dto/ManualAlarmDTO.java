@@ -28,6 +28,13 @@ public class ManualAlarmDTO {
         @NotBlank(message = "키워드가 필요합니다.")
         @Size(max = 5, message = "키워드는 최대 5자까지 가능합니다.")
         private String keyword;
+
+        /**
+         * (선택) 발송할 과거 콘텐츠를 정확히 지정. 통합검색 id 형식 {TYPE}:{원본ID}.
+         * 지정하면 이 콘텐츠로 발송하고, 없으면 keyword 최신 매칭으로 자동 선택한다.
+         */
+        @Size(max = 64, message = "searchIndexId 는 최대 64자입니다.")
+        private String searchIndexId;
     }
 
     @Getter
