@@ -4,13 +4,33 @@ import nova.mjs.domain.thingo.search.entity.UnifiedSearchIndex;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UnifiedSearchIndexRepository
         extends JpaRepository<UnifiedSearchIndex, String>, UnifiedSearchIndexQueryRepository {
+
+    /**
+     * 수동 알림 발송용: 키워드가 제목에 포함된 활성 콘텐츠 중 가장 최근 1건을 찾는다.
+     *
+     * - 알림 대상 카테고리 type(NOTICE/MJU_CALENDAR/COMMUNITY) 로 한정한다.
+     * - 자동 키워드 매칭이 제목 토큰 기준인 것과 맞춰 제목(title) 부분일치로 후보를 고른다.
+     * - keyword 의 LIKE 와일드카드(%, _)는 escape('\\') 로 리터럴 처리한다.
+     */
+    @Query(value = """
+            SELECT * FROM unified_search_index
+            WHERE active = true
+              AND type IN (:types)
+              AND title ILIKE ('%' || :keyword || '%') ESCAPE '\\'
+            ORDER BY date DESC
+            LIMIT 1
+            """, nativeQuery = true)
+    Optional<UnifiedSearchIndex> findLatestActiveByTitleKeyword(@Param("keyword") String keyword,
+                                                               @Param("types") List<String> types);
 
     @Modifying
     @Query(value = "TRUNCATE TABLE unified_search_index", nativeQuery = true)
