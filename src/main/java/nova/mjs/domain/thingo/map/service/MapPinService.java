@@ -253,6 +253,18 @@ public class MapPinService {
     }
 
     /**
+     * 건물의 카테고리 칩(탭)만 경량 조회. 층·시설·운영시간 없이 칩 바만 먼저 그릴 때 쓴다.
+     * (건물 상세와 동일하게 그 건물 안 장소들의 카테고리에서 유도한다)
+     */
+    public List<BuildingDetailResponse.CategoryTab> getBuildingCategoryTabs(Long buildingId) {
+        // 존재하지 않거나 건물이 아니면 404
+        pinRepository.findByIdAndType(buildingId, PinType.BUILDING)
+                .orElseThrow(PinNotFoundException::new);
+        List<Pin> placesInBuilding = pinRepository.findByParentBuildingId(buildingId);
+        return buildCategoryTabs(placesInBuilding);
+    }
+
+    /**
      * 장소(비건물) 상세. 위치(건물명+층수 또는 도로명주소)와 요일별 운영시간을 구성한다.
      */
     public PlaceDetailResponse getPlaceDetail(Long placeId, Double userLat, Double userLng, String email) {

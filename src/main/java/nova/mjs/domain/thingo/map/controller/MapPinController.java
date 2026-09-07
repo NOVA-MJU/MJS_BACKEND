@@ -68,6 +68,21 @@ public class MapPinController {
     }
 
     /**
+     * 건물 카테고리 칩(탭)만 경량 조회.
+     *
+     * 건물 상세 전체(층·시설·운영시간)를 받지 않고 층별안내도 상단 칩 바만 먼저 그릴 때 사용한다.
+     *
+     * @param buildingId 건물 핀 ID
+     */
+    @GetMapping("/buildings/{buildingId}/categories")
+    public ApiResponse<List<BuildingDetailResponse.CategoryTab>> getBuildingCategories(
+            @PathVariable("buildingId") Long buildingId
+    ) {
+        log.info("[명지도 건물 카테고리 칩] buildingId={}", buildingId);
+        return ApiResponse.success(mapPinService.getBuildingCategoryTabs(buildingId));
+    }
+
+    /**
      * 장소(비건물) 상세 조회.
      *
      * @param placeId 장소 핀 ID
