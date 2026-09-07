@@ -15,6 +15,7 @@ import nova.mjs.domain.thingo.map.repository.PinRepository;
 import nova.mjs.domain.thingo.map.support.CampusArea;
 import nova.mjs.domain.thingo.map.support.DistanceCalculator;
 import nova.mjs.domain.thingo.map.support.MapRecommendationRanker;
+import nova.mjs.domain.thingo.map.support.MapSearchRouteResolver;
 import nova.mjs.domain.thingo.map.support.OperatingStatusResolver;
 import nova.mjs.domain.thingo.member.entity.Member;
 import nova.mjs.domain.thingo.member.repository.MemberRepository;
@@ -267,7 +268,7 @@ public class MapPinService {
 
         return PinSummaryResponse.of(
                 pin.getId(),
-                pin.getType().name(),
+                MapSearchRouteResolver.responseType(pin),
                 pin.getName(),
                 pin.getCategory().getCode(),
                 pin.getCategory().getIconKey(),
@@ -278,7 +279,9 @@ public class MapPinService {
                 pin.getType() == PinType.BUILDING ? statusLabel(pin, now) : null, // 운영 상태는 건물에만
                 displayDistance,
                 pin.resolveLatitude(),   // 내부 장소는 소속 건물 좌표로 대체
-                pin.resolveLongitude());
+                pin.resolveLongitude(),
+                pin.getIndoorCode(),
+                MapSearchRouteResolver.link(pin));
     }
 
     /** 화면에 표시할 거리(미터). 캠퍼스 안일 때만 계산, 그 외 null */
