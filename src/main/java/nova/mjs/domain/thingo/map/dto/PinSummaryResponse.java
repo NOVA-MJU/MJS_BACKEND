@@ -2,6 +2,7 @@ package nova.mjs.domain.thingo.map.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+import nova.mjs.domain.thingo.map.support.MapSearchRouteResolver;
 
 /**
  * 목록 카드 1개 (건물 목록 / 칩 클릭 장소 목록 공용).
@@ -12,7 +13,7 @@ import lombok.Getter;
  * imageUrl 유무에 따라 프론트 레이아웃이 달라진다.
  */
 @Getter
-@Builder
+@Builder(toBuilder = true)
 public class PinSummaryResponse {
 
     /** 핀 ID (상세 페이지 요청에 사용) */
@@ -67,6 +68,21 @@ public class PinSummaryResponse {
                 .longitude(longitude)
                 .indoorCode(indoorCode)
                 .link(link)
+                .build();
+    }
+
+    /**
+     * 층별안내도 라우팅(floorMap)을 요청하지 않았을 때 FLOOR_MAP 항목을 기본 PLACE로 낮춘다.
+     * 내부 시설은 실제로 PLACE 핀이므로 종류만 되돌리고 층별안내도 link는 제거한다.
+     * FLOOR_MAP이 아니면 그대로 반환한다.
+     */
+    public PinSummaryResponse toPlaceFallback() {
+        if (!MapSearchRouteResolver.FLOOR_MAP_TYPE.equals(type)) {
+            return this;
+        }
+        return toBuilder()
+                .type("PLACE")
+                .link(null)
                 .build();
     }
 }
