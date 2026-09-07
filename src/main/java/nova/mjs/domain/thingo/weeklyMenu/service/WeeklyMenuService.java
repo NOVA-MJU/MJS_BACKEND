@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -47,73 +48,7 @@ public class WeeklyMenuService {
         List<WeeklyMenu> weeklyMenus = new ArrayList<>();
 
         try {
-            Document doc;
-
-            LocalDate today = LocalDate.now();
-            DayOfWeek dayOfWeek = today.getDayOfWeek();
-
-            if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-                LocalDate currentWeekMonday = today.minusDays(dayOfWeek == DayOfWeek.SATURDAY ? 5 : 6);
-                String mondayParam = currentWeekMonday.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-
-                log.info("주말이므로 다음 주 식단 페이지를 직접 요청합니다. monday={}, week=next", mondayParam);
-
-                doc = Jsoup.connect("https://www.mju.ac.kr/diet/mjukr/10/view.do")
-                        .data("monday", mondayParam)
-                        .data("week", "next")
-                        .post();
-            } else {
-                doc = Jsoup.connect(url).get();
-            }
-            Element tableWrap = doc.selectFirst(".tableWrap.marT50");
-
-            if (tableWrap == null) {
-                log.error("테이블을 포함하는 div를 찾을 수 없습니다.");
-            }
-
-            Element table = tableWrap.selectFirst("table");
-            if (table == null) {
-                log.error("테이블을 찾을 수 없습니다.");
-            }
-
-            Elements rows = table.select("tbody tr");
-            if (rows.isEmpty()){
-                log.error("식단 데이터를 찾을 수 없습니다.");
-                throw new WeeklyMenuNotFoundException("식단 데이터를 찾을 수 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
-            }
-            String currentDate = null;
-
-            for (Element row : rows) {
-                Element dateCell = row.selectFirst("th[rowspan]"); //날짜
-                if (dateCell != null) {
-                    currentDate = dateCell.text().trim(); //날짜 최신화
-                }
-
-                Elements cells = row.select("td"); //카테고리가 있는 class
-                if (!cells.isEmpty()) {
-                    String category = cells.get(0).text().trim(); //카테고리 수집
-                    MenuCategory menuCategory = mapCategory(category); // 카테고리 변환
-
-                    if (menuCategory == null) {
-                        log.warn("정의되지 않은 카테고리: {}", category);
-                        continue; // 변환되지 않은 카테고리는 무시
-                    }
-
-                    Element menuCell = row.selectFirst("td.alignL"); //메뉴가 있는 class
-                    List<String> menuContent = menuCell != null
-                            ? Arrays.stream(menuCell.html().split("<br>")) // 줄바꿈 기준으로 분리
-                            .map(String::trim) // 양쪽 공백 제거
-                            .map(content -> content.replace("&amp;", "&")) // &amp;를 &로 변환
-                            .toList() // 리스트로 변환
-                            : Collections.singletonList("등록된 식단 내용이 없습니다."); // 메뉴 수집
-
-                    if (menuContent.isEmpty()){
-                        log.error("메뉴 데이터가 비어 있습니다.");
-                    }
-                    WeeklyMenu weeklyMenu = WeeklyMenu.create(currentDate, menuCategory, menuContent);
-                    weeklyMenus.add(weeklyMenu);
-                }
-            }
+            weeklyMenus = parseWeeklyMenus(fetchMenuDocument(LocalDate.now()));
 
             //save() : 영속성 컨텍스트의 cache에 먼저 저장 -> 나중에 flush()
             //vs. saveAndFlush() : 즉시 db에 반영
@@ -129,13 +64,111 @@ public class WeeklyMenuService {
                 eventPublisher.publishEvent(
                         new WeeklyMenuCrawledEvent(weeklyMenus.size(), buildContentSignature(weeklyMenus)));
             } else{
-                log.warn("크롤링된 데이터가 없어 기존 데이터를 삭제하지 않았습니다.");
+                log.warn("크롤링된 식단이 없어(미게시 주 포함) 기존 데이터를 삭제하지 않았습니다.");
             }
 
         } catch (Exception e) {
             log.error("크롤링 오류 = {}", e.getMessage(), e);
         }
         return WeeklyMenuResponseDTO.fromEntityToList(weeklyMenus);
+    }
+
+    /**
+     * 크롤링 대상 주의 식단 페이지를 가져온다.
+     *
+     * - 평일: 학교 기본 페이지(이번 주)를 그대로 GET.
+     * - 주말: 이번 주 월요일 + week=next 로 POST 해서 다음 주 페이지를 직접 요청한다.
+     *   (주말 크롤 시점에는 이번 주가 이미 끝났으므로 다음 주를 보여줘야 한다.)
+     */
+    private Document fetchMenuDocument(LocalDate today) throws IOException {
+        DayOfWeek dayOfWeek = today.getDayOfWeek();
+
+        if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
+            return Jsoup.connect(url).get();
+        }
+
+        LocalDate currentWeekMonday = today.minusDays(dayOfWeek == DayOfWeek.SATURDAY ? 5 : 6);
+        String mondayParam = currentWeekMonday.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+
+        log.info("주말이므로 다음 주 식단 페이지를 직접 요청합니다. monday={}, week=next", mondayParam);
+
+        return Jsoup.connect("https://www.mju.ac.kr/diet/mjukr/10/view.do")
+                .data("monday", mondayParam)
+                .data("week", "next")
+                .post();
+    }
+
+    /**
+     * 식단 표를 파싱해 끼니별 엔티티로 변환한다.
+     *
+     * 미게시 주 방어
+     * - 학교 페이지는 아직 식단이 올라오지 않은 주에도 날짜 뼈대(월~금 x 조/중/석 = 15행)를 그대로 렌더하고,
+     *   실제 메뉴 셀(td.alignL)만 통째로 빠진 채 "등록된 식단내용이(가) 없습니다."만 채워서 내려준다.
+     * - 이걸 정상 데이터로 취급하면 호출부가 기존 식단을 전부 지우고 빈 껍데기를 저장한다.
+     * - 그래서 표 전체에 메뉴 셀이 하나도 없으면 빈 목록을 돌려주고, 기존 데이터를 그대로 유지하게 한다.
+     */
+    List<WeeklyMenu> parseWeeklyMenus(Document doc) {
+        List<WeeklyMenu> weeklyMenus = new ArrayList<>();
+
+        Element tableWrap = doc.selectFirst(".tableWrap.marT50");
+        if (tableWrap == null) {
+            log.error("테이블을 포함하는 div를 찾을 수 없습니다.");
+            throw new WeeklyMenuNotFoundException("식단 데이터를 찾을 수 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
+        }
+
+        Element table = tableWrap.selectFirst("table");
+        if (table == null) {
+            log.error("테이블을 찾을 수 없습니다.");
+            throw new WeeklyMenuNotFoundException("식단 데이터를 찾을 수 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
+        }
+
+        Elements rows = table.select("tbody tr");
+        if (rows.isEmpty()){
+            log.error("식단 데이터를 찾을 수 없습니다.");
+            throw new WeeklyMenuNotFoundException("식단 데이터를 찾을 수 없습니다.", ErrorCode.WEEKLYMENU_NOT_FOUND);
+        }
+
+        // 아직 식단이 게시되지 않은 주 -> 기존 데이터를 지키기 위해 빈 목록 반환
+        if (table.selectFirst("td.alignL") == null) {
+            log.warn("아직 식단이 게시되지 않은 주입니다. 기존 식단을 유지합니다. 행 수={}", rows.size());
+            return weeklyMenus;
+        }
+
+        String currentDate = null;
+
+        for (Element row : rows) {
+            Element dateCell = row.selectFirst("th[rowspan]"); //날짜
+            if (dateCell != null) {
+                currentDate = dateCell.text().trim(); //날짜 최신화
+            }
+
+            Elements cells = row.select("td"); //카테고리가 있는 class
+            if (!cells.isEmpty()) {
+                String category = cells.get(0).text().trim(); //카테고리 수집
+                MenuCategory menuCategory = mapCategory(category); // 카테고리 변환
+
+                if (menuCategory == null) {
+                    log.warn("정의되지 않은 카테고리: {}", category);
+                    continue; // 변환되지 않은 카테고리는 무시
+                }
+
+                Element menuCell = row.selectFirst("td.alignL"); //메뉴가 있는 class
+                List<String> menuContent = menuCell != null
+                        ? Arrays.stream(menuCell.html().split("<br>")) // 줄바꿈 기준으로 분리
+                        .map(String::trim) // 양쪽 공백 제거
+                        .map(content -> content.replace("&amp;", "&")) // &amp;를 &로 변환
+                        .toList() // 리스트로 변환
+                        : Collections.singletonList("등록된 식단 내용이 없습니다."); // 메뉴 수집
+
+                if (menuContent.isEmpty()){
+                    log.error("메뉴 데이터가 비어 있습니다.");
+                }
+                WeeklyMenu weeklyMenu = WeeklyMenu.create(currentDate, menuCategory, menuContent);
+                weeklyMenus.add(weeklyMenu);
+            }
+        }
+
+        return weeklyMenus;
     }
 
     /**
