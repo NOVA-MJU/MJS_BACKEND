@@ -54,7 +54,7 @@ public class MapSearchController {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
         log.info("[명지도 검색] keyword={}, lat={}, lng={}, page={}, floorMap={}, email={}",
                 keyword, lat, lng, page, floorMap, email);
-        List<PinSummaryResponse> results = mapSearchService.search(keyword, lat, lng, page, size, email, seed);
+        List<PinSummaryResponse> results = mapSearchService.search(keyword, lat, lng, page, size, email, seed, floorMap);
         return ApiResponse.success(
                 floorMap ? results : results.stream().map(PinSummaryResponse::toPlaceFallback).toList());
     }
