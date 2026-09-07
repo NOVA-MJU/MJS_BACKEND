@@ -48,23 +48,31 @@ public class MapSearchController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
             @RequestParam(value = "seed", required = false) String seed,
+            @RequestParam(value = "floorMap", defaultValue = "false") boolean floorMap,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
-        log.info("[명지도 검색] keyword={}, lat={}, lng={}, page={}, email={}",
-                keyword, lat, lng, page, email);
-        return ApiResponse.success(mapSearchService.search(keyword, lat, lng, page, size, email, seed));
+        log.info("[명지도 검색] keyword={}, lat={}, lng={}, page={}, floorMap={}, email={}",
+                keyword, lat, lng, page, floorMap, email);
+        List<PinSummaryResponse> results = mapSearchService.search(keyword, lat, lng, page, size, email, seed);
+        return ApiResponse.success(
+                floorMap ? results : results.stream().map(PinSummaryResponse::toPlaceFallback).toList());
     }
 
     /**
      * 명지도 검색 자동완성 조회.
+     *
+     * @param floorMap 기본 false면 내부 시설도 type=PLACE·link=null. true일 때만 FLOOR_MAP 라우팅을 제공한다.
      */
     @GetMapping("/search/suggest")
     public ApiResponse<List<MapSuggestResponse>> suggest(
             @RequestParam("keyword") String keyword,
-            @RequestParam(value = "limit", defaultValue = "10") int limit
+            @RequestParam(value = "limit", defaultValue = "10") int limit,
+            @RequestParam(value = "floorMap", defaultValue = "false") boolean floorMap
     ) {
-        log.info("[명지도 자동완성] keyword={}, limit={}", keyword, limit);
-        return ApiResponse.success(mapSearchService.suggest(keyword, limit));
+        log.info("[명지도 자동완성] keyword={}, limit={}, floorMap={}", keyword, limit, floorMap);
+        List<MapSuggestResponse> suggestions = mapSearchService.suggest(keyword, limit);
+        return ApiResponse.success(
+                floorMap ? suggestions : suggestions.stream().map(MapSuggestResponse::toPlaceFallback).toList());
     }
 }

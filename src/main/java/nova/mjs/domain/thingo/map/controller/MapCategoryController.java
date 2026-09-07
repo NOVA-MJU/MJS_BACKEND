@@ -44,6 +44,9 @@ public class MapCategoryController {
      * @param page 0부터 시작하는 페이지 번호
      * @param size 페이지 크기
      * @param seed 대동명지도 추천 순서를 세션 동안 고정할 선택 seed
+     * @param floorMap 건물 안 시설을 층별안내도(FLOOR_MAP)로 라우팅할지 여부.
+     *                 기본 false면 내부 시설도 type=PLACE·link=null로 내려간다(하위호환).
+     *                 true일 때만 type=FLOOR_MAP·층별안내도 link를 제공한다.
      */
     @GetMapping("/categories/{code}/pins")
     public ApiResponse<List<PinSummaryResponse>> getPinsByCategory(
@@ -53,11 +56,19 @@ public class MapCategoryController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
             @RequestParam(value = "seed", required = false) String seed,
+            @RequestParam(value = "floorMap", defaultValue = "false") boolean floorMap,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
-        log.info("[명지도 칩 목록] code={}, lat={}, lng={}, page={}, email={}", code, lat, lng, page, email);
-        return ApiResponse.success(mapPinService.getPinsByCategory(code, lat, lng, page, size, email, seed));
+        log.info("[명지도 칩 목록] code={}, lat={}, lng={}, page={}, floorMap={}, email={}",
+                code, lat, lng, page, floorMap, email);
+        List<PinSummaryResponse> pins = mapPinService.getPinsByCategory(code, lat, lng, page, size, email, seed);
+        return ApiResponse.success(applyFloorMap(pins, floorMap));
+    }
+
+    /** floorMap 미요청(기본)이면 FLOOR_MAP 항목을 기본 PLACE로 낮춰 하위호환을 유지한다. */
+    private List<PinSummaryResponse> applyFloorMap(List<PinSummaryResponse> pins, boolean floorMap) {
+        return floorMap ? pins : pins.stream().map(PinSummaryResponse::toPlaceFallback).toList();
     }
 
     /** 지도 마커 전용 조회. 내부 시설은 건물별 대표 마커 하나로 묶는다. */

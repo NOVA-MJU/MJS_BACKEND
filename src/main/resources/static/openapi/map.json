@@ -104,6 +104,17 @@
               "default": 20,
               "example": 20
             }
+          },
+          {
+            "name": "floorMap",
+            "in": "query",
+            "required": false,
+            "description": "건물 안 시설을 층별안내도(FLOOR_MAP)로 라우팅할지 여부. 기본 false면 내부 시설도 type=PLACE·link=null로 내려간다(하위호환). true일 때만 type=FLOOR_MAP과 층별안내도 link를 제공한다.",
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "example": true
+            }
           }
         ],
         "responses": {
@@ -599,6 +610,17 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "floorMap",
+            "in": "query",
+            "required": false,
+            "description": "층별안내도(FLOOR_MAP) 라우팅을 켤지 여부. 기본 false면 내부 시설도 type=PLACE·link=null로 내려간다(하위호환). true일 때만 위 표의 FLOOR_MAP 동작(type=FLOOR_MAP·link)이 적용된다. 정확한 호실 코드(S1353) 검색도 false면 PLACE로 반환된다.",
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "example": true
+            }
           }
         ],
         "responses": {
@@ -807,6 +829,17 @@
               "type": "integer",
               "default": 10,
               "example": 10
+            }
+          },
+          {
+            "name": "floorMap",
+            "in": "query",
+            "required": false,
+            "description": "층별안내도(FLOOR_MAP) 라우팅을 켤지 여부. 기본 false면 내부 시설도 type=PLACE·link=null. true일 때만 type=FLOOR_MAP·link를 제공한다.",
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "example": true
             }
           }
         ],
