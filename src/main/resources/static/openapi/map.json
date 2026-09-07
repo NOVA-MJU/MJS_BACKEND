@@ -473,6 +473,52 @@
         }
       }
     },
+    "/map/buildings/{buildingId}/categories": {
+      "get": {
+        "tags": ["명지도 - 건물/장소"],
+        "summary": "건물 카테고리 칩(탭) 경량 조회",
+        "operationId": "getBuildingCategories",
+        "description": "특정 건물의 **층별안내도 상단 칩(카테고리 탭)만** 가볍게 조회합니다.\n\n### 언제 쓰나\n건물 상세(`/map/buildings/{id}`)는 층·시설·운영시간까지 모두 담아 무겁습니다. 칩 바를 먼저 그리고 싶을 때 이 API로 칩만 받고, 사용자가 특정 칩/층을 고르면 그때 상세를 부르면 됩니다.\n\n### 내용\n- 이 건물 안에 **실제 있는 내부 시설**의 카테고리에서 유도(건물마다 다름)\n- `/map/buildings/{id}` 응답의 `categoryTabs`와 동일한 항목",
+        "parameters": [
+          { "name": "buildingId", "in": "path", "required": true, "description": "건물 핀 ID", "schema": { "type": "integer", "format": "int64", "example": 7 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "건물 카테고리 칩 목록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/BuildingCategoryTab" } },
+                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-06-22T09:05:12" }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": [
+                    { "code": "restroom", "label": "화장실", "iconKey": "RestroomIcon" },
+                    { "code": "printer", "label": "프린터", "iconKey": "PrinterIcon" },
+                    { "code": "convenience-store", "label": "편의점", "iconKey": "ConvenienceStoreIcon" }
+                  ],
+                  "timestamp": "2026-06-22T09:05:12"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "존재하지 않는 건물",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": "MAP_PIN_NOT_FOUND", "message": "[MJS] 해당 건물/장소를 찾을 수 없습니다.", "status": 404 }
+              }
+            }
+          }
+        }
+      }
+    },
     "/map/places/{placeId}": {
       "get": {
         "tags": [
