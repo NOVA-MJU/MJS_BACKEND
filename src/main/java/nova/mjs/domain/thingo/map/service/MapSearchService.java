@@ -77,6 +77,15 @@ public class MapSearchService {
      */
     public List<PinSummaryResponse> search(String keyword, Double userLat, Double userLng, int page, int size,
                                            String email, String recommendationSeed) {
+        return search(keyword, userLat, userLng, page, size, email, recommendationSeed, false);
+    }
+
+    /**
+     * @param floorMap 층별안내도 모드. true면 등록 라벨(카테고리) 검색 결과를 내부 시설만으로 제한한다
+     *                 (외부 장소·대동명지도 제외). 일반 이름 검색은 캠퍼스 전역이라 필터하지 않는다.
+     */
+    public List<PinSummaryResponse> search(String keyword, Double userLat, Double userLng, int page, int size,
+                                           String email, String recommendationSeed, boolean floorMap) {
         if (keyword == null || keyword.isBlank()) {
             return List.of();
         }
@@ -95,7 +104,7 @@ public class MapSearchService {
         Category exactCategory = findExactCategory(keyword);
         if (exactCategory != null) {
             return mapPinService.getPinsByCategory(
-                    exactCategory.getCode(), userLat, userLng, page, size, email, recommendationSeed);
+                    exactCategory.getCode(), userLat, userLng, page, size, email, recommendationSeed, floorMap);
         }
 
         return searchGeneral(keyword, userLat, userLng, page, size, email);

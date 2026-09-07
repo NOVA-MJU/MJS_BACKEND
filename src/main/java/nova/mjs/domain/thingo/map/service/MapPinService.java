@@ -3,6 +3,7 @@ package nova.mjs.domain.thingo.map.service;
 import lombok.RequiredArgsConstructor;
 import nova.mjs.domain.thingo.map.dto.BuildingDetailResponse;
 import nova.mjs.domain.thingo.map.dto.MapOperatingHourLine;
+import nova.mjs.domain.thingo.map.dto.MapCategoryResponse;
 import nova.mjs.domain.thingo.map.dto.MapMarkerResponse;
 import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
 import nova.mjs.domain.thingo.map.dto.PlaceDetailResponse;
@@ -71,6 +72,50 @@ public class MapPinService {
     }
 
     /**
+     * 기본 지도 칩(카테고리) 목록. 그룹 → 최상위 칩 → 하위 탭 구조로, 노출 순서대로 내려준다.
+     * 프론트가 기본 지도 칩셋을 하드코딩하지 않고 이 응답으로 렌더할 수 있게 한다.
+     * (층별안내도 칩은 이 API가 아니라 건물 상세의 categoryTabs를 사용한다)
+     */
+    public List<MapCategoryResponse> getCategories() {
+        List<Category> all = categoryRepository.findAllForListing();
+
+        // 상위 칩 ID → 하위 탭들
+        Map<Long, List<Category>> subTabsByParentId = all.stream()
+                .filter(category -> category.getParent() != null)
+                .collect(Collectors.groupingBy(category -> category.getParent().getId()));
+
+        // 그룹별 최상위 칩 묶기 (그룹 인스턴스는 그룹 ID로 식별)
+        Map<Long, CategoryGroup> groupById = new LinkedHashMap<>();
+        Map<Long, List<Category>> topChipsByGroupId = new LinkedHashMap<>();
+        all.stream()
+                .filter(Category::isTopLevel)
+                .sorted(Comparator.comparingInt(Category::getDisplayOrder).thenComparing(Category::getId))
+                .forEach(chip -> {
+                    CategoryGroup group = chip.getGroup();
+                    groupById.putIfAbsent(group.getId(), group);
+                    topChipsByGroupId.computeIfAbsent(group.getId(), key -> new ArrayList<>()).add(chip);
+                });
+
+        return topChipsByGroupId.entrySet().stream()
+                .map(entry -> {
+                    List<MapCategoryResponse.Chip> chips = entry.getValue().stream()
+                            .map(chip -> MapCategoryResponse.Chip.of(chip, subTabsOf(chip, subTabsByParentId)))
+                            .toList();
+                    return MapCategoryResponse.of(groupById.get(entry.getKey()), chips);
+                })
+                .sorted(Comparator.comparingInt(MapCategoryResponse::getGroupDisplayOrder))
+                .toList();
+    }
+
+    /** 칩의 하위 탭을 노출 순서대로 DTO로 변환 */
+    private List<MapCategoryResponse.SubTab> subTabsOf(Category chip, Map<Long, List<Category>> subTabsByParentId) {
+        return subTabsByParentId.getOrDefault(chip.getId(), List.of()).stream()
+                .sorted(Comparator.comparingInt(Category::getDisplayOrder).thenComparing(Category::getId))
+                .map(MapCategoryResponse.SubTab::from)
+                .toList();
+    }
+
+    /**
      * 칩(카테고리) 클릭 시 보여줄 장소/건물 목록.
      *
      * 하위 탭이 있는 칩(예: 대동명지도)은 자식 카테고리까지 포함해 조회한다.
@@ -82,11 +127,21 @@ public class MapPinService {
      */
     public List<PinSummaryResponse> getPinsByCategory(String categoryCode, Double userLat, Double userLng,
                                                       int page, int size, String email) {
-        return getPinsByCategory(categoryCode, userLat, userLng, page, size, email, null);
+        return getPinsByCategory(categoryCode, userLat, userLng, page, size, email, null, false);
     }
 
     public List<PinSummaryResponse> getPinsByCategory(String categoryCode, Double userLat, Double userLng,
                                                       int page, int size, String email, String recommendationSeed) {
+        return getPinsByCategory(categoryCode, userLat, userLng, page, size, email, recommendationSeed, false);
+    }
+
+    /**
+     * @param floorMap 층별안내도 모드. true면 소속 건물+층이 있는 내부 시설만 남기고
+     *                 외부 장소(대동명지도 맛집·교외 가게 등)는 제외한다. false면 기존처럼 전체를 반환한다.
+     */
+    public List<PinSummaryResponse> getPinsByCategory(String categoryCode, Double userLat, Double userLng,
+                                                      int page, int size, String email, String recommendationSeed,
+                                                      boolean floorMap) {
         Category category = categoryRepository.findByCode(categoryCode)
                 .orElseThrow(CategoryNotFoundException::new);
 
@@ -102,6 +157,11 @@ public class MapPinService {
                 .forEach(child -> categoryCodes.add(child.getCode()));
 
         List<Pin> pins = pinRepository.findByCategoryCodeIn(categoryCodes);
+
+        // 층별안내도 모드: 내부 시설(소속 건물+층)만 남긴다. 외부 장소·대동명지도는 층별안내도에 표시하지 않는다.
+        if (floorMap) {
+            pins = pins.stream().filter(MapSearchRouteResolver::isFloorMapTarget).toList();
+        }
 
         Set<Long> favoriteIds = favoritePinIds(resolveMember(email));
         LocalDateTime now = LocalDateTime.now(KST);

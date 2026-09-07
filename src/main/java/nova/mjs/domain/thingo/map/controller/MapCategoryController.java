@@ -2,6 +2,7 @@ package nova.mjs.domain.thingo.map.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nova.mjs.domain.thingo.map.dto.MapCategoryResponse;
 import nova.mjs.domain.thingo.map.dto.PinSummaryResponse;
 import nova.mjs.domain.thingo.map.dto.MapMarkerResponse;
 import nova.mjs.domain.thingo.map.service.MapPinService;
@@ -30,6 +31,18 @@ import java.util.List;
 public class MapCategoryController {
 
     private final MapPinService mapPinService;
+
+    /**
+     * 기본 지도 칩(카테고리) 목록 조회.
+     *
+     * 그룹 → 최상위 칩 → 하위 탭 구조로, 노출 순서대로 내려준다.
+     * 프론트는 이 응답으로 기본 지도 칩셋을 렌더한다(코드 하드코딩 불필요).
+     * 층별안내도 칩셋은 이 API가 아니라 건물 상세(/buildings/{id})의 categoryTabs를 사용한다.
+     */
+    @GetMapping("/categories")
+    public ApiResponse<List<MapCategoryResponse>> getCategories() {
+        return ApiResponse.success(mapPinService.getCategories());
+    }
 
     /**
      * 특정 칩을 눌렀을 때 보여줄 장소/건물 목록.
@@ -62,11 +75,14 @@ public class MapCategoryController {
         String email = (userPrincipal != null) ? userPrincipal.getUsername() : null;
         log.info("[명지도 칩 목록] code={}, lat={}, lng={}, page={}, floorMap={}, email={}",
                 code, lat, lng, page, floorMap, email);
-        List<PinSummaryResponse> pins = mapPinService.getPinsByCategory(code, lat, lng, page, size, email, seed);
+        List<PinSummaryResponse> pins = mapPinService.getPinsByCategory(code, lat, lng, page, size, email, seed, floorMap);
         return ApiResponse.success(applyFloorMap(pins, floorMap));
     }
 
-    /** floorMap 미요청(기본)이면 FLOOR_MAP 항목을 기본 PLACE로 낮춰 하위호환을 유지한다. */
+    /**
+     * floorMap=true면 서비스가 내부 시설만 FLOOR_MAP으로 내려주므로 그대로 반환한다.
+     * floorMap=false(기본)면 FLOOR_MAP 항목을 기본 PLACE로 낮춰 하위호환을 유지한다.
+     */
     private List<PinSummaryResponse> applyFloorMap(List<PinSummaryResponse> pins, boolean floorMap) {
         return floorMap ? pins : pins.stream().map(PinSummaryResponse::toPlaceFallback).toList();
     }

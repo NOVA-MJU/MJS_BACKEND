@@ -102,6 +102,7 @@ class MapSearchE2EIT {
 
     @Autowired MapSyncService mapSyncService;
     @Autowired MapSearchService mapSearchService;
+    @Autowired MapPinService mapPinService;
     @Autowired PinRepository pinRepository;
     @PersistenceContext EntityManager entityManager;
 
@@ -343,6 +344,28 @@ class MapSearchE2EIT {
                 .containsExactlyInAnyOrder(
                         floorMapLink(results, "p-restroom-f1-east"),
                         floorMapLink(results, "p-restroom-f3-west"));
+    }
+
+    @Test
+    @DisplayName("floorMap=true면 칩 목록이 내부 시설만 반환한다 (외부 장소 제외)")
+    void should_returnInternalOnly_when_floorMapTrue() throws Exception {
+        syncAndClear();
+
+        // 프린터: 내부(무한프린터, 종합관 F1) + 외부(명지문구 프린터)가 섞여 있음
+        List<PinSummaryResponse> floorMapMode = mapPinService.getPinsByCategory(
+                "printer", null, null, 0, 20, null, null, true);
+        List<PinSummaryResponse> defaultMode = mapPinService.getPinsByCategory(
+                "printer", null, null, 0, 20, null, null, false);
+
+        // floorMap=true: 내부 시설만, 전부 FLOOR_MAP
+        assertThat(floorMapMode).extracting(PinSummaryResponse::getName)
+                .contains("무한프린터")
+                .doesNotContain("명지문구 프린터");
+        assertThat(floorMapMode).allSatisfy(r -> assertThat(r.getType()).isEqualTo("FLOOR_MAP"));
+
+        // 기본(false): 내부·외부 모두 포함
+        assertThat(defaultMode).extracting(PinSummaryResponse::getName)
+                .contains("무한프린터", "명지문구 프린터");
     }
 
     @Test
