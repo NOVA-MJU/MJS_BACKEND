@@ -184,6 +184,51 @@
         }
       }
     },
+    "/map/categories/{code}/markers": {
+      "get": {
+        "tags": ["명지도 - 카테고리"],
+        "summary": "칩 클릭 시 지도 마커 조회",
+        "operationId": "getMarkersByCategory",
+        "description": "칩을 눌렀을 때 **지도 위에 찍을 마커** 목록입니다. 목록 카드(`/pins`)와 짝을 이룹니다.\n\n### 왜 별도 API인가\n화장실처럼 한 건물에 같은 시설이 수십 개면 지도에 핀이 겹칩니다. 이 API는 건물 안 시설을 **건물별 대표 마커 하나로 묶어**(`grouped=true`, `title='화장실 19개'`) 내려주고, 마커를 탭하면 그 건물 상세/층별안내도로 들어가 개별 시설을 봅니다. 건물 밖(좌표만 있는) 시설과 건물 자체는 개별 마커(`grouped=false`, `count=1`)입니다.\n\n### 하위 탭·버스 칩\n- 하위 탭이 있는 칩은 자식 카테고리 시설까지 포함합니다.\n- 버스 칩(resultType=BUS)은 빈 목록을 반환합니다.",
+        "parameters": [
+          { "name": "code", "in": "path", "required": true, "description": "칩 코드 (예: restroom, bank, parking)", "schema": { "type": "string", "example": "restroom" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "지도 마커 목록",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "API 요청 성공" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/MapMarker" } },
+                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-06-22T09:05:12" }
+                  }
+                },
+                "example": {
+                  "status": "API 요청 성공",
+                  "data": [
+                    { "id": 2, "type": "BUILDING", "title": "화장실 19개", "location": "학생회관", "categoryCode": "restroom", "iconKey": "RestroomIcon", "count": 19, "grouped": true, "latitude": 37.5803346, "longitude": 126.9234212 },
+                    { "id": 1, "type": "BUILDING", "title": "화장실 22개", "location": "종합관", "categoryCode": "restroom", "iconKey": "RestroomIcon", "count": 22, "grouped": true, "latitude": 37.5802215, "longitude": 126.9225443 }
+                  ],
+                  "timestamp": "2026-06-22T09:05:12"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "존재하지 않는 칩 코드",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": { "error": "MAP_CATEGORY_NOT_FOUND", "message": "[MJS] 해당 카테고리를 찾을 수 없습니다.", "status": 404 }
+              }
+            }
+          }
+        }
+      }
+    },
     "/map/buildings": {
       "get": {
         "tags": [
@@ -2493,6 +2538,23 @@
           "categoryCode",
           "favorite"
         ]
+      },
+      "MapMarker": {
+        "type": "object",
+        "description": "지도 마커 1개. 목록 카드(PinSummary)와 달리 내부 시설을 건물별 대표 마커 하나로 묶어(grouped=true) 지도 위 핀 겹침을 막는다. 외부 장소·건물은 개별 마커(grouped=false, count=1)다.",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "description": "클릭 시 상세 조회에 쓸 핀 ID. 묶음 마커는 대표(부모) 건물 ID", "example": 2 },
+          "type": { "type": "string", "description": "마커 종류", "enum": ["BUILDING", "PLACE"], "example": "BUILDING" },
+          "title": { "type": "string", "description": "마커 제목. 묶음이면 '{라벨} {개수}개', 단건이면 시설명", "example": "화장실 19개" },
+          "location": { "type": "string", "nullable": true, "description": "보조 위치. 묶음이면 건물명, 외부 장소면 주소, 건물이면 null", "example": "학생회관" },
+          "categoryCode": { "type": "string", "example": "restroom" },
+          "iconKey": { "type": "string", "nullable": true, "example": "RestroomIcon" },
+          "count": { "type": "integer", "description": "이 마커가 대표하는 시설 수. 단건은 1", "example": 19 },
+          "grouped": { "type": "boolean", "description": "건물별로 묶인 대표 마커인지 여부", "example": true },
+          "latitude": { "type": "number", "format": "double", "nullable": true, "example": 37.5803346 },
+          "longitude": { "type": "number", "format": "double", "nullable": true, "example": 126.9234212 }
+        },
+        "required": ["id", "type", "title", "categoryCode", "count", "grouped"]
       },
       "MapSuggestItem": {
         "type": "object",
